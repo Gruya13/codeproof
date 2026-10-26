@@ -155,11 +155,16 @@ async function main() {
   });
 
   let proposed;
+  let scanValidated;
+  let scanRaw;
+  let rawCandidates;
   if (controlled) {
-    const candidateDoc = JSON.parse(readFileSync(resolve(args.candidates), "utf8"));
-    const candidateValidation = validateFindingsL0({ findings: candidateDoc.findings });
-    if (!candidateValidation.ok) throw new Error("candidate findings failed L0: " + candidateValidation.errors.join("; "));
-    proposed = candidateValidation.findings;
+    scanRaw = readFileSync(resolve(args.candidates), "utf8");
+    const candidateDoc = JSON.parse(scanRaw);
+    scanValidated = validateFindingsL0(candidateDoc);
+    if (!scanValidated.ok) throw new Error("candidate findings failed L0: " + scanValidated.errors.join("; "));
+    rawCandidates = candidateDoc.findings;
+    proposed = scanValidated.findings;
     phases.push({ name: "scan", status: "skipped", durationMs: 0 });
     console.log("  scan     skip  controlled verifier: " + proposed.length + " injected candidates");
   } else {
@@ -188,40 +193,80 @@ async function main() {
       });
       scanParsed = parseDirtyJson(scanCall.text);
     }
-    const scanValidated = validateFindingsL0(scanParsed);
+    scanRaw = scanCall.text;
+    scanValidated = validateFindingsL0(scanParsed);
     if (!scanValidated.ok) {
       mkdirSync(join(process.cwd(), "reports"), { recursive: true });
       writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ raw: scanCall.text, errors: scanValidated.errors }, null, 2) + "\n");
       throw new Error("scanner output failed L0: " + scanValidated.errors.join("; ") + " (raw output saved to reports/last-scan-raw.json)");
     }
+    if (scanValidated.rejected.length > 0) {
+      mkdirSync(join(process.cwd(), "reports"), { recursive: true });
+      writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ raw: scanCall.text, rejected: scanValidated.rejected }, null, 2) + "\n");
+    }
+    rawCandidates = scanParsed.findings;
     proposed = scanValidated.findings;
     phases.push({ name: "scan", status: "ok", durationMs: Date.now() - scanStarted });
     console.log("  scan     " + String(Date.now() - scanStarted).padStart(4) + " ms  " +
       proposed.length + " proposed (input " + scanCall.usage.inputTokens + " tok, cached " + scanCall.usage.cachedTokens + ")");
   }
 
+  const rejectedByIndex = new Map(scanValidated.rejected.map(function (item) { return [item.index, item]; }));
+  const candidateAudit = rawCandidates.map(function (candidate, index) {
+    const rejection = rejectedByIndex.get(index);
+    return {
+      index: index,
+      candidate: candidate,
+      l0: { ok: !rejection, reasons: rejection ? rejection.reasons : [] },
+      status: rejection ? "l0-rejected" : "pending"
+    };
+  });
   const manifest = new Map(repo.files.map(function (file) { return [file.path, file]; }));
   const repoForGate = { root: target, manifest: manifest, commit: commit };
   const verifyStarted = Date.now();
   const published = [];
   let l1Rejected = 0;
-  for (const finding of proposed) {
+  let aborted = false;
+  let skippedFindings = [];
+  function skipFrom(index) {
+    aborted = true;
+    skippedFindings = proposed.slice(index).map(function (finding) { return finding.id; });
+    for (let remaining = index; remaining < proposed.length; remaining++) {
+      candidateAudit[scanValidated.acceptedIndices[remaining]].status = "skipped-budget";
+    }
+  }
+  if (budget.exceeded) skipFrom(0);
+  for (let index = 0; index < proposed.length && !aborted; index++) {
+    const finding = proposed[index];
     const verifierContext = buildVerifierContext({ repo: repo, finding: finding, maxChars: config.verifierContextChars });
-    const outcome = await verifyOne({ finding: finding, repo: repoForGate, agent: agents, excerpts: verifierContext.text, maxTokens: config.verifierMaxTokens });
+    let outcome;
+    try {
+      outcome = await verifyOne({ finding: finding, repo: repoForGate, agent: agents, excerpts: verifierContext.text, maxTokens: config.verifierMaxTokens });
+    } catch (error) {
+      if (error.code !== "BUDGET_EXCEEDED") throw error;
+      skipFrom(index);
+      break;
+    }
+    const audit = candidateAudit[scanValidated.acceptedIndices[index]];
+    audit.status = outcome.status;
+    audit.l1 = outcome.l1;
+    if (outcome.verifier) audit.verifier = outcome.verifier;
     if (outcome.status === "l1-rejected") {
       l1Rejected += 1;
-      continue;
+    } else {
+      published.push({
+        finding: outcome.finding,
+        status: outcome.status,
+        l1: { passed: true, reason: outcome.l1.reason, lineTolerance: outcome.l1.lineTolerance === undefined ? 0 : outcome.l1.lineTolerance },
+        verifier: outcome.verifier
+      });
     }
-    published.push({
-      finding: outcome.finding,
-      status: outcome.status,
-      l1: { passed: true, reason: outcome.l1.reason, lineTolerance: outcome.l1.lineTolerance === undefined ? 0 : outcome.l1.lineTolerance },
-      verifier: outcome.verifier
-    });
+    if (budget.exceeded) skipFrom(index + 1);
   }
-  phases.push({ name: "verify", status: "ok", durationMs: Date.now() - verifyStarted });
+  phases.push({ name: "verify", status: aborted ? "aborted" : "ok", durationMs: Date.now() - verifyStarted });
   const counts = {
     proposed: proposed.length,
+    l0Rejected: { count: scanValidated.rejected.length, items: scanValidated.rejected },
     l1Rejected: l1Rejected,
     verified: published.filter(function (item) { return item.status === "verified"; }).length,
     moderate: published.filter(function (item) { return item.status === "moderate"; }).length,
@@ -277,14 +322,21 @@ async function main() {
       cachedTokens: totalCached,
       byRole: Array.from(byRoleMap.values()),
       callLog: agents.callLog,
-      costUsd: totalCost,
+      costUsd: aborted ? budget.spentUsd : totalCost,
       measured: measured
     },
     calls: agents.callLog.length,
     retries: agents.callLog.reduce(function (sum, call) { return sum + (call.retries || 0); }, 0),
     timings: { startedAt: startedAt, durationMs: Date.now() - startedAtMs },
     phases: phases,
-    budget: { limitUsd: config.budgetUsd, spentUsd: measured ? Math.round(budget.spentUsd * 1e6) / 1e6 : null, measured: measured, exceeded: budget.exceeded },
+    budget: {
+      limitUsd: config.budgetUsd,
+      spentUsd: aborted ? budget.spentUsd : (measured ? Math.round(budget.spentUsd * 1e6) / 1e6 : null),
+      measured: measured,
+      exceeded: budget.exceeded,
+      aborted: aborted,
+      skippedFindings: skippedFindings
+    },
     findings: counts,
     outputs: {
       report: outLabel + "/REPORT.md",
@@ -296,6 +348,7 @@ async function main() {
   writeFileSync(join(outDir, "REPORT.md"), buildReport({ repo: repo, published: published, run: runJson }) + "\n");
   writeFileSync(join(outDir, "rejected.md"), buildRejected({ published: published, run: runJson }) + "\n");
   writeFileSync(join(outDir, "findings.json"), JSON.stringify(published, null, 2) + "\n");
+  writeFileSync(join(outDir, "candidates.json"), JSON.stringify({ raw: scanRaw, candidates: candidateAudit }, null, 2) + "\n");
   phases.push({ name: "publish", status: "ok", durationMs: Date.now() - publishStarted });
   runJson.timings.durationMs = Date.now() - startedAtMs;
   writeFileSync(join(outDir, "run.json"), JSON.stringify(runJson, null, 2) + "\n");
@@ -308,6 +361,10 @@ async function main() {
   console.log("  Cost:     " + (measured ? "$" + totalCost.toFixed(4) : "not measured (mock)"));
   console.log("  Cache:    " + totalCached + " of " + totalInput + " input tokens served from cache");
   console.log("");
+  if (aborted) {
+    console.error("ERROR: run budget exceeded: spent " + budget.spentUsd + " USD of " + budget.limitUsd);
+    process.exitCode = 1;
+  }
 }
 
 main().catch(function (error) {

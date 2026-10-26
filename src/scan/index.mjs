@@ -74,40 +74,52 @@ export function buildScannerMessages(input) {
 }
 
 export function validateFindingsL0(parsed) {
-  const errors = [];
   if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.findings)) {
-    return { ok: false, findings: [], errors: ["response is not an object with a findings array"] };
+    return { ok: false, findings: [], acceptedIndices: [], rejected: [], errors: ["response is not an object with a findings array"] };
   }
   const findings = [];
+  const acceptedIndices = [];
+  const rejected = [];
+  const seenIds = new Set();
   parsed.findings.forEach(function (finding, index) {
     const label = "findings[" + index + "]";
+    const reasons = [];
     if (!finding || typeof finding !== "object") {
-      errors.push(label + " is not an object");
+      rejected.push({ index: index, reasons: [label + " is not an object"] });
       return;
     }
-    if (!/^F-[0-9]{3}$/.test(String(finding.id || ""))) errors.push(label + ".id must match F-NNN");
-    if (finding.category !== "correctness") errors.push(label + ".category must be correctness");
-    if (finding.kind !== "direct") errors.push(label + ".kind must be direct");
-    if (["critical", "high", "medium", "low"].indexOf(finding.severity) === -1) errors.push(label + ".severity is invalid");
-    if (typeof finding.title !== "string" || finding.title.length < 8) errors.push(label + ".title is too short");
-    if (typeof finding.claim !== "string" || finding.claim.length < 20) errors.push(label + ".claim is too short");
-    if (typeof finding.confidence !== "number" || finding.confidence < 0 || finding.confidence > 1) errors.push(label + ".confidence must be 0..1");
+    if (!/^F-[0-9]{3}$/.test(String(finding.id || ""))) reasons.push(label + ".id must match F-NNN");
+    if (seenIds.has(finding.id)) reasons.push(label + ".id is duplicate: " + finding.id);
+    if (finding.category !== "correctness") reasons.push(label + ".category must be correctness");
+    if (finding.kind !== "direct") reasons.push(label + ".kind must be direct");
+    if (["critical", "high", "medium", "low"].indexOf(finding.severity) === -1) reasons.push(label + ".severity is invalid");
+    if (typeof finding.title !== "string" || finding.title.length < 8) reasons.push(label + ".title is too short");
+    if (typeof finding.claim !== "string" || finding.claim.length < 20) reasons.push(label + ".claim is too short");
+    if (typeof finding.confidence !== "number" || !Number.isFinite(finding.confidence) || finding.confidence < 0 || finding.confidence > 1) reasons.push(label + ".confidence must be 0..1");
     if (!Array.isArray(finding.evidence) || finding.evidence.length === 0 || finding.evidence.length > 3) {
-      errors.push(label + ".evidence must have 1-3 items");
+      reasons.push(label + ".evidence must have 1-3 items");
     } else {
       finding.evidence.forEach(function (evidence, evidenceIndex) {
         const evidenceLabel = label + ".evidence[" + evidenceIndex + "]";
         if (!evidence || typeof evidence !== "object") {
-          errors.push(evidenceLabel + " is not an object");
+          reasons.push(evidenceLabel + " is not an object");
           return;
         }
-        if (typeof evidence.path !== "string" || evidence.path.length === 0) errors.push(evidenceLabel + ".path is empty");
-        if (!Number.isInteger(evidence.startLine) || evidence.startLine < 1) errors.push(evidenceLabel + ".startLine is invalid");
-        if (!Number.isInteger(evidence.endLine) || evidence.endLine < 1) errors.push(evidenceLabel + ".endLine is invalid");
-        if (typeof evidence.snippet !== "string" || evidence.snippet.length === 0) errors.push(evidenceLabel + ".snippet is empty");
+        if (typeof evidence.path !== "string" || evidence.path.length === 0) reasons.push(evidenceLabel + ".path is empty");
+        if (!Number.isInteger(evidence.startLine) || evidence.startLine < 1) reasons.push(evidenceLabel + ".startLine is invalid");
+        if (!Number.isInteger(evidence.endLine) || evidence.endLine < 1) reasons.push(evidenceLabel + ".endLine is invalid");
+        if (typeof evidence.snippet !== "string" || evidence.snippet.length === 0) reasons.push(evidenceLabel + ".snippet is empty");
       });
     }
-    findings.push(finding);
+    if (reasons.length > 0) {
+      const item = { index: index, reasons: reasons };
+      if (typeof finding.id === "string") item.id = finding.id;
+      rejected.push(item);
+    } else {
+      findings.push(finding);
+      acceptedIndices.push(index);
+      seenIds.add(finding.id);
+    }
   });
-  return { ok: errors.length === 0, findings: findings, errors: errors };
+  return { ok: true, findings: findings, acceptedIndices: acceptedIndices, rejected: rejected, errors: [] };
 }

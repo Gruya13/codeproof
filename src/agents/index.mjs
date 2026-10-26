@@ -6,6 +6,12 @@ export function createAgents(options) {
   const budget = options.budget;
   let counter = 0;
 
+  function budgetExceededError() {
+    const error = new Error("run budget exceeded: spent " + budget.spentUsd + " USD of " + budget.limitUsd);
+    error.code = "BUDGET_EXCEEDED";
+    return error;
+  }
+
   function record(role, result) {
     callLog.push({
       role: role,
@@ -20,7 +26,6 @@ export function createAgents(options) {
     });
     counter += 1;
     budget.charge(result.costUsd);
-    if (budget.exceeded) throw new Error("run budget exceeded: spent " + budget.spentUsd + " USD of " + budget.limitUsd);
     return result;
   }
 
@@ -30,6 +35,7 @@ export function createAgents(options) {
       kind: "mock",
       callLog: callLog,
       complete: function (request) {
+        if (budget.exceeded) return Promise.reject(budgetExceededError());
         return complete(request).then(function (result) { return record(request.role, result); });
       }
     };
@@ -53,6 +59,7 @@ export function createAgents(options) {
     kind: "meta",
     callLog: callLog,
     complete: function (request) {
+      if (budget.exceeded) return Promise.reject(budgetExceededError());
       return byRole[request.role](request).then(function (result) { return record(request.role, result); });
     }
   };
