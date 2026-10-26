@@ -117,6 +117,71 @@ export function normalizeLine(line) {
   return String(line).replace(/\r$/, "").replace(/\s+/g, " ").trim();
 }
 
+// --- F8 Helperi: provera excerpts i različitosti citata (Z5) ---
+
+export function normalizeExcerptLine(line) {
+  const stripped = String(line || "").replace(/^\s*\d+\s*\|\s?/, "");
+  return normalizeLine(stripped);
+}
+
+export function normalizeSnippetLines(snippet) {
+  const raw = String(snippet || "").split("\n");
+  while (raw.length > 0 && raw[0].trim() === "") raw.shift();
+  while (raw.length > 0 && raw[raw.length - 1].trim() === "") raw.pop();
+  return raw.map(normalizeLine);
+}
+
+export function isSnippetInExcerpts(snippet, excerpts) {
+  if (typeof excerpts !== "string") return true;
+  const snippetLines = normalizeSnippetLines(snippet);
+  if (snippetLines.length === 0) return false;
+
+  const excerptLines = excerpts.split("\n").map(normalizeExcerptLine);
+  if (excerptLines.length < snippetLines.length) return false;
+
+  for (let k = 0; k <= excerptLines.length - snippetLines.length; k += 1) {
+    let match = true;
+    for (let i = 0; i < snippetLines.length; i += 1) {
+      if (excerptLines[k + i] !== snippetLines[i]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) return true;
+  }
+  return false;
+}
+
+export function isSameCitation(counter, findingEv) {
+  if (!counter || !findingEv) return false;
+  const counterPath = String(counter.path || "");
+  const findingPath = String(findingEv.path || "");
+  if (counterPath === "" || counterPath !== findingPath) return false;
+
+  const counterStart = counter.startLine;
+  const counterEnd = counter.endLine;
+  const findingStart = findingEv.startLine;
+  const findingEnd = findingEv.endLine;
+
+  const validRanges =
+    Number.isInteger(counterStart) && Number.isInteger(counterEnd) &&
+    Number.isInteger(findingStart) && Number.isInteger(findingEnd);
+
+  const rangesOverlap = validRanges && (counterStart <= findingEnd && findingStart <= counterEnd);
+
+  const counterSnippetLines = normalizeSnippetLines(counter.snippet);
+  const findingSnippetLines = normalizeSnippetLines(findingEv.snippet);
+  let snippetsEqual = false;
+  if (counterSnippetLines.length > 0 && counterSnippetLines.length === findingSnippetLines.length) {
+    snippetsEqual = counterSnippetLines.every(function (line, index) {
+      return line === findingSnippetLines[index];
+    });
+  }
+
+  return rangesOverlap || snippetsEqual;
+}
+
+
 export function checkCitation(evidence, repo) {
   if (!evidence || typeof evidence !== "object") return { passed: false, reason: "evidence is not an object" };
   const file = String(evidence.path || "");
@@ -255,7 +320,7 @@ export async function verifyOne(input) {
     console.warn("  WARN verifier output not parseable for " + finding.id + ": " + error.message + " (finish_reason=" + String(call.finishReason) + ")");
     verdict = { findingId: finding.id, verdict: "uncertain", reason: "verifier output was not parseable JSON (" + error.message + "), finish_reason=" + String(call.finishReason) };
   }
-  let outcome = applyVerdict(verdict, call.model, repo);
+  let outcome = applyVerdict(verdict, call.model, repo, finding, input.excerpts);
   if (outcome.status === "moderate" && verdict.verdict === "refute") {
     const retryCall = await input.agent.complete({
       role: "verifier",
@@ -270,7 +335,7 @@ export async function verifyOne(input) {
       if (retryValidated.ok) {
         const retryVerdict = retryValidated.verdicts.find(function (item) { return item.findingId === finding.id; });
         if (retryVerdict && retryVerdict.verdict === "refute" && retryVerdict.mode === "strong") {
-          const secondOutcome = applyVerdict(retryVerdict, retryCall.model, repo);
+          const secondOutcome = applyVerdict(retryVerdict, retryCall.model, repo, finding, input.excerpts);
           if (secondOutcome.status === "refuted") outcome = secondOutcome;
         }
       }
@@ -280,7 +345,7 @@ export async function verifyOne(input) {
   }
   return { finding: finding, status: outcome.status, l1: passing, verifier: outcome.verifier };
 }
-export function applyVerdict(verdict, model, repo) {
+export function applyVerdict(verdict, model, repo, finding = null, excerpts = null) {
   const verifier = { model: model, verdict: verdict.verdict, reason: verdict.reason };
   let status = "uncertain";
   if (verdict.verdict === "confirm") {
@@ -302,14 +367,49 @@ export function applyVerdict(verdict, model, repo) {
         passed: !failed,
         reason: failed ? failed.reason : "counter-citation verified against the commit"
       };
-      status = failed ? "moderate" : "refuted";
+
+      // F8: Provera bounded konteksta i različitosti od citata nalaza (Z5)
+      let inContext = true;
+      if (typeof excerpts === "string") {
+        inContext = counterEvidence.every(function (evidence) {
+          return isSnippetInExcerpts(evidence.snippet, excerpts);
+        });
+      }
+
+      let distinctFromCitation = true;
+      const findingEvidences = (finding && Array.isArray(finding.evidence)) ? finding.evidence : [];
+      if (findingEvidences.length > 0) {
+        const hasOverlap = counterEvidence.some(function (counter) {
+          return findingEvidences.some(function (findingEv) {
+            return isSameCitation(counter, findingEv);
+          });
+        });
+        if (hasOverlap) distinctFromCitation = false;
+      }
+
+      const policyPassed = inContext && distinctFromCitation;
+      let policyReason = "counter-evidence is in bounded context and distinct from finding citation";
+      if (!inContext && !distinctFromCitation) {
+        policyReason = "counter-evidence is outside context excerpts and identical to finding citation";
+      } else if (!inContext) {
+        policyReason = "counter-evidence is not present in verifier context excerpts";
+      } else if (!distinctFromCitation) {
+        policyReason = "counter-evidence is not distinct from finding citation (overlapping range or identical snippet)";
+      }
+
+      verifier.counterEvidencePolicy = {
+        inContext: inContext,
+        distinctFromCitation: distinctFromCitation,
+        reason: policyReason
+      };
+
+      status = (!failed && policyPassed) ? "refuted" : "moderate";
     } else {
       status = "moderate";
     }
   }
   return { status: status, verifier: verifier };
 }
-
 export function buildStrongRefuteMessages(finding, excerpts, previousOutput) {
   const base = buildVerifierMessages(finding, excerpts);
   return base.concat([

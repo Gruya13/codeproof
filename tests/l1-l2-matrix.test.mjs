@@ -528,17 +528,29 @@ test("T-B13: refute degradations: empty counterEvidence, missing mode, and weak 
   assert.equal(resC.status, "moderate");
 });
 
-test("T-B14a: characterization — strong refute from manifest file absent in verifier context currently passes as 'refuted'", (t) => {
-  // expected to change when F8 lands
+test("T-B14a: strong refute from manifest file absent in verifier context degrades to 'moderate' (F8 inContext=false)", (t) => {
   const { dir, cleanup } = createTempRepo();
   t.after(cleanup);
 
   writeFileSync(join(dir, "outside_context.js"), "export const safe = true;\n", "utf8");
+  writeFileSync(join(dir, "inside_context.js"), "const query = req.query;\n", "utf8");
 
   const repo = {
     root: dir,
-    manifest: new Map([["outside_context.js", { path: "outside_context.js" }]])
+    manifest: new Map([
+      ["outside_context.js", { path: "outside_context.js" }],
+      ["inside_context.js", { path: "inside_context.js" }]
+    ])
   };
+
+  const finding = {
+    id: "F-001",
+    evidence: [
+      { path: "inside_context.js", startLine: 1, endLine: 1, snippet: "const query = req.query;" }
+    ]
+  };
+
+  const excerpts = "### inside_context.js - cited file\n   1 | const query = req.query;";
 
   const verdict = {
     findingId: "F-001",
@@ -550,10 +562,98 @@ test("T-B14a: characterization — strong refute from manifest file absent in ve
     ]
   };
 
-  // Trenutna karakterizacija sistema: applyVerdict proverava samo postojanje u manifestu i disku
-  const result = applyVerdict(verdict, "test-model", repo);
+  // Posle F8: citat prolazi L1 (fajl postoji na disku), ali pada F8 policy jer nije u excerpts
+  const result = applyVerdict(verdict, "test-model", repo, finding, excerpts);
+  assert.equal(result.status, "moderate");
+  assert.equal(result.verifier.mode, "strong");
+  assert.equal(result.verifier.counterEvidenceL1.passed, true);
+  assert.equal(result.verifier.counterEvidencePolicy.inContext, false);
+});
+
+test("T-B14b: characterization — unrelated counter-citation inside context still yields 'refuted' (Z5 residual risk)", (t) => {
+  const { dir, cleanup } = createTempRepo();
+  t.after(cleanup);
+
+  const fileContent = [
+    "const query = req.query.id;",
+    "const db = connect();",
+    "export const unrelatedConst = 42;"
+  ].join("\n");
+  writeFileSync(join(dir, "handler.js"), fileContent, "utf8");
+
+  const repo = {
+    root: dir,
+    manifest: new Map([["handler.js", { path: "handler.js" }]])
+  };
+
+  const finding = {
+    id: "F-001",
+    evidence: [
+      { path: "handler.js", startLine: 1, endLine: 1, snippet: "const query = req.query.id;" }
+    ]
+  };
+
+  const excerpts = [
+    "### handler.js - cited file",
+    "   1 | const query = req.query.id;",
+    "   2 | const db = connect();",
+    "   3 | export const unrelatedConst = 42;"
+  ].join("\n");
+
+  const verdict = {
+    findingId: "F-001",
+    verdict: "refute",
+    mode: "strong",
+    reason: "Refuting with unrelated line 3 from within bounded context.",
+    counterEvidence: [
+      { path: "handler.js", startLine: 3, endLine: 3, snippet: "export const unrelatedConst = 42;" }
+    ]
+  };
+
+  // F8 proverava samo kontekst i različitost; semantički nepovezan citat unutar konteksta i dalje prolazi
+  const result = applyVerdict(verdict, "test-model", repo, finding, excerpts);
   assert.equal(result.status, "refuted");
   assert.equal(result.verifier.counterEvidenceL1.passed, true);
+  assert.equal(result.verifier.counterEvidencePolicy.inContext, true);
+  assert.equal(result.verifier.counterEvidencePolicy.distinctFromCitation, true);
+});
+
+test("T-B15: strong refute identical to finding citation degrades to 'moderate' (F8 distinctFromCitation=false)", (t) => {
+  const { dir, cleanup } = createTempRepo();
+  t.after(cleanup);
+
+  writeFileSync(join(dir, "target.js"), "const secret = process.env.API_KEY;\n", "utf8");
+
+  const repo = {
+    root: dir,
+    manifest: new Map([["target.js", { path: "target.js" }]])
+  };
+
+  const finding = {
+    id: "F-001",
+    evidence: [
+      { path: "target.js", startLine: 1, endLine: 1, snippet: "const secret = process.env.API_KEY;" }
+    ]
+  };
+
+  const excerpts = "### target.js - cited file\n   1 | const secret = process.env.API_KEY;";
+
+  const verdict = {
+    findingId: "F-001",
+    verdict: "refute",
+    mode: "strong",
+    reason: "Verifier quotes the exact same line as the finding.",
+    counterEvidence: [
+      { path: "target.js", startLine: 1, endLine: 1, snippet: "const secret = process.env.API_KEY;" }
+    ]
+  };
+
+  // Posle F8: protiv-citat identičan citatu nalaza ne sme oboriti nalaz
+  const result = applyVerdict(verdict, "test-model", repo, finding, excerpts);
+  assert.equal(result.status, "moderate");
+  assert.equal(result.verifier.mode, "strong");
+  assert.equal(result.verifier.counterEvidenceL1.passed, true);
+  assert.equal(result.verifier.counterEvidencePolicy.distinctFromCitation, false);
 });
 
 test("T-B16: confirm -> 'verified', uncertain -> 'uncertain', mismatched findingId -> 'uncertain'", async (t) => {
@@ -710,7 +810,7 @@ test("T-B19: weak refute triggers strong-refute retry; promotes to 'refuted' on 
   const { dir, cleanup } = createTempRepo();
   t.after(cleanup);
 
-  writeFileSync(join(dir, "guard.js"), "if (value == null) return fallback;\n", "utf8");
+  writeFileSync(join(dir, "guard.js"), "const val = input.val;\nif (val == null) return fallback;\n", "utf8");
   const repo = {
     root: dir,
     manifest: new Map([["guard.js", { path: "guard.js" }]])
@@ -718,7 +818,7 @@ test("T-B19: weak refute triggers strong-refute retry; promotes to 'refuted' on 
 
   const finding = {
     id: "F-001",
-    evidence: [{ path: "guard.js", startLine: 1, endLine: 1, snippet: "if (value == null) return fallback;" }]
+    evidence: [{ path: "guard.js", startLine: 1, endLine: 1, snippet: "const val = input.val;" }]
   };
 
   // Scenario 1: Retry uspeva sa strong refute i validnim protiv-citatom -> status postaje 'refuted'
@@ -736,7 +836,7 @@ test("T-B19: weak refute triggers strong-refute retry; promotes to 'refuted' on 
             verdict: "refute",
             mode: "strong",
             reason: "Counter-evidence at guard.js:1.",
-            counterEvidence: [{ path: "guard.js", startLine: 1, endLine: 1, snippet: "if (value == null) return fallback;" }]
+            counterEvidence: [{ path: "guard.js", startLine: 2, endLine: 2, snippet: "if (val == null) return fallback;" }]
           }
         ]
       })
@@ -747,7 +847,7 @@ test("T-B19: weak refute triggers strong-refute retry; promotes to 'refuted' on 
     finding,
     repo,
     agent: agentSuccess,
-    excerpts: "if (value == null) return fallback;",
+    excerpts: "   1 | const val = input.val;\n   2 | if (val == null) return fallback;",
     maxTokens: 2000
   });
 
@@ -773,7 +873,7 @@ test("T-B19: weak refute triggers strong-refute retry; promotes to 'refuted' on 
     finding,
     repo,
     agent: agentStillWeak,
-    excerpts: "if (value == null) return fallback;",
+    excerpts: "   1 | const val = input.val;\n   2 | if (val == null) return fallback;",
     maxTokens: 2000
   });
 
