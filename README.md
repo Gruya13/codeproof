@@ -58,7 +58,7 @@ node src/cli.mjs analyze /path/to/repo
 
 ## What was built during the hackathon
 
-This repository is created during the hackathon; the first commit is tagged `hackathon-start`. All code, prompts and fixtures in this repository were authored during the event, and the git history is the evidence. Design notes written before the kickoff are not part of this repository.
+This repository is created during the hackathon; the first commit is tagged `hackathon-start`. All code, prompts and fixtures in this repository were authored during the event, and the git history is the evidence: every commit after the tag is event-time work, and no code or fixture from outside this repository was imported.
 
 ## Limits
 
