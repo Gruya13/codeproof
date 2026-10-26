@@ -28,13 +28,61 @@ function listGitFiles(target) {
   }
 }
 
-const IMPORT_RE = /(?:import\s+(?:[^"'()]*?\s+from\s+)?|export\s+(?:[^"'()]*?\s+)?from\s+|require\s*\(\s*)["']([^"']+)["']/g;
-
 function extractSpecifiers(source) {
+  const tokens = [];
+  for (let i = 0; i < source.length;) {
+    const char = source[i];
+    if (/\s/.test(char)) { i++; continue; }
+    if (char === "/" && source[i + 1] === "/") {
+      i = source.indexOf("\n", i + 2);
+      if (i < 0) break;
+      continue;
+    }
+    if (char === "/" && source[i + 1] === "*") {
+      const end = source.indexOf("*/", i + 2);
+      i = end < 0 ? source.length : end + 2;
+      continue;
+    }
+    if (char === '"' || char === "'" || char === "`") {
+      const quote = char;
+      const start = ++i;
+      while (i < source.length && source[i] !== quote) {
+        if (source[i] === "\\") i++;
+        i++;
+      }
+      if (quote !== "`") tokens.push({ type: "string", value: source.slice(start, i) });
+      if (i < source.length) i++;
+      continue;
+    }
+    if (/[A-Za-z_$]/.test(char)) {
+      const start = i++;
+      while (i < source.length && /[A-Za-z0-9_$]/.test(source[i])) i++;
+      tokens.push({ type: "word", value: source.slice(start, i) });
+      continue;
+    }
+    tokens.push({ type: "punct", value: char });
+    i++;
+  }
+
   const out = [];
-  IMPORT_RE.lastIndex = 0;
-  let match;
-  while ((match = IMPORT_RE.exec(source)) !== null) out.push(match[1]);
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token.type !== "word" || !["import", "export", "require"].includes(token.value)) continue;
+    if (i > 0 && tokens[i - 1].value === ".") continue;
+    const next = tokens[i + 1];
+    if (token.value === "import" && next?.type === "string") {
+      out.push(next.value);
+    } else if ((token.value === "import" || token.value === "require") && next?.value === "(" && tokens[i + 2]?.type === "string") {
+      out.push(tokens[i + 2].value);
+    } else if (token.value !== "require") {
+      for (let j = i + 1; j < tokens.length && tokens[j].value !== ";"; j++) {
+        if (tokens[j].value === "from" && tokens[j + 1]?.type === "string") {
+          out.push(tokens[j + 1].value);
+          break;
+        }
+      }
+    }
+  }
   return out;
 }
 

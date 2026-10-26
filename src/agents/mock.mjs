@@ -10,12 +10,15 @@ function extractFindingId(messages) {
 
 export function createMockAgent(options) {
   const scenario = JSON.parse(readFileSync(options.scenarioPath, "utf8"));
+  function responseCost(response) {
+    return response?.costUsd ?? response?.costPerCall ?? scenario.costUsd ?? scenario.costPerCall ?? 0;
+  }
   return async function complete(request) {
     if (request.role === "scanner") {
       return {
         text: JSON.stringify({ findings: scenario.findings }),
         usage: { inputTokens: 1850, outputTokens: 260, cachedTokens: 0 },
-        costUsd: 0,
+        costUsd: responseCost(scenario.scanner),
         model: "mock-scanner",
         latencyMs: 2,
         retries: 0
@@ -32,7 +35,7 @@ export function createMockAgent(options) {
       return {
         text: JSON.stringify({ verdicts: [one] }),
         usage: { inputTokens: 1400, outputTokens: 140, cachedTokens: 900 },
-        costUsd: 0,
+        costUsd: responseCost(verdict),
         model: "mock-verifier",
         latencyMs: 2,
         retries: 0
@@ -41,7 +44,7 @@ export function createMockAgent(options) {
     return {
       text: "",
       usage: { inputTokens: 0, outputTokens: 0, cachedTokens: 0 },
-      costUsd: 0,
+      costUsd: responseCost(),
       model: "mock",
       latencyMs: 0,
       retries: 0

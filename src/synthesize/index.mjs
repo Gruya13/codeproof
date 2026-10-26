@@ -2,13 +2,20 @@ function fence() {
   return "```";
 }
 
+function escapeMermaidText(value) {
+  return value.replace(/"/g, "#quot;").replace(/\r\n?|\n/g, "<br/>").replace(/[\x00-\x1f\x7f]/g, "");
+}
+
 export function mermaidGraph(repo) {
   const ids = new Map();
   repo.files.forEach(function (file, index) { ids.set(file.path, "n" + index); });
   const lines = ["graph LR"];
-  for (const pair of ids) lines.push("  " + pair[1] + '["' + pair[0] + '"]');
+  for (const pair of ids) {
+    const label = escapeMermaidText(pair[0]);
+    lines.push("  " + pair[1] + '["' + label + '"]');
+  }
   for (const edge of repo.edges) lines.push("  " + ids.get(edge.from) + " --> " + ids.get(edge.to));
-  for (const cycle of repo.cycles) lines.push("  %% cycle: " + cycle.join(" -> "));
+  for (const cycle of repo.cycles) lines.push("  %% cycle: " + cycle.map(escapeMermaidText).join(" -> "));
   return lines.join("\n");
 }
 
