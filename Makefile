@@ -1,4 +1,4 @@
-.PHONY: demo test controlled bench score
+.PHONY: demo test controlled bench score replay clean-clone probe-repo
 
 demo:
 	USE_MOCK=1 node src/cli.mjs analyze fixtures/mini-repo --mock
@@ -14,3 +14,12 @@ bench:
 
 score:
 	node bench/score.mjs --run "$(RUN)"
+
+replay:
+	node scripts/replay-gates.mjs --run "$(if $(RUN),$(RUN),reports/golden)"
+
+clean-clone:
+	scripts/clean-clone.sh
+
+probe-repo:
+	node scripts/probe-repo.mjs $(ARGS)
