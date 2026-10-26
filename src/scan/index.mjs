@@ -1,65 +1,72 @@
-export const SCANNER_SYSTEM_PROMPT = [
-  "You are a static correctness auditor for a TypeScript/JavaScript repository.",
-  "You receive a repository digest followed by file contents with line numbers.",
-  "Report only direct correctness defects: the defective code is physically present in the lines you cite.",
-  "Every finding needs evidence: path, startLine, endLine and a verbatim snippet copied from the input. Never paraphrase code in the snippet.",
-  "Do not report missing validations, security, style, performance or architecture issues. Do not guess; if unsure, drop the finding.",
-  "Return at most 8 findings sorted by severity. Keep each citation at most 15 lines wide.",
-  "Output only a JSON object matching the provided schema. If you find nothing, return an empty findings array."
-].join("\n");
+export function scannerSystemPrompt(maxFindings) {
+  const limit = maxFindings === undefined ? 8 : maxFindings;
+  return [
+    "You are a static correctness auditor for a TypeScript/JavaScript repository.",
+    "You receive a repository digest followed by file contents with line numbers.",
+    "Report only direct correctness defects: the defective code is physically present in the lines you cite.",
+    "Every finding needs evidence: path, startLine, endLine and a verbatim snippet copied from the input. Never paraphrase code in the snippet.",
+    "Do not report missing validations, security, style, performance or architecture issues. Do not guess; if unsure, drop the finding.",
+    "Return at most " + limit + " findings sorted by severity. Keep each citation at most 15 lines wide.",
+    "Output only a JSON object matching the provided schema. If you find nothing, return an empty findings array."
+  ].join("\n");
+}
 
-export const SCANNER_RESPONSE_FORMAT = {
-  type: "json_schema",
-  json_schema: {
-    name: "codeproof_findings",
-    schema: {
-      type: "object",
-      additionalProperties: false,
-      required: ["findings"],
-      properties: {
-        findings: {
-          type: "array",
-          maxItems: 8,
-          items: {
-            type: "object",
-            additionalProperties: false,
-            required: ["id", "category", "kind", "severity", "title", "claim", "evidence", "confidence"],
-            properties: {
-              id: { type: "string", pattern: "^F-[0-9]{3}$" },
-              category: { const: "correctness" },
-              kind: { const: "direct" },
-              severity: { enum: ["critical", "high", "medium", "low"] },
-              title: { type: "string" },
-              claim: { type: "string" },
-              evidence: {
-                type: "array",
-                minItems: 1,
-                maxItems: 3,
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  required: ["path", "startLine", "endLine", "snippet"],
-                  properties: {
-                    path: { type: "string" },
-                    startLine: { type: "integer", minimum: 1 },
-                    endLine: { type: "integer", minimum: 1 },
-                    snippet: { type: "string" }
+export function buildScannerResponseFormat(maxFindings) {
+  const limit = maxFindings === undefined ? 8 : maxFindings;
+  return {
+    type: "json_schema",
+    json_schema: {
+      name: "codeproof_findings",
+      schema: {
+        type: "object",
+        additionalProperties: false,
+        required: ["findings"],
+        properties: {
+          findings: {
+            type: "array",
+            maxItems: limit,
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["id", "category", "kind", "severity", "title", "claim", "evidence", "confidence"],
+              properties: {
+                id: { type: "string", pattern: "^F-[0-9]{3}$" },
+                category: { const: "correctness" },
+                kind: { const: "direct" },
+                severity: { enum: ["critical", "high", "medium", "low"] },
+                title: { type: "string" },
+                claim: { type: "string" },
+                evidence: {
+                  type: "array",
+                  minItems: 1,
+                  maxItems: 3,
+                  items: {
+                    type: "object",
+                    additionalProperties: false,
+                    required: ["path", "startLine", "endLine", "snippet"],
+                    properties: {
+                      path: { type: "string" },
+                      startLine: { type: "integer", minimum: 1 },
+                      endLine: { type: "integer", minimum: 1 },
+                      snippet: { type: "string" }
+                    }
                   }
-                }
-              },
-              confidence: { type: "number", minimum: 0, maximum: 1 }
+                },
+                confidence: { type: "number", minimum: 0, maximum: 1 }
+              }
             }
           }
         }
       }
     }
-  }
-};
+  };
+}
 
 export function buildScannerMessages(input) {
+  const maxFindings = input.maxFindings === undefined ? 8 : input.maxFindings;
   const user = input.digest + "\n\n" + input.filesWithLineNumbers + "\n\nReturn the findings JSON object now.";
   return [
-    { role: "system", content: SCANNER_SYSTEM_PROMPT },
+    { role: "system", content: scannerSystemPrompt(maxFindings) },
     { role: "user", content: user }
   ];
 }

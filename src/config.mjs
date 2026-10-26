@@ -17,7 +17,7 @@ export function loadConfig(env) {
     scannerModel: env.SCANNER_MODEL || "muse-spark-1.3",
     verifierModel: env.VERIFIER_MODEL || "muse-wonder-1.0",
     temperature: 0,
-    maxFindings: LIMITS.maxFindings,
+    maxFindings: Number(env.MAX_FINDINGS || String(LIMITS.maxFindings)),
     citationMaxLines: LIMITS.citationMaxLines,
     budgetUsd: Number(env.BUDGET_USD || "2"),
     mock: env.USE_MOCK === "1",

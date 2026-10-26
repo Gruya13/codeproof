@@ -3,7 +3,7 @@ import { resolve, join } from "node:path";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { loadConfig, VERSION } from "./config.mjs";
 import { ingest, repoDigest, filesWithLineNumbers } from "./ingest/index.mjs";
-import { buildScannerMessages, validateFindingsL0, SCANNER_RESPONSE_FORMAT, SCANNER_SYSTEM_PROMPT } from "./scan/index.mjs";
+import { buildScannerMessages, buildScannerResponseFormat, scannerSystemPrompt, validateFindingsL0 } from "./scan/index.mjs";
 import { verifyOne, VERIFIER_SYSTEM_PROMPT } from "./verify/index.mjs";
 import { buildReport, buildRejected } from "./synthesize/index.mjs";
 import { parseDirtyJson } from "./run/json.mjs";
@@ -96,10 +96,11 @@ async function main() {
     citationMaxLines: config.citationMaxLines
   }));
   const commit = await gitCommit(target);
+  const scannerPrompt = scannerSystemPrompt(config.maxFindings);
   const prompts = controlled
     ? [{ role: "verifier", version: "v1", sha256: sha256Hex(VERIFIER_SYSTEM_PROMPT) }]
     : [
-        { role: "scanner-correctness", version: "v1", sha256: sha256Hex(SCANNER_SYSTEM_PROMPT) },
+        { role: "scanner-correctness", version: "v2", sha256: sha256Hex(scannerPrompt) },
         { role: "verifier", version: "v1", sha256: sha256Hex(VERIFIER_SYSTEM_PROMPT) }
       ];
   const runId = computeRunId({
@@ -154,8 +155,8 @@ async function main() {
     const scanStarted = Date.now();
     const scanCall = await agents.complete({
       role: "scanner",
-      messages: buildScannerMessages({ digest: repoDigest(repo), filesWithLineNumbers: filesWithLineNumbers(repo) }),
-      responseFormat: SCANNER_RESPONSE_FORMAT,
+      messages: buildScannerMessages({ digest: repoDigest(repo), filesWithLineNumbers: filesWithLineNumbers(repo), maxFindings: config.maxFindings }),
+      responseFormat: buildScannerResponseFormat(config.maxFindings),
       temperature: config.temperature,
       maxTokens: 6000
     });

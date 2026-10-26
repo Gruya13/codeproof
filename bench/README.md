@@ -17,7 +17,7 @@ Size: **15 TypeScript files, 229 LOC**.
 
 ## How it is used
 
-1. `make bench` runs the pipeline on `bench/seed-repo` (needs `MODEL_API_KEY`; use `muse-spark-1.3-contributor` for cheap calibration runs).
+1. `make bench` runs the pipeline on `bench/seed-repo` with `MAX_FINDINGS=12` and `--mode bench` (needs `MODEL_API_KEY`; use `muse-spark-1.3-contributor` for cheap calibration runs).
 2. `make score` scores the newest report against `bench/expected.json` using `bench/score.mjs`.
 3. Results are copied into the README and used in the demo video; the table always includes `n` and the calibration label.
 
