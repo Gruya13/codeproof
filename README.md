@@ -13,7 +13,7 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), 
 
 ## Status
 
-Milestone F1: the pipeline runs end-to-end on a mock adapter (`make demo`), including the L1 citation gate and the rejected-findings report. A real Meta Model API run (`mode: smoke`) is the next step and needs `MODEL_API_KEY`. Numbers are only published when measured - `run.json` says `measured: false` when they are not.
+Milestone F1 is complete: the pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`). First live runs on the 4-file demo fixture: 2 calls (Muse Spark 1.3 producer, Muse Wonder verifier), 1 finding passed both gates, 16.5 s wall time, **$0.0335 measured cost**; a second run measured **229 of 1365 input tokens served from prompt cache**. Numbers are only published when measured - `run.json` says `measured: false` when they are not. Benchmark recall and precision are measured next (milestones F2/F3).
 
 ## How it works
 
