@@ -33,6 +33,18 @@ export function gitCommit(dir) {
   });
 }
 
+export function repoIsClean(target) {
+  return new Promise(function (resolve) {
+    execFile("git", ["-C", target, "status", "--porcelain", "--", "."], function (statusError, statusStdout) {
+      if (statusError) return resolve(false);
+      if (String(statusStdout).trim() !== "") return resolve(false);
+      execFile("git", ["-C", target, "diff", "--quiet", "HEAD", "--", "."], function (diffError) {
+        resolve(!diffError);
+      });
+    });
+  });
+}
+
 export class Budget {
   constructor(limitUsd) {
     this.limitUsd = limitUsd;

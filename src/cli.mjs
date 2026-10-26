@@ -7,7 +7,7 @@ import { buildScannerMessages, buildScannerResponseFormat, scannerSystemPrompt, 
 import { verifyOne, VERIFIER_SYSTEM_PROMPT } from "./verify/index.mjs";
 import { buildReport, buildRejected } from "./synthesize/index.mjs";
 import { parseDirtyJson } from "./run/json.mjs";
-import { computeRunId, sha256Hex, gitCommit, Budget } from "./run/index.mjs";
+import { computeRunId, sha256Hex, gitCommit, repoIsClean, Budget } from "./run/index.mjs";
 import { createAgents } from "./agents/index.mjs";
 
 function loadDotEnv(path) {
@@ -96,6 +96,13 @@ async function main() {
     citationMaxLines: config.citationMaxLines
   }));
   const commit = await gitCommit(target);
+  const dirty = !(await repoIsClean(target));
+  if (mode === "bench" && dirty) {
+    throw new Error("bench mode requires a clean working tree under " + target + " (commit or stash changes first)");
+  }
+  if (dirty) {
+    console.warn("  WARN working tree is dirty under " + target + "; run.json records repo.dirty=true");
+  }
   const scannerPrompt = scannerSystemPrompt(config.maxFindings);
   const prompts = controlled
     ? [{ role: "verifier", version: "v1", sha256: sha256Hex(VERIFIER_SYSTEM_PROMPT) }]
@@ -237,7 +244,7 @@ async function main() {
     mode: mode,
     mock: mock,
     configSha256: configSha256,
-    repo: { source: "local", path: target, commit: commit, loc: repo.loc, files: repo.files.length },
+    repo: { source: "local", path: target, commit: commit, dirty: dirty, loc: repo.loc, files: repo.files.length },
     models: mock
       ? [{ role: "scanner-correctness", id: "mock-scanner" }, { role: "verifier", id: "mock-verifier" }]
       : controlled
