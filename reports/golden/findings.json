@@ -1,0 +1,248 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "collect uses forEach with async callback without awaiting, so it returns empty results before tasks complete and try/catch cannot observe rejections",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 12,
+          "path": "src/analytics.ts",
+          "snippet": "    tasks.forEach(async (task) => {\n      results.push(await task());\n    });\n  } catch (error) {\n    console.error(\"analytics collection failed\", error);\n  }\n  return results;",
+          "startLine": 6
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "async forEach not awaited returns empty results"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 6-12 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at src/analytics.ts:6-12 uses tasks.forEach with an async callback and immediately returns results without awaiting those callbacks, so the array is returned before awaited tasks complete and rejections bypass the try/catch at src/analytics.ts:9."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "buildSummary posts to module-global totals then summarizes totals instead of the passed entries, so repeated calls accumulate prior entries",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 18,
+          "path": "src/ledger.ts",
+          "snippet": "export function buildSummary(entries: Entry[]): string {\n  post(entries);\n  const byAccount = new Map<string, number>();\n  for (const entry of totals) {\n    byAccount.set(entry.account, (byAccount.get(entry.account) ?? 0) + entry.cents);\n  }",
+          "startLine": 12
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "summary aggregates global totals instead of argument"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 12-17 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed at src/ledger.ts:6 the totals array is module-global, src/ledger.ts:13 buildSummary appends via post(entries) without clearing it, and src/ledger.ts:15 it aggregates totals rather than the passed entries, so repeated calls accumulate."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "validate uses OR instead of AND for undefined/null checks, so conditions are always true and errors are always reported",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "endLine": 13,
+          "path": "src/validation.ts",
+          "snippet": "  if (payload.id !== undefined || payload.id !== null) {\n    errors.push(\"id is required\");\n  }\n  if (payload.value !== undefined || payload.value !== null) {\n    errors.push(\"value is required\");\n  }",
+          "startLine": 8
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "OR instead of AND makes validation always fail"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 8-13 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At src/validation.ts:8 and src/validation.ts:11, `!== undefined || !== null` is always true because a value cannot be both undefined and null, so errors are always pushed at src/validation.ts:9 and src/validation.ts:12."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "rotateToken does not await store.save before store.get, so read can race the write and return stale token",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 13,
+          "path": "src/session.ts",
+          "snippet": "export async function rotateToken(\n  store: SessionStore,\n  userId: string,\n  token: string,\n): Promise<string | undefined> {\n  store.save(userId, token);\n  return store.get(userId);",
+          "startLine": 6
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "high",
+      "title": "missing await on save before get"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 6-12 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At src/session.ts:11 store.save(userId, token) is called without await despite SessionStore.save returning Promise<void> at src/session.ts:2, and src/session.ts:12 immediately returns store.get(userId), so the read can race the write and return a stale token."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "pageSlice uses slice(start, end+1) where end is already start+size, returning size+1 elements instead of size",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 11,
+          "path": "src/paging.ts",
+          "snippet": "export function pageSlice<T>(items: T[], request: PageRequest): T[] {\n  const size = Math.max(1, request.size);\n  const start = Math.max(0, request.page) * size;\n  const end = start + size;\n  return items.slice(start, end + 1);",
+          "startLine": 6
+        }
+      ],
+      "id": "F-005",
+      "kind": "direct",
+      "severity": "high",
+      "title": "off-by-one slice returns extra element"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 6-10 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: at src/paging.ts:9 end is already start+size and Array.slice's end is exclusive, so src/paging.ts:10 slice(start, end+1) returns up to size+1 elements instead of size."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "sortScores calls sort without numeric comparator, so numbers sort lexicographically (e.g. 10 before 9)",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 3,
+          "path": "src/scores.ts",
+          "snippet": "export function sortScores(scores: number[]): number[] {\n  return scores.slice().sort();\n}",
+          "startLine": 1
+        }
+      ],
+      "id": "F-006",
+      "kind": "direct",
+      "severity": "high",
+      "title": "numeric sort without comparator"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 1-3 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at src/scores.ts:2 calls scores.slice().sort() with no comparator, so JavaScript's default string conversion sorts numbers lexicographically (e.g. 10 before 9)."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "withinQuota uses strict < but documented max is inclusive, so exact-max requests are incorrectly rejected; should be <=",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 6,
+          "path": "src/quota.ts",
+          "snippet": "/**\n * Returns true when the request fits. Max is inclusive: a request that uses\n * exactly the maximum is still within quota.\n */\nexport function withinQuota(used: number, amount: number, max: number): boolean {\n  return used + amount < max;",
+          "startLine": 1
+        }
+      ],
+      "id": "F-007",
+      "kind": "direct",
+      "severity": "high",
+      "title": "exclusive quota check contradicts inclusive max"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 1-6 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The documentation at src/quota.ts:2-3 states max is inclusive and exact-max use is within quota, but src/quota.ts:6 returns used + amount < max, so an exact-max request returns false."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "normalizeSettings uses || fallback so legitimate 0 values become 20/1000; should use ??",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 15,
+          "path": "src/settings.ts",
+          "snippet": "export function normalizeSettings(raw: RawSettings): Settings {\n  return {\n    pageSize: raw.pageSize || 20,\n    budgetCents: raw.budgetCents || 1000,\n  };",
+          "startLine": 11
+        },
+        {
+          "endLine": 18,
+          "path": "src/settings.ts",
+          "snippet": "// Optional values are read from settings where 0 is a legitimate value.",
+          "startLine": 18
+        }
+      ],
+      "id": "F-008",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "OR fallback discards legitimate zero"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 11-15 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at src/settings.ts:13-14 uses `raw.pageSize || 20` and `raw.budgetCents || 1000`, so 0 is falsy and is replaced, while src/settings.ts:18 states 0 is a legitimate value for settings."
+    }
+  }
+]
