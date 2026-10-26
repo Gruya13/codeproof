@@ -1,0 +1,145 @@
+{
+  "version": "1.0-f2",
+  "createdAt": "2026-10-26",
+  "repo": "bench/seed-repo",
+  "locCap": 600,
+  "tolerance": "range overlap of at least 1 line; an off-by-one line citation is tolerated by L1 (+/-1 line) but the adjudicated match needs semantic agreement with the cause in statement",
+  "note": "Synthetic fixture authored during the hackathon event. Not a product. The fixture and expected.json are frozen after the first benchmark run. Metrics are computed from the status field in findings.json (verified only), never from where a finding is displayed.",
+  "problems": [
+    {
+      "id": "B-01",
+      "file": "src/analytics.ts",
+      "startLine": 6,
+      "endLine": 8,
+      "severity": "high",
+      "title": "Async forEach callback is not awaited inside try/catch",
+      "statement": "tasks.forEach with an async callback does not await the callbacks; a rejected task becomes an unhandled rejection and the surrounding try/catch never sees it, so collect() can return a partial list."
+    },
+    {
+      "id": "B-02",
+      "file": "src/paging.ts",
+      "startLine": 10,
+      "endLine": 10,
+      "severity": "high",
+      "title": "Page slice returns one extra item",
+      "statement": "slice(start, end + 1) returns size + 1 items because the end index is exclusive, so every page leaks the first item of the next page."
+    },
+    {
+      "id": "B-03",
+      "file": "src/session.ts",
+      "startLine": 11,
+      "endLine": 12,
+      "severity": "high",
+      "title": "Missing await before reading the rotated token",
+      "statement": "store.save is not awaited before store.get, so the read can return the previous token; the caller receives a stale value."
+    },
+    {
+      "id": "B-04",
+      "file": "src/ledger.ts",
+      "startLine": 12,
+      "endLine": 18,
+      "severity": "high",
+      "title": "Module-level ledger totals are never reset between calls",
+      "statement": "buildSummary posts into the shared module-level totals array that is only reset explicitly, so a second call double-counts the entries from the first call."
+    },
+    {
+      "id": "B-05",
+      "file": "src/scheduler.ts",
+      "startLine": 8,
+      "endLine": 10,
+      "severity": "medium",
+      "title": "start() replaces the timer without clearing the previous interval",
+      "statement": "start() assigns this.timer without clearing an existing interval; calling start() twice leaks the first timer, which keeps firing while no reference to it remains."
+    },
+    {
+      "id": "B-06",
+      "file": "src/settings.ts",
+      "startLine": 13,
+      "endLine": 14,
+      "severity": "medium",
+      "title": "Logical OR replaces legitimate zero with the default",
+      "statement": "raw.pageSize || 20 and raw.budgetCents || 1000 treat an explicit 0 as absent, so a valid zero is silently replaced by the default."
+    },
+    {
+      "id": "B-07",
+      "file": "src/quota.ts",
+      "startLine": 6,
+      "endLine": 6,
+      "severity": "medium",
+      "title": "Quota check rejects a request that uses exactly the inclusive max",
+      "statement": "withinQuota uses used + amount < max, but the documented maximum is inclusive: a request that reaches exactly max is wrongly rejected."
+    },
+    {
+      "id": "B-08",
+      "file": "src/validation.ts",
+      "startLine": 8,
+      "endLine": 13,
+      "severity": "high",
+      "title": "Tautological OR conditions make validation always fail",
+      "statement": "id !== undefined || id !== null (and the same for value) is always true, so both required-field errors are pushed even for a complete payload; one logical defect with two equivalent locations."
+    }
+  ],
+  "traps": [
+    {
+      "id": "T-01",
+      "file": "src/settings.ts",
+      "startLine": 20,
+      "endLine": 20,
+      "why": "value == null is intentional and correct: it matches both null and undefined, so a caller cannot bypass the fallback by passing null. Looks like a loose comparison, is not a bug."
+    },
+    {
+      "id": "T-02",
+      "file": "src/retry.ts",
+      "startLine": 5,
+      "endLine": 5,
+      "why": "attempts are counted from 1 and maxAttempts is inclusive, so <= is correct. Looks like an off-by-one, is not."
+    },
+    {
+      "id": "T-03",
+      "file": "src/batch.ts",
+      "startLine": 4,
+      "endLine": 6,
+      "why": "the catch block logs the error and rethrows it, so the error is not swallowed. A strong refutation with the counter-citation of the throw line exists."
+    },
+    {
+      "id": "T-04",
+      "file": "src/cache.ts",
+      "startLine": 11,
+      "endLine": 12,
+      "why": "put() looks like it accepts an unvalidated ttl (NaN or negative would corrupt expiresAt), but the guard lives in another module: registry.normalizeTtl throws on non-finite or negative ttl. Refuting this requires cross-file context; no explanatory comment is placed next to the call.",
+      "crossFile": "src/registry.ts"
+    }
+  ],
+  "extraTrue": [
+    {
+      "id": "X-01",
+      "file": "src/log.ts",
+      "startLine": 9,
+      "endLine": 9,
+      "note": "warn lines are routed to console.log instead of console.warn; a real defect that is not among the 8. Pre-registered: counts as neither TP nor FP."
+    },
+    {
+      "id": "X-02",
+      "file": "src/scores.ts",
+      "startLine": 2,
+      "endLine": 2,
+      "note": "default Array.prototype.sort compares numbers as strings, so scores are ordered lexicographically (10 < 9). Real defect, not among the 8. Pre-registered: neither TP nor FP."
+    }
+  ],
+  "scoring": {
+    "scannerRecall": "unique problems proposed by the scanner before L2 / 8 - informational, no threshold",
+    "e2eRecall": "unique problems with status verified / 8; threshold >= 6/8 (75%)",
+    "precision": "verified TP / (verified TP + verified FP); threshold >= 90%; moderate does not count",
+    "trapsVerified": "traps with status verified; threshold 0/4",
+    "trapsModerate": "traps with status moderate; displayed separately, not part of precision",
+    "falseRefutations": "unique real problems with status refuted; threshold <= 1",
+    "citationWidth": "a citation wider than 15 lines is a weak citation and fails L0",
+    "e2eRecallMin": 6,
+    "problemsTotal": 8,
+    "trapsTotal": 4,
+    "precisionMin": 0.9,
+    "trapsVerifiedMax": 0,
+    "falseRefutationsMax": 1
+  },
+  "freezeRule": "bench/seed-repo and expected.json are frozen after the first benchmark run on 27.10.; any later change must be a git commit with a reason and is recorded in run.json."
+}

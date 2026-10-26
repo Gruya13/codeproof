@@ -43,6 +43,8 @@ Static analysis only: the analyzed code is never executed, patched, or sent anyw
 make demo        # deterministic end-to-end demo, mock adapter, no network
 make test        # unit tests for the L1 gate, dirty-JSON parsing and run-id
 make controlled  # controlled verifier test: injected candidates, real API (needs MODEL_API_KEY)
+make bench       # benchmark: analyze bench/seed-repo with the real API
+make score       # score the newest report against bench/expected.json
 ```
 
 `make demo` prints a **MOCK MODE** banner and writes `mock: true` into `run.json`; the analyzed fixture is synthetic and checked in on purpose. A real run needs a key (never committed):
