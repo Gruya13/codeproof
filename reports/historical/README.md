@@ -19,7 +19,7 @@ No prompt tuning was done for these tests; this is an honesty test of recall, no
 | swr-c39d701 | swr `c39d701f` | `46f3954a` | `src/_internal/utils` (1026 LOC) | **FOUND** (automated (verified)) | $0.086 |
 | swr-9e8b1c9d | swr `9e8b1c9d` | `a33fba73` | `src/subscription` (166 LOC) | **FOUND** (manual (verified)) | $0.0962 |
 | swr-87cf235d | swr `87cf235d` | `ba10cf9e` | `src/_internal/utils` (1006 LOC) | missed | $0.405 |
-| swr-f8647706 | swr `f8647706` | `1f93cc2c` | `src/_internal/utils` (1020 LOC) | missed | $0.6959 |
+| swr-f8647706 | swr `f8647706` | `1f93cc2c` | `src/_internal/utils` (1020 LOC) | missed ([swr-f8647706/](swr-f8647706/)) | $0.6959 |
 | swr-a33fba7 | swr `a33fba73` | `ad7b276a` | `src/index` (1081 LOC) | missed | $0.0386 |
 | ky-85460807 | ky `85460807` | `3e2d81ab` | `source/core` (1745 LOC) | missed | $0.0538 |
 | ky-8cf26e0 | ky `8cf26e0e` | `85460807` | `source/utils` (929 LOC) | missed | $0.0558 |
@@ -41,7 +41,7 @@ Bug: on the last unsubscribe, `dispose?.()` runs but the `subscriptions` and `di
 
 ## Misses (7)
 
-The other seven historical bugs were not proposed by the scanner: swr `87cf235d` (falsy `error` handling), swr `f8647706` (preload on the server), swr `a33fba7` (suspense cacheData on remount), ky `85460807` (UTF-8 JSON errors), ky `8cf26e0` (array/object merge), ky `0f2e281` (stale timeout timer), ky `91ea8a9` (search parameter merge). In two miss runs the scanner found *different* real defects (a later-fixed cache unsubscribe bug and the `INITIAL_CACHE` issue), which is why the miss runs still produced verified findings.
+The other seven historical bugs were not proposed by the scanner: swr `87cf235d` (falsy `error` handling), swr `f8647706` (preload on the server), swr `a33fba7` (suspense cacheData on remount), ky `85460807` (UTF-8 JSON errors), ky `8cf26e0` (array/object merge), ky `0f2e281` (stale timeout timer), ky `91ea8a9` (search parameter merge). In two miss runs the scanner found *different* real defects (a later-fixed cache unsubscribe bug and the `INITIAL_CACHE` issue), which is why the miss runs still produced verified findings. The `swr-f8647706` run is published with its artifacts in [swr-f8647706/](swr-f8647706/): it contains the only **organic refutation** in the public record (partially refuted - see [HAND-CHECK.md](swr-f8647706/HAND-CHECK.md)) and one **uncertain** candidate caused by verifier output truncation (`finish_reason=length`).
 
 ## Honest caveats
 

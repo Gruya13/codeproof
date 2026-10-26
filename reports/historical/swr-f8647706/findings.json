@@ -1,0 +1,165 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "cache.ts subscribe returns an unsubscribe that splices without checking indexOf; calling it twice or after removal splices index -1 and removes the wrong callback.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 60,
+          "path": "cache.ts",
+          "snippet": "    const subscribe = (\n      key: string,\n      callback: (current: any, prev: any) => void\n    ) => {\n      const subs = subscriptions[key] || []\n      subscriptions[key] = subs\n\n      subs.push(callback)\n      return () => subs.splice(subs.indexOf(callback), 1)\n    }",
+          "startLine": 51
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Unsubscribe without index check removes wrong subscriber"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 51-60 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The unsubscribe at cache.ts:59 is `return () => subs.splice(subs.indexOf(callback), 1)` with no -1 guard, so a second call yields indexOf -1 and splice(-1, 1) removes the last remaining subscriber."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "INITIAL_CACHE is module-level and only ever written, never cleared or scoped to a cache provider; once a key is stored the server snapshot getter returns that stale initial value forever across providers and remounts.",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "endLine": 6,
+          "path": "helper.ts",
+          "snippet": "const INITIAL_CACHE: Record<string, any> = {}",
+          "startLine": 6
+        },
+        {
+          "endLine": 35,
+          "path": "helper.ts",
+          "snippet": "        // Before writing to the store, we keep the value in the initial cache\n        // if it's not there yet.\n        if (!(key in INITIAL_CACHE)) {\n          INITIAL_CACHE[key] = prev\n        }",
+          "startLine": 31
+        },
+        {
+          "endLine": 46,
+          "path": "helper.ts",
+          "snippet": "      if (!isUndefined(key)) {\n        // If the cache was updated on the client, we return the stored initial value.\n        if (key in INITIAL_CACHE) return INITIAL_CACHE[key]\n      }",
+          "startLine": 43
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Module-level INITIAL_CACHE never reset shares stale snapshot"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 6-6 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed from helper.ts:6 where INITIAL_CACHE is a non-exported module-level Record, helper.ts:33-34 where it is only conditionally written, and helper.ts:46 where the server snapshot getter returns it by key alone without reference to the cache argument; the full 56-line helper.ts contains no delete, reassignment, or clearing, and it cannot be cleared externally since it is not exported."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "After startRevalidate the code unconditionally clears _c, so a second concurrent optimistic mutation that set a new _c backup has its backup wiped by the first mutation's completion, breaking rollback.",
+      "confidence": 0.82,
+      "evidence": [
+        {
+          "endLine": 149,
+          "path": "mutate.ts",
+          "snippet": "      // When we set optimistic data, backup the current committedData data in `_c`.\n      set({ data: optimisticData, _c: committedData })",
+          "startLine": 148
+        },
+        {
+          "endLine": 210,
+          "path": "mutate.ts",
+          "snippet": "    Promise.resolve(startRevalidate()).then(() => {\n      // The mutation and revalidation are ended, we can clear it since the data is\n      // not an optimistic value anymore.\n      set({ _c: UNDEFINED })\n    })",
+          "startLine": 206
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Unconditional _c clear races with concurrent optimistic mutations"
+    },
+    "status": "uncertain",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 148-149 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "uncertain",
+      "reason": "verifier output was not parseable JSON (empty model output), finish_reason=length"
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Cache init is stored in a ref only on first provider and the layout effect has empty deps; a provider that appears after mount never gets initProvider called nor unmount cleanup, and a changed provider is ignored while old listeners leak.",
+      "confidence": 0.8,
+      "evidence": [
+        {
+          "endLine": 51,
+          "path": "config-context.ts",
+          "snippet": "  const cacheContextRef = useRef<ReturnType<typeof initCache>>(UNDEFINED)\n  if (provider && !cacheContextRef.current) {\n    cacheContextRef.current = initCache(\n      provider((extendedConfig as any).cache || defaultCache),\n      config\n    )\n  }\n  const cacheContext = cacheContextRef.current",
+          "startLine": 44
+        },
+        {
+          "endLine": 66,
+          "path": "config-context.ts",
+          "snippet": "  useIsomorphicLayoutEffect(() => {\n    if (cacheContext) {\n      // eslint-disable-next-line @typescript-eslint/no-unused-expressions\n      cacheContext[2] && cacheContext[2]()\n      return cacheContext[3]\n    }\n  }, [])",
+          "startLine": 60
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Late or changed provider misses init and cleanup"
+    },
+    "status": "refuted",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 44-51 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "refute",
+      "reason": "The claim that a late provider never gets initProvider called is false: config-context.ts:45 re-evaluates the provider guard on every render and calls initCache when a provider first appears, and cache.ts:123 calls initProvider() inside initCache itself, so initialization occurs during that render even though the empty-deps effect will not re-run.",
+      "mode": "strong",
+      "counterEvidence": [
+        {
+          "endLine": 50,
+          "path": "config-context.ts",
+          "snippet": "  if (provider && !cacheContextRef.current) {\n    cacheContextRef.current = initCache(\n      provider((extendedConfig as any).cache || defaultCache),\n      config\n    )\n  }",
+          "startLine": 45
+        },
+        {
+          "endLine": 123,
+          "path": "cache.ts",
+          "snippet": "    initProvider()",
+          "startLine": 123
+        }
+      ],
+      "counterEvidenceL1": {
+        "passed": true,
+        "reason": "counter-citation verified against the commit"
+      }
+    }
+  }
+]

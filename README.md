@@ -105,6 +105,7 @@ A different question than precision: can the gate find a **known bug** if we rep
 - **2 of 9 found** (both verified); the other 7 were missed. Both hits match the lines the upstream fix changed.
 - swr `c39d701` (cache unsubscribe splice, parent `46f3954`): finding `cache.ts:51-60`, verified; the fix adds an index guard exactly there. Artifacts + fix diff: [reports/historical/swr-c39d701/](reports/historical/swr-c39d701/).
 - swr `9e8b1c9d` (stale subscription cleanup, parent `a33fba7`): finding `index.ts:81`, verified; the fix adds `subscriptions.delete`/`disposers.delete` in the cleanup block. Manual adjudication because the citation line is a few lines above the fix. Artifacts: [reports/historical/swr-9e8b1c9d/](reports/historical/swr-9e8b1c9d/).
+- One miss run (swr f8647706) is published with its artifacts: it contains the only organic refutation in the public record (partially refuted - see HAND-CHECK.md) and one uncertain candidate caused by verifier output truncation.
 - Measured cost: **$1.5223** for the 9 tests ([RESULTS.json](reports/historical/RESULTS.json)).
 - Caveats: the commits and fixes are public and predate the analysis, so contamination is possible; n = 9 is small; no prompt tuning was done for these tests; this is an **anecdote, not a benchmark metric**.
 
