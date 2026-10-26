@@ -5,6 +5,7 @@ import { loadConfig, VERSION } from "./config.mjs";
 import { ingest, repoDigest, filesWithLineNumbers } from "./ingest/index.mjs";
 import { buildScannerMessages, buildScannerResponseFormat, scannerSystemPrompt, validateFindingsL0 } from "./scan/index.mjs";
 import { verifyOne, VERIFIER_SYSTEM_PROMPT } from "./verify/index.mjs";
+import { buildVerifierContext } from "./verify/context.mjs";
 import { buildReport, buildRejected } from "./synthesize/index.mjs";
 import { parseDirtyJson } from "./run/json.mjs";
 import { computeRunId, sha256Hex, gitCommit, repoIsClean, Budget } from "./run/index.mjs";
@@ -198,12 +199,12 @@ async function main() {
 
   const manifest = new Map(repo.files.map(function (file) { return [file.path, file]; }));
   const repoForGate = { root: target, manifest: manifest, commit: commit };
-  const excerpts = filesWithLineNumbers(repo);
   const verifyStarted = Date.now();
   const published = [];
   let l1Rejected = 0;
   for (const finding of proposed) {
-    const outcome = await verifyOne({ finding: finding, repo: repoForGate, agent: agents, excerpts: excerpts, maxTokens: config.verifierMaxTokens });
+    const verifierContext = buildVerifierContext({ repo: repo, finding: finding, maxChars: config.verifierContextChars });
+    const outcome = await verifyOne({ finding: finding, repo: repoForGate, agent: agents, excerpts: verifierContext.text, maxTokens: config.verifierMaxTokens });
     if (outcome.status === "l1-rejected") {
       l1Rejected += 1;
       continue;

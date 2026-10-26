@@ -24,7 +24,8 @@ export function loadConfig(env) {
     apiKey: env.MODEL_API_KEY || "",
     maxRetries: Number(env.MAX_RETRIES || "4"),
     scannerMaxTokens: Number(env.SCANNER_MAX_TOKENS || "10000"),
-    verifierMaxTokens: Number(env.VERIFIER_MAX_TOKENS || "4000")
+    verifierMaxTokens: Number(env.VERIFIER_MAX_TOKENS || "4000"),
+    verifierContextChars: Number(env.VERIFIER_CONTEXT_CHARS || "24000")
   };
 }
 
