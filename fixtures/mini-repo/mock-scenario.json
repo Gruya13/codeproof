@@ -1,0 +1,99 @@
+{
+  "note": "MOCK MODE only: canned model responses for the demo fixture. Never used in a real run; the scanner prompt never sees this file.",
+  "findings": [
+    {
+      "id": "F-001",
+      "category": "correctness",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Off-by-one page slice returns one extra item",
+      "claim": "slice(start, start + size + 1) returns size + 1 items, so every page leaks the first item of the next page.",
+      "evidence": [
+        {
+          "path": "src/pagination.js",
+          "startLine": 3,
+          "endLine": 3,
+          "snippet": "  return items.slice(start, start + size + 1);"
+        }
+      ],
+      "confidence": 0.9
+    },
+    {
+      "id": "F-002",
+      "category": "correctness",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Missing await before reading the rotated token",
+      "claim": "store.save is not awaited, so store.get can return the previous token and the caller receives a stale value.",
+      "evidence": [
+        {
+          "path": "src/auth.js",
+          "startLine": 2,
+          "endLine": 3,
+          "snippet": "  store.save(userId, token);\n  return store.get(userId);"
+        }
+      ],
+      "confidence": 0.85
+    },
+    {
+      "id": "F-003",
+      "category": "correctness",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Batch errors are swallowed in runAll",
+      "claim": "The catch block in runAll ignores the failure and returns an empty result instead of propagating the error.",
+      "evidence": [
+        {
+          "path": "src/batch.js",
+          "startLine": 4,
+          "endLine": 6,
+          "snippet": "  } catch (error) {\n    console.error(\"batch failed\", error);\n    throw error;"
+        }
+      ],
+      "confidence": 0.6
+    },
+    {
+      "id": "F-004",
+      "category": "correctness",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Negative page numbers are not clamped",
+      "claim": "pageNumber is multiplied by size without clamping, so a negative page produces a slice counted from the end of the array.",
+      "evidence": [
+        {
+          "path": "src/pagination.js",
+          "startLine": 2,
+          "endLine": 2,
+          "snippet": "  store.save(userId, token);"
+        }
+      ],
+      "confidence": 0.5
+    }
+  ],
+  "verdicts": [
+    {
+      "findingId": "F-001",
+      "verdict": "confirm",
+      "reason": "The slice end bound is start + size + 1, so the returned page has one more element than requested."
+    },
+    {
+      "findingId": "F-002",
+      "verdict": "confirm",
+      "reason": "The save call is not awaited before the read, so the returned token can be stale on a slow store."
+    },
+    {
+      "findingId": "F-003",
+      "verdict": "refute",
+      "mode": "strong",
+      "reason": "The catch block logs and then rethrows the same error at line 6; the error is not swallowed and callers still receive it.",
+      "counterEvidence": [
+        {
+          "path": "src/batch.js",
+          "startLine": 6,
+          "endLine": 6,
+          "snippet": "    throw error;"
+        }
+      ]
+    }
+  ]
+}

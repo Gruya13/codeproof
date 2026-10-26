@@ -1,0 +1,7 @@
+{
+  "name": "codeproof-demo-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tiny synthetic repo used by the mock demo. Not a product."
+}
