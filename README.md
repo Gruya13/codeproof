@@ -73,6 +73,17 @@ node src/cli.mjs analyze /path/to/repo
 
 The committed artifacts for the controlled test are in [reports/controlled-verifier/](reports/controlled-verifier/): `run.json`, `REPORT.md`, `findings.json` and `rejected.md`. The refuted candidate in `rejected.md` carries the machine-checked counter-citation `src/batch.js:6` (verbatim `throw error;`), together with its L1 check result.
 
+## Evidence index
+
+| Evidence | Artifact | What it shows | What it does not show |
+|---|---|---|---|
+| Calibration benchmark (n=8) | [reports/golden/](reports/golden/) | 8/8 recall, 100% precision, 0/4 traps published | a statistical claim; the set was used for calibration |
+| Real repository (unjs/ofetch) | [reports/real-world/ofetch/](reports/real-world/ofetch/) | 4/4 verified, all four match open upstream issues/PRs | novel discovery - the commit and issues are public |
+| Controlled verifier | [reports/controlled-verifier/](reports/controlled-verifier/) | a strong refutation carries a machine-checked counter-citation | a scanner output - candidates are injected |
+| Historical recall (n=9) | [reports/historical/](reports/historical/) | 2/9 known fixes found, 0 false findings published | a benchmark metric; n=9, single directory per test |
+
+`run.json` keeps the local path of the analyzed checkout; it is provenance, not required for reproduction.
+
 ## Benchmark results
 
 Scored on the **calibration set**: frozen synthetic fixture with 8 injected defects, 4 traps and 2 pre-registered extra defects - 15 files / 229 LOC. Artifacts of the current run are committed verbatim in [reports/golden/](reports/golden/) (`run.json`, `findings.json`, `REPORT.md`, `rejected.md`).
