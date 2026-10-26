@@ -13,13 +13,11 @@ L1 is a provenance check, not a semantic judge: it proves that the cited lines e
 
 ## The problem
 
-The problem: an AI review tool can produce a convincing but wrong claim even when it cites real lines. The developer then has to check both the provenance of the citation and the interpretation of the code. A tool can also miss an existing bug.
+An AI review tool can produce a convincing but wrong claim even when it cites real lines. The developer then has to check both the provenance of the citation and the interpretation of the code. A tool can also miss an existing bug.
 
-CodeProof statically reviews a TypeScript/JavaScript repository. A deterministic L1 gate checks that the cited snippet literally exists in the analyzed commit - a provenance check, not proof of a bug. Then Muse Wonder, a second Meta model in the critic role, judges the claim: confirmed findings are published as verified, while refuted and uncertain ones stay visible separately; a strong refutation must carry a machine-checked counter-citation. The gates do not guarantee completeness or semantic infallibility: the calibration result is 8/8, and on nine known historical fixes the gate found two. Zero false findings is an empirical result across all runs so far, not a guarantee.
+CodeProof statically reviews a TypeScript/JavaScript repository. A deterministic L1 gate checks that the cited snippet literally exists in the analyzed commit - a provenance check, not proof of a bug. Then Muse Wonder, a second Meta model in the critic role, judges the claim: confirmed findings are published as verified, while refuted (including partial refutations) and uncertain ones stay visible separately; a strong refutation must carry a machine-checked counter-citation. The gates do not guarantee completeness or semantic infallibility: the calibration result is 8/8, and on nine known historical fixes the gate found two. Zero false findings were published in the committed runs so far; this is an empirical result, not a guarantee.
 
 Tagline: Code review where every verified finding has a commit-checked citation and a second-model confirmation.
-
-Built during the **Meta Global AI Developer Hackathon**
 
 Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), Indie Developer track.
 
@@ -80,7 +78,7 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 | Calibration benchmark (n=8) | [reports/golden/](reports/golden/) | 8/8 recall, 100% precision, 0/4 traps published | a statistical claim; the set was used for calibration |
 | Real repository (unjs/ofetch) | [reports/real-world/ofetch/](reports/real-world/ofetch/) | 4/4 verified, all four match open upstream issues/PRs | novel discovery - the commit and issues are public |
 | Controlled verifier | [reports/controlled-verifier/](reports/controlled-verifier/) | a strong refutation carries a machine-checked counter-citation | a scanner output - candidates are injected |
-| Historical recall (n=9) | [reports/historical/](reports/historical/) | 2/9 known fixes found, 0 false findings published | a benchmark metric; n=9, single directory per test |
+| Historical recall (n=9) | [reports/historical/](reports/historical/) | 2/9 known fixes found; 7 known fixes missed | a benchmark metric; n=9, single directory per test |
 
 `run.json` keeps the local path of the analyzed checkout; it is provenance, not required for reproduction.
 
@@ -117,7 +115,7 @@ The pipeline was also run on a real, widely used open-source project: [unjs/ofet
   - `baseURL` prefix boundary reported as SSRF (CWE-918) - [issue #564](https://github.com/unjs/ofetch/issues/564), PR [#576](https://github.com/unjs/ofetch/pull/576)
   - `withQuery` array values appended without replacing existing ones - PR [#594](https://github.com/unjs/ofetch/pull/594)
 - Runs are not bit-identical: three runs on this commit and scope produced 4/4, 3/3 and 4/4 verified findings ($0.2928, $0.1991, $0.5596). The latest valid run is the one committed here; earlier results are stated above.
-- This is an **anecdote, not a benchmark metric**. The analyzed commit is public and the upstream issues/PRs predate the analysis, so a model may have seen them; the run shows that the gate surfaces real, acknowledged problems - not that the findings are novel discovery. The hand check also corrected the scanner's severity: the `withBase` issue is SSRF class upstream even though the scanner labelled it medium.
+- This is an **anecdote, not a benchmark metric**. The analyzed commit is public and the upstream issues/PRs predate the analysis, so a model may have seen them; the run shows that the gate surfaces real, acknowledged problems - not that the findings are novel discoveries. The hand check also corrected the scanner's severity: the `withBase` issue is SSRF class upstream even though the scanner labelled it medium.
 
 ## Historical recall test (qualitative)
 
