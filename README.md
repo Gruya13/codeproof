@@ -2,7 +2,7 @@
 
 **AI review that publishes only what it can prove.**
 
-A finding appears in the main report only if two independent gates pass:
+A finding appears in the main report only if two separate gates pass:
 
 1. **L1 - deterministic citation gate.** The cited file, line range and verbatim snippet exist in the analyzed commit. Checked by code, not by a prompt.
 2. **L2 - adversarial verifier.** A different model (Muse Wonder) tries to refute the finding. A strong refutation must carry its own machine-checked counter-citation.
@@ -10,6 +10,16 @@ A finding appears in the main report only if two independent gates pass:
 Everything that fails the gate is still published - in `rejected.md`, with the evidence that refuted it.
 
 L1 is a provenance check, not a semantic judge: it proves that the cited lines exist in the commit (file, range, verbatim snippet). Whether the claim is actually true is judged by L2 (the verifier) and is presented as such everywhere - L1 never proves semantic accuracy. The claim is not "we found everything". It is "we do not publish what we could not prove".
+
+## The problem
+
+The problem: an AI review tool can produce a convincing but wrong claim even when it cites real lines. The developer then has to check both the provenance of the citation and the interpretation of the code. A tool can also miss an existing bug.
+
+CodeProof statically reviews a TypeScript/JavaScript repository. A deterministic L1 gate checks that the cited snippet literally exists in the analyzed commit - a provenance check, not proof of a bug. Then Muse Wonder, a second Meta model in the critic role, judges the claim: confirmed findings are published as verified, while refuted and uncertain ones stay visible separately; a strong refutation must carry a machine-checked counter-citation. The gates do not guarantee completeness or semantic infallibility: the calibration result is 8/8, and on nine known historical fixes the gate found two. Zero false findings is an empirical result across all runs so far, not a guarantee.
+
+Tagline: Code review where every verified finding has a commit-checked citation and a second-model confirmation.
+
+Built during the **Meta Global AI Developer Hackathon**
 
 Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), Indie Developer track.
 
@@ -96,7 +106,7 @@ The pipeline was also run on a real, widely used open-source project: [unjs/ofet
   - `baseURL` prefix boundary reported as SSRF (CWE-918) - [issue #564](https://github.com/unjs/ofetch/issues/564), PR [#576](https://github.com/unjs/ofetch/pull/576)
   - `withQuery` array values appended without replacing existing ones - PR [#594](https://github.com/unjs/ofetch/pull/594)
 - Runs are not bit-identical: three runs on this commit and scope produced 4/4, 3/3 and 4/4 verified findings ($0.2928, $0.1991, $0.5596). The latest valid run is the one committed here; earlier results are stated above.
-- This is an **anecdote, not a benchmark metric**. The analyzed commit is public and the upstream issues/PRs predate the analysis, so a model may have seen them; the run shows that the gate surfaces real, acknowledged problems - not that the findings are independent discovery. The hand check also corrected the scanner's severity: the `withBase` issue is SSRF class upstream even though the scanner labelled it medium.
+- This is an **anecdote, not a benchmark metric**. The analyzed commit is public and the upstream issues/PRs predate the analysis, so a model may have seen them; the run shows that the gate surfaces real, acknowledged problems - not that the findings are novel discovery. The hand check also corrected the scanner's severity: the `withBase` issue is SSRF class upstream even though the scanner labelled it medium.
 
 ## Historical recall test (qualitative)
 
