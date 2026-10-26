@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseDirtyJson } from "../run/json.mjs";
+import { readFileAtCommit } from "../run/index.mjs";
 
 export const VERIFIER_SYSTEM_PROMPT = [
   "You are an adversarial verifier. A finding was produced by another model.",
@@ -130,7 +131,9 @@ export function checkCitation(evidence, repo) {
   }
   if (startLine < 1 || endLine < startLine) return { passed: false, reason: "invalid line range" };
   if (endLine - startLine + 1 > 15) return { passed: false, reason: "citation wider than 15 lines" };
-  const lines = readFileSync(join(repo.root, file), "utf8").split("\n");
+  const committed = repo.commit ? readFileAtCommit(repo.root, repo.commit, file) : null;
+  const source = committed === null ? readFileSync(join(repo.root, file), "utf8") : committed;
+  const lines = source.split("\n");
   if (endLine > lines.length) return { passed: false, reason: "line range exceeds file length" };
   const rawSnippet = String(evidence.snippet || "").split("\n");
   while (rawSnippet.length > 0 && rawSnippet[0].trim() === "") rawSnippet.shift();

@@ -181,7 +181,7 @@ async function main() {
   }
 
   const manifest = new Map(repo.files.map(function (file) { return [file.path, file]; }));
-  const repoForGate = { root: target, manifest: manifest };
+  const repoForGate = { root: target, manifest: manifest, commit: commit };
   const excerpts = filesWithLineNumbers(repo);
   const verifyStarted = Date.now();
   const published = [];

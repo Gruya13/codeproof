@@ -1,0 +1,47 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { checkCitation } from "../src/verify/index.mjs";
+
+const manifest = new Map([["src/a.ts", { path: "src/a.ts" }]]);
+
+function makeGitRepo() {
+  const dir = mkdtempSync(join(tmpdir(), "codeproof-provenance-"));
+  mkdirSync(join(dir, "src"));
+  writeFileSync(join(dir, "src/a.ts"), "const a = 1;\nconst b = 2;\nconst c = 3;\n");
+  execFileSync("git", ["init", "-q", "-b", "main"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=test", "-c", "user.email=test@example.invalid", "add", "-A"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-q", "-m", "init"], { cwd: dir });
+  const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: dir, encoding: "utf8" }).trim();
+  return { dir: dir, commit: commit };
+}
+
+test("L1 reads citations from the run commit, not from a modified working tree", function () {
+  const { dir, commit } = makeGitRepo();
+  writeFileSync(join(dir, "src/a.ts"), "const x = 10;\nconst y = 20;\nconst z = 30;\n");
+  const repo = { root: dir, manifest: manifest, commit: commit };
+  const committed = checkCitation({ path: "src/a.ts", startLine: 2, endLine: 2, snippet: "const b = 2;" }, repo);
+  assert.equal(committed.passed, true, committed.reason);
+  const workingTree = checkCitation({ path: "src/a.ts", startLine: 2, endLine: 2, snippet: "const y = 20;" }, repo);
+  assert.equal(workingTree.passed, false);
+});
+
+test("L1 reads the working tree when no commit is given", function () {
+  const { dir } = makeGitRepo();
+  writeFileSync(join(dir, "src/a.ts"), "const x = 10;\nconst y = 20;\nconst z = 30;\n");
+  const repo = { root: dir, manifest: manifest };
+  const result = checkCitation({ path: "src/a.ts", startLine: 2, endLine: 2, snippet: "const y = 20;" }, repo);
+  assert.equal(result.passed, true, result.reason);
+});
+
+test("L1 falls back to disk when the target is not a git repository", function () {
+  const dir = mkdtempSync(join(tmpdir(), "codeproof-nogit-prov-"));
+  mkdirSync(join(dir, "src"));
+  writeFileSync(join(dir, "src/a.ts"), "hello\nworld\n");
+  const repo = { root: dir, manifest: manifest, commit: "0123456789abcdef0123456789abcdef01234567" };
+  const result = checkCitation({ path: "src/a.ts", startLine: 2, endLine: 2, snippet: "world" }, repo);
+  assert.equal(result.passed, true, result.reason);
+});

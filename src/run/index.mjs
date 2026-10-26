@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { execFile } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
 
 export function sha256Hex(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -31,6 +31,32 @@ export function gitCommit(dir) {
       resolve(stdout.trim());
     });
   });
+}
+
+const gitPrefixCache = new Map();
+
+export function gitPrefix(target) {
+  if (gitPrefixCache.has(target)) return gitPrefixCache.get(target);
+  try {
+    const prefix = execFileSync("git", ["-C", target, "rev-parse", "--show-prefix"], { encoding: "utf8" }).trim();
+    gitPrefixCache.set(target, prefix);
+    return prefix;
+  } catch (error) {
+    gitPrefixCache.set(target, null);
+    return null;
+  }
+}
+
+export function readFileAtCommit(target, commit, relativePath) {
+  if (!commit || commit === "0000000") return null;
+  const prefix = gitPrefix(target);
+  if (prefix === null) return null;
+  const gitPath = (prefix + relativePath).replace(/\/{2,}/g, "/");
+  try {
+    return execFileSync("git", ["-C", target, "show", commit + ":" + gitPath], { encoding: "utf8", maxBuffer: 10 * 1024 * 1024 });
+  } catch (error) {
+    return null;
+  }
 }
 
 export function repoIsClean(target) {
