@@ -44,3 +44,16 @@ Rules are in [adjudication.md](adjudication.md) and are written before the first
 - Not a proof of real-world quality; it is a demonstration of the gate. A real open-source repository is used only as a qualitative anecdote in the video, never as a metric.
 - Not a claim of completeness: the fixture checks direct defects only; omission, security and architecture findings are out of scope.
 - `expected.json` and this design must never enter the model context. The scanner sees only code.
+
+## Freeze record
+
+Frozen before the first scored benchmark run.
+
+- Frozen on: 2026-10-26 (Europe/Belgrade)
+- Frozen at commit: 4ca1de1fc98e9d53274894253ab8537aee1711de (last commit that changes bench/seed-repo and bench/expected.json before the first run; freeze record commit comes after it)
+- expected.json sha256: de244ac78e1fd16bc4fdc733910fe744dcc2b120aa17ece6a23bc43abea71c45
+- src/**/*.ts sha256 (sorted files, concatenated): 1ae13ced304078a2b3920bfe3fe25d3353e2626705846561aa93d4044c595b38
+- Files / LOC: 15 TypeScript files / 229 LOC
+- Reproducibility check: sha256sum bench/expected.json and git show HEAD:bench/expected.json | sha256sum must both equal the expected.json hash above; the fixture build passes with npm run build (tsc strict).
+
+After the first scored run the fixture and expected.json are not edited. A later change is a separate commit with a reason, and the affected numbers are labelled as not final.
