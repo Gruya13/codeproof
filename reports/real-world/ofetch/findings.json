@@ -1,0 +1,122 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "t is the string result of typeof, so t === null is never true; null therefore falls through to value.buffer which throws TypeError instead of returning true.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 32,
+          "path": "utils.ts",
+          "snippet": "  const t = typeof value;\n  if (t === \"string\" || t === \"number\" || t === \"boolean\" || t === null) {\n    return true;\n  }\n  if (t !== \"object\") {\n    return false; // bigint, function, symbol, undefined\n  }\n  if (Array.isArray(value)) {\n    return true;\n  }\n  if (value.buffer) {\n    return false;\n  }",
+          "startLine": 21
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "isJSONSerializable crashes on null due to typeof comparison"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 21-33 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed at utils.ts:21-32: t is the string from typeof, so t === null at utils.ts:22 is never true, typeof null is \"object\" so it passes utils.ts:25, Array.isArray(null) is false, and utils.ts:31 then dereferences null.buffer throwing a TypeError."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Truthiness test on body skips valid falsy JSON bodies like 0, \"\" and false, so they miss stringify and content-type handling.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 132,
+          "path": "fetch.ts",
+          "snippet": "    if (context.options.body && isPayloadMethod(context.options.method)) {\n      if (isJSONSerializable(context.options.body)) {\n        const contentType = context.options.headers.get(\"content-type\");",
+          "startLine": 130
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Falsy request bodies are skipped by truthiness check"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 130-132 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The guard at fetch.ts:130 uses truthiness on context.options.body, so 0 and false skip the block at fetch.ts:131-153 that stringifies and sets application/json headers, even though utils.ts:22 explicitly treats number and boolean values as JSON-serializable."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Prefix test without slash boundary treats /apiary as already based on /api and returns it unchanged instead of joining to /api/apiary.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 50,
+          "path": "utils.url.ts",
+          "snippet": "export function withBase(input = \"\", base = \"\"): string {\n  if (!base || base === \"/\") {\n    return input;\n  }\n\n  const _base = withoutTrailingSlash(base);\n  if (input.startsWith(_base)) {\n    return input;\n  }\n\n  return joinURL(_base, input);",
+          "startLine": 40
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "withBase prefix check lacks path-boundary"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 40-50 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: at utils.url.ts:45-48, _base is '/api' for base '/api' and '/apiary'.startsWith('/api') is true, so withBase returns '/apiary' unchanged and never reaches joinURL at utils.url.ts:50 which would produce '/api/apiary'."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Array values are appended without deleting existing params while scalar values use set, so retrying withQuery on a URL with existing query leaves stale values.",
+      "confidence": 0.82,
+      "evidence": [
+        {
+          "endLine": 99,
+          "path": "utils.url.ts",
+          "snippet": "  for (const [key, value] of Object.entries(query)) {\n    if (value === undefined) {\n      searchParams.delete(key);\n    } else if (Array.isArray(value)) {\n      for (const item of value) {\n        searchParams.append(key, normalizeQueryValue(item));\n      }\n    } else {\n      searchParams.set(key, normalizeQueryValue(value));\n    }\n  }",
+          "startLine": 89
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "withQuery array branch does not replace existing params"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 89-99 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at utils.url.ts:86 parses existing query params, then utils.url.ts:92-97 appends array items without deleting the key while scalar values use set to replace it, so pre-existing values remain alongside new array values."
+    }
+  }
+]

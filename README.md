@@ -13,7 +13,7 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), 
 
 ## Status
 
-Milestone F1 is complete: the pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`). First live runs on the 4-file demo fixture: 2 calls (Muse Spark 1.3 producer, Muse Wonder verifier), 1 finding passed both gates, 16.5 s wall time, **$0.0335 measured cost**; a second run measured **229 of 1365 input tokens served from prompt cache**. Numbers are only published when measured - `run.json` says `measured: false` when they are not. The first scored benchmark run is in [Benchmark results](#benchmark-results); its artifacts are committed verbatim in [reports/golden/](reports/golden/).
+Milestone F1 is complete: the pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`). First live runs on the 4-file demo fixture: 2 calls (Muse Spark 1.3 producer, Muse Wonder verifier), 1 finding passed both gates, 16.5 s wall time, **$0.0335 measured cost**; a second run measured **229 of 1365 input tokens served from prompt cache**. Numbers are only published when measured - `run.json` says `measured: false` when they are not. The first scored benchmark run is in [Benchmark results](#benchmark-results); its artifacts are committed verbatim in [reports/golden/](reports/golden/). A qualitative run on a real open-source project is in [Real-repository run](#real-repository-run-qualitative).
 
 A controlled verifier test (`make controlled`) closed the hard gate on the real API: two true findings were confirmed and one deliberately false claim was **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`). The run cost **$0.103** and served **3280 of 4065 input tokens from prompt cache**. It is recorded as `mode: controlled-verifier` and labelled as injected candidates in every report - never as scanner output.
 
@@ -77,6 +77,15 @@ The baseline missed B-05 (a timer handle replaced without clearing the previous 
 **Attempts (no cherry-picking):** four benchmark attempts were made. (1) invalidated: ingest included `dist/` build artifacts, fixed in `b0e6568`; (2) valid baseline: run `9a5a56d6`, 7/8; (3) aborted: scanner output was truncated at the token limit, tooling fixed in `d0cde39`; (4) valid post-calibration run `a17a5b3e`, 8/8, shown above. Model output is not bit-identical, so the number of attempts is always stated.
 
 This is a calibration set: prompts are tuned on the same fixture, so the numbers are **post-calibration** and n = 8 is not a statistical claim. The pre-calibration baseline is shown for transparency.
+
+## Real-repository run (qualitative)
+
+The pipeline was also run on a real, widely used open-source project: [unjs/ofetch](https://github.com/unjs/ofetch) at commit `1dbc37f`, scope `src/` (7 files, 802 LOC). Run artifacts and the human review are committed in [reports/real-world/ofetch/](reports/real-world/ofetch/).
+
+- 4 findings proposed, **4 verified** by the gate (L1 passed + Muse Wonder confirmed), 0 refuted or uncertain
+- 90.2 s, **$0.2928** measured, 2,000 of 38,529 input tokens served from prompt cache
+- Hand check (see [HAND-CHECK.md](reports/real-world/ofetch/HAND-CHECK.md)): two findings match **open upstream fix PRs** - a `baseURL` prefix-boundary issue reported as SSRF ([issue #564](https://github.com/unjs/ofetch/issues/564), [PR #576](https://github.com/unjs/ofetch/pull/576)) and a `withQuery` array-replacement bug ([PR #594](https://github.com/unjs/ofetch/pull/594)); one is a latent internal defect ([issue #571](https://github.com/unjs/ofetch/issues/571), fix PRs [#572](https://github.com/unjs/ofetch/pull/572), [#636](https://github.com/unjs/ofetch/pull/636)); one is a real edge-case inconsistency with no upstream report.
+- This is an **anecdote, not a benchmark metric**. The analyzed commit is public and the upstream issues/PRs predate the analysis, so a model may have seen them; the run shows that the gate surfaces real, acknowledged problems - not that the findings are independent discovery.
 
 ## What was built during the hackathon
 

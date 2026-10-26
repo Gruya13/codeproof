@@ -6,4 +6,6 @@ dist/
 reports/*
 !reports/golden/
 !reports/golden/**
+!reports/real-world/
+!reports/real-world/**
 *.log
