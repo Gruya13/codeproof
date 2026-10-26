@@ -1,8 +1,8 @@
 {
-  "runId": "09e78bb8e4a0b6eb",
+  "runId": "e02cc2e908e2078a",
   "mode": "smoke",
   "mock": false,
-  "configSha256": "8e85b27529f77b166c8f91f5617a80e7eef085098ba1bca0f986137f1dc8f8ea",
+  "configSha256": "551284b574dafcd4c2145ff6811d030c4c054c52b2407c195dc1526f1f92ef17",
   "repo": {
     "source": "local",
     "path": "/tmp/demo-repos/ofetch/src",
@@ -34,27 +34,27 @@
     }
   ],
   "usage": {
-    "inputTokens": 38529,
-    "outputTokens": 15824,
-    "cachedTokens": 2000,
+    "inputTokens": 53398,
+    "outputTokens": 39573,
+    "cachedTokens": 2500,
     "byRole": [
       {
         "role": "scanner-correctness",
         "model": "muse-spark-1.3",
-        "calls": 1,
-        "inputTokens": 7568,
-        "outputTokens": 9487,
+        "calls": 2,
+        "inputTokens": 15136,
+        "outputTokens": 25034,
         "cachedTokens": 0,
-        "costUsd": 0.04977975
+        "costUsd": 0.1253145
       },
       {
         "role": "verifier",
         "model": "muse-wonder-1.0",
-        "calls": 4,
-        "inputTokens": 30961,
-        "outputTokens": 6337,
-        "cachedTokens": 2000,
-        "costUsd": 0.24298400000000003
+        "calls": 5,
+        "inputTokens": 38262,
+        "outputTokens": 14539,
+        "cachedTokens": 2500,
+        "costUsd": 0.43432799999999994
       }
     ],
     "callLog": [
@@ -63,91 +63,113 @@
         "model": "muse-spark-1.3",
         "index": 0,
         "inputTokens": 7568,
-        "outputTokens": 9487,
+        "outputTokens": 10000,
         "cachedTokens": 0,
-        "costUsd": 0.04977975,
-        "durationMs": 34793,
+        "costUsd": 0.05196,
+        "durationMs": 60728,
         "retries": 0
       },
       {
-        "role": "verifier",
-        "model": "muse-wonder-1.0",
+        "role": "scanner",
+        "model": "muse-spark-1.3",
         "index": 1,
-        "inputTokens": 7766,
-        "outputTokens": 1900,
-        "cachedTokens": 500,
-        "costUsd": 0.067164,
-        "durationMs": 17089,
+        "inputTokens": 7568,
+        "outputTokens": 15034,
+        "cachedTokens": 0,
+        "costUsd": 0.0733545,
+        "durationMs": 105530,
         "retries": 0
       },
       {
         "role": "verifier",
         "model": "muse-wonder-1.0",
         "index": 2,
-        "inputTokens": 7705,
-        "outputTokens": 1716,
+        "inputTokens": 7321,
+        "outputTokens": 2575,
         "cachedTokens": 500,
-        "costUsd": 0.06324,
-        "durationMs": 16800,
+        "costUsd": 0.078884,
+        "durationMs": 17723,
         "retries": 0
       },
       {
         "role": "verifier",
         "model": "muse-wonder-1.0",
         "index": 3,
-        "inputTokens": 7736,
-        "outputTokens": 839,
+        "inputTokens": 7588,
+        "outputTokens": 4000,
         "cachedTokens": 500,
-        "costUsd": 0.045824,
-        "durationMs": 6713,
+        "costUsd": 0.108452,
+        "durationMs": 33253,
         "retries": 0
       },
       {
         "role": "verifier",
         "model": "muse-wonder-1.0",
         "index": 4,
-        "inputTokens": 7754,
-        "outputTokens": 1882,
+        "inputTokens": 7588,
+        "outputTokens": 5998,
         "cachedTokens": 500,
-        "costUsd": 0.066756,
-        "durationMs": 14693,
+        "costUsd": 0.148412,
+        "durationMs": 47533,
+        "retries": 0
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 5,
+        "inputTokens": 7956,
+        "outputTokens": 1042,
+        "cachedTokens": 500,
+        "costUsd": 0.050764,
+        "durationMs": 7020,
+        "retries": 0
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 6,
+        "inputTokens": 7809,
+        "outputTokens": 924,
+        "cachedTokens": 500,
+        "costUsd": 0.047816,
+        "durationMs": 8924,
         "retries": 0
       }
     ],
-    "costUsd": 0.29276375,
+    "costUsd": 0.5596424999999999,
     "measured": true
   },
-  "calls": 5,
+  "calls": 7,
   "retries": 0,
   "timings": {
-    "startedAt": "2026-10-26T20:05:23.393Z",
-    "durationMs": 90173
+    "startedAt": "2026-10-26T20:23:20.773Z",
+    "durationMs": 280781
   },
   "phases": [
     {
       "name": "ingest",
       "status": "ok",
-      "durationMs": 5
+      "durationMs": 4
     },
     {
       "name": "scan",
       "status": "ok",
-      "durationMs": 34803
+      "durationMs": 166259
     },
     {
       "name": "verify",
       "status": "ok",
-      "durationMs": 55334
+      "durationMs": 114497
     },
     {
       "name": "publish",
       "status": "ok",
-      "durationMs": 9
+      "durationMs": 2
     }
   ],
   "budget": {
     "limitUsd": 2,
-    "spentUsd": 0.292764,
+    "spentUsd": 0.559642,
     "measured": true,
     "exceeded": false
   },
@@ -160,9 +182,9 @@
     "uncertain": 0
   },
   "outputs": {
-    "report": "reports/09e78bb8e4a0b6eb/REPORT.md",
-    "findings": "reports/09e78bb8e4a0b6eb/findings.json",
-    "rejected": "reports/09e78bb8e4a0b6eb/rejected.md"
+    "report": "reports/e02cc2e908e2078a/REPORT.md",
+    "findings": "reports/e02cc2e908e2078a/findings.json",
+    "rejected": "reports/e02cc2e908e2078a/rejected.md"
   },
   "versions": {
     "node": "v26.8.2",

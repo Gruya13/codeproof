@@ -25,7 +25,7 @@ ingest -> scan -> verify -> publish
 |---|---|
 | ingest | fixes the file list from the commit (git-tracked files only; walking fallback for non-git targets), LOC and a sha256 manifest; builds a regex import graph and detects cycles |
 | scan | the producer model (Muse Spark) returns findings as schema-constrained JSON: one claim, one verbatim citation, no speculation |
-| verify | deterministic L1 citation check; then Muse Wonder tries to refute (strong refute needs a machine-checked counter-citation) |
+| verify | deterministic L1 citation check; then Muse Wonder tries to refute inside a bounded, relevant-file context (strong refute needs a machine-checked counter-citation) |
 | publish | `REPORT.md`, `findings.json` (status per finding), `rejected.md`, `run.json` (models, tokens, cache hits, cost, duration, commit) |
 
 Static analysis only: the analyzed code is never executed, patched, or sent anywhere except the Meta Model API.
@@ -35,6 +35,7 @@ Static analysis only: the analyzed code is never executed, patched, or sent anyw
 - **Two models in one gate:** Muse Spark 1.3 as producer, Muse Wonder as adversarial verifier - not one model grading itself.
 - **Schema-constrained decoding** (`response_format: json_schema`): the scanner cannot emit output that violates the schema, so L0 is structural instead of best-effort parsing.
 - **Prompt caching:** the repository digest is a stable prefix; cached input tokens are read from `usage.prompt_tokens_details.cached_tokens` and written to `run.json`.
+- **Bounded verifier context:** the verifier sees the cited file, its import neighbours and identifier-matched files, capped at 24,000 characters; the digest and the cap are recorded per run so cost stays measurable.
 - **1M-token context** on both models: the analyzed repositories so far fit in a single pass without chunking; context size and token usage are measured per run.
 
 ## Quick start
@@ -62,19 +63,20 @@ node src/cli.mjs analyze /path/to/repo
 
 Scored on the **calibration set**: frozen synthetic fixture with 8 injected defects, 4 traps and 2 pre-registered extra defects - 15 files / 229 LOC. Artifacts of the current run are committed verbatim in [reports/golden/](reports/golden/) (`run.json`, `findings.json`, `REPORT.md`, `rejected.md`).
 
-| Metric | Post-calibration (golden) | Pre-calibration baseline | Threshold |
+| Metric | Current (F4, golden) | Pre-calibration baseline | Threshold |
 |---|---|---|---|
 | End-to-end recall (verified) | **8/8 (100%)** | 7/8 (87.5%) | >= 6/8 |
 | Precision (verified-only) | **100%** (8 TP, 0 FP) | 100% (7 TP, 0 FP) | >= 90% |
 | Traps published as verified | **0/4** | 0/4 | 0/4 |
 | False refutations | **0** | 0 | <= 1 |
-| Cost / duration | **$0.2777** / 107.3 s | $0.2308 / 93.2 s | measured |
-| Prompt cache | 3,500 of 29,408 input tokens | 4,000 of 26,255 | reported |
+| Cost / duration | **$0.2190** / 101.4 s | $0.2308 / 93.2 s | measured |
+| Prompt cache | 6,801 of 20,873 input tokens | 4,000 of 26,255 | reported |
+| Verifier context | bounded to 24,000 characters (F4) | whole repository | - |
 | Scanner prompt version | v3 | v2 | - |
 
-The baseline missed B-05 (a timer handle replaced without clearing the previous interval). The scanner prompt v3 adds generic audits for leaked resource handles and for repeated-call accumulators; after that change the same frozen fixture was re-scanned and B-05 was found. One pre-registered extra defect (X-02, numeric sort without comparator) was found in both runs and is correctly counted as neither TP nor FP; no trap was proposed by the scanner in either run, so the refutation path is demonstrated separately by the controlled verifier test.
+The bounded verifier context cut benchmark input tokens from 29,408 to 20,873 (**-29%**) with identical metrics; observed cost fell from $0.2777 to $0.2190 on the compared attempts. The baseline missed B-05 (a timer handle replaced without clearing the previous interval); scanner prompt v3 adds generic audits for leaked resource handles and repeated-call accumulators, after which the frozen fixture was re-scanned and B-05 was found. One pre-registered extra defect (X-02, numeric sort without comparator) is found and correctly counted as neither TP nor FP; no trap was proposed by the scanner in any run, so the refutation path is demonstrated separately by the controlled verifier test.
 
-**Attempts (no cherry-picking):** four benchmark attempts were made. (1) invalidated: ingest included `dist/` build artifacts, fixed in `b0e6568`; (2) valid baseline: run `9a5a56d6`, 7/8; (3) aborted: scanner output was truncated at the token limit, tooling fixed in `d0cde39`; (4) valid post-calibration run `a17a5b3e`, 8/8, shown above. Model output is not bit-identical, so the number of attempts is always stated.
+**Attempts (no cherry-picking):** six benchmark attempts. (1) invalidated: ingest included `dist/` build artifacts, fixed in `b0e6568`; (2) valid baseline: 7/8; (3) aborted: scanner output truncated at the token limit, tooling fixed in `d0cde39`; (4) valid post-calibration run: 8/8; (5) F4 validation run before the configuration hash fix: 8/8; (6) F4 final run: 8/8, shown above. Model output is not bit-identical, so the number of attempts is always stated.
 
 This is a calibration set: prompts are tuned on the same fixture, so the numbers are **post-calibration** and n = 8 is not a statistical claim. The pre-calibration baseline is shown for transparency.
 
@@ -83,9 +85,14 @@ This is a calibration set: prompts are tuned on the same fixture, so the numbers
 The pipeline was also run on a real, widely used open-source project: [unjs/ofetch](https://github.com/unjs/ofetch) at commit `1dbc37f`, scope `src/` (7 files, 802 LOC). Run artifacts and the human review are committed in [reports/real-world/ofetch/](reports/real-world/ofetch/).
 
 - 4 findings proposed, **4 verified** by the gate (L1 passed + Muse Wonder confirmed), 0 refuted or uncertain
-- 90.2 s, **$0.2928** measured, 2,000 of 38,529 input tokens served from prompt cache
-- Hand check (see [HAND-CHECK.md](reports/real-world/ofetch/HAND-CHECK.md)): two findings match **open upstream fix PRs** - a `baseURL` prefix-boundary issue reported as SSRF ([issue #564](https://github.com/unjs/ofetch/issues/564), [PR #576](https://github.com/unjs/ofetch/pull/576)) and a `withQuery` array-replacement bug ([PR #594](https://github.com/unjs/ofetch/pull/594)); one is a latent internal defect ([issue #571](https://github.com/unjs/ofetch/issues/571), fix PRs [#572](https://github.com/unjs/ofetch/pull/572), [#636](https://github.com/unjs/ofetch/pull/636)); one is a real edge-case inconsistency with no upstream report.
-- This is an **anecdote, not a benchmark metric**. The analyzed commit is public and the upstream issues/PRs predate the analysis, so a model may have seen them; the run shows that the gate surfaces real, acknowledged problems - not that the findings are independent discovery.
+- 280.8 s, **$0.5596** measured (the scanner hit its token cap once and the pipeline retried with double budget; the default is now 16,000)
+- Hand check (see [HAND-CHECK.md](reports/real-world/ofetch/HAND-CHECK.md)): **all four findings correspond to open upstream issues or fix PRs**:
+  - `isJSONSerializable` null handling - [issue #571](https://github.com/unjs/ofetch/issues/571), PRs [#572](https://github.com/unjs/ofetch/pull/572), [#636](https://github.com/unjs/ofetch/pull/636)
+  - `retry` + `timeout` incompatible because an aborted `AbortSignal` is reused - [issue #637](https://github.com/unjs/ofetch/issues/637), PRs [#638](https://github.com/unjs/ofetch/pull/638), [#621](https://github.com/unjs/ofetch/pull/621), [#640](https://github.com/unjs/ofetch/pull/640)
+  - `baseURL` prefix boundary reported as SSRF (CWE-918) - [issue #564](https://github.com/unjs/ofetch/issues/564), PR [#576](https://github.com/unjs/ofetch/pull/576)
+  - `withQuery` array values appended without replacing existing ones - PR [#594](https://github.com/unjs/ofetch/pull/594)
+- Runs are not bit-identical: three runs on this commit and scope produced 4/4, 3/3 and 4/4 verified findings ($0.2928, $0.1991, $0.5596). The latest valid run is the one committed here; earlier results are stated above.
+- This is an **anecdote, not a benchmark metric**. The analyzed commit is public and the upstream issues/PRs predate the analysis, so a model may have seen them; the run shows that the gate surfaces real, acknowledged problems - not that the findings are independent discovery. The hand check also corrected the scanner's severity: the `withBase` issue is SSRF class upstream even though the scanner labelled it medium.
 
 ## What was built during the hackathon
 

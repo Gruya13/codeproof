@@ -2,8 +2,8 @@
   {
     "finding": {
       "category": "correctness",
-      "claim": "validate uses `!== undefined || !== null` which is always true, so it always reports \"id is required\" and \"value is required\" even for complete payloads.",
-      "confidence": 0.98,
+      "claim": "validate uses !== with || so each condition is always true and valid payloads always report errors.",
+      "confidence": 0.99,
       "evidence": [
         {
           "endLine": 15,
@@ -15,7 +15,7 @@
       "id": "F-001",
       "kind": "direct",
       "severity": "critical",
-      "title": "validation condition always true"
+      "title": "validate condition always true"
     },
     "status": "verified",
     "l1": {
@@ -26,43 +26,13 @@
     "verifier": {
       "model": "muse-wonder-1.0",
       "verdict": "confirm",
-      "reason": "The conditions at src/validation.ts:8 and src/validation.ts:11 use `!== undefined || !== null`, which is tautologically true since a value cannot be both undefined and null, so both errors are always pushed even for complete payloads."
+      "reason": "The conditions at src/validation.ts:8 and src/validation.ts:11 use !== undefined || !== null, which is tautologically true for any value, so both errors are always pushed even for valid payloads."
     }
   },
   {
     "finding": {
       "category": "correctness",
-      "claim": "collect uses forEach with an async callback and returns immediately, so results is always empty and async errors are never caught.",
-      "confidence": 0.95,
-      "evidence": [
-        {
-          "endLine": 13,
-          "path": "src/analytics.ts",
-          "snippet": "export async function collect(tasks: Task[]): Promise<number[]> {\n  const results: number[] = [];\n  try {\n    tasks.forEach(async (task) => {\n      results.push(await task());\n    });\n  } catch (error) {\n    console.error(\"analytics collection failed\", error);\n  }\n  return results;\n}",
-          "startLine": 3
-        }
-      ],
-      "id": "F-002",
-      "kind": "direct",
-      "severity": "critical",
-      "title": "async forEach never awaited"
-    },
-    "status": "verified",
-    "l1": {
-      "passed": true,
-      "reason": "citation matches lines 3-13 (+/-1 line tolerance)",
-      "lineTolerance": 0
-    },
-    "verifier": {
-      "model": "muse-wonder-1.0",
-      "verdict": "confirm",
-      "reason": "The code at src/analytics.ts:6 uses tasks.forEach with an async callback whose awaited pushes at src/analytics.ts:7 are not awaited by collect, which returns results immediately at src/analytics.ts:12, and the surrounding try/catch at src/analytics.ts:5 cannot catch the discarded async callback rejections."
-    }
-  },
-  {
-    "finding": {
-      "category": "correctness",
-      "claim": "buildSummary appends to module-level totals then sums totals, so repeated calls double-count prior entries.",
+      "claim": "buildSummary pushes into module-level totals then summarizes totals, so repeated calls double-count prior entries.",
       "confidence": 0.95,
       "evidence": [
         {
@@ -72,10 +42,10 @@
           "startLine": 6
         }
       ],
-      "id": "F-003",
+      "id": "F-002",
       "kind": "direct",
       "severity": "critical",
-      "title": "module accumulator double-counts"
+      "title": "ledger summary accumulates across calls"
     },
     "status": "verified",
     "l1": {
@@ -86,14 +56,14 @@
     "verifier": {
       "model": "muse-wonder-1.0",
       "verdict": "confirm",
-      "reason": "Confirmed: buildSummary at src/ledger.ts:12-15 calls post(entries) which pushes onto the module-level totals at src/ledger.ts:6-9, then sums all of totals without resetting, so a second call re-includes entries from the first call."
+      "reason": "buildSummary at src/ledger.ts:12-15 calls post(entries), which pushes into the module-level totals at src/ledger.ts:6-9, then iterates all of totals with no reset inside buildSummary, so a second call re-summarizes entries from the first call."
     }
   },
   {
     "finding": {
       "category": "correctness",
-      "claim": "rotateToken does not await store.save before store.get, so the read can return the stale token.",
-      "confidence": 0.93,
+      "claim": "rotateToken does not await store.save before store.get, so the read can race the write.",
+      "confidence": 0.95,
       "evidence": [
         {
           "endLine": 13,
@@ -102,10 +72,10 @@
           "startLine": 6
         }
       ],
-      "id": "F-004",
+      "id": "F-003",
       "kind": "direct",
-      "severity": "critical",
-      "title": "missing await on save before read"
+      "severity": "high",
+      "title": "rotateToken missing await on save"
     },
     "status": "verified",
     "l1": {
@@ -116,13 +86,43 @@
     "verifier": {
       "model": "muse-wonder-1.0",
       "verdict": "confirm",
-      "reason": "At src/session.ts:11 store.save(userId, token) is called without await despite SessionStore.save returning Promise<void> at src/session.ts:2, and src/session.ts:12 immediately returns store.get(userId), so the read can race the pending save and return the stale token."
+      "reason": "At src/session.ts:2 save returns Promise<void>, but src/session.ts:11 calls store.save without await before src/session.ts:12 returns store.get(userId), so the read can race the unfinished write."
     }
   },
   {
     "finding": {
       "category": "correctness",
-      "claim": "start overwrites this.timer with a new setInterval without clearing the existing interval, leaking the prior timer.",
+      "claim": "collect uses forEach with async callback and returns immediately, so results is returned before tasks complete.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 13,
+          "path": "src/analytics.ts",
+          "snippet": "export async function collect(tasks: Task[]): Promise<number[]> {\n  const results: number[] = [];\n  try {\n    tasks.forEach(async (task) => {\n      results.push(await task());\n    });\n  } catch (error) {\n    console.error(\"analytics collection failed\", error);\n  }\n  return results;\n}",
+          "startLine": 3
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "high",
+      "title": "collect does not await tasks"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 3-13 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: src/analytics.ts:6 uses tasks.forEach with an async callback whose returned promises are discarded, and src/analytics.ts:12 returns results synchronously without awaiting them, so the array is returned before awaited task pushes at src/analytics.ts:7 complete."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "start overwrites this.timer with a new setInterval without clearing an existing interval, leaking the prior timer.",
       "confidence": 0.92,
       "evidence": [
         {
@@ -135,7 +135,7 @@
       "id": "F-005",
       "kind": "direct",
       "severity": "high",
-      "title": "timer handle replaced without clear"
+      "title": "Scheduler start replaces timer without clear"
     },
     "status": "verified",
     "l1": {
@@ -146,44 +146,14 @@
     "verifier": {
       "model": "muse-wonder-1.0",
       "verdict": "confirm",
-      "reason": "The start method at src/scheduler.ts:7-11 unconditionally assigns this.timer = setInterval(...) with no clearInterval call or null guard, and no stop method exists in src/scheduler.ts:3-20, so a second call loses the prior timer handle."
+      "reason": "Confirmed at src/scheduler.ts:7-11: start() directly assigns this.timer = setInterval(...) with no prior clearInterval or running guard, and no stop/clear method exists in src/scheduler.ts:13-20, so a second call orphans the previous interval."
     }
   },
   {
     "finding": {
       "category": "correctness",
-      "claim": "pageSlice uses slice(start, end + 1) where end is start+size, returning size+1 elements instead of size.",
-      "confidence": 0.95,
-      "evidence": [
-        {
-          "endLine": 11,
-          "path": "src/paging.ts",
-          "snippet": "export function pageSlice<T>(items: T[], request: PageRequest): T[] {\n  const size = Math.max(1, request.size);\n  const start = Math.max(0, request.page) * size;\n  const end = start + size;\n  return items.slice(start, end + 1);\n}",
-          "startLine": 6
-        }
-      ],
-      "id": "F-006",
-      "kind": "direct",
-      "severity": "high",
-      "title": "page slice off-by-one"
-    },
-    "status": "verified",
-    "l1": {
-      "passed": true,
-      "reason": "citation matches lines 6-11 (+/-1 line tolerance)",
-      "lineTolerance": 0
-    },
-    "verifier": {
-      "model": "muse-wonder-1.0",
-      "verdict": "confirm",
-      "reason": "Confirmed at src/paging.ts:9-10: end is start+size and slice(start, end+1) is end-exclusive, so it returns up to size+1 elements instead of size."
-    }
-  },
-  {
-    "finding": {
-      "category": "correctness",
-      "claim": "sortScores uses default Array.sort without numeric comparator, sorting numbers lexicographically and breaking topScore.",
-      "confidence": 0.94,
+      "claim": "sort without comparator sorts lexicographically, so numeric scores order incorrectly and topScore can be wrong.",
+      "confidence": 0.93,
       "evidence": [
         {
           "endLine": 3,
@@ -192,10 +162,10 @@
           "startLine": 1
         }
       ],
-      "id": "F-007",
+      "id": "F-006",
       "kind": "direct",
       "severity": "high",
-      "title": "numeric sort uses lexicographic order"
+      "title": "numeric sort uses default lexicographic order"
     },
     "status": "verified",
     "l1": {
@@ -206,14 +176,44 @@
     "verifier": {
       "model": "muse-wonder-1.0",
       "verdict": "confirm",
-      "reason": "The code at src/scores.ts:2 uses scores.slice().sort() with no comparator, so JavaScript sorts numbers as strings, and topScore at src/scores.ts:5-7 returns the last element, which will not be the numeric maximum for multi-digit values."
+      "reason": "The code at src/scores.ts:2 calls scores.slice().sort() with no comparator, which sorts numbers lexicographically as strings in JavaScript, and topScore at src/scores.ts:7 returns the last sorted element, so the maximum can be incorrect."
     }
   },
   {
     "finding": {
       "category": "correctness",
-      "claim": "withinQuota uses `< max` while the contract states max is inclusive, rejecting requests that exactly fill quota.",
-      "confidence": 0.93,
+      "claim": "pageSlice uses slice(start, end + 1) where end is already start+size, returning size+1 items instead of one page.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 11,
+          "path": "src/paging.ts",
+          "snippet": "export function pageSlice<T>(items: T[], request: PageRequest): T[] {\n  const size = Math.max(1, request.size);\n  const start = Math.max(0, request.page) * size;\n  const end = start + size;\n  return items.slice(start, end + 1);\n}",
+          "startLine": 6
+        }
+      ],
+      "id": "F-007",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "pageSlice off-by-one returns extra item"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 6-11 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: at src/paging.ts:9 end is already start+size (exclusive bound for slice), so src/paging.ts:10 slice(start, end + 1) returns size+1 items when available."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "withinQuota uses < while documented max is inclusive, so used+amount exactly equal to max is wrongly rejected.",
+      "confidence": 0.95,
       "evidence": [
         {
           "endLine": 6,
@@ -225,7 +225,7 @@
       "id": "F-008",
       "kind": "direct",
       "severity": "medium",
-      "title": "inclusive quota uses strict less-than"
+      "title": "withinQuota excludes inclusive max"
     },
     "status": "verified",
     "l1": {
@@ -236,14 +236,14 @@
     "verifier": {
       "model": "muse-wonder-1.0",
       "verdict": "confirm",
-      "reason": "The contract at src/quota.ts:2 states max is inclusive, but src/quota.ts:6 returns used + amount < max, so an exact-fill request returns false."
+      "reason": "At src/quota.ts:2-3 max is documented as inclusive, but src/quota.ts:6 uses strict <, so used+amount == max returns false."
     }
   },
   {
     "finding": {
       "category": "correctness",
-      "claim": "normalizeSettings uses `||` for defaults, so legitimate 0 values for pageSize/budgetCents are replaced with defaults.",
-      "confidence": 0.9,
+      "claim": "normalizeSettings uses || so explicit 0 is replaced by defaults, while 0 is documented as legitimate.",
+      "confidence": 0.88,
       "evidence": [
         {
           "endLine": 16,
@@ -252,16 +252,16 @@
           "startLine": 11
         },
         {
-          "endLine": 18,
+          "endLine": 22,
           "path": "src/settings.ts",
-          "snippet": "// Optional values are read from settings where 0 is a legitimate value.",
+          "snippet": "// Optional values are read from settings where 0 is a legitimate value.\nexport function optionalLimit(value: number | null | undefined, fallback: number): number {\n  if (value == null) return fallback;\n  return value;\n}",
           "startLine": 18
         }
       ],
       "id": "F-009",
       "kind": "direct",
       "severity": "medium",
-      "title": "falsy default replaces legitimate zero"
+      "title": "normalizeSettings treats 0 as missing"
     },
     "status": "verified",
     "l1": {
@@ -272,7 +272,7 @@
     "verifier": {
       "model": "muse-wonder-1.0",
       "verdict": "confirm",
-      "reason": "The code at src/settings.ts:13-14 uses `raw.pageSize || 20` and `raw.budgetCents || 1000`, so a legitimate 0 is falsy and is replaced by the default, consistent with the note at src/settings.ts:18 that 0 is a legitimate value."
+      "reason": "normalizeSettings at src/settings.ts:13-14 uses || so an explicit 0 is replaced by 20/1000, contradicting src/settings.ts:18 stating 0 is a legitimate settings value and the null-only fallback pattern at src/settings.ts:20."
     }
   }
 ]

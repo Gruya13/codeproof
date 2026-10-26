@@ -1,6 +1,6 @@
 # CodeProof report
 
-Commit: 1dbc37fd1ceab832fc7c90cad81b1091c95ba563  |  run-id: 09e78bb8e4a0b6eb  |  mode: smoke
+Commit: 1dbc37fd1ceab832fc7c90cad81b1091c95ba563  |  run-id: e02cc2e908e2078a  |  mode: smoke
 
 **Publishing rule:** a finding appears under *Verified findings* only if the deterministic citation gate (L1) passed and the adversarial verifier confirmed it. Refuted, uncertain and moderate findings are kept in separate sections - nothing is hidden, and nothing unproven is presented as verified.
 
@@ -16,54 +16,63 @@ Commit: 1dbc37fd1ceab832fc7c90cad81b1091c95ba563  |  run-id: 09e78bb8e4a0b6eb  |
 | Moderate confidence | 0 |
 | Refuted | 0 |
 | Uncertain | 0 |
-| Calls / retries | 5 / 0 |
-| Tokens in / out | 38529 / 15824 |
-| Cached input tokens | 2000 |
-| Cost | $0.2928 |
+| Calls / retries | 7 / 0 |
+| Tokens in / out | 53398 / 39573 |
+| Cached input tokens | 2500 |
+| Cost | $0.5596 |
 
 ## Verified findings
 
-### F-001 - high - isJSONSerializable crashes on null due to typeof comparison
+### F-001 - high - isJSONSerializable mishandles null and throws on value.buffer
 
-**Claim:** t is the string result of typeof, so t === null is never true; null therefore falls through to value.buffer which throws TypeError instead of returning true.
+**Claim:** typeof value is never null so `t === null` is dead code; null falls through to `value.buffer` access which throws TypeError instead of returning true as JSON-serializable.
 
-**Citation:** utils.ts:21-32
+**Citation:** utils.ts:21-24
 ```text
   const t = typeof value;
   if (t === "string" || t === "number" || t === "boolean" || t === null) {
     return true;
   }
-  if (t !== "object") {
-    return false; // bigint, function, symbol, undefined
-  }
-  if (Array.isArray(value)) {
-    return true;
-  }
+```
+**Citation:** utils.ts:31-33
+```text
   if (value.buffer) {
     return false;
   }
 ```
 
-**Verifier (muse-wonder-1.0):** confirm - Confirmed at utils.ts:21-32: t is the string from typeof, so t === null at utils.ts:22 is never true, typeof null is "object" so it passes utils.ts:25, Array.isArray(null) is false, and utils.ts:31 then dereferences null.buffer throwing a TypeError.
+**Verifier (muse-wonder-1.0):** confirm - Confirmed at utils.ts:22 and utils.ts:31: typeof null is "object" so the string t can never equal null, null then passes the object check and Array.isArray check before value.buffer throws a TypeError.
 
-### F-002 - high - Falsy request bodies are skipped by truthiness check
+### F-002 - high - Timeout retry reuses already-aborted AbortSignal
 
-**Claim:** Truthiness test on body skips valid falsy JSON bodies like 0, "" and false, so they miss stringify and content-type handling.
+**Claim:** On retry the previous timeout-derived signal which is already aborted is spread into the next $fetchRaw and combined via AbortSignal.any, so the retried request starts already aborted and fails immediately.
 
-**Citation:** fetch.ts:130-132
+**Citation:** fetch.ts:171-178
 ```text
-    if (context.options.body && isPayloadMethod(context.options.method)) {
-      if (isJSONSerializable(context.options.body)) {
-        const contentType = context.options.headers.get("content-type");
+    if (context.options.timeout) {
+      context.options.signal = context.options.signal
+        ? AbortSignal.any([
+            AbortSignal.timeout(context.options.timeout),
+            context.options.signal,
+          ])
+        : AbortSignal.timeout(context.options.timeout);
+    }
+```
+**Citation:** fetch.ts:72-75
+```text
+        return $fetchRaw(context.request, {
+          ...context.options,
+          retry: retries - 1,
+        });
 ```
 
-**Verifier (muse-wonder-1.0):** confirm - The guard at fetch.ts:130 uses truthiness on context.options.body, so 0 and false skip the block at fetch.ts:131-153 that stringifies and sets application/json headers, even though utils.ts:22 explicitly treats number and boolean values as JSON-serializable.
+**Verifier (muse-wonder-1.0):** confirm - The timeout handling at fetch.ts:171-178 mutates context.options.signal into an AbortSignal.timeout/AbortSignal.any result, and the retry at fetch.ts:72-75 spreads that same context.options into the next $fetchRaw, so the next pass combines a fresh timeout with the already-aborted prior signal via AbortSignal.any and the retried fetch starts aborted.
 
-### F-003 - medium - withBase prefix check lacks path-boundary
+### F-003 - medium - withBase uses raw startsWith without segment boundary
 
-**Claim:** Prefix test without slash boundary treats /apiary as already based on /api and returns it unchanged instead of joining to /api/apiary.
+**Claim:** Any input sharing a raw string prefix with the base is returned unchanged without checking a path-segment boundary, so base /api incorrectly matches /api-v2 and skips joining.
 
-**Citation:** utils.url.ts:40-50
+**Citation:** utils.url.ts:40-51
 ```text
 export function withBase(input = "", base = ""): string {
   if (!base || base === "/") {
@@ -76,16 +85,20 @@ export function withBase(input = "", base = ""): string {
   }
 
   return joinURL(_base, input);
+}
 ```
 
-**Verifier (muse-wonder-1.0):** confirm - Confirmed: at utils.url.ts:45-48, _base is '/api' for base '/api' and '/apiary'.startsWith('/api') is true, so withBase returns '/apiary' unchanged and never reaches joinURL at utils.url.ts:50 which would produce '/api/apiary'.
+**Verifier (muse-wonder-1.0):** confirm - The code at utils.url.ts:46-48 returns input unchanged on input.startsWith(_base) with no segment-boundary check, so withBase('/api-v2','/api') incorrectly skips joinURL at utils.url.ts:50.
 
-### F-004 - medium - withQuery array branch does not replace existing params
+### F-004 - medium - withQuery appends array values without clearing existing key
 
-**Claim:** Array values are appended without deleting existing params while scalar values use set, so retrying withQuery on a URL with existing query leaves stale values.
+**Claim:** When the URL already contains a query string, array values are appended without first deleting the existing key while scalar values use set (replace), so old values are retained and duplicated.
 
-**Citation:** utils.url.ts:89-99
+**Citation:** utils.url.ts:86-99
 ```text
+  const searchParams = new URLSearchParams(input.slice(searchIndex + 1));
+  const base = input.slice(0, searchIndex);
+
   for (const [key, value] of Object.entries(query)) {
     if (value === undefined) {
       searchParams.delete(key);
@@ -99,7 +112,7 @@ export function withBase(input = "", base = ""): string {
   }
 ```
 
-**Verifier (muse-wonder-1.0):** confirm - The code at utils.url.ts:86 parses existing query params, then utils.url.ts:92-97 appends array items without deleting the key while scalar values use set to replace it, so pre-existing values remain alongside new array values.
+**Verifier (muse-wonder-1.0):** confirm - At utils.url.ts:86 searchParams is initialized from the existing query string, and at utils.url.ts:92-95 the array branch uses append without a preceding delete while utils.url.ts:97 uses set for scalars, so pre-existing values for that key are retained alongside the new array values.
 
 ## Architecture
 
