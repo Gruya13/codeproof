@@ -23,7 +23,7 @@ export function loadConfig(env) {
     mock: env.USE_MOCK === "1",
     apiKey: env.MODEL_API_KEY || "",
     maxRetries: Number(env.MAX_RETRIES || "4"),
-    scannerMaxTokens: Number(env.SCANNER_MAX_TOKENS || "6000"),
+    scannerMaxTokens: Number(env.SCANNER_MAX_TOKENS || "10000"),
     verifierMaxTokens: Number(env.VERIFIER_MAX_TOKENS || "4000")
   };
 }

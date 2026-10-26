@@ -160,14 +160,30 @@ async function main() {
     console.log("  scan     skip  controlled verifier: " + proposed.length + " injected candidates");
   } else {
     const scanStarted = Date.now();
-    const scanCall = await agents.complete({
+    const scanMessages = buildScannerMessages({ digest: repoDigest(repo), filesWithLineNumbers: filesWithLineNumbers(repo), maxFindings: config.maxFindings });
+    let scanCall = await agents.complete({
       role: "scanner",
-      messages: buildScannerMessages({ digest: repoDigest(repo), filesWithLineNumbers: filesWithLineNumbers(repo), maxFindings: config.maxFindings }),
+      messages: scanMessages,
       responseFormat: buildScannerResponseFormat(config.maxFindings),
       temperature: config.temperature,
-      maxTokens: 6000
+      maxTokens: config.scannerMaxTokens
     });
-    const scanParsed = parseDirtyJson(scanCall.text);
+    let scanParsed;
+    try {
+      scanParsed = parseDirtyJson(scanCall.text);
+    } catch (parseError) {
+      mkdirSync(join(process.cwd(), "reports"), { recursive: true });
+      writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ error: parseError.message, maxTokens: config.scannerMaxTokens, finishReason: scanCall.finishReason, raw: scanCall.text }, null, 2) + "\n");
+      console.warn("  WARN scanner output was not valid JSON (" + parseError.message + ", finish_reason=" + String(scanCall.finishReason) + "); retrying once with " + (config.scannerMaxTokens * 2) + " max tokens");
+      scanCall = await agents.complete({
+        role: "scanner",
+        messages: scanMessages,
+        responseFormat: buildScannerResponseFormat(config.maxFindings),
+        temperature: config.temperature,
+        maxTokens: config.scannerMaxTokens * 2
+      });
+      scanParsed = parseDirtyJson(scanCall.text);
+    }
     const scanValidated = validateFindingsL0(scanParsed);
     if (!scanValidated.ok) {
       mkdirSync(join(process.cwd(), "reports"), { recursive: true });
