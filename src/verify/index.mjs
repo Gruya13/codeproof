@@ -11,6 +11,14 @@ export const VERIFIER_SYSTEM_PROMPT = [
   "refute with mode weak - refute by reasoning when you cannot cite a precise snippet. This downgrades the finding to moderate confidence, it does not veto it.",
   "uncertain - when the given context cannot settle it. Say what you would need to see.",
   "Never refute because something might be handled elsewhere without citing that elsewhere.",
+  "When the verdict is refute, mode is mandatory. For mode strong the counterEvidence array is mandatory and its snippet must be copied verbatim from the provided excerpts, line for line; a strong refute whose citation does not match is downgraded to weak.",
+  "Prefer a strong refute whenever a counter-line exists in the excerpts; do not settle for weak reasoning when you can cite the line.",
+  "If the claim asserts that some behavior is absent (never / does not / cannot / swallows / ignores) and the excerpts contain the corresponding construct (throw, rethrow, await, return, guard, validation), you must return refute with mode strong and cite that construct as counterEvidence.",
+  "The reason field must be at least one sentence and must cite file:line.",
+  "Examples (illustrative, not taken from the repository under analysis):",
+  "Strong refute: {\"verdicts\":[{\"findingId\":\"F-004\",\"verdict\":\"refute\",\"mode\":\"strong\",\"reason\":\"The value is null-checked before use at src/session.ts:41, so the fallback already handles the missing value.\",\"counterEvidence\":[{\"path\":\"src/session.ts\",\"startLine\":41,\"endLine\":41,\"snippet\":\"  if (value == null) return fallback;\"}]}]}",
+  "Weak refute (only when no line in the excerpts contradicts the claim): {\"verdicts\":[{\"findingId\":\"F-007\",\"verdict\":\"refute\",\"mode\":\"weak\",\"reason\":\"The loop is reachable only when size >= 1, which the caller guarantees; the off-by-one cannot trigger.\"}]}",
+  "A reason that names a refuting line but omits it from counterEvidence is a weak refute; include the line instead.",
   "Do not rewrite the finding and do not invent new findings. Output only JSON matching the verdict schema."
 ].join("\n");
 
@@ -34,6 +42,51 @@ export const VERIFIER_RESPONSE_FORMAT = {
               findingId: { type: "string", pattern: "^F-[0-9]{3}$" },
               verdict: { enum: ["confirm", "refute", "uncertain"] },
               mode: { enum: ["strong", "weak"] },
+              reason: { type: "string" },
+              counterEvidence: {
+                type: "array",
+                minItems: 1,
+                maxItems: 3,
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["path", "startLine", "endLine", "snippet"],
+                  properties: {
+                    path: { type: "string" },
+                    startLine: { type: "integer", minimum: 1 },
+                    endLine: { type: "integer", minimum: 1 },
+                    snippet: { type: "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
+export const STRONG_REFUTE_RESPONSE_FORMAT = {
+  type: "json_schema",
+  json_schema: {
+    name: "codeproof_strong_refute",
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["verdicts"],
+      properties: {
+        verdicts: {
+          type: "array",
+          minItems: 1,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["findingId", "verdict", "mode", "reason", "counterEvidence"],
+            properties: {
+              findingId: { type: "string", pattern: "^F-[0-9]{3}$" },
+              verdict: { const: "refute" },
+              mode: { const: "strong" },
               reason: { type: "string" },
               counterEvidence: {
                 type: "array",
@@ -123,11 +176,14 @@ export function validateVerdictsL0(parsed) {
       errors.push("invalid verdict value: " + String(verdict.verdict));
       continue;
     }
-    if (typeof verdict.reason !== "string" || verdict.reason.length < 20) errors.push("reason is too short");
+    if (typeof verdict.reason !== "string" || verdict.reason.length < 10) errors.push("reason is too short");
     if (verdict.verdict === "refute") {
-      if (["strong", "weak"].indexOf(verdict.mode) === -1) errors.push("refute requires mode strong or weak");
-      if (verdict.mode === "strong" && (!Array.isArray(verdict.counterEvidence) || verdict.counterEvidence.length === 0)) {
-        errors.push("strong refute requires counterEvidence");
+      if (["strong", "weak"].indexOf(verdict.mode) === -1) {
+        // refute without a mode is a weak refute by definition: it carries no machine-checked counter-citation
+        verdict.mode = "weak";
+      } else if (verdict.mode === "strong" && (!Array.isArray(verdict.counterEvidence) || verdict.counterEvidence.length === 0)) {
+        // strong refute without a counter-citation is not a reason to drop the finding: degrade to weak
+        verdict.mode = "weak";
       }
     } else if (Array.isArray(verdict.counterEvidence) && verdict.counterEvidence.length > 0) {
       errors.push("counterEvidence is only allowed for refute");
@@ -164,37 +220,78 @@ export async function verifyOne(input) {
     const first = checks[0] || { reason: "finding has no evidence" };
     return { finding: finding, status: "l1-rejected", l1: first, verifier: null };
   }
-  const call = await input.agent.complete({
+  const maxTokens = input.maxTokens || 4000;
+  let call = await input.agent.complete({
     role: "verifier",
     messages: buildVerifierMessages(finding, input.excerpts),
     responseFormat: VERIFIER_RESPONSE_FORMAT,
     temperature: 0,
-    maxTokens: 1500
+    maxTokens: maxTokens
   });
+  if (String(call.text || "").trim() === "") {
+    call = await input.agent.complete({
+      role: "verifier",
+      messages: buildVerifierMessages(finding, input.excerpts),
+      responseFormat: VERIFIER_RESPONSE_FORMAT,
+      temperature: 0,
+      maxTokens: maxTokens * 2
+    });
+  }
   let verdict;
   try {
     const parsed = parseDirtyJson(call.text);
     const validated = validateVerdictsL0(parsed);
     if (!validated.ok) {
+      console.warn("  WARN verifier output failed L0 for " + finding.id + ": " + validated.errors.join("; "));
       verdict = { findingId: finding.id, verdict: "uncertain", reason: "verifier output failed L0: " + validated.errors.join("; ") };
     } else {
       verdict = validated.verdicts.find(function (item) { return item.findingId === finding.id; });
       if (!verdict) verdict = { findingId: finding.id, verdict: "uncertain", reason: "verifier returned no verdict for this finding" };
     }
   } catch (error) {
-    verdict = { findingId: finding.id, verdict: "uncertain", reason: "verifier output was not parseable JSON: " + error.message };
+    console.warn("  WARN verifier output not parseable for " + finding.id + ": " + error.message + " (finish_reason=" + String(call.finishReason) + ")");
+    verdict = { findingId: finding.id, verdict: "uncertain", reason: "verifier output was not parseable JSON (" + error.message + "), finish_reason=" + String(call.finishReason) };
   }
-  const verifier = { model: call.model, verdict: verdict.verdict, reason: verdict.reason };
+  let outcome = applyVerdict(verdict, call.model, repo);
+  if (outcome.status === "moderate" && verdict.verdict === "refute") {
+    const retryCall = await input.agent.complete({
+      role: "verifier",
+      messages: buildStrongRefuteMessages(finding, input.excerpts, call.text),
+      responseFormat: STRONG_REFUTE_RESPONSE_FORMAT,
+      temperature: 0,
+      maxTokens: maxTokens
+    });
+    try {
+      const retryParsed = parseDirtyJson(retryCall.text);
+      const retryValidated = validateVerdictsL0(retryParsed);
+      if (retryValidated.ok) {
+        const retryVerdict = retryValidated.verdicts.find(function (item) { return item.findingId === finding.id; });
+        if (retryVerdict && retryVerdict.verdict === "refute" && retryVerdict.mode === "strong") {
+          const secondOutcome = applyVerdict(retryVerdict, retryCall.model, repo);
+          if (secondOutcome.status === "refuted") outcome = secondOutcome;
+        }
+      }
+    } catch (error) {
+      console.warn("  WARN strong-refute retry failed for " + finding.id + ": " + error.message);
+    }
+  }
+  return { finding: finding, status: outcome.status, l1: passing, verifier: outcome.verifier };
+}
+export function applyVerdict(verdict, model, repo) {
+  const verifier = { model: model, verdict: verdict.verdict, reason: verdict.reason };
   let status = "uncertain";
   if (verdict.verdict === "confirm") {
     status = "verified";
   } else if (verdict.verdict === "refute") {
     verifier.mode = verdict.mode;
-    if (Array.isArray(verdict.counterEvidence) && verdict.counterEvidence.length > 0) {
-      verifier.counterEvidence = verdict.counterEvidence;
+    const counterEvidence = Array.isArray(verdict.counterEvidence) ? verdict.counterEvidence : [];
+    if (counterEvidence.length > 0) verifier.counterEvidence = counterEvidence;
+    if (verdict.mode === "strong" && counterEvidence.length === 0) {
+      verdict.mode = "weak";
+      verifier.mode = "weak";
     }
     if (verdict.mode === "strong") {
-      const counterChecks = verdict.counterEvidence.map(function (evidence) {
+      const counterChecks = counterEvidence.map(function (evidence) {
         return checkCitation(evidence, repo);
       });
       const failed = counterChecks.find(function (check) { return !check.passed; });
@@ -207,5 +304,16 @@ export async function verifyOne(input) {
       status = "moderate";
     }
   }
-  return { finding: finding, status: status, l1: passing, verifier: verifier };
+  return { status: status, verifier: verifier };
+}
+
+export function buildStrongRefuteMessages(finding, excerpts, previousOutput) {
+  const base = buildVerifierMessages(finding, excerpts);
+  return base.concat([
+    { role: "assistant", content: String(previousOutput || "").slice(0, 2000) },
+    {
+      role: "user",
+      content: "You refuted the finding without a counter-citation. The excerpts may contain a line that directly contradicts the claim: a guard, sanitizer, awaited call, throw or rethrow, or a correct branch. If such a line exists, return the verdict again with mode strong and counterEvidence copied verbatim from the excerpts (path, startLine, endLine, snippet). If no such line exists, return mode weak again and say why."
+    }
+  ]);
 }

@@ -1,0 +1,56 @@
+{
+  "note": "CONTROLLED VERIFIER TEST. These candidates are injected directly into the verifier; they are NOT scanner output. Citations are real. Two claims are true on purpose and one is false on purpose (the verifier should refute it with a mechanically checked counter-citation).",
+  "findings": [
+    {
+      "id": "F-101",
+      "category": "correctness",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Catch block swallows batch errors",
+      "claim": "The catch block in runAll swallows the failure: it logs the error but never rethrows, so callers continue as if the batch had succeeded.",
+      "evidence": [
+        {
+          "path": "src/batch.js",
+          "startLine": 4,
+          "endLine": 5,
+          "snippet": "  } catch (error) {\n    console.error(\"batch failed\", error);"
+        }
+      ],
+      "confidence": 0.8
+    },
+    {
+      "id": "F-102",
+      "category": "correctness",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Pagination slice returns one extra item",
+      "claim": "items.slice(start, start + size + 1) returns size + 1 elements because slice end is exclusive, so every page leaks one item from the next page.",
+      "evidence": [
+        {
+          "path": "src/pagination.js",
+          "startLine": 3,
+          "endLine": 3,
+          "snippet": "  return items.slice(start, start + size + 1);"
+        }
+      ],
+      "confidence": 0.9
+    },
+    {
+      "id": "F-103",
+      "category": "correctness",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Missing await before reading rotated token",
+      "claim": "store.save is not awaited before store.get, so the rotated token read can return the previous token and the caller receives a stale value.",
+      "evidence": [
+        {
+          "path": "src/auth.js",
+          "startLine": 2,
+          "endLine": 3,
+          "snippet": "  store.save(userId, token);\n  return store.get(userId);"
+        }
+      ],
+      "confidence": 0.9
+    }
+  ]
+}

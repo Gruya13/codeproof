@@ -68,7 +68,8 @@ export function createMetaAgent(options) {
           costUsd: costOf(model, usage),
           model: model,
           latencyMs: Date.now() - startedAt,
-          retries: attempt
+          retries: attempt,
+          finishReason: choice ? choice.finish_reason || null : null
         };
       }
       const status = response.status;

@@ -15,6 +15,8 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), 
 
 Milestone F1 is complete: the pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`). First live runs on the 4-file demo fixture: 2 calls (Muse Spark 1.3 producer, Muse Wonder verifier), 1 finding passed both gates, 16.5 s wall time, **$0.0335 measured cost**; a second run measured **229 of 1365 input tokens served from prompt cache**. Numbers are only published when measured - `run.json` says `measured: false` when they are not. Benchmark recall and precision are measured next (milestones F2/F3).
 
+A controlled verifier test (`make controlled`) closed the hard gate on the real API: two true findings were confirmed and one deliberately false claim was **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`). The run cost **$0.103** and served **3280 of 4065 input tokens from prompt cache**. It is recorded as `mode: controlled-verifier` and labelled as injected candidates in every report - never as scanner output.
+
 ## How it works
 
 ingest -> scan -> verify -> publish
@@ -38,8 +40,9 @@ Static analysis only: the analyzed code is never executed, patched, or sent anyw
 ## Quick start
 
 ```bash
-make demo   # deterministic end-to-end demo, mock adapter, no network
-make test   # unit tests for the L1 gate, dirty-JSON parsing and run-id
+make demo        # deterministic end-to-end demo, mock adapter, no network
+make test        # unit tests for the L1 gate, dirty-JSON parsing and run-id
+make controlled  # controlled verifier test: injected candidates, real API (needs MODEL_API_KEY)
 ```
 
 `make demo` prints a **MOCK MODE** banner and writes `mock: true` into `run.json`; the analyzed fixture is synthetic and checked in on purpose. A real run needs a key (never committed):
@@ -48,6 +51,10 @@ make test   # unit tests for the L1 gate, dirty-JSON parsing and run-id
 export MODEL_API_KEY=...
 node src/cli.mjs analyze /path/to/repo
 ```
+
+## Controlled verifier test
+
+`make controlled` injects a small candidate set (two true findings and one false claim that cites real lines) directly into the verifier, bypassing the scanner. That is how the project proves that a strong refutation really carries a machine-checked counter-citation without waiting for the scanner to produce a false positive on its own. The run is recorded as `mode: controlled-verifier` and every report says so; it is never presented as scanner output. These results are not benchmark recall or precision.
 
 ## What was built during the hackathon
 

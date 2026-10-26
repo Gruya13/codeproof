@@ -27,7 +27,7 @@ function loadDotEnv(path) {
 }
 
 function parseArgs(argv) {
-  const args = { command: argv[0], target: null, mock: false, out: "reports" };
+  const args = { command: argv[0], target: null, mock: false, out: "reports", candidates: null };
   const rest = argv.slice(1);
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
@@ -35,6 +35,9 @@ function parseArgs(argv) {
       args.mock = true;
     } else if (arg === "--out") {
       args.out = rest[index + 1];
+      index += 1;
+    } else if (arg === "--candidates") {
+      args.candidates = rest[index + 1];
       index += 1;
     } else if (args.target === null) {
       args.target = arg;
@@ -47,10 +50,15 @@ function parseArgs(argv) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  if (args.command !== "analyze") {
+  const controlled = args.candidates !== null;
+  if (args.command !== "analyze" && args.command !== "controlled-verifier") {
     console.log("usage: node src/cli.mjs analyze <path> [--mock] [--out <dir>]");
+    console.log("       node src/cli.mjs controlled-verifier <path> --candidates <file> [--out <dir>]");
     process.exitCode = 2;
     return;
+  }
+  if (args.command === "controlled-verifier" && !controlled) {
+    throw new Error("--candidates <file> is required for controlled-verifier mode");
   }
   loadDotEnv(resolve(".env"));
   const config = loadConfig(process.env);
@@ -58,12 +66,17 @@ async function main() {
   if (!mock && !config.apiKey) {
     throw new Error("MODEL_API_KEY is not set. Use --mock for an offline demo, or export MODEL_API_KEY for a real run.");
   }
+  if (controlled && mock) {
+    throw new Error("controlled-verifier mode needs the real API; do not use --mock");
+  }
+  const mode = controlled ? "controlled-verifier" : (mock ? "demo" : "smoke");
   const target = resolve(args.target || "fixtures/mini-repo");
   const startedAt = new Date().toISOString();
   const startedAtMs = Date.now();
   const phases = [];
-  const models = [config.scannerModel, config.verifierModel];
+  const models = controlled ? [config.verifierModel] : [config.scannerModel, config.verifierModel];
   const configSha256 = sha256Hex(JSON.stringify({
+    mode: mode,
     scannerModel: config.scannerModel,
     verifierModel: config.verifierModel,
     temperature: config.temperature,
@@ -71,10 +84,12 @@ async function main() {
     citationMaxLines: config.citationMaxLines
   }));
   const commit = await gitCommit(target);
-  const prompts = [
-    { role: "scanner-correctness", version: "v1", sha256: sha256Hex(SCANNER_SYSTEM_PROMPT) },
-    { role: "verifier", version: "v1", sha256: sha256Hex(VERIFIER_SYSTEM_PROMPT) }
-  ];
+  const prompts = controlled
+    ? [{ role: "verifier", version: "v1", sha256: sha256Hex(VERIFIER_SYSTEM_PROMPT) }]
+    : [
+        { role: "scanner-correctness", version: "v1", sha256: sha256Hex(SCANNER_SYSTEM_PROMPT) },
+        { role: "verifier", version: "v1", sha256: sha256Hex(VERIFIER_SYSTEM_PROMPT) }
+      ];
   const runId = computeRunId({
     commit: commit,
     configSha256: configSha256,
@@ -88,7 +103,13 @@ async function main() {
     console.log("  *  MOCK MODE - synthetic output, no network, no model calls  *");
     console.log("  *************************************************************");
   }
-  console.log((mock ? "CodeProof demo" : "CodeProof run") + "  target=" + target);
+  if (controlled) {
+    console.log("  *************************************************************");
+    console.log("  *  CONTROLLED VERIFIER TEST - candidates injected by hand    *");
+    console.log("  *  This is NOT scanner output; it is presented as such.      *");
+    console.log("  *************************************************************");
+  }
+  console.log((controlled ? "CodeProof controlled verifier test" : mock ? "CodeProof demo" : "CodeProof run") + "  target=" + target);
   console.log("  run-id " + runId + (mock ? "  (mock)" : ""));
 
   const ingestStarted = Date.now();
@@ -108,25 +129,35 @@ async function main() {
     budget: budget
   });
 
-  const scanStarted = Date.now();
-  const scanCall = await agents.complete({
-    role: "scanner",
-    messages: buildScannerMessages({ digest: repoDigest(repo), filesWithLineNumbers: filesWithLineNumbers(repo) }),
-    responseFormat: SCANNER_RESPONSE_FORMAT,
-    temperature: config.temperature,
-    maxTokens: 6000
-  });
-  const scanParsed = parseDirtyJson(scanCall.text);
-  const scanValidated = validateFindingsL0(scanParsed);
-  if (!scanValidated.ok) {
-    mkdirSync(join(process.cwd(), "reports"), { recursive: true });
-    writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ raw: scanCall.text, errors: scanValidated.errors }, null, 2) + "\n");
-    throw new Error("scanner output failed L0: " + scanValidated.errors.join("; ") + " (raw output saved to reports/last-scan-raw.json)");
+  let proposed;
+  if (controlled) {
+    const candidateDoc = JSON.parse(readFileSync(resolve(args.candidates), "utf8"));
+    const candidateValidation = validateFindingsL0({ findings: candidateDoc.findings });
+    if (!candidateValidation.ok) throw new Error("candidate findings failed L0: " + candidateValidation.errors.join("; "));
+    proposed = candidateValidation.findings;
+    phases.push({ name: "scan", status: "skipped", durationMs: 0 });
+    console.log("  scan     skip  controlled verifier: " + proposed.length + " injected candidates");
+  } else {
+    const scanStarted = Date.now();
+    const scanCall = await agents.complete({
+      role: "scanner",
+      messages: buildScannerMessages({ digest: repoDigest(repo), filesWithLineNumbers: filesWithLineNumbers(repo) }),
+      responseFormat: SCANNER_RESPONSE_FORMAT,
+      temperature: config.temperature,
+      maxTokens: 6000
+    });
+    const scanParsed = parseDirtyJson(scanCall.text);
+    const scanValidated = validateFindingsL0(scanParsed);
+    if (!scanValidated.ok) {
+      mkdirSync(join(process.cwd(), "reports"), { recursive: true });
+      writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ raw: scanCall.text, errors: scanValidated.errors }, null, 2) + "\n");
+      throw new Error("scanner output failed L0: " + scanValidated.errors.join("; ") + " (raw output saved to reports/last-scan-raw.json)");
+    }
+    const proposed = scanValidated.findings;
+    phases.push({ name: "scan", status: "ok", durationMs: Date.now() - scanStarted });
+    console.log("  scan     " + String(Date.now() - scanStarted).padStart(4) + " ms  " +
+      proposed.length + " proposed (input " + scanCall.usage.inputTokens + " tok, cached " + scanCall.usage.cachedTokens + ")");
   }
-  const proposed = scanValidated.findings;
-  phases.push({ name: "scan", status: "ok", durationMs: Date.now() - scanStarted });
-  console.log("  scan     " + String(Date.now() - scanStarted).padStart(4) + " ms  " +
-    proposed.length + " proposed (input " + scanCall.usage.inputTokens + " tok, cached " + scanCall.usage.cachedTokens + ")");
 
   const manifest = new Map(repo.files.map(function (file) { return [file.path, file]; }));
   const repoForGate = { root: target, manifest: manifest };
@@ -135,7 +166,7 @@ async function main() {
   const published = [];
   let l1Rejected = 0;
   for (const finding of proposed) {
-    const outcome = await verifyOne({ finding: finding, repo: repoForGate, agent: agents, excerpts: excerpts });
+    const outcome = await verifyOne({ finding: finding, repo: repoForGate, agent: agents, excerpts: excerpts, maxTokens: config.verifierMaxTokens });
     if (outcome.status === "l1-rejected") {
       l1Rejected += 1;
       continue;
@@ -161,8 +192,14 @@ async function main() {
     counts.uncertain + " uncertain, " + counts.l1Rejected + " rejected at L1");
 
   const publishStarted = Date.now();
-  const outDir = resolve(args.out, runId);
+  let outDir = resolve(args.out, runId);
+  if (existsSync(outDir)) {
+    let suffix = 2;
+    while (existsSync(outDir + "-" + suffix)) suffix += 1;
+    outDir = outDir + "-" + suffix;
+  }
   mkdirSync(outDir, { recursive: true });
+  const outLabel = args.out + "/" + outDir.slice(resolve(args.out).length + 1);
   const byRoleMap = new Map();
   for (const call of agents.callLog) {
     const role = call.role === "scanner" ? "scanner-correctness" : "verifier";
@@ -183,13 +220,15 @@ async function main() {
   const totalCost = measured ? agents.callLog.reduce(function (sum, call) { return sum + (call.costUsd || 0); }, 0) : null;
   const runJson = {
     runId: runId,
-    mode: mock ? "demo" : "smoke",
+    mode: mode,
     mock: mock,
     configSha256: configSha256,
     repo: { source: "local", path: target, commit: commit, loc: repo.loc, files: repo.files.length },
     models: mock
       ? [{ role: "scanner-correctness", id: "mock-scanner" }, { role: "verifier", id: "mock-verifier" }]
-      : [{ role: "scanner-correctness", id: config.scannerModel }, { role: "verifier", id: config.verifierModel }],
+      : controlled
+        ? [{ role: "verifier", id: config.verifierModel }]
+        : [{ role: "scanner-correctness", id: config.scannerModel }, { role: "verifier", id: config.verifierModel }],
     prompts: prompts,
     usage: {
       inputTokens: totalInput,
@@ -207,9 +246,9 @@ async function main() {
     budget: { limitUsd: config.budgetUsd, spentUsd: measured ? Math.round(budget.spentUsd * 1e6) / 1e6 : null, measured: measured, exceeded: budget.exceeded },
     findings: counts,
     outputs: {
-      report: args.out + "/" + runId + "/REPORT.md",
-      findings: args.out + "/" + runId + "/findings.json",
-      rejected: args.out + "/" + runId + "/rejected.md"
+      report: outLabel + "/REPORT.md",
+      findings: outLabel + "/findings.json",
+      rejected: outLabel + "/rejected.md"
     },
     versions: { node: process.version, codeproof: VERSION }
   };

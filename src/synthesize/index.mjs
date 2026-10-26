@@ -38,6 +38,10 @@ export function buildReport(options) {
     lines.push("> **MOCK MODE** - this run used the mock adapter. No model was called and no network was used; the numbers are synthetic.");
     lines.push("");
   }
+  if (run.mode === "controlled-verifier") {
+    lines.push("> **CONTROLLED VERIFIER TEST** - the candidates in this report were injected directly into the verifier. They are not scanner output and must not be presented as a scan.");
+    lines.push("");
+  }
   lines.push("**Publishing rule:** a finding appears under *Verified findings* only if the deterministic citation gate (L1) passed and the adversarial verifier confirmed it. Refuted, uncertain and moderate findings are kept in separate sections - nothing is hidden, and nothing unproven is presented as verified.");
   lines.push("");
   lines.push("## Summary");
@@ -120,6 +124,10 @@ export function buildRejected(options) {
   lines.push("");
   if (run.mock) {
     lines.push("> **MOCK MODE** - synthetic output, no model was called.");
+    lines.push("");
+  }
+  if (run.mode === "controlled-verifier") {
+    lines.push("> **CONTROLLED VERIFIER TEST** - candidates were injected directly into the verifier; they are not scanner output.");
     lines.push("");
   }
   lines.push("This file exists on purpose: the product is not 'we found everything', it is 'we do not publish what we could not prove'. Rejected findings stay visible with the evidence that refuted them.");
