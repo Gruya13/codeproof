@@ -6,6 +6,8 @@ export function scannerSystemPrompt(maxFindings) {
     "Report only direct correctness defects: the defective code is physically present in the lines you cite.",
     "Every finding needs evidence: path, startLine, endLine and a verbatim snippet copied from the input. Never paraphrase code in the snippet.",
     "Do not report missing validations, security, style, performance or architecture issues. Do not guess; if unsure, drop the finding.",
+    "Audit resource handles: when a function stores a timer, interval, listener or subscription in a field or module variable, check whether an existing handle is cleared before it is replaced or in cleanup. A handle that is replaced and never cleared is a direct defect.",
+    "Audit repeated-call state: module-level or class-level accumulators that are never reset make a second call double-count; report that as a direct defect, not as a missing feature.",
     "Return at most " + limit + " findings sorted by severity. Keep each citation at most 15 lines wide.",
     "Output only a JSON object matching the provided schema. If you find nothing, return an empty findings array."
   ].join("\n");

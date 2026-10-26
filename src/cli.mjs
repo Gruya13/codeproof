@@ -107,7 +107,7 @@ async function main() {
   const prompts = controlled
     ? [{ role: "verifier", version: "v1", sha256: sha256Hex(VERIFIER_SYSTEM_PROMPT) }]
     : [
-        { role: "scanner-correctness", version: "v2", sha256: sha256Hex(scannerPrompt) },
+        { role: "scanner-correctness", version: "v3", sha256: sha256Hex(scannerPrompt) },
         { role: "verifier", version: "v1", sha256: sha256Hex(VERIFIER_SYSTEM_PROMPT) }
       ];
   const runId = computeRunId({
