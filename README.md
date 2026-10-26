@@ -7,7 +7,9 @@ A finding appears in the main report only if two independent gates pass:
 1. **L1 - deterministic citation gate.** The cited file, line range and verbatim snippet exist in the analyzed commit. Checked by code, not by a prompt.
 2. **L2 - adversarial verifier.** A different model (Muse Wonder) tries to refute the finding. A strong refutation must carry its own machine-checked counter-citation.
 
-Everything that fails the gate is still published - in `rejected.md`, with the evidence that refuted it. The claim is not "we found everything". It is "we do not publish what we could not prove".
+Everything that fails the gate is still published - in `rejected.md`, with the evidence that refuted it.
+
+L1 is a provenance check, not a semantic judge: it proves that the cited lines exist in the commit (file, range, verbatim snippet). Whether the claim is actually true is judged by L2 (the verifier) and is presented as such everywhere - L1 never proves semantic accuracy. The claim is not "we found everything". It is "we do not publish what we could not prove".
 
 Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), Indie Developer track.
 
@@ -58,6 +60,8 @@ node src/cli.mjs analyze /path/to/repo
 ## Controlled verifier test
 
 `make controlled` injects a small candidate set (two true findings and one false claim that cites real lines) directly into the verifier, bypassing the scanner. That is how the project proves that a strong refutation really carries a machine-checked counter-citation without waiting for the scanner to produce a false positive on its own. The run is recorded as `mode: controlled-verifier` and every report says so; it is never presented as scanner output. These results are not benchmark recall or precision.
+
+The committed artifacts for the controlled test are in [reports/controlled-verifier/](reports/controlled-verifier/): `run.json`, `REPORT.md`, `findings.json` and `rejected.md`. The refuted candidate in `rejected.md` carries the machine-checked counter-citation `src/batch.js:6` (verbatim `throw error;`), together with its L1 check result.
 
 ## Benchmark results
 

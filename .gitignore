@@ -8,4 +8,6 @@ reports/*
 !reports/golden/**
 !reports/real-world/
 !reports/real-world/**
+!reports/controlled-verifier/
+!reports/controlled-verifier/**
 *.log

@@ -1,0 +1,141 @@
+{
+  "runId": "65857ce15ea9d5c3",
+  "mode": "controlled-verifier",
+  "mock": false,
+  "configSha256": "843bdd0328e486e4f00d445d41a925e5889f3e77f732a64a2fdf77ca8abd1250",
+  "repo": {
+    "source": "local",
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/fixtures/mini-repo",
+    "commit": "89f18b2880afbca9fc26a0f926e862d549036349",
+    "loc": 21,
+    "files": 4
+  },
+  "models": [
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "43e01b00acc59ce86aeafd47601d8ca5115f5364d945cb167478bfea82a42673"
+    }
+  ],
+  "usage": {
+    "inputTokens": 4065,
+    "outputTokens": 4960,
+    "cachedTokens": 3280,
+    "byRole": [
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 4,
+        "inputTokens": 4065,
+        "outputTokens": 4960,
+        "cachedTokens": 3280,
+        "costUsd": 0.102996
+      }
+    ],
+    "callLog": [
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 0,
+        "inputTokens": 981,
+        "outputTokens": 706,
+        "cachedTokens": 500,
+        "costUsd": 0.016144,
+        "durationMs": 6205,
+        "retries": 0
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 1,
+        "inputTokens": 1126,
+        "outputTokens": 841,
+        "cachedTokens": 1012,
+        "costUsd": 0.0174784,
+        "durationMs": 4504,
+        "retries": 0
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 981,
+        "outputTokens": 802,
+        "cachedTokens": 884,
+        "costUsd": 0.0166048,
+        "durationMs": 5811,
+        "retries": 0
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 3,
+        "inputTokens": 977,
+        "outputTokens": 2611,
+        "cachedTokens": 884,
+        "costUsd": 0.052768800000000005,
+        "durationMs": 22259,
+        "retries": 0
+      }
+    ],
+    "costUsd": 0.102996,
+    "measured": true
+  },
+  "calls": 4,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-26T18:51:12.930Z",
+    "durationMs": 38791
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 1
+    },
+    {
+      "name": "scan",
+      "status": "skipped",
+      "durationMs": 0
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 38781
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 1
+    }
+  ],
+  "budget": {
+    "limitUsd": 2,
+    "spentUsd": 0.102996,
+    "measured": true,
+    "exceeded": false
+  },
+  "findings": {
+    "proposed": 3,
+    "l1Rejected": 0,
+    "verified": 2,
+    "moderate": 0,
+    "refuted": 1,
+    "uncertain": 0
+  },
+  "outputs": {
+    "report": "reports/65857ce15ea9d5c3-2/REPORT.md",
+    "findings": "reports/65857ce15ea9d5c3-2/findings.json",
+    "rejected": "reports/65857ce15ea9d5c3-2/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.1.0"
+  }
+}

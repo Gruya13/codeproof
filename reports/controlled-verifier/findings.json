@@ -1,0 +1,105 @@
+[
+  {
+    "finding": {
+      "id": "F-101",
+      "category": "correctness",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Catch block swallows batch errors",
+      "claim": "The catch block in runAll swallows the failure: it logs the error but never rethrows, so callers continue as if the batch had succeeded.",
+      "evidence": [
+        {
+          "path": "src/batch.js",
+          "startLine": 4,
+          "endLine": 5,
+          "snippet": "  } catch (error) {\n    console.error(\"batch failed\", error);"
+        }
+      ],
+      "confidence": 0.8
+    },
+    "status": "refuted",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 4-5 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "refute",
+      "reason": "The catch block rethrows the error at src/batch.js:6, so it does not swallow the failure.",
+      "mode": "strong",
+      "counterEvidence": [
+        {
+          "endLine": 6,
+          "path": "src/batch.js",
+          "snippet": "    throw error;",
+          "startLine": 6
+        }
+      ],
+      "counterEvidenceL1": {
+        "passed": true,
+        "reason": "counter-citation verified against the commit"
+      }
+    }
+  },
+  {
+    "finding": {
+      "id": "F-102",
+      "category": "correctness",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Pagination slice returns one extra item",
+      "claim": "items.slice(start, start + size + 1) returns size + 1 elements because slice end is exclusive, so every page leaks one item from the next page.",
+      "evidence": [
+        {
+          "path": "src/pagination.js",
+          "startLine": 3,
+          "endLine": 3,
+          "snippet": "  return items.slice(start, start + size + 1);"
+        }
+      ],
+      "confidence": 0.9
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 3-3 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At src/pagination.js:3 the code returns items.slice(start, start + size + 1) with start computed at src/pagination.js:2, so the exclusive end yields size+1 items per full page, confirming the off-by-one."
+    }
+  },
+  {
+    "finding": {
+      "id": "F-103",
+      "category": "correctness",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Missing await before reading rotated token",
+      "claim": "store.save is not awaited before store.get, so the rotated token read can return the previous token and the caller receives a stale value.",
+      "evidence": [
+        {
+          "path": "src/auth.js",
+          "startLine": 2,
+          "endLine": 3,
+          "snippet": "  store.save(userId, token);\n  return store.get(userId);"
+        }
+      ],
+      "confidence": 0.9
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 2-3 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At src/auth.js:2 store.save(userId, token) is called without await and src/auth.js:3 immediately returns store.get(userId), so there is no ordering guarantee that an asynchronous save completes before the read."
+    }
+  }
+]
