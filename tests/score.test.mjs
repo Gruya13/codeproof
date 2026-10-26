@@ -1,6 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { scoreRun, matchTarget, buildIndex } from "../bench/score.mjs";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { scoreRun, matchTarget, buildIndex, selectBenchRun } from "../bench/score.mjs";
+
+function makeRun(reportsDir, name, mode, startedAt) {
+  const dir = join(reportsDir, name);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "run.json"), JSON.stringify({ mode: mode, timings: { startedAt: startedAt } }));
+}
 
 const expected = {
   problems: [
@@ -79,4 +88,20 @@ test("duplicates are not false positives and do not add recall", function () {
 test("precision is undefined when nothing is verified", function () {
   const metrics = scoreRun(expected, [finding("F-001", "src/a.ts", 10, "uncertain")]);
   assert.equal(metrics.precision, null);
+});
+
+test("selectBenchRun fails clearly when no benchmark run exists", function () {
+  const reports = mkdtempSync(join(tmpdir(), "codeproof-reports-"));
+  makeRun(reports, "demo-run", "demo", "2026-10-26T18:00:00.000Z");
+  makeRun(reports, "smoke-run", "smoke", "2026-10-26T18:05:00.000Z");
+  makeRun(reports, "controlled-run", "controlled-verifier", "2026-10-26T18:10:00.000Z");
+  assert.throws(function () { selectBenchRun(reports); }, /no benchmark run found/);
+});
+
+test("selectBenchRun selects the newest benchmark run", function () {
+  const reports = mkdtempSync(join(tmpdir(), "codeproof-reports-"));
+  makeRun(reports, "demo-run", "demo", "2026-10-26T18:00:00.000Z");
+  makeRun(reports, "bench-old", "bench", "2026-10-27T10:00:00.000Z");
+  makeRun(reports, "bench-new", "bench", "2026-10-27T12:00:00.000Z");
+  assert.equal(selectBenchRun(reports), join(reports, "bench-new"));
 });

@@ -27,7 +27,7 @@ function loadDotEnv(path) {
 }
 
 function parseArgs(argv) {
-  const args = { command: argv[0], target: null, mock: false, out: "reports", candidates: null };
+  const args = { command: argv[0], target: null, mock: false, out: "reports", candidates: null, mode: null };
   const rest = argv.slice(1);
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
@@ -38,6 +38,9 @@ function parseArgs(argv) {
       index += 1;
     } else if (arg === "--candidates") {
       args.candidates = rest[index + 1];
+      index += 1;
+    } else if (arg === "--mode") {
+      args.mode = rest[index + 1];
       index += 1;
     } else if (args.target === null) {
       args.target = arg;
@@ -52,7 +55,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const controlled = args.candidates !== null;
   if (args.command !== "analyze" && args.command !== "controlled-verifier") {
-    console.log("usage: node src/cli.mjs analyze <path> [--mock] [--out <dir>]");
+    console.log("usage: node src/cli.mjs analyze <path> [--mock] [--out <dir>] [--mode demo|bench|smoke]");
     console.log("       node src/cli.mjs controlled-verifier <path> --candidates <file> [--out <dir>]");
     process.exitCode = 2;
     return;
@@ -69,7 +72,16 @@ async function main() {
   if (controlled && mock) {
     throw new Error("controlled-verifier mode needs the real API; do not use --mock");
   }
-  const mode = controlled ? "controlled-verifier" : (mock ? "demo" : "smoke");
+  const mode = args.mode || (controlled ? "controlled-verifier" : (mock ? "demo" : "smoke"));
+  if (["demo", "bench", "smoke", "controlled-verifier"].indexOf(mode) === -1) {
+    throw new Error("unknown --mode " + mode + " (expected demo, bench, smoke or controlled-verifier)");
+  }
+  if (mode === "bench" && mock) {
+    throw new Error("bench mode needs the real API; do not use --mock");
+  }
+  if (controlled && mode !== "controlled-verifier") {
+    throw new Error("controlled-verifier runs must use mode controlled-verifier");
+  }
   const target = resolve(args.target || "fixtures/mini-repo");
   const startedAt = new Date().toISOString();
   const startedAtMs = Date.now();
@@ -109,7 +121,8 @@ async function main() {
     console.log("  *  This is NOT scanner output; it is presented as such.      *");
     console.log("  *************************************************************");
   }
-  console.log((controlled ? "CodeProof controlled verifier test" : mock ? "CodeProof demo" : "CodeProof run") + "  target=" + target);
+  const title = controlled ? "CodeProof controlled verifier test" : mock ? "CodeProof demo" : mode === "bench" ? "CodeProof benchmark run" : "CodeProof run";
+  console.log(title + "  target=" + target);
   console.log("  run-id " + runId + (mock ? "  (mock)" : ""));
 
   const ingestStarted = Date.now();

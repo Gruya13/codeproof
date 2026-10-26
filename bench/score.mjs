@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 export function overlaps(a, b) {
   return a.startLine <= b.endLine && b.startLine <= a.endLine;
@@ -19,6 +20,43 @@ export function matchTarget(evidence, index) {
     if (entry.file === evidence.path && overlaps(evidence, entry)) return entry;
   }
   return null;
+}
+
+export function selectBenchRun(reportsDir) {
+  const base = reportsDir || "reports";
+  let entries;
+  try {
+    entries = readdirSync(base, { withFileTypes: true });
+  } catch (error) {
+    throw new Error("reports directory is not readable: " + base + " (" + error.message + ")");
+  }
+  const candidates = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name === "archive") continue;
+    const dir = join(base, entry.name);
+    const runPath = join(dir, "run.json");
+    if (!existsSync(runPath)) continue;
+    let run;
+    try {
+      run = JSON.parse(readFileSync(runPath, "utf8"));
+    } catch (error) {
+      continue;
+    }
+    if (run.mode !== "bench") continue;
+    const parsed = run.timings && run.timings.startedAt ? Date.parse(run.timings.startedAt) : 0;
+    let mtime = 0;
+    try { mtime = statSync(runPath).mtimeMs; } catch (error) { mtime = 0; }
+    candidates.push({ dir: dir, startedAt: Number.isNaN(parsed) ? 0 : parsed, mtime: mtime });
+  }
+  if (candidates.length === 0) {
+    throw new Error("no benchmark run found in " + base + " (mode: bench); run 'make bench' first");
+  }
+  candidates.sort(function (a, b) {
+    if (b.startedAt !== a.startedAt) return b.startedAt - a.startedAt;
+    return b.mtime - a.mtime;
+  });
+  return candidates[0].dir;
 }
 
 export function scoreRun(expected, findings) {
@@ -134,22 +172,45 @@ export function formatReport(metrics, meta) {
   return lines.join("\n");
 }
 
-function main() {
-  const args = process.argv.slice(2);
-  if (args.length < 2) {
-    console.error("usage: node bench/score.mjs bench/expected.json reports/<run>/findings.json [--json <out>]");
-    process.exitCode = 2;
-    return;
+function parseArgs(argv) {
+  const options = { expectedPath: "bench/expected.json", findingsPath: null, runDir: null, jsonOut: null, positional: [] };
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--run") { options.runDir = argv[index + 1]; index += 1; }
+    else if (arg === "--expected") { options.expectedPath = argv[index + 1]; index += 1; }
+    else if (arg === "--json") { options.jsonOut = argv[index + 1]; index += 1; }
+    else if (arg.startsWith("--")) throw new Error("unknown option: " + arg);
+    else options.positional.push(arg);
   }
-  const expected = JSON.parse(readFileSync(args[0], "utf8"));
-  const findings = JSON.parse(readFileSync(args[1], "utf8"));
-  const metrics = scoreRun(expected, findings);
-  console.log(formatReport(metrics, args[1]));
-  console.log("");
-  console.log(JSON.stringify(metrics, null, 2));
-  const jsonIndex = args.indexOf("--json");
-  if (jsonIndex >= 0 && args[jsonIndex + 1]) writeFileSync(args[jsonIndex + 1], JSON.stringify(metrics, null, 2) + "\n");
-  process.exitCode = metrics.pass ? 0 : 1;
+  if (options.positional.length > 0) options.expectedPath = options.positional[0];
+  if (options.positional.length > 1) options.findingsPath = options.positional[1];
+  return options;
+}
+
+function main() {
+  try {
+    const options = parseArgs(process.argv.slice(2));
+    let findingsPath = options.findingsPath;
+    if (options.runDir !== null && options.runDir !== undefined && String(options.runDir).trim() !== "") {
+      findingsPath = join(options.runDir, "findings.json");
+    }
+    if (!findingsPath) {
+      const selected = selectBenchRun("reports");
+      findingsPath = join(selected, "findings.json");
+      console.log("Selected benchmark run: " + selected);
+    }
+    const expected = JSON.parse(readFileSync(options.expectedPath, "utf8"));
+    const findings = JSON.parse(readFileSync(findingsPath, "utf8"));
+    const metrics = scoreRun(expected, findings);
+    console.log(formatReport(metrics, findingsPath));
+    console.log("");
+    console.log(JSON.stringify(metrics, null, 2));
+    if (options.jsonOut) writeFileSync(options.jsonOut, JSON.stringify(metrics, null, 2) + "\n");
+    process.exitCode = metrics.pass ? 0 : 1;
+  } catch (error) {
+    console.error("ERROR: " + error.message);
+    process.exitCode = 1;
+  }
 }
 
 function invokedDirectly() {
