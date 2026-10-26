@@ -94,7 +94,10 @@ async function main() {
     verifierModel: config.verifierModel,
     temperature: config.temperature,
     maxFindings: config.maxFindings,
-    citationMaxLines: config.citationMaxLines
+    citationMaxLines: config.citationMaxLines,
+    scannerMaxTokens: config.scannerMaxTokens,
+    verifierMaxTokens: config.verifierMaxTokens,
+    verifierContextChars: config.verifierContextChars
   }));
   const commit = await gitCommit(target);
   const dirty = !(await repoIsClean(target));
