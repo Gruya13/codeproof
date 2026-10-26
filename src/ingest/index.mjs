@@ -1,12 +1,14 @@
+import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, extname, posix } from "node:path";
 import { sha256Hex } from "../run/index.mjs";
 
 const ANALYZABLE = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
+const SKIP_DIRS = new Set(["node_modules", "dist", "build", "out", "coverage"]);
 
 function walk(dir, root, out) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === "node_modules" || entry.name.startsWith(".")) continue;
+    if (SKIP_DIRS.has(entry.name) || entry.name.startsWith(".")) continue;
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       walk(full, root, out);
@@ -15,6 +17,15 @@ function walk(dir, root, out) {
     }
   }
   return out;
+}
+
+function listGitFiles(target) {
+  try {
+    const output = execFileSync("git", ["-C", target, "ls-files", "-z"], { encoding: "utf8", maxBuffer: 10 * 1024 * 1024 });
+    return output.split("\0").filter(function (entry) { return entry !== ""; });
+  } catch (error) {
+    return null;
+  }
 }
 
 const IMPORT_RE = /(?:import\s+(?:[^"'()]*?\s+from\s+)?|export\s+(?:[^"'()]*?\s+)?from\s+|require\s*\(\s*)["']([^"']+)["']/g;
@@ -79,7 +90,10 @@ function findCycles(nodes, edges) {
 }
 
 export function ingest(rootPath) {
-  const files = walk(rootPath, rootPath, []).sort();
+  const tracked = listGitFiles(rootPath);
+  const files = tracked !== null && tracked.length > 0
+    ? tracked.filter(function (relativePath) { return ANALYZABLE.has(extname(relativePath)); }).sort()
+    : walk(rootPath, rootPath, []).sort();
   if (files.length === 0) throw new Error("no TS/JS files found under " + rootPath);
   const fileSet = new Set(files);
   const entries = [];
