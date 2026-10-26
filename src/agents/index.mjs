@@ -22,7 +22,9 @@ export function createAgents(options) {
       cachedTokens: result.usage.cachedTokens,
       costUsd: result.costUsd,
       durationMs: result.latencyMs,
-      retries: result.retries || 0
+      retries: result.retries || 0,
+      finishReason: result.finishReason || null,
+      httpStatus: result.httpStatus || null
     });
     counter += 1;
     budget.charge(result.costUsd);
@@ -46,13 +48,17 @@ export function createAgents(options) {
       apiKey: options.apiKey,
       baseUrl: options.baseUrl,
       model: options.scannerModel,
-      maxRetries: options.maxRetries
+      maxRetries: options.maxRetries,
+      fetchImpl: options.fetchImpl,
+      sleepImpl: options.sleepImpl
     }),
     verifier: createMetaAgent({
       apiKey: options.apiKey,
       baseUrl: options.baseUrl,
       model: options.verifierModel,
-      maxRetries: options.maxRetries
+      maxRetries: options.maxRetries,
+      fetchImpl: options.fetchImpl,
+      sleepImpl: options.sleepImpl
     })
   };
   return {

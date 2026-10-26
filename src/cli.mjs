@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { resolve, join } from "node:path";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { loadConfig, VERSION } from "./config.mjs";
+import { loadConfig, computeConfigSha256, VERSION } from "./config.mjs";
 import { ingest, repoDigest, filesWithLineNumbers } from "./ingest/index.mjs";
 import { buildScannerMessages, buildScannerResponseFormat, scannerSystemPrompt, validateFindingsL0 } from "./scan/index.mjs";
 import { verifyOne, VERIFIER_SYSTEM_PROMPT } from "./verify/index.mjs";
@@ -88,17 +88,7 @@ async function main() {
   const startedAtMs = Date.now();
   const phases = [];
   const models = controlled ? [config.verifierModel] : [config.scannerModel, config.verifierModel];
-  const configSha256 = sha256Hex(JSON.stringify({
-    mode: mode,
-    scannerModel: config.scannerModel,
-    verifierModel: config.verifierModel,
-    temperature: config.temperature,
-    maxFindings: config.maxFindings,
-    citationMaxLines: config.citationMaxLines,
-    scannerMaxTokens: config.scannerMaxTokens,
-    verifierMaxTokens: config.verifierMaxTokens,
-    verifierContextChars: config.verifierContextChars
-  }));
+  const configSha256 = computeConfigSha256(config, mode);
   const commit = await gitCommit(target);
   const dirty = !(await repoIsClean(target));
   if (mode === "bench" && dirty) {
@@ -170,13 +160,24 @@ async function main() {
   } else {
     const scanStarted = Date.now();
     const scanMessages = buildScannerMessages({ digest: repoDigest(repo), filesWithLineNumbers: filesWithLineNumbers(repo), maxFindings: config.maxFindings });
-    let scanCall = await agents.complete({
-      role: "scanner",
-      messages: scanMessages,
-      responseFormat: buildScannerResponseFormat(config.maxFindings),
-      temperature: config.temperature,
-      maxTokens: config.scannerMaxTokens
-    });
+    let scanCall;
+    try {
+      scanCall = await agents.complete({
+        role: "scanner",
+        messages: scanMessages,
+        responseFormat: buildScannerResponseFormat(config.maxFindings),
+        temperature: config.temperature,
+        maxTokens: config.scannerMaxTokens
+      });
+    } catch (scanError) {
+      if (scanError.code === "CONTENT_FILTERED") {
+        console.error("");
+        console.error("ERROR: safety filter blocked the model response during scan");
+        process.exitCode = 1;
+        return;
+      }
+      throw scanError;
+    }
     let scanParsed;
     try {
       scanParsed = parseDirtyJson(scanCall.text);
@@ -191,7 +192,12 @@ async function main() {
         temperature: config.temperature,
         maxTokens: config.scannerMaxTokens * 2
       });
-      scanParsed = parseDirtyJson(scanCall.text);
+      try {
+        scanParsed = parseDirtyJson(scanCall.text);
+      } catch (retryParseError) {
+        writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ error: retryParseError.message, maxTokens: config.scannerMaxTokens * 2, finishReason: scanCall.finishReason, raw: scanCall.text }, null, 2) + "\n");
+        throw retryParseError;
+      }
     }
     scanRaw = scanCall.text;
     scanValidated = validateFindingsL0(scanParsed);
@@ -227,6 +233,7 @@ async function main() {
   const published = [];
   let l1Rejected = 0;
   let aborted = false;
+  let safetyFilterHit = false;
   let skippedFindings = [];
   function skipFrom(index) {
     aborted = true;
@@ -243,9 +250,26 @@ async function main() {
     try {
       outcome = await verifyOne({ finding: finding, repo: repoForGate, agent: agents, excerpts: verifierContext.text, maxTokens: config.verifierMaxTokens });
     } catch (error) {
-      if (error.code !== "BUDGET_EXCEEDED") throw error;
-      skipFrom(index);
-      break;
+      if (error.code === "BUDGET_EXCEEDED") {
+        skipFrom(index);
+        break;
+      }
+      if (error.code === "CONTENT_FILTERED") {
+        console.warn("  WARN safety filter blocked the model response for " + finding.id);
+        safetyFilterHit = true;
+        outcome = {
+          finding: finding,
+          status: "uncertain",
+          l1: { passed: true, reason: "citation verified against the commit" },
+          verifier: {
+            model: config.verifierModel,
+            verdict: "uncertain",
+            reason: "safety filter blocked the model response (finish_reason=content_filter)"
+          }
+        };
+      } else {
+        throw error;
+      }
     }
     const audit = candidateAudit[scanValidated.acceptedIndices[index]];
     audit.status = outcome.status;
@@ -363,6 +387,9 @@ async function main() {
   console.log("");
   if (aborted) {
     console.error("ERROR: run budget exceeded: spent " + budget.spentUsd + " USD of " + budget.limitUsd);
+    process.exitCode = 1;
+  } else if (safetyFilterHit) {
+    console.error("ERROR: safety filter blocked the model response on one or more findings");
     process.exitCode = 1;
   }
 }

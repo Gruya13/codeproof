@@ -27,6 +27,7 @@ export function createMetaAgent(options) {
   const model = options.model;
   const maxRetries = options.maxRetries === undefined ? 4 : options.maxRetries;
   const fetchImpl = options.fetchImpl || globalThis.fetch;
+  const sleepImpl = options.sleepImpl || sleep;
 
   return async function complete(request) {
     if (!apiKey) throw new Error("MODEL_API_KEY is required for a real (non-mock) run");
@@ -54,12 +55,18 @@ export function createMetaAgent(options) {
       } catch (error) {
         lastError = error;
         attempt += 1;
-        if (attempt <= maxRetries) await sleep(backoffMs(attempt));
+        if (attempt <= maxRetries) await sleepImpl(backoffMs(attempt));
         continue;
       }
       if (response.ok) {
         const json = await response.json();
         const choice = json.choices && json.choices[0];
+        const finishReason = choice ? choice.finish_reason || null : null;
+        if (finishReason === "content_filter") {
+          const filterError = new Error("safety filter blocked the model response (finish_reason=content_filter)");
+          filterError.code = "CONTENT_FILTERED";
+          throw filterError;
+        }
         const text = choice && choice.message ? choice.message.content : "";
         const usage = mapUsage(json.usage);
         return {
@@ -69,7 +76,8 @@ export function createMetaAgent(options) {
           model: model,
           latencyMs: Date.now() - startedAt,
           retries: attempt,
-          finishReason: choice ? choice.finish_reason || null : null
+          finishReason: finishReason,
+          httpStatus: 200
         };
       }
       const status = response.status;
@@ -80,7 +88,7 @@ export function createMetaAgent(options) {
       attempt += 1;
       const retryAfter = Number(response.headers.get("retry-after") || "0");
       if (attempt <= maxRetries) {
-        await sleep(retryAfter > 0 ? retryAfter * 1000 : backoffMs(attempt));
+        await sleepImpl(retryAfter > 0 ? retryAfter * 1000 : backoffMs(attempt));
       }
     }
     throw lastError || new Error("Meta Model API call failed");

@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 export const PRICES = {
   "muse-spark-1.3": { input: 1.25, cachedInput: 0.15, output: 4.25 },
   "muse-spark-1.2": { input: 1.25, cachedInput: 0.15, output: 4.25 },
@@ -27,6 +29,21 @@ export function loadConfig(env) {
     verifierMaxTokens: Number(env.VERIFIER_MAX_TOKENS || "4000"),
     verifierContextChars: Number(env.VERIFIER_CONTEXT_CHARS || "24000")
   };
+}
+
+export function computeConfigSha256(config, mode) {
+  const payload = JSON.stringify({
+    mode: mode,
+    scannerModel: config.scannerModel,
+    verifierModel: config.verifierModel,
+    temperature: config.temperature,
+    maxFindings: config.maxFindings,
+    citationMaxLines: config.citationMaxLines,
+    scannerMaxTokens: config.scannerMaxTokens,
+    verifierMaxTokens: config.verifierMaxTokens,
+    verifierContextChars: config.verifierContextChars
+  });
+  return createHash("sha256").update(payload).digest("hex");
 }
 
 export function costOf(model, usage) {
