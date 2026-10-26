@@ -60,23 +60,23 @@ node src/cli.mjs analyze /path/to/repo
 
 ## Benchmark results
 
-First scored run on the **calibration set**: frozen synthetic fixture with 8 injected defects, 4 traps and 2 pre-registered extra defects - 15 files / 229 LOC. The run artifacts are committed verbatim in [reports/golden/](reports/golden/) (`run.json`, `findings.json`, `REPORT.md`, `rejected.md`).
+Scored on the **calibration set**: frozen synthetic fixture with 8 injected defects, 4 traps and 2 pre-registered extra defects - 15 files / 229 LOC. Artifacts of the current run are committed verbatim in [reports/golden/](reports/golden/) (`run.json`, `findings.json`, `REPORT.md`, `rejected.md`).
 
-| Metric | Result | Threshold |
-|---|---|---|
-| End-to-end recall (verified) | **7/8 (87.5%)** | >= 6/8 |
-| Precision (verified-only) | **100%** (7 TP, 0 FP) | >= 90% |
-| Traps published as verified | **0/4** | 0/4 |
-| False refutations | **0** | <= 1 |
-| Cost / duration | **$0.2308** / 93.2 s | measured |
-| Prompt cache | 4,000 of 26,255 input tokens | reported |
-| Models | Muse Spark 1.3 (contributor) scanner, Muse Wonder verifier | two roles, two models |
+| Metric | Post-calibration (golden) | Pre-calibration baseline | Threshold |
+|---|---|---|---|
+| End-to-end recall (verified) | **8/8 (100%)** | 7/8 (87.5%) | >= 6/8 |
+| Precision (verified-only) | **100%** (8 TP, 0 FP) | 100% (7 TP, 0 FP) | >= 90% |
+| Traps published as verified | **0/4** | 0/4 | 0/4 |
+| False refutations | **0** | 0 | <= 1 |
+| Cost / duration | **$0.2777** / 107.3 s | $0.2308 / 93.2 s | measured |
+| Prompt cache | 3,500 of 29,408 input tokens | 4,000 of 26,255 | reported |
+| Scanner prompt version | v3 | v2 | - |
 
-The miss is B-05 (a timer replaced without clearing the previous interval): the scanner did not propose it. One pre-registered extra defect (X-02, numeric sort without comparator) was found and is correctly counted as neither TP nor FP. No trap was proposed by the scanner in this run, so the verifier's refutation path is demonstrated separately by the controlled verifier test.
+The baseline missed B-05 (a timer handle replaced without clearing the previous interval). The scanner prompt v3 adds generic audits for leaked resource handles and for repeated-call accumulators; after that change the same frozen fixture was re-scanned and B-05 was found. One pre-registered extra defect (X-02, numeric sort without comparator) was found in both runs and is correctly counted as neither TP nor FP; no trap was proposed by the scanner in either run, so the refutation path is demonstrated separately by the controlled verifier test.
 
-**Attempts (no cherry-picking):** two benchmark runs were made. The first (run `6a6d0c9c`) was invalidated because ingest included `dist/` build artifacts (45 files / 474 LOC instead of 15 / 229); the bug was fixed in commit `b0e6568` and the run was re-executed (run `9a5a56d6`, shown above). The invalid run is not reported as a result and is kept for audit. Model output is not bit-identical, so the number of attempts is always stated.
+**Attempts (no cherry-picking):** four benchmark attempts were made. (1) invalidated: ingest included `dist/` build artifacts, fixed in `b0e6568`; (2) valid baseline: run `9a5a56d6`, 7/8; (3) aborted: scanner output was truncated at the token limit, tooling fixed in `d0cde39`; (4) valid post-calibration run `a17a5b3e`, 8/8, shown above. Model output is not bit-identical, so the number of attempts is always stated.
 
-This is a calibration set: the same fixture is used to tune prompts, so the numbers are labelled as calibration results and n = 8 is not a statistical claim.
+This is a calibration set: prompts are tuned on the same fixture, so the numbers are **post-calibration** and n = 8 is not a statistical claim. The pre-calibration baseline is shown for transparency.
 
 ## What was built during the hackathon
 
