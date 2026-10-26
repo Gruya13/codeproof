@@ -32,12 +32,38 @@ test("verified problem is TP, unmatched verified is FP, trap leak is counted", f
     finding("F-005", "src/d.ts", 1, "verified")
   ]);
   assert.equal(metrics.verifiedTp, 1);
-  assert.equal(metrics.verifiedFp, 1);
+  assert.equal(metrics.verifiedFp, 2);
   assert.equal(metrics.trapsVerified, 1);
   assert.equal(metrics.falseRefutations, 1);
   assert.ok(metrics.extraTrueSeen.includes("X-01"));
-  assert.equal(metrics.precision, 0.5);
+  assert.ok(Math.abs(metrics.precision - 1 / 3) < 1e-9);
+  assert.ok(metrics.falsePositives.some(function (fp) { return fp.trap === true; }));
   assert.equal(metrics.pass, false);
+});
+
+test("moderate or refuted trap is not a false positive", function () {
+  const metrics = scoreRun(expected, [
+    finding("F-001", "src/a.ts", 10, "verified"),
+    finding("F-002", "src/c.ts", 20, "moderate"),
+    finding("F-003", "src/c.ts", 20, "refuted")
+  ]);
+  assert.equal(metrics.verifiedTp, 1);
+  assert.equal(metrics.verifiedFp, 0);
+  assert.equal(metrics.trapsVerified, 0);
+  assert.equal(metrics.trapsModerate, 1);
+  assert.equal(metrics.precision, 1);
+});
+
+test("a verified trap lowers precision like any other false positive", function () {
+  const metrics = scoreRun(expected, [
+    finding("F-001", "src/a.ts", 10, "verified"),
+    finding("F-002", "src/b.ts", 5, "verified"),
+    finding("F-003", "src/c.ts", 20, "verified")
+  ]);
+  assert.equal(metrics.verifiedTp, 2);
+  assert.equal(metrics.verifiedFp, 1);
+  assert.ok(Math.abs(metrics.precision - 2 / 3) < 1e-9);
+  assert.equal(metrics.trapsVerified, 1);
 });
 
 test("duplicates are not false positives and do not add recall", function () {

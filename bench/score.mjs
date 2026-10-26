@@ -49,6 +49,10 @@ export function scoreRun(expected, findings) {
     if (target.kind === "trap") {
       const state = trapState.get(target.id);
       if (state[item.status] !== undefined) state[item.status] = true;
+      if (item.status === "verified") {
+        verifiedFp += 1;
+        falsePositives.push({ id: item.finding.id, title: item.finding.title, path: evidence ? evidence.path : null, startLine: evidence ? evidence.startLine : null, trap: true });
+      }
       continue;
     }
     const state = problemState.get(target.id);
@@ -119,7 +123,7 @@ export function formatReport(metrics, meta) {
   if (metrics.falsePositives.length > 0) {
     lines.push("## False positives");
     lines.push("");
-    for (const fp of metrics.falsePositives) lines.push("- " + fp.id + " " + fp.title + " (" + fp.path + ":" + fp.startLine + ")");
+    for (const fp of metrics.falsePositives) lines.push("- " + fp.id + " " + fp.title + " (" + fp.path + ":" + fp.startLine + ")" + (fp.trap ? " - leaked trap (negative control)" : ""));
     lines.push("");
   }
   lines.push("## Threshold checks");
