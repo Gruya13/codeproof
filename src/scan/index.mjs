@@ -25,7 +25,7 @@ export const SCANNER_RESPONSE_FORMAT = {
             additionalProperties: false,
             required: ["id", "category", "kind", "severity", "title", "claim", "evidence", "confidence"],
             properties: {
-              id: { type: "string" },
+              id: { type: "string", pattern: "^F-[0-9]{3}$" },
               category: { const: "correctness" },
               kind: { const: "direct" },
               severity: { enum: ["critical", "high", "medium", "low"] },

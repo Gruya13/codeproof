@@ -31,7 +31,7 @@ export const VERIFIER_RESPONSE_FORMAT = {
             additionalProperties: false,
             required: ["findingId", "verdict", "reason"],
             properties: {
-              findingId: { type: "string" },
+              findingId: { type: "string", pattern: "^F-[0-9]{3}$" },
               verdict: { enum: ["confirm", "refute", "uncertain"] },
               mode: { enum: ["strong", "weak"] },
               reason: { type: "string" },

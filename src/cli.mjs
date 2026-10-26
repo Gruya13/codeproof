@@ -118,7 +118,11 @@ async function main() {
   });
   const scanParsed = parseDirtyJson(scanCall.text);
   const scanValidated = validateFindingsL0(scanParsed);
-  if (!scanValidated.ok) throw new Error("scanner output failed L0: " + scanValidated.errors.join("; "));
+  if (!scanValidated.ok) {
+    mkdirSync(join(process.cwd(), "reports"), { recursive: true });
+    writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ raw: scanCall.text, errors: scanValidated.errors }, null, 2) + "\n");
+    throw new Error("scanner output failed L0: " + scanValidated.errors.join("; ") + " (raw output saved to reports/last-scan-raw.json)");
+  }
   const proposed = scanValidated.findings;
   phases.push({ name: "scan", status: "ok", durationMs: Date.now() - scanStarted });
   console.log("  scan     " + String(Date.now() - scanStarted).padStart(4) + " ms  " +
