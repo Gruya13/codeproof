@@ -174,7 +174,7 @@ async function main() {
       writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ raw: scanCall.text, errors: scanValidated.errors }, null, 2) + "\n");
       throw new Error("scanner output failed L0: " + scanValidated.errors.join("; ") + " (raw output saved to reports/last-scan-raw.json)");
     }
-    const proposed = scanValidated.findings;
+    proposed = scanValidated.findings;
     phases.push({ name: "scan", status: "ok", durationMs: Date.now() - scanStarted });
     console.log("  scan     " + String(Date.now() - scanStarted).padStart(4) + " ms  " +
       proposed.length + " proposed (input " + scanCall.usage.inputTokens + " tok, cached " + scanCall.usage.cachedTokens + ")");
