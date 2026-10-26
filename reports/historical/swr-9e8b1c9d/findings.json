@@ -1,0 +1,74 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Ref count is incremented before calling subscribe, but if subscribe throws or returns a non-function the effect throws before returning cleanup, so the increment is never decremented and future mounts see refCount!=0 and skip subscribing forever.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 82,
+          "path": "index.ts",
+          "snippet": "      // Increment the ref count.\n      subscriptions.set(subscriptionKey, refCount + 1)\n\n      if (!refCount) {\n        const dispose = subscribe(args, { next })\n        if (typeof dispose !== 'function') {\n          throw new Error(\n            'The `subscribe` function must return a function to unsubscribe.'\n          )\n        }\n        disposers.set(subscriptionKey, dispose)\n      }",
+          "startLine": 71
+        },
+        {
+          "endLine": 93,
+          "path": "index.ts",
+          "snippet": "      return () => {\n        const count = subscriptions.get(subscriptionKey)! - 1\n\n        subscriptions.set(subscriptionKey, count)\n\n        // Dispose if it's the last one.\n        if (!count) {\n          const dispose = disposers.get(subscriptionKey)\n          dispose?.()\n        }",
+          "startLine": 84
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Leaked subscription ref-count on subscribe throw blocks resubscribe"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 71-82 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at index.ts:72 increments the count before index.ts:75 calls subscribe and index.ts:77-79 throws for a non-function return, with no try/catch/finally to roll back and no cleanup returned on that path, so the leaked count makes later effects skip the !refCount subscribe branch at index.ts:74."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Disposer function stored in module-level disposers map is invoked on last unsubscribe but never removed from the map, leaving a stale disposed handle stored after cleanup.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 81,
+          "path": "index.ts",
+          "snippet": "        disposers.set(subscriptionKey, dispose)",
+          "startLine": 81
+        },
+        {
+          "endLine": 93,
+          "path": "index.ts",
+          "snippet": "        // Dispose if it's the last one.\n        if (!count) {\n          const dispose = disposers.get(subscriptionKey)\n          dispose?.()\n        }",
+          "startLine": 89
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Disposed subscription handle never cleared from disposers map"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 81-81 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code stores the disposer at index.ts:81 via disposers.set and invokes it at index.ts:90-92 on last unsubscribe with no disposers.delete anywhere in index.ts, so the disposed handle remains in the map."
+    }
+  }
+]

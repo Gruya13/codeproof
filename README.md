@@ -98,6 +98,16 @@ The pipeline was also run on a real, widely used open-source project: [unjs/ofet
 - Runs are not bit-identical: three runs on this commit and scope produced 4/4, 3/3 and 4/4 verified findings ($0.2928, $0.1991, $0.5596). The latest valid run is the one committed here; earlier results are stated above.
 - This is an **anecdote, not a benchmark metric**. The analyzed commit is public and the upstream issues/PRs predate the analysis, so a model may have seen them; the run shows that the gate surfaces real, acknowledged problems - not that the findings are independent discovery. The hand check also corrected the scanner's severity: the `withBase` issue is SSRF class upstream even though the scanner labelled it medium.
 
+## Historical recall test (qualitative)
+
+A different question than precision: can the gate find a **known bug** if we replay history? For 9 known fix commits in two mature libraries (vercel/swr, sindresorhus/ky), the analyzed commit is the **parent of the fix** and the scope is the directory of the file the fix changes. Artifacts and per-test costs: [reports/historical/](reports/historical/).
+
+- **2 of 9 found** (both verified); the other 7 were missed. Both hits match the lines the upstream fix changed.
+- swr `c39d701` (cache unsubscribe splice, parent `46f3954`): finding `cache.ts:51-60`, verified; the fix adds an index guard exactly there. Artifacts + fix diff: [reports/historical/swr-c39d701/](reports/historical/swr-c39d701/).
+- swr `9e8b1c9d` (stale subscription cleanup, parent `a33fba7`): finding `index.ts:81`, verified; the fix adds `subscriptions.delete`/`disposers.delete` in the cleanup block. Manual adjudication because the citation line is a few lines above the fix. Artifacts: [reports/historical/swr-9e8b1c9d/](reports/historical/swr-9e8b1c9d/).
+- Measured cost: **$1.5223** for the 9 tests ([RESULTS.json](reports/historical/RESULTS.json)).
+- Caveats: the commits and fixes are public and predate the analysis, so contamination is possible; n = 9 is small; no prompt tuning was done for these tests; this is an **anecdote, not a benchmark metric**.
+
 ## What was built during the hackathon
 
 This repository is created during the hackathon; the first commit is tagged `hackathon-start`. All code, prompts and fixtures in this repository were authored during the event, and the git history is the evidence: every commit after the tag is event-time work, and no code or fixture from outside this repository was imported.

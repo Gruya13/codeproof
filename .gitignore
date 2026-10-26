@@ -10,4 +10,6 @@ reports/*
 !reports/real-world/**
 !reports/controlled-verifier/
 !reports/controlled-verifier/**
+!reports/historical/
+!reports/historical/**
 *.log

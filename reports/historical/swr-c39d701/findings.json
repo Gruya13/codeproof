@@ -1,0 +1,32 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Unsubscribe does not guard against missing callback: subs.indexOf(callback) can be -1 on double-unsubscribe, and splice(-1,1) removes an unrelated subscriber.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 60,
+          "path": "cache.ts",
+          "snippet": "    const subscribe = (\n      key: string,\n      callback: (current: any, prev: any) => void\n    ) => {\n      const subs = subscriptions[key] || []\n      subscriptions[key] = subs\n\n      subs.push(callback)\n      return () => subs.splice(subs.indexOf(callback), 1)\n    }",
+          "startLine": 51
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Unsubscribe splice without index check corrupts subscriber list"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 51-60 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The unsubscribe returned at cache.ts:59 is `subs.splice(subs.indexOf(callback), 1)` with no -1 check, so a second invocation splices at -1 and removes the last unrelated subscriber."
+    }
+  }
+]

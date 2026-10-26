@@ -1,0 +1,16 @@
+diff --git a/src/subscription/index.ts b/src/subscription/index.ts
+index 41ab886..b165a7d 100644
+--- a/src/subscription/index.ts
++++ b/src/subscription/index.ts
+@@ -90,6 +90,11 @@ export const subscription = (<Data = any, Error = any>(useSWRNext: SWRHook) =>
+         if (!count) {
+           const dispose = disposers.get(subscriptionKey)
+           dispose?.()
++
++          // Remove both entries, so the internal states only retain the
++          // subscription keys that currently have active subscribers.
++          subscriptions.delete(subscriptionKey)
++          disposers.delete(subscriptionKey)
+         }
+       }
+     }, [subscriptionKey])

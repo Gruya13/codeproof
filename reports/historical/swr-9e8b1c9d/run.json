@@ -1,0 +1,149 @@
+{
+  "runId": "c8b5e5f12186d9e0",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "140cbc56d51ac92925c28a151b384b9fe12b582c969d22f24d31b44baf8e6d05",
+  "repo": {
+    "source": "local",
+    "path": "/tmp/big-repos/swr/src/subscription",
+    "commit": "a33fba7330d23899346f25a459f17fab3c44f81b",
+    "dirty": false,
+    "loc": 166,
+    "files": 2
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "6f72aee67d77fbfa41f6c71fd3a4f8086edee5c326fb2ec252af57eb404c8839"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "43e01b00acc59ce86aeafd47601d8ca5115f5364d945cb167478bfea82a42673"
+    }
+  ],
+  "usage": {
+    "inputTokens": 7588,
+    "outputTokens": 9650,
+    "cachedTokens": 1000,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 1,
+        "inputTokens": 2019,
+        "outputTokens": 7482,
+        "cachedTokens": 0,
+        "costUsd": 0.03432225
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 2,
+        "inputTokens": 5569,
+        "outputTokens": 2168,
+        "cachedTokens": 1000,
+        "costUsd": 0.061836
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 2019,
+        "outputTokens": 7482,
+        "cachedTokens": 0,
+        "costUsd": 0.03432225,
+        "durationMs": 48574,
+        "retries": 0
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 1,
+        "inputTokens": 2852,
+        "outputTokens": 1282,
+        "cachedTokens": 500,
+        "costUsd": 0.035148,
+        "durationMs": 12849,
+        "retries": 0
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 2717,
+        "outputTokens": 886,
+        "cachedTokens": 500,
+        "costUsd": 0.026688,
+        "durationMs": 6158,
+        "retries": 0
+      }
+    ],
+    "costUsd": 0.09615825,
+    "measured": true
+  },
+  "calls": 3,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-26T21:21:00.457Z",
+    "durationMs": 67633
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 5
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 48575
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 19032
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 1
+    }
+  ],
+  "budget": {
+    "limitUsd": 1.5,
+    "spentUsd": 0.096158,
+    "measured": true,
+    "exceeded": false
+  },
+  "findings": {
+    "proposed": 2,
+    "l1Rejected": 0,
+    "verified": 2,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0
+  },
+  "outputs": {
+    "report": "reports/c8b5e5f12186d9e0/REPORT.md",
+    "findings": "reports/c8b5e5f12186d9e0/findings.json",
+    "rejected": "reports/c8b5e5f12186d9e0/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.1.0"
+  }
+}
