@@ -185,7 +185,7 @@ export function isSameCitation(counter, findingEv) {
 export function checkCitation(evidence, repo) {
   if (!evidence || typeof evidence !== "object") return { passed: false, reason: "evidence is not an object" };
   const file = String(evidence.path || "");
-  if (file === "" || file.startsWith("/") || file.split("/").indexOf("..") !== -1) {
+  if (file === "" || file.startsWith("/") || file.indexOf("\\") !== -1 || file.split("/").indexOf("..") !== -1) {
     return { passed: false, reason: "path must be relative and must not contain .." };
   }
   if (!repo.manifest.has(file)) return { passed: false, reason: "path is not in the repo manifest: " + file };

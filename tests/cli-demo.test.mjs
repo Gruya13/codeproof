@@ -1,15 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
-test("cli runs a full mock demo end-to-end and writes a run.json with mode demo and repo.dirty", function () {
+test("cli runs a full mock demo end-to-end and writes a run.json with mode demo and repo.dirty", function (t) {
   const outDir = mkdtempSync(join(tmpdir(), "codeproof-cli-demo-"));
+  t.after(function () { rmSync(outDir, { recursive: true, force: true }); });
   execFileSync(process.execPath, ["src/cli.mjs", "analyze", "fixtures/mini-repo", "--mock", "--mode", "demo", "--out", outDir], {
     cwd: repoRoot,
     timeout: 60000,

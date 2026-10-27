@@ -55,6 +55,13 @@ test("returns the first JSON object when multiple sibling objects exist", functi
   assert.equal(parsed.id, "F-001");
 });
 
+test("T-C2: throws on truncated output (unclosed object, array or string)", function () {
+  assert.throws(function () { parseDirtyJson("{\"findings\": [{\"id\": \"F-001\""); }, /no JSON object/);
+  assert.throws(function () { parseDirtyJson("[1, 2, 3"); }, /no JSON object/);
+  assert.throws(function () { parseDirtyJson("{\"a\": \"unclosed"); }, /no JSON object/);
+  assert.throws(function () { parseDirtyJson("{\"a\": 1, \"b\": ["); }, /no JSON object/);
+});
+
 test("characterization: fails on JSON with single quotes", function () {
   assert.throws(function () {
     parseDirtyJson("{'findings': []}");

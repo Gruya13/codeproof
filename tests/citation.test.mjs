@@ -13,6 +13,32 @@ const repo = {
   ])
 };
 
+function freshRepo(extra) {
+  const manifest = new Map([
+    ["src/pagination.js", { path: "src/pagination.js" }],
+    ["src/Case.js", { path: "src/Case.js" }],
+    ["src\\win.js", { path: "src\\win.js" }]
+  ]);
+  return { root: root, manifest: manifest, ...(extra || {}) };
+}
+
+test("T-B8: citation paths are case-sensitive, reject backslashes, absolute paths and ..", function () {
+  const boundary = { startLine: 3, endLine: 3, snippet: "  return items.slice(start, start + size + 1);" };
+  // wrong case against a real manifest entry
+  const caseMismatch = checkCitation({ ...boundary, path: "src/PAGINATION.js" }, freshRepo());
+  assert.equal(caseMismatch.passed, false);
+  assert.match(caseMismatch.reason, /not in the repo manifest/);
+  // a Windows separator must never be normalised into a valid repository path
+  const windowsPath = checkCitation({ ...boundary, path: "src\\win.js" }, freshRepo());
+  assert.equal(windowsPath.passed, false);
+  assert.match(windowsPath.reason, /must be relative/);
+  // absolute paths and traversal
+  for (const badPath of ["/etc/passwd", "src/../pagination.js", "..\\src\\pagination.js"]) {
+    const result = checkCitation({ ...boundary, path: badPath }, freshRepo());
+    assert.equal(result.passed, false, badPath);
+  }
+});
+
 test("L1 accepts a citation whose snippet matches the cited lines", function () {
   const result = checkCitation({
     path: "src/pagination.js",

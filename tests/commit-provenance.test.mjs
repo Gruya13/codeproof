@@ -62,6 +62,19 @@ test("L1 falls back to disk when the target is not a git repository", function (
   assert.equal(result.passed, true, result.reason);
 });
 
+test("T-B9: a CRLF file in the commit matches a LF citation through line normalisation", function () {
+  const dir = mkdtempSync(join(tmpdir(), "codeproof-provenance-crlf-"));
+  mkdirSync(join(dir, "src"));
+  writeFileSync(join(dir, "src/a.ts"), "const a = 1;\r\nconst b = 2;\r\nconst c = 3;\r\n");
+  execFileSync("git", ["init", "-q", "-b", "main"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=test", "-c", "user.email=test@example.invalid", "add", "-A"], { cwd: dir });
+  execFileSync("git", ["-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-q", "-m", "crlf"], { cwd: dir });
+  const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: dir, encoding: "utf8" }).trim();
+  const repo = { root: dir, manifest: manifest, commit: commit };
+  const lfCitation = checkCitation({ path: "src/a.ts", startLine: 2, endLine: 2, snippet: "const b = 2;" }, repo);
+  assert.equal(lfCitation.passed, true, lfCitation.reason);
+});
+
 test("report prints the committed source lines instead of a model-provided snippet", function () {
   const { dir, commit } = makeGitRepo();
   try {

@@ -47,6 +47,15 @@ test("config-hash: the hard-budget gate is part of the run identity", function (
   assert.equal(loadConfig({ HARD_BUDGET: "0" }).hardBudget, false);
 });
 
+test("T-C15: SCANNER_MAX_TOKENS is read from the environment and changes the run identity", function () {
+  assert.equal(loadConfig({}).scannerMaxTokens, 16000);
+  assert.equal(loadConfig({ SCANNER_MAX_TOKENS: "32000" }).scannerMaxTokens, 32000);
+  assert.equal(loadConfig({ VERIFIER_MAX_TOKENS: "8000" }).verifierMaxTokens, 8000);
+  const hash1 = computeConfigSha256({ ...baseConfig, scannerMaxTokens: 16000 }, "smoke");
+  const hash2 = computeConfigSha256({ ...baseConfig, scannerMaxTokens: 32000 }, "smoke");
+  assert.notEqual(hash1, hash2);
+});
+
 test("estimateCost is a worst-case upper bound with no cache discount", function () {
   // 1M input tokens on Spark 1.3 cost 1.25 USD; 1M output tokens cost 4.25 USD.
   assert.equal(estimateCost("muse-spark-1.3", 1_000_000, 0), 1.25);
