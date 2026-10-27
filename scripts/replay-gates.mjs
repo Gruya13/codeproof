@@ -3,6 +3,7 @@
 // No model is called and no network is used; the check runs against the commit
 // recorded in run.json.
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { ingest } from "../src/ingest/index.mjs";
@@ -46,6 +47,20 @@ function displayPath(target) {
 // it. In a fresh clone (possibly another machine/container) that path does not
 // exist, so fall back to the longest existing suffix of that path that stays
 // inside the current repository.
+// In a shallow clone the analyzed commit may be missing. Fetch just that commit
+// from origin when possible, so replay still checks the commit instead of the
+// working tree; if that is impossible, fail without writing an artifact.
+function ensureCommit(repoPath, commit) {
+  if (!commit) return true;
+  const check = spawnSync("git", ["-C", repoPath, "cat-file", "-e", commit + "^{commit}"], { encoding: "utf8" });
+  if (check.status === 0) return true;
+  const fetch = spawnSync("git", ["-C", repoPath, "fetch", "--quiet", "--depth", "1", "origin", commit], { encoding: "utf8", timeout: 120000 });
+  if (fetch.status === 0) return true;
+  console.error("ERROR: analyzed commit " + commit + " is not available in this checkout and could not be fetched from origin.");
+  console.error("       Use a full clone, or run: git fetch origin " + commit);
+  return false;
+}
+
 function resolveScope(options, run) {
   if (options.repo !== null) return resolve(options.repo);
   const stored = run.repo && run.repo.path ? String(run.repo.path) : null;
@@ -73,6 +88,9 @@ function main() {
   const repoPath = resolveScope(options, run);
   if (!repoPath) {
     throw new Error("analyzed scope is not available (relative path not found in this clone; use --repo <path>)");
+  }
+  if (!ensureCommit(repoPath, run.repo && run.repo.commit ? run.repo.commit : null)) {
+    process.exit(1);
   }
   const repo = ingest(repoPath);
   const manifest = new Map(repo.files.map(function (file) { return [file.path, file]; }));
