@@ -23,9 +23,17 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), 
 
 ## Status
 
-Milestone F1 is complete: the pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`). First live runs on the 4-file demo fixture: 2 calls (Muse Spark 1.3 producer, Muse Wonder verifier), 1 finding passed both gates, 16.5 s wall time, **$0.0335 measured cost**; a second run measured **229 of 1365 input tokens served from prompt cache**. Numbers are only published when measured - `run.json` says `measured: false` when they are not. The first scored benchmark run is in [Benchmark results](#benchmark-results); its artifacts are committed verbatim in [reports/golden/](reports/golden/). A qualitative run on a real open-source project is in [Real-repository run](#real-repository-run-qualitative).
+The pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`), and the deterministic suite is green on Node 22 and Node 26:
 
-A controlled verifier test (`make controlled`) closed the hard gate on the real API: two true findings were confirmed and one deliberately false claim was **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`). The run cost **$0.103** and served **3280 of 4065 input tokens from prompt cache**. It is recorded as `mode: controlled-verifier` and labelled as injected candidates in every report - never as scanner output.
+- **89/89 tests** on Node 22 and Node 26 (`make test`): L1/L2 gate cases, dirty-JSON and truncation handling, fault injection (retries, content filter, budget abort with partial artifacts), config-hash determinism, Node-22 compatibility.
+- **Clean clone**: `make clean-clone` (tmpfs + `env -i`, local and public repo) and the Docker variant `make clean-clone-docker` (node:22-alpine) both pass `make test`, `make demo` and `make score RUN=reports/golden` on a fresh clone.
+- **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts - 9/9 identical verdicts, 0 mismatches, no model calls.
+- **Calibration benchmark**: 8/8 recall, 100% precision, 0/4 traps, 0 false refutations - golden run committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
+- **Real repositories** (qualitative, each hand-checked and published with both runs): unjs/ofetch, sindresorhus/execa, preactjs/preact, moment/luxon - see [Real-repository run](#real-repository-run-qualitative). The real-API probe round (axios real + injected, fastify, prompt-cache TTL, safety, parallel calls) is under [reports/probes/](reports/probes/).
+- **Controlled verifier test**: two true findings confirmed and one deliberately false claim **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`); the committed run cost **$0.103** and served 3280 of 4065 input tokens from prompt cache. Recorded as `mode: controlled-verifier`, never as scanner output.
+- **Historical recall**: 2/9 known fixes found (both verified); one of the organic refutations is published in the record.
+
+Numbers are only published when measured - `run.json` says `measured: false` when they are not. Every evidence directory keeps its raw run artifacts.
 
 ## How it works
 
@@ -52,10 +60,14 @@ Static analysis only: the analyzed code is never executed, patched, or sent anyw
 
 ```bash
 make demo        # deterministic end-to-end demo, mock adapter, no network
-make test        # unit tests for the L1 gate, dirty-JSON parsing and run-id
+make test        # 89 tests: L1/L2 gate, dirty JSON, fault injection, config hash (Node >= 22)
 make controlled  # controlled verifier test: injected candidates, real API (needs MODEL_API_KEY)
 make bench       # scored benchmark: bench/seed-repo, MAX_FINDINGS=12, mode bench (needs MODEL_API_KEY)
 make score       # score the newest benchmark run; RUN=reports/<id> selects one explicitly
+make replay      # re-run L0/L1 over the committed golden artifacts (no model calls)
+make clean-clone # fresh clone in tmpfs with env -i, make test/demo/score
+make clean-clone-docker # same inside node:22-alpine (needs Docker)
+make probe-repo ARGS="--repo <url> --commit <sha> --scope <dir> --runs 2 --dry-run"
 ```
 
 `make demo` prints a **MOCK MODE** banner and writes `mock: true` into `run.json`; the analyzed fixture is synthetic and checked in on purpose. A real run needs a key (never committed):
@@ -82,7 +94,7 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 | Real repository (moment/luxon) | [reports/real-world/luxon-src/](reports/real-world/luxon-src/) | 1 verified in both runs (latent internal `uncomputeOrdinal` defect; public dates correct) + 1 organic refuted claim in run 2 | a hit-rate claim; the verified finding is latent, static + public-API adjudication |
 | Real-API probe round: axios (real + injected) | [reports/probes/real/axios-lib/](reports/probes/real/axios-lib/), [reports/probes/real/axios-injected/](reports/probes/real/axios-injected/) | clean: 0 then 1 verified (an upstream revert regression); injected: 3/6 controlled defects in both runs, L1 100% | not a benchmark metric; the 6 defects were injected for this probe |
 | Real-API probe round: fastify | [reports/probes/real/fastify-lib/](reports/probes/real/fastify-lib/) | 3/3 verified; hand check: F-001 confirmed, F-002/F-003 partially confirmed at lower severity | not a benchmark metric; static adjudication for F-002/F-003 |
-| Safety / prompt-cache TTL / parallel probes | [reports/probes/](reports/probes/) | no content_filter on inert payloads; cache served at +2/+5/+10 min; 6/6 small parallel calls OK, shared prefix cache on 2/3 | single-run probes, not guarantees |
+| Safety / prompt-cache TTL / parallel probes | [reports/probes/](reports/probes/) | no content_filter on inert payloads; cache served at +2/+5/+10 min; 6/6 small parallel calls OK, shared prefix cache on 2/3 | single-run probes; no completeness or stability claim |
 | Controlled verifier | [reports/controlled-verifier/](reports/controlled-verifier/) | a strong refutation carries a machine-checked counter-citation | a scanner output - candidates are injected |
 | Historical recall (n=9) | [reports/historical/](reports/historical/) | 2/9 known fixes found; 7 known fixes missed | a benchmark metric; n=9, single directory per test |
 
@@ -103,7 +115,7 @@ Scored on the **calibration set**: frozen synthetic fixture with 8 injected defe
 | Verifier context | bounded to 24,000 characters (F4) | whole repository | - |
 | Scanner prompt version | v3 | v2 | - |
 
-The bounded verifier context cut benchmark input tokens from 29,408 to 20,873 (**-29%**) with identical metrics; observed cost fell from $0.2777 to $0.2190 on the compared attempts. The baseline missed B-05 (a timer handle replaced without clearing the previous interval); scanner prompt v3 adds generic audits for leaked resource handles and repeated-call accumulators, after which the frozen fixture was re-scanned and B-05 was found. One pre-registered extra defect (X-02, numeric sort without comparator) is found and correctly counted as neither TP nor FP; no trap was proposed by the scanner in any run, so the refutation path is demonstrated separately by the controlled verifier test.
+The bounded verifier context cut benchmark input tokens from 29,408 to 20,873 (**-29%**) with identical metrics; observed cost fell from $0.2777 to $0.2190 on the compared attempts. The baseline missed B-05 (a timer handle replaced without clearing the previous interval); scanner prompt v3 adds generic audits for leaked resource handles and repeated-call accumulators, after which the frozen fixture was re-scanned and B-05 was found. One pre-registered extra defect (X-02, numeric sort without comparator) is found and correctly counted as neither TP nor FP; no trap was proposed by the scanner in any benchmark run, so the refutation path is demonstrated separately by the controlled verifier test.
 
 **Attempts (no cherry-picking):** six benchmark attempts. (1) invalidated: ingest included `dist/` build artifacts, fixed in `b0e6568`; (2) valid baseline: 7/8; (3) aborted: scanner output truncated at the token limit, tooling fixed in `d0cde39`; (4) valid post-calibration run: 8/8; (5) F4 validation run before the configuration hash fix: 8/8; (6) F4 final run: 8/8, shown above. Model output is not bit-identical, so the number of attempts is always stated.
 
@@ -123,14 +135,14 @@ The pipeline was also run on a real, widely used open-source project: [unjs/ofet
 - Runs are not bit-identical: three runs on this commit and scope produced 4/4, 3/3 and 4/4 verified findings ($0.2928, $0.1991, $0.5596). The latest valid run is the one committed here; earlier results are stated above.
 - This is an **anecdote, not a benchmark metric**. The analyzed commit is public and the upstream issues/PRs predate the analysis, so a model may have seen them; the run shows that the gate surfaces real, acknowledged problems - not that the findings are novel discoveries. The hand check also corrected the scanner's severity: the `withBase` issue is SSRF class upstream even though the scanner labelled it medium.
 
-### Additional real-repository runs (execa, preact)
+### Additional real-repository runs (execa, preact, luxon)
 
-Two more real repositories were run with the same protocol (2 runs per frozen commit, scope fully inside the scanner prompt, hand check of every published finding; artifacts committed verbatim under [reports/real-world/](reports/real-world/)):
+Three more real repositories were run with the same protocol (2 runs per frozen commit, scope fully inside the scanner prompt, hand check of every published finding; artifacts committed verbatim under [reports/real-world/](reports/real-world/)):
 
 - [sindresorhus/execa](https://github.com/sindresorhus/execa) `lib/` (8,227 LOC): run 1 proposed nothing, run 2 verified one Windows-only shebang parser defect (`split(' ', 2)` drops interpreter arguments and returns a space-containing interpreter path). Hand verdict: confirmed, undocumented, no matching upstream issue; Windows path not executed here.
 - [preactjs/preact](https://github.com/preactjs/preact) `src/` (6,214 LOC): run 1 proposed nothing, run 2 verified one error-path defect (`refQueue` is not rolled back when `diff()` throws, while `commitQueue` is) and left two candidates uncertain. Hand verdict: confirmed plausible defect (static), error-boundary path, no matching upstream issue.
 - [moment/luxon](https://github.com/moment/luxon) `src/` (8,582 LOC): both runs verified the same internal `uncomputeOrdinal` conversion defect (`findIndex` instead of `findLastIndex`), but 731 ordinal and 468 ISO-week public-API cases all returned correct dates, so the verified finding is latent (hand severity low, scanner said critical); run 2 additionally **refuted** a plausible-looking locale-week claim with a machine-checked counter-citation (organic L2 evidence).
-- Both are anecdotes, not benchmark metrics; the commits are public (contamination possible) and both directories include the full runs, not only the successful one.
+- All three are anecdotes, not benchmark metrics; the commits are public (contamination possible) and every directory includes the full runs, not only the successful one.
 
 The real-API probe round (axios real/injected, fastify, TTL cache, safety, parallel) is committed under [reports/probes/](reports/probes/) with the full protocol and caveats in [REAL-WORLD-ROUND.md](reports/probes/REAL-WORLD-ROUND.md); it is separate from the benchmark and from the four hand-checked repositories above.
 
@@ -141,7 +153,7 @@ A different question than precision: can the gate find a **known bug** if we rep
 - **2 of 9 found** (both verified); the other 7 were missed. Both hits match the lines the upstream fix changed.
 - swr `c39d701` (cache unsubscribe splice, parent `46f3954`): finding `cache.ts:51-60`, verified; the fix adds an index guard exactly there. Artifacts + fix diff: [reports/historical/swr-c39d701/](reports/historical/swr-c39d701/).
 - swr `9e8b1c9d` (stale subscription cleanup, parent `a33fba7`): finding `index.ts:81`, verified; the fix adds `subscriptions.delete`/`disposers.delete` in the cleanup block. Manual adjudication because the citation line is a few lines above the fix. Artifacts: [reports/historical/swr-9e8b1c9d/](reports/historical/swr-9e8b1c9d/).
-- One miss run (swr f8647706) is published with its artifacts: it contains the only organic refutation in the public record (partially refuted - see HAND-CHECK.md) and one uncertain candidate caused by verifier output truncation.
+- One miss run (swr f8647706) is published with its artifacts: it contains one of the two organic refutations in the public record (partially refuted - see HAND-CHECK.md); the other is the luxon run-2 refutation and one uncertain candidate caused by verifier output truncation.
 - Measured cost: **$1.5223** for the 9 tests ([RESULTS.json](reports/historical/RESULTS.json)).
 - Caveats: the commits and fixes are public and predate the analysis, so contamination is possible; n = 9 is small; no prompt tuning was done for these tests; this is an **anecdote, not a benchmark metric**.
 
@@ -155,6 +167,7 @@ This repository is created during the hackathon; the first commit is tagged `hac
 - No completeness claim: the report shows what passed the gate, not everything that exists in a repository.
 - L1 proves that a citation exists in the commit. Whether the claim matches the code is judged by the verifier model and is presented as such.
 - TypeScript/JavaScript only, static analysis only.
+- Hand checks may downgrade the scanner's severity (for example a latent internal defect or an error-path-only issue); such findings are labelled as latent/partial in the corresponding HAND-CHECK.md. Real-repository findings are qualitative anecdotes, never benchmark metrics.
 
 ## License
 

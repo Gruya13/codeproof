@@ -1,8 +1,8 @@
-# Test round — real-world probes (axios 1.21.0 @ lib/) — FINAL
+# Test round — real-world probes (axios real/injected + fastify + cache/safety/parallel) — FINAL
 
-**Datum:** 26–27.10.2026. **Budžet runde:** $20 (Meta API). **Ukupan trošak:** $1.8502.
+**Datum:** 26–27.10.2026. **Budžet runde:** $20 (Meta API). **Ukupan trošak ove runde:** $1.8502 (kasniji real-repo runovi — execa, preact, luxon — su u `reports/real-world/` i ne ulaze u ovaj iznos).
 **Harness:** scripts/probe-repo.mjs, scripts/make-injected.mjs, scripts/score-injected.mjs, scripts/probe-cache.mjs, scripts/probe-safety.mjs, scripts/probe-parallel.mjs.
-**Nijedan analizirani kod nije izvršen** — pipeline je isključivo statički.
+**Pipeline je isključivo statički: nijedan analizirani kod nije izvršen kao deo analize.** Ručna adjudikacija fastify nalaza koristila je odvojen funkcionalni probe na kopiji repo-a u `/tmp` (vidi `real/fastify-lib/hand-check/`); to je izvan pipeline-a i označeno je u HAND-CHECK-u.
 
 ## 1. Metodologija
 

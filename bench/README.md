@@ -1,7 +1,7 @@
 # Benchmark — design (F2)
 
 > Synthetic benchmark repository authored during the Meta Global AI Developer Hackathon. **Not a product.**
-> **Frozen after the first benchmark run on 27.10.2026.** After that, changes only by commit with a reason.
+> **Frozen before the first scored benchmark run on 26.10.2026.** After that, changes only by commit with a reason.
 > **Calibration set:** the same fixture is used to calibrate prompts and to report final metrics, so every published number is labelled "on the calibration set" and always carries **n = 8**.
 
 ## Purpose
@@ -19,7 +19,7 @@ Size: **15 TypeScript files, 229 LOC**.
 
 1. `make bench` runs the pipeline on `bench/seed-repo` with `MAX_FINDINGS=12` and `--mode bench` (needs `MODEL_API_KEY`; use `muse-spark-1.3-contributor` for cheap calibration runs).
 2. `make score` scores the newest report against `bench/expected.json` using `bench/score.mjs`.
-3. Results are copied into the README and used in the demo video; the table always includes `n` and the calibration label.
+3. Results are copied into the README and used in the demo/pitch; the table always includes `n` and the calibration label.
 
 ## Metrics and thresholds
 
@@ -41,7 +41,7 @@ Rules are in [adjudication.md](adjudication.md) and are written before the first
 
 ## What this is not
 
-- Not a proof of real-world quality; it is a demonstration of the gate. A real open-source repository is used only as a qualitative anecdote in the video, never as a metric.
+- Not a proof of real-world quality; it is a demonstration of the gate. Real open-source repositories are used only as qualitative anecdotes (in the pitch and, later, the video), never as metrics.
 - Not a claim of completeness: the fixture checks direct defects only; omission, security and architecture findings are out of scope.
 - `expected.json` and this design must never enter the model context. The scanner sees only code.
 
