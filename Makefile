@@ -1,4 +1,4 @@
-.PHONY: demo test controlled bench score replay clean-clone clean-clone-docker probe-repo
+.PHONY: demo test controlled bench score replay clean-clone clean-clone-docker probe-repo ablation
 
 demo:
 	USE_MOCK=1 node src/cli.mjs analyze fixtures/mini-repo --mock
@@ -26,3 +26,6 @@ clean-clone-docker:
 
 probe-repo:
 	node scripts/probe-repo.mjs $(ARGS)
+
+ablation:
+	node scripts/ablation.mjs --repo bench/held-out

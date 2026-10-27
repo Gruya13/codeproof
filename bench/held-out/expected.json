@@ -1,0 +1,76 @@
+{
+  "problems": [
+    {
+      "id": "H-01",
+      "file": "src/clamp.js",
+      "startLine": 1,
+      "endLine": 3,
+      "note": "clamp has swapped min/max bounds"
+    },
+    {
+      "id": "H-02",
+      "file": "src/paging.js",
+      "startLine": 1,
+      "endLine": 4,
+      "note": "page returns size-1 items"
+    },
+    {
+      "id": "H-03",
+      "file": "src/cart.js",
+      "startLine": 1,
+      "endLine": 6,
+      "note": "total overwrites the accumulator"
+    },
+    {
+      "id": "H-04",
+      "file": "src/sort.js",
+      "startLine": 1,
+      "endLine": 3,
+      "note": "comparator returns a boolean, not a number"
+    },
+    {
+      "id": "H-05",
+      "file": "src/retry.js",
+      "startLine": 1,
+      "endLine": 9,
+      "note": "retry silently returns undefined after the last attempt"
+    },
+    {
+      "id": "H-06",
+      "file": "src/find-last.js",
+      "startLine": 1,
+      "endLine": 6,
+      "note": "findLast returns the first match"
+    }
+  ],
+  "traps": [
+    {
+      "id": "H-T1",
+      "file": "src/guard.js",
+      "startLine": 1,
+      "endLine": 3,
+      "note": "== null is intentional and correct (null and undefined)"
+    },
+    {
+      "id": "H-T2",
+      "file": "src/reraise.js",
+      "startLine": 1,
+      "endLine": 8,
+      "note": "logs and rethrows; not a swallowed error"
+    },
+    {
+      "id": "H-T3",
+      "file": "src/collect.js",
+      "startLine": 1,
+      "endLine": 7,
+      "note": "synchronous forEach; not an async-await defect"
+    },
+    {
+      "id": "H-T4",
+      "file": "src/early.js",
+      "startLine": 1,
+      "endLine": 11,
+      "note": "every switch case returns; no fallthrough"
+    }
+  ]
+}
