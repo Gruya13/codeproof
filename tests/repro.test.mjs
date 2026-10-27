@@ -59,13 +59,19 @@ test("reproducer schema and parser accept a valid test", function () {
 
 test("reproducer L0 rejects absent assertions, forbidden code and long tests", function () {
   assert.match(validateReproL0(reproResponse("export const x = 1;")).errors.join(" "), /node:assert/);
-  for (const code of ["assert.fail()", "process.exit(1)", "require('x')", "fetch('x')", "http://example.com", "node:net", "node:http", "node:https", "child_process", "writeFileSync('x', 'y')", "console.error('AssertionError')"]) {
+  for (const code of ["assert.fail()", "process.exit(1)", "require('x')", "fetch('x')", "node:net", "node:http", "node:https", "child_process", "writeFileSync('x', 'y')", "console.error('AssertionError')", "process.stderr.write('x')"]) {
     const result = validateReproL0(reproResponse("import assert from 'node:assert/strict';\n" + code));
     assert.equal(result.ok, false, code);
   }
   assert.match(validateReproL0(reproResponse("import assert from 'node:assert/strict';\n" + "assert.ok(true);\n".repeat(60))).errors.join(" "), /60 lines/);
   assert.equal(validateReproL0({ ...reproResponse(), findingId: "bad" }).ok, false);
   assert.equal(validateReproL0({ ...reproResponse(), extra: true }).ok, false);
+});
+
+test("a URL string as test data does not trip the static validator", function () {
+  const code = "import assert from 'node:assert/strict';\nimport { parseURL } from './sample.js';\nassert.equal(typeof parseURL('https://example.com/a?b=1'), 'object');\n";
+  const result = validateReproL0(reproResponse(code));
+  assert.equal(result.ok, true, result.errors.join("; "));
 });
 
 test("unsupported response needs a reason and no code", function () {

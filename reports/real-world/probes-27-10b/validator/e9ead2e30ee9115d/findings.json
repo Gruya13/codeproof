@@ -1,0 +1,413 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Mastercard alternation is not grouped, so ^ anchors only the first branch and $ only the second branch, accepting any string starting with 5[1-5]xx or ending with the second branch.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 9,
+          "path": "lib/isCreditCard.js",
+          "snippet": "  mastercard: /^5[1-5][0-9]{2}|(222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720)[0-9]{12}$/, // /^[25][1-7][0-9]{14}$/;",
+          "startLine": 9
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "isCreditCard mastercard regex missing group anchors"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 9-9 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The regex at lib/isCreditCard.js:9 is /^5[1-5][0-9]{2}|(222[1-9]|...|2720)[0-9]{12}$/ with no grouping around the alternation, so ^ applies only to the first branch and $ only to the second, and the subsequent Luhn check at lib/isCreditCard.js:41 and lib/isLuhnNumber.js:25 enforces no length or prefix, confirming the claim."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-2FvPDQ/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-2FvPDQ/snapshot/lib/isCreditCard.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-2FvPDQ/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 62,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-2FvPDQ/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-2FvPDQ/snapshot/lib/isCreditCard.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-2FvPDQ/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 62,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-2FvPDQ/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-2FvPDQ/snapshot/lib/isCreditCard.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-2FvPDQ/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 60,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport isCreditCard from './lib/isCreditCard.js';\n\n// Controls: genuine 16-digit Luhn-valid Mastercards must pass.\nassert.equal(isCreditCard('5105105105105100', { provider: 'mastercard' }), true);\nassert.equal(isCreditCard('2221000000000009', { provider: 'mastercard' }), true);\n\n// Prefix branch bug: ^5[1-5][0-9]{2} has no $ anchor.\n// '510008' is Luhn-valid (sum 10) and starts 5100, but is only 6 digits.\nassert.equal(isCreditCard('510008', { provider: 'mastercard' }), false);\n// '51051051051051005' is Luhn-valid (sum 30) and starts 5105, but is 17 digits.\nassert.equal(isCreditCard('51051051051051005', { provider: 'mastercard' }), false);\n\n// Suffix branch bug: second alternative has no ^ anchor.\n// '92221000000000000' is Luhn-valid (sum 20), 17 digits starting with 9,\n// but ends with 2221 + 12 digits, so the unanchored branch matches.\nassert.equal(isCreditCard('92221000000000000', { provider: 'mastercard' }), false);\n",
+      "expectedBehavior": "isCreditCard with provider 'mastercard' should only accept full 16-digit Mastercard numbers (anchored at both ends); Luhn-valid strings that merely start with 5[1-5]xx or end with a 2-series pattern should return false.",
+      "rationale": "Crafted Luhn-valid digit strings that match only the unanchored prefix branch (510008, 51051051051051005) or only the suffix branch (92221000000000000). Buggy regex passes the provider check and Luhn passes, so it returns true; correctly anchored regex returns false. Valid 16-digit Mastercards are asserted true as controls.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 37302,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1806,
+        "outputTokens": 6705,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.141324
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Alternation is not grouped so ^ applies only to the first branch and $ only to the second, allowing prefix/suffix matches with extra characters; [J,Z] also matches a literal comma.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 6,
+          "path": "lib/isISO6346.js",
+          "snippet": "const isISO6346Str = /^[A-Z]{3}(U[0-9]{7})|([J,Z][0-9]{6,7})$/;",
+          "startLine": 6
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "high",
+      "title": "isISO6346 regex not anchored across alternation"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 6-6 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The regex at lib/isISO6346.js:6 is ungrouped as /^[A-Z]{3}(U[0-9]{7})|([J,Z][0-9]{6,7})$/, so ^ anchors only the first branch and $ only the second, and [J,Z] includes a literal comma; lib/isISO6346.js:14 only tests this regex and lib/isISO6346.js:35 returns true for non-11 lengths, allowing extra prefix/suffix characters to pass."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-aof5dY/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-aof5dY/snapshot/lib/isISO6346.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-aof5dY/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 61,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-aof5dY/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-aof5dY/snapshot/lib/isISO6346.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-aof5dY/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 60,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-aof5dY/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-aof5dY/snapshot/lib/isISO6346.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-aof5dY/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 62,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport { isISO6346 } from './lib/isISO6346.js';\n\n// Valid IDs should be accepted.\nassert.equal(isISO6346('CSQU3054383'), true);\nassert.equal(isISO6346('ABCU1234560'), true);\nassert.equal(isISO6346('ABCJ123456'), true);\n\n// Extra suffix: first alternation branch lacks a trailing anchor.\nassert.equal(isISO6346('ABCU1234560XYZ'), false);\nassert.equal(isISO6346('ABCU1234567XYZ'), false);\n\n// Extra prefix: second alternation branch lacks a leading anchor.\nassert.equal(isISO6346('GARBAGEJ123456'), false);\nassert.equal(isISO6346('XXXXZ1234567'), false);\n\n// Comma: [J,Z] incorrectly includes a literal comma as category.\nassert.equal(isISO6346('ABC,123456'), false);\nassert.equal(isISO6346(',123456'), false);\n",
+      "expectedBehavior": "isISO6346 only accepts fully-anchored ISO 6346 IDs (3 owner letters plus U/J/Z category and digits, with comma not a valid category), rejecting IDs with extra prefix or suffix characters.",
+      "rationale": "The regex /^[A-Z]{3}(U[0-9]{7})|([J,Z][0-9]{6,7})$/ anchors ^ only to the U branch and $ only to the J/Z branch, and [J,Z] includes a comma. Valid IDs pass, but ABCU1234560XYZ (suffix), GARBAGEJ123456 / XXXXZ1234567 (prefix), and ABC,123456 / ,123456 (comma) incorrectly return true on the buggy code and must be false.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 47622,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1653,
+        "outputTokens": 7768,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.161972
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "pt-BR alternation is not grouped, so ^ anchors only the first branch and $ only the second, accepting strings with extra prefix/suffix characters.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 15,
+          "path": "lib/isLicensePlate.js",
+          "snippet": "  'pt-BR': str =>\n    /^[A-Z]{3}[ -]?[0-9][A-Z][0-9]{2}|[A-Z]{3}[ -]?[0-9]{4}$/.test(str),",
+          "startLine": 14
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "high",
+      "title": "isLicensePlate pt-BR regex missing group anchors"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 14-15 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The regex at lib/isLicensePlate.js:15 is ungrouped, so it parses as (^Mercosur-pattern)|(old-pattern$) and is applied directly via .test(str) with no length or trimming guard in lib/isLicensePlate.js:25-28, allowing trailing characters after the first format and leading characters before the second."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-SWVAYO/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-SWVAYO/snapshot/lib/isLicensePlate.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-SWVAYO/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 62,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-SWVAYO/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-SWVAYO/snapshot/lib/isLicensePlate.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-SWVAYO/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 60,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-SWVAYO/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-SWVAYO/snapshot/lib/isLicensePlate.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-SWVAYO/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 57,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport isLicensePlate from './lib/isLicensePlate.js';\n\n// Valid pt-BR plates must pass\nassert.equal(isLicensePlate('ABC1234', 'pt-BR'), true);\nassert.equal(isLicensePlate('ABC-1234', 'pt-BR'), true);\nassert.equal(isLicensePlate('ABC1D23', 'pt-BR'), true);\nassert.equal(isLicensePlate('ABC-1D23', 'pt-BR'), true);\n\n// Extra suffix after Mercosur format must be rejected (first branch lacks $)\nassert.equal(isLicensePlate('ABC1D23X', 'pt-BR'), false);\nassert.equal(isLicensePlate('ABC1D234', 'pt-BR'), false);\nassert.equal(isLicensePlate('ABC1D23XYZ', 'pt-BR'), false);\n\n// Extra prefix before old format must be rejected (second branch lacks ^)\nassert.equal(isLicensePlate('XABC1234', 'pt-BR'), false);\nassert.equal(isLicensePlate('XYZABC1234', 'pt-BR'), false);\nassert.equal(isLicensePlate('1ABC1234', 'pt-BR'), false);\nassert.equal(isLicensePlate(' ABC1234', 'pt-BR'), false);\n",
+      "expectedBehavior": "pt-BR plates must be fully anchored: valid ABC1234/ABC1D23 pass, strings with extra prefix before the old format or extra suffix after the Mercosur format are rejected",
+      "rationale": "The ungrouped alternation anchors ^ only to the first branch and $ only to the second, so suffix/prefix extras incorrectly validate.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 13962,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 4102,
+        "outputTokens": 2293,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.062268
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Symbol escaping uses /\\W/ without global flag, so only the first non-word character is escaped and multi-character symbols produce a broken/incorrect currency pattern.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 9,
+          "path": "lib/isCurrency.js",
+          "snippet": "  const symbol =\n    `(${options.symbol.replace(/\\W/, m => `\\\\${m}`)})${(options.require_symbol ? '' : '?')}`,",
+          "startLine": 8
+        }
+      ],
+      "id": "F-005",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "isCurrency escapes only first symbol character"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 8-9 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at lib/isCurrency.js:9 uses options.symbol.replace(/\\W/, ...) without a global flag, so String.replace escapes only the first non-word character and leaves subsequent metacharacters in multi-character symbols unescaped in the constructed RegExp."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge' imported from /tmp/codeproof-repro-zzWXWZ/snapshot/lib/isCurrency.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 60,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge' imported from /tmp/codeproof-repro-zzWXWZ/snapshot/lib/isCurrency.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 64,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge' imported from /tmp/codeproof-repro-zzWXWZ/snapshot/lib/isCurrency.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport isCurrency from './lib/isCurrency.js';\n\nfunction check(str, options) {\n  let result;\n  let error = null;\n  try {\n    result = isCurrency(str, options);\n  } catch (e) {\n    error = e;\n  }\n  return { result, error };\n}\n\nlet validDoubleDollar = check('$$10.00', { symbol: '$$', require_symbol: true });\nassert.equal(validDoubleDollar.error, null);\nassert.equal(validDoubleDollar.result, true);\n\nlet wildcardBypass = check('.a10.00', { symbol: '..', require_symbol: true });\nassert.equal(wildcardBypass.error, null);\nassert.equal(wildcardBypass.result, false);\n\nlet validPlus = check('$+10.00', { symbol: '$+', require_symbol: true });\nassert.equal(validPlus.error, null);\nassert.equal(validPlus.result, true);\n\nlet missingPlus = check('$10.00', { symbol: '$+', require_symbol: true });\nassert.equal(missingPlus.error, null);\nassert.equal(missingPlus.result, false);\n",
+      "expectedBehavior": "isCurrency should treat every non-word character in a multi-character symbol literally: '$$10.00' with symbol '$$', '..10.00' only with symbol '..', and '$+10.00' with symbol '$+' should validate, while mismatched symbols should not.",
+      "rationale": "The symbol is interpolated into a RegExp after escaping only the first \\W character. Multi-character symbols such as '$$', '..', and '$+' therefore leave regex metacharacters active, causing valid amounts to be rejected and invalid amounts to be accepted.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 35626,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2066,
+        "outputTokens": 4732,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.1019768
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "HN and PA VAT matchers use optional-group-only patterns that match the empty string, so empty input is reported as valid VAT.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 121,
+          "path": "lib/isVAT.js",
+          "snippet": "  HN: str => /^(HN)?$/.test(str),",
+          "startLine": 121
+        },
+        {
+          "endLine": 124,
+          "path": "lib/isVAT.js",
+          "snippet": "  PA: str => /^(PA)?$/.test(str),",
+          "startLine": 124
+        }
+      ],
+      "id": "F-006",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "isVAT HN/PA matchers accept empty string"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 121-121 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The HN matcher at lib/isVAT.js:121 uses /^(HN)?$/ and the PA matcher at lib/isVAT.js:124 uses /^(PA)?$/, both of which match the empty string, and isVAT at lib/isVAT.js:132-137 only type-checks via assertString before dispatching to the matcher, so isVAT('', 'HN') and isVAT('', 'PA') return true."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-fsxyDP/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-fsxyDP/snapshot/lib/isVAT.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-fsxyDP/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 56,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-fsxyDP/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-fsxyDP/snapshot/lib/isVAT.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-fsxyDP/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 60,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-fsxyDP/snapshot/lib/util/assertString' imported from /tmp/codeproof-repro-fsxyDP/snapshot/lib/isVAT.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-fsxyDP/snapshot/lib/util/assertString'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport isVAT from './lib/isVAT.js';\n\nassert.equal(isVAT('', 'HN'), false, 'empty string must not be a valid HN VAT');\nassert.equal(isVAT('', 'PA'), false, 'empty string must not be a valid PA VAT');\n",
+      "expectedBehavior": "isVAT('', 'HN') and isVAT('', 'PA') return false; empty string is not a valid VAT number",
+      "rationale": "HN and PA matchers are /^(HN)?$/ and /^(PA)?$/ which match the empty string, so asserting empty input is invalid fails on the buggy code.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 4794,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 3863,
+        "outputTokens": 840,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0313248
+    },
+    "evidenceLevel": "citation+adversarial"
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "status": "unavailable",
+  "classification": "invalid-test",
+  "deterministic": false,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge' imported from /tmp/codeproof-repro-zzWXWZ/snapshot/lib/isCurrency.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 60,
+      "classification": "invalid-test"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge' imported from /tmp/codeproof-repro-zzWXWZ/snapshot/lib/isCurrency.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 64,
+      "classification": "invalid-test"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge' imported from /tmp/codeproof-repro-zzWXWZ/snapshot/lib/isCurrency.js\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-zzWXWZ/snapshot/lib/util/merge'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 63,
+      "classification": "invalid-test"
+    }
+  ],
+  "expectedBehavior": "isCurrency should treat every non-word character in a multi-character symbol literally: '$$10.00' with symbol '$$', '..10.00' only with symbol '..', and '$+10.00' with symbol '$+' should validate, while mismatched symbols should not.",
+  "rationale": "The symbol is interpolated into a RegExp after escaping only the first \\W character. Multi-character symbols such as '$$', '..', and '$+' therefore leave regex metacharacters active, causing valid amounts to be rejected and invalid amounts to be accepted.",
+  "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 2066,
+    "outputTokens": 4732,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.1019768
+}

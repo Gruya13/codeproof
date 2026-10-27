@@ -1,0 +1,16 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "reproducer failed L0: forbidden URL",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1733,
+    "outputTokens": 3552,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.0770448
+}

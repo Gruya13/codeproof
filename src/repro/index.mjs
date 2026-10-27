@@ -56,7 +56,8 @@ const FORBIDDEN_CODE = [
   [/\bprocess\s*\.\s*exit\b/i, "process.exit"],
   [/\brequire\s*\(/i, "require"],
   [/\bfetch\s*\(/i, "fetch"],
-  [/https?:\/\//i, "URL"],
+  // A URL string as test data is harmless: the sandbox has no network and the guard blocks
+  // every network primitive. Only the calls themselves are forbidden (fetch/http/net/tls).
   [/node:(?:net|http|https|tls|dgram|child_process)\b/i, "network or child process module"],
   [/\bchild_process\b/i, "child process module"],
   [/\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|mkdir|mkdirSync|rm|rmSync|unlink|unlinkSync|rename|renameSync)\s*\(/i, "file write"],

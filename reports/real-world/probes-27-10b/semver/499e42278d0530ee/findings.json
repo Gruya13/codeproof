@@ -1,0 +1,83 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "LRUCache.set deletes an existing key and then fails to re-insert it, so updating any cached key loses the entry.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 36,
+          "path": "internal/lrucache.js",
+          "snippet": "  set (key, value) {\n    const deleted = this.delete(key)\n\n    if (!deleted && value !== undefined) {\n      // If cache is full, delete the least recently used item\n      if (this.map.size >= this.max) {\n        const firstKey = this.map.keys().next().value\n        this.delete(firstKey)\n      }\n\n      this.map.set(key, value)\n    }",
+          "startLine": 25
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "LRUCache.set drops updates to existing keys"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 25-36 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at internal/lrucache.js:26-35 deletes the key first and only calls this.map.set inside if (!deleted && value !== undefined), so setting an existing key with a defined value deletes it without re-inserting it."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ undefined\n- 'second'\n\n    at file:///tmp/codeproof-repro-posXBY/snapshot/.codeproof-repro.test.mjs:8:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: 'second',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 70,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ undefined\n- 'second'\n\n    at file:///tmp/codeproof-repro-posXBY/snapshot/.codeproof-repro.test.mjs:8:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: 'second',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 72,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ undefined\n- 'second'\n\n    at file:///tmp/codeproof-repro-posXBY/snapshot/.codeproof-repro.test.mjs:8:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: 'second',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 67,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict'\nimport LRUCache from './internal/lrucache.js'\n\nconst cache = new LRUCache()\ncache.set('key', 'first')\nassert.equal(cache.get('key'), 'first')\ncache.set('key', 'second')\nassert.equal(cache.get('key'), 'second')\nassert.equal(cache.map.size, 1)\ncache.set('other', 1)\ncache.set('other', 2)\nassert.equal(cache.get('other'), 2)\nassert.equal(cache.get('key'), 'second')\n",
+      "expectedBehavior": "LRUCache.set on an existing key updates its value and retains the entry, so a subsequent get returns the new value.",
+      "rationale": "The buggy set() only inserts when delete() returned false, so updating an existing key deletes it without re-inserting. Setting a key twice and asserting get returns the updated value fails on the buggy code (undefined) and passes when fixed.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 6662,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1815,
+        "outputTokens": 1385,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.03496
+    },
+    "evidenceLevel": "execution-proven"
+  }
+]

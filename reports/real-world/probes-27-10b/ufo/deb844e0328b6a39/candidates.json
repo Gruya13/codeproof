@@ -1,0 +1,145 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"withoutLeadingSlash(\\\"/\\\") returns \\\"/\\\" instead of \\\"\\\" because empty result falls back to \\\"/\\\", breaking append/join/resolve that expect stripped slash.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 237, \"path\": \"utils.ts\", \"snippet\": \"export function withoutLeadingSlash(input = \\\"\\\"): string {\\n  return (hasLeadingSlash(input) ? input.slice(1) : input) || \\\"/\\\";\\n}\", \"startLine\": 235}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"withoutLeadingSlash returns slash for slash input\"}, {\"category\": \"correctness\", \"claim\": \"withFragment cannot clear fragment: early return on falsy hash returns input unchanged, making the hash===\\\"\\\" branch unreachable, contradicting documented withFragment(\\\"/foo#bar\\\",\\\"\\\") => \\\"/foo\\\".\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 743, \"path\": \"utils.ts\", \"snippet\": \"export function withFragment(input: string, hash: string): string {\\n  if (!hash || hash === \\\"#\\\") {\\n    return input;\\n  }\\n  const parsed = parseURL(input);\\n  parsed.hash = hash === \\\"\\\" ? \\\"\\\" : \\\"#\\\" + encodeHash(hash);\\n  return stringifyParsedURL(parsed);\\n}\", \"startLine\": 736}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"withFragment early return makes clearing fragment impossible\"}, {\"category\": \"correctness\", \"claim\": \"parseAuth splits on every colon but keeps only first two parts, so password containing colon is truncated (e.g. user:pass:word loses :word).\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 139, \"path\": \"parse.ts\", \"snippet\": \"export function parseAuth(input = \\\"\\\"): ParsedAuth {\\n  const [username, password] = input.split(\\\":\\\");\\n  return {\\n    username: decode(username),\\n    password: decode(password),\\n  };\\n}\", \"startLine\": 133}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"parseAuth truncates password at second colon\"}, {\"category\": \"correctness\", \"claim\": \"$URL.searchParams appends array elements raw while non-array branch JSON-stringifies objects, so array object values become [object Object] instead of JSON, inconsistent with stringifyQuery/encodeQueryValue.\", \"confidence\": 0.88, \"evidence\": [{\"endLine\": 83, \"path\": \"url.ts\", \"snippet\": \"    for (const name in this.query) {\\n      const value = this.query[name];\\n      if (Array.isArray(value)) {\\n        for (const v of value) {\\n          p.append(name, v);\\n        }\\n      } else {\\n        p.append(\\n          name,\\n          typeof value === \\\"string\\\" ? value : JSON.stringify(value),\\n        );\\n      }\\n    }\", \"startLine\": 71}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"searchParams array values skip JSON stringify\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "withoutLeadingSlash(\"/\") returns \"/\" instead of \"\" because empty result falls back to \"/\", breaking append/join/resolve that expect stripped slash.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 237,
+            "path": "utils.ts",
+            "snippet": "export function withoutLeadingSlash(input = \"\"): string {\n  return (hasLeadingSlash(input) ? input.slice(1) : input) || \"/\";\n}",
+            "startLine": 235
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "withoutLeadingSlash returns slash for slash input"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 235-237 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "At utils.ts:235-236, withoutLeadingSlash(\"/\") slices to \"\" and then falls back via || \"/\" to return \"/\", and url.ts:124-126 concatenates that result after withTrailingSlash in append, so a root pathname yields a double slash rather than a stripped segment."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "withFragment cannot clear fragment: early return on falsy hash returns input unchanged, making the hash===\"\" branch unreachable, contradicting documented withFragment(\"/foo#bar\",\"\") => \"/foo\".",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 743,
+            "path": "utils.ts",
+            "snippet": "export function withFragment(input: string, hash: string): string {\n  if (!hash || hash === \"#\") {\n    return input;\n  }\n  const parsed = parseURL(input);\n  parsed.hash = hash === \"\" ? \"\" : \"#\" + encodeHash(hash);\n  return stringifyParsedURL(parsed);\n}",
+            "startLine": 736
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "withFragment early return makes clearing fragment impossible"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 736-743 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: utils.ts:737 returns input unchanged when hash is falsy, so the documented empty-string case at utils.ts:731 never reaches the hash === \"\" branch at utils.ts:741, making that branch unreachable and clearing via withFragment impossible."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "parseAuth splits on every colon but keeps only first two parts, so password containing colon is truncated (e.g. user:pass:word loses :word).",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 139,
+            "path": "parse.ts",
+            "snippet": "export function parseAuth(input = \"\"): ParsedAuth {\n  const [username, password] = input.split(\":\");\n  return {\n    username: decode(username),\n    password: decode(password),\n  };\n}",
+            "startLine": 133
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "high",
+        "title": "parseAuth truncates password at second colon"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 133-139 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at parse.ts:134 destructures only the first two elements of input.split(\":\"), so a third colon-separated segment such as ':word' in 'user:pass:word' is discarded and the password is truncated."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "$URL.searchParams appends array elements raw while non-array branch JSON-stringifies objects, so array object values become [object Object] instead of JSON, inconsistent with stringifyQuery/encodeQueryValue.",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "endLine": 83,
+            "path": "url.ts",
+            "snippet": "    for (const name in this.query) {\n      const value = this.query[name];\n      if (Array.isArray(value)) {\n        for (const v of value) {\n          p.append(name, v);\n        }\n      } else {\n        p.append(\n          name,\n          typeof value === \"string\" ? value : JSON.stringify(value),\n        );\n      }\n    }",
+            "startLine": 71
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "searchParams array values skip JSON stringify"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 71-83 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: url.ts:73-80 appends array elements raw via p.append(name, v) while the non-array branch JSON-stringifies non-strings, and encoding.ts:59-61 plus query.ts:105-111 show encodeQueryValue/encodeQueryItem JSON-stringify each array element, so an object element is coerced to [object Object] inconsistently."
+      }
+    }
+  ]
+}

@@ -1,0 +1,215 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Lowercase countryCode passes the 'in' check via toUpperCase() but the subsequent lookup uses the original case, so passportRegexByCountryCode[countryCode] is undefined and .test() throws.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 89, \"path\": \"lib/isPassportNumber.js\", \"snippet\": \"export default function isPassportNumber(str, countryCode) {\\n  assertString(str);\\n  /** Remove All Whitespaces, Convert to UPPERCASE */\\n  const normalizedStr = str.replace(/\\\\s/g, '').toUpperCase();\\n\\n  return (countryCode.toUpperCase() in passportRegexByCountryCode) &&\\n    passportRegexByCountryCode[countryCode].test(normalizedStr);\", \"startLine\": 82}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"isPassportNumber uses wrong case for regex lookup\"}, {\"category\": \"correctness\", \"claim\": \"Mastercard alternation is not grouped, so ^ anchors only the first branch and $ only the second branch, accepting any string starting with 5[1-5]xx or ending with the second branch.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 9, \"path\": \"lib/isCreditCard.js\", \"snippet\": \"  mastercard: /^5[1-5][0-9]{2}|(222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720)[0-9]{12}$/, // /^[25][1-7][0-9]{14}$/;\", \"startLine\": 9}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"isCreditCard mastercard regex missing group anchors\"}, {\"category\": \"correctness\", \"claim\": \"Alternation is not grouped so ^ applies only to the first branch and $ only to the second, allowing prefix/suffix matches with extra characters; [J,Z] also matches a literal comma.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 6, \"path\": \"lib/isISO6346.js\", \"snippet\": \"const isISO6346Str = /^[A-Z]{3}(U[0-9]{7})|([J,Z][0-9]{6,7})$/;\", \"startLine\": 6}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"isISO6346 regex not anchored across alternation\"}, {\"category\": \"correctness\", \"claim\": \"pt-BR alternation is not grouped, so ^ anchors only the first branch and $ only the second, accepting strings with extra prefix/suffix characters.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 15, \"path\": \"lib/isLicensePlate.js\", \"snippet\": \"  'pt-BR': str =>\\n    /^[A-Z]{3}[ -]?[0-9][A-Z][0-9]{2}|[A-Z]{3}[ -]?[0-9]{4}$/.test(str),\", \"startLine\": 14}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"isLicensePlate pt-BR regex missing group anchors\"}, {\"category\": \"correctness\", \"claim\": \"Symbol escaping uses /\\\\W/ without global flag, so only the first non-word character is escaped and multi-character symbols produce a broken/incorrect currency pattern.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 9, \"path\": \"lib/isCurrency.js\", \"snippet\": \"  const symbol =\\n    `(${options.symbol.replace(/\\\\W/, m => `\\\\\\\\${m}`)})${(options.require_symbol ? '' : '?')}`,\", \"startLine\": 8}], \"id\": \"F-005\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"isCurrency escapes only first symbol character\"}, {\"category\": \"correctness\", \"claim\": \"HN and PA VAT matchers use optional-group-only patterns that match the empty string, so empty input is reported as valid VAT.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 121, \"path\": \"lib/isVAT.js\", \"snippet\": \"  HN: str => /^(HN)?$/.test(str),\", \"startLine\": 121}, {\"endLine\": 124, \"path\": \"lib/isVAT.js\", \"snippet\": \"  PA: str => /^(PA)?$/.test(str),\", \"startLine\": 124}], \"id\": \"F-006\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"isVAT HN/PA matchers accept empty string\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Lowercase countryCode passes the 'in' check via toUpperCase() but the subsequent lookup uses the original case, so passportRegexByCountryCode[countryCode] is undefined and .test() throws.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 89,
+            "path": "lib/isPassportNumber.js",
+            "snippet": "export default function isPassportNumber(str, countryCode) {\n  assertString(str);\n  /** Remove All Whitespaces, Convert to UPPERCASE */\n  const normalizedStr = str.replace(/\\s/g, '').toUpperCase();\n\n  return (countryCode.toUpperCase() in passportRegexByCountryCode) &&\n    passportRegexByCountryCode[countryCode].test(normalizedStr);",
+            "startLine": 82
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "isPassportNumber uses wrong case for regex lookup"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 8 non-blank lines but snippet has 7"
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Mastercard alternation is not grouped, so ^ anchors only the first branch and $ only the second branch, accepting any string starting with 5[1-5]xx or ending with the second branch.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 9,
+            "path": "lib/isCreditCard.js",
+            "snippet": "  mastercard: /^5[1-5][0-9]{2}|(222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720)[0-9]{12}$/, // /^[25][1-7][0-9]{14}$/;",
+            "startLine": 9
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "isCreditCard mastercard regex missing group anchors"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 9-9 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The regex at lib/isCreditCard.js:9 is /^5[1-5][0-9]{2}|(222[1-9]|...|2720)[0-9]{12}$/ with no grouping around the alternation, so ^ applies only to the first branch and $ only to the second, and the subsequent Luhn check at lib/isCreditCard.js:41 and lib/isLuhnNumber.js:25 enforces no length or prefix, confirming the claim."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Alternation is not grouped so ^ applies only to the first branch and $ only to the second, allowing prefix/suffix matches with extra characters; [J,Z] also matches a literal comma.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 6,
+            "path": "lib/isISO6346.js",
+            "snippet": "const isISO6346Str = /^[A-Z]{3}(U[0-9]{7})|([J,Z][0-9]{6,7})$/;",
+            "startLine": 6
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "high",
+        "title": "isISO6346 regex not anchored across alternation"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 6-6 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The regex at lib/isISO6346.js:6 is ungrouped as /^[A-Z]{3}(U[0-9]{7})|([J,Z][0-9]{6,7})$/, so ^ anchors only the first branch and $ only the second, and [J,Z] includes a literal comma; lib/isISO6346.js:14 only tests this regex and lib/isISO6346.js:35 returns true for non-11 lengths, allowing extra prefix/suffix characters to pass."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "pt-BR alternation is not grouped, so ^ anchors only the first branch and $ only the second, accepting strings with extra prefix/suffix characters.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 15,
+            "path": "lib/isLicensePlate.js",
+            "snippet": "  'pt-BR': str =>\n    /^[A-Z]{3}[ -]?[0-9][A-Z][0-9]{2}|[A-Z]{3}[ -]?[0-9]{4}$/.test(str),",
+            "startLine": 14
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "high",
+        "title": "isLicensePlate pt-BR regex missing group anchors"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 14-15 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The regex at lib/isLicensePlate.js:15 is ungrouped, so it parses as (^Mercosur-pattern)|(old-pattern$) and is applied directly via .test(str) with no length or trimming guard in lib/isLicensePlate.js:25-28, allowing trailing characters after the first format and leading characters before the second."
+      }
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Symbol escaping uses /\\W/ without global flag, so only the first non-word character is escaped and multi-character symbols produce a broken/incorrect currency pattern.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 9,
+            "path": "lib/isCurrency.js",
+            "snippet": "  const symbol =\n    `(${options.symbol.replace(/\\W/, m => `\\\\${m}`)})${(options.require_symbol ? '' : '?')}`,",
+            "startLine": 8
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "isCurrency escapes only first symbol character"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 8-9 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at lib/isCurrency.js:9 uses options.symbol.replace(/\\W/, ...) without a global flag, so String.replace escapes only the first non-word character and leaves subsequent metacharacters in multi-character symbols unescaped in the constructed RegExp."
+      }
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "HN and PA VAT matchers use optional-group-only patterns that match the empty string, so empty input is reported as valid VAT.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 121,
+            "path": "lib/isVAT.js",
+            "snippet": "  HN: str => /^(HN)?$/.test(str),",
+            "startLine": 121
+          },
+          {
+            "endLine": 124,
+            "path": "lib/isVAT.js",
+            "snippet": "  PA: str => /^(PA)?$/.test(str),",
+            "startLine": 124
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "isVAT HN/PA matchers accept empty string"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 121-121 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The HN matcher at lib/isVAT.js:121 uses /^(HN)?$/ and the PA matcher at lib/isVAT.js:124 uses /^(PA)?$/, both of which match the empty string, and isVAT at lib/isVAT.js:132-137 only type-checks via assertString before dispatching to the matcher, so isVAT('', 'HN') and isVAT('', 'PA') return true."
+      }
+    }
+  ]
+}

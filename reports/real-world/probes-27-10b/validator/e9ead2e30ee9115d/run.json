@@ -1,0 +1,291 @@
+{
+  "runId": "e9ead2e30ee9115d",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "3d752a2d55161d22354fc4e17a0ed545ac7a6d6994154c787401be3dc9dc966b",
+  "repo": {
+    "source": "local",
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/_repo/validator/src",
+    "commit": "9ff342479591ca5a43cb30000195bcf55c1bbed9",
+    "dirty": false,
+    "loc": 6158,
+    "files": 114
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    },
+    {
+      "role": "repro",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+    }
+  ],
+  "usage": {
+    "inputTokens": 150475,
+    "outputTokens": 37581,
+    "cachedTokens": 2988,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 1,
+        "inputTokens": 91088,
+        "outputTokens": 8596,
+        "cachedTokens": 0,
+        "costUsd": 0.150393
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 5,
+        "inputTokens": 45897,
+        "outputTokens": 6647,
+        "cachedTokens": 2500,
+        "costUsd": 0.30702799999999997
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "calls": 5,
+        "inputTokens": 13490,
+        "outputTokens": 22338,
+        "cachedTokens": 488,
+        "costUsd": 0.49886559999999996
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 91088,
+        "outputTokens": 8596,
+        "cachedTokens": 0,
+        "costUsd": 0.150393,
+        "durationMs": 38360,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 1,
+        "inputTokens": 8817,
+        "outputTokens": 2364,
+        "cachedTokens": 500,
+        "costUsd": 0.080648,
+        "durationMs": 15658,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 1806,
+        "outputTokens": 6705,
+        "cachedTokens": 0,
+        "costUsd": 0.141324,
+        "durationMs": 37097,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 3,
+        "inputTokens": 8642,
+        "outputTokens": 1263,
+        "cachedTokens": 500,
+        "costUsd": 0.057928,
+        "durationMs": 6233,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 4,
+        "inputTokens": 1653,
+        "outputTokens": 7768,
+        "cachedTokens": 0,
+        "costUsd": 0.161972,
+        "durationMs": 47417,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 5,
+        "inputTokens": 10100,
+        "outputTokens": 967,
+        "cachedTokens": 500,
+        "costUsd": 0.05784,
+        "durationMs": 6303,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 6,
+        "inputTokens": 4102,
+        "outputTokens": 2293,
+        "cachedTokens": 0,
+        "costUsd": 0.062268,
+        "durationMs": 13761,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 7,
+        "inputTokens": 8474,
+        "outputTokens": 1304,
+        "cachedTokens": 500,
+        "costUsd": 0.058076,
+        "durationMs": 9874,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 8,
+        "inputTokens": 2066,
+        "outputTokens": 4732,
+        "cachedTokens": 244,
+        "costUsd": 0.1019768,
+        "durationMs": 35416,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 9,
+        "inputTokens": 9864,
+        "outputTokens": 749,
+        "cachedTokens": 500,
+        "costUsd": 0.052536,
+        "durationMs": 3642,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 10,
+        "inputTokens": 3863,
+        "outputTokens": 840,
+        "cachedTokens": 244,
+        "costUsd": 0.0313248,
+        "durationMs": 4594,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      }
+    ],
+    "costUsd": 0.9562866000000001,
+    "measured": true
+  },
+  "calls": 11,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-27T19:41:20.922Z",
+    "durationMs": 219525
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 24
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 38363
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 181085
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 32
+    }
+  ],
+  "budget": {
+    "limitUsd": 2,
+    "spentUsd": 0.956287,
+    "measured": true,
+    "exceeded": false,
+    "aborted": false,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 6,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 1,
+    "verified": 5,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "reproduced": 0
+  },
+  "repro": {
+    "enabled": true,
+    "model": "muse-wonder-1.0",
+    "timeoutMs": 2000,
+    "attempts": 3,
+    "counts": {
+      "reproduced": 0,
+      "notReproduced": 0,
+      "unavailable": 5,
+      "inconclusive": 0
+    }
+  },
+  "outputs": {
+    "report": "reports/real-world/probes-27-10b/validator/e9ead2e30ee9115d/REPORT.md",
+    "findings": "reports/real-world/probes-27-10b/validator/e9ead2e30ee9115d/findings.json",
+    "rejected": "reports/real-world/probes-27-10b/validator/e9ead2e30ee9115d/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.1.0"
+  }
+}
