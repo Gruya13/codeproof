@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { checkCitation } from "../src/verify/index.mjs";
@@ -35,6 +35,21 @@ test("L1 reads the working tree when no commit is given", function () {
   const repo = { root: dir, manifest: manifest };
   const result = checkCitation({ path: "src/a.ts", startLine: 2, endLine: 2, snippet: "const y = 20;" }, repo);
   assert.equal(result.passed, true, result.reason);
+});
+
+test("L1 rejects a file added after the analyzed commit", function () {
+  const { dir, commit } = makeGitRepo();
+  try {
+    writeFileSync(join(dir, "src/b.ts"), "const b = 2;\n");
+    execFileSync("git", ["-c", "user.name=test", "-c", "user.email=test@example.invalid", "add", "-A"], { cwd: dir });
+    execFileSync("git", ["-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-q", "-m", "add b"], { cwd: dir });
+    const repo = { root: dir, manifest: new Map([["src/b.ts", { path: "src/b.ts" }]]), commit: commit };
+    const result = checkCitation({ path: "src/b.ts", startLine: 1, endLine: 1, snippet: "const b = 2;" }, repo);
+    assert.equal(result.passed, false);
+    assert.match(result.reason, /not present in the analyzed commit/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("L1 falls back to disk when the target is not a git repository", function () {

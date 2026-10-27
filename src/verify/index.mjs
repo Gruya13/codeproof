@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseDirtyJson } from "../run/json.mjs";
-import { readFileAtCommit } from "../run/index.mjs";
+import { gitPrefix, readFileAtCommit } from "../run/index.mjs";
 
 export const VERIFIER_SYSTEM_PROMPT = [
   "You are an adversarial verifier. A finding was produced by another model.",
@@ -197,6 +197,9 @@ export function checkCitation(evidence, repo) {
   if (startLine < 1 || endLine < startLine) return { passed: false, reason: "invalid line range" };
   if (endLine - startLine + 1 > 15) return { passed: false, reason: "citation wider than 15 lines" };
   const committed = repo.commit ? readFileAtCommit(repo.root, repo.commit, file) : null;
+  if (repo.commit && committed === null && gitPrefix(repo.root) !== null) {
+    return { passed: false, reason: "path is not present in the analyzed commit: " + file };
+  }
   const source = committed === null ? readFileSync(join(repo.root, file), "utf8") : committed;
   const lines = source.split("\n");
   if (endLine > lines.length) return { passed: false, reason: "line range exceeds file length" };
@@ -204,6 +207,7 @@ export function checkCitation(evidence, repo) {
   while (rawSnippet.length > 0 && rawSnippet[0].trim() === "") rawSnippet.shift();
   while (rawSnippet.length > 0 && rawSnippet[rawSnippet.length - 1].trim() === "") rawSnippet.pop();
   if (rawSnippet.length === 0) return { passed: false, reason: "snippet is empty" };
+  if (rawSnippet.length > 15) return { passed: false, reason: "citation wider than 15 lines" };
   const snippetLines = rawSnippet.map(normalizeLine);
   const fileLines = lines.map(normalizeLine);
   for (const offset of [0, -1, 1]) {
@@ -369,8 +373,9 @@ export function applyVerdict(verdict, model, repo, finding = null, excerpts = nu
       };
 
       // F8: Provera bounded konteksta i različitosti od citata nalaza (Z5)
-      let inContext = true;
-      if (typeof excerpts === "string") {
+      const hasContext = typeof excerpts === "string" && finding && Array.isArray(finding.evidence) && finding.evidence.length > 0;
+      let inContext = false;
+      if (hasContext) {
         inContext = counterEvidence.every(function (evidence) {
           return isSnippetInExcerpts(evidence.snippet, excerpts);
         });
@@ -389,7 +394,9 @@ export function applyVerdict(verdict, model, repo, finding = null, excerpts = nu
 
       const policyPassed = inContext && distinctFromCitation;
       let policyReason = "counter-evidence is in bounded context and distinct from finding citation";
-      if (!inContext && !distinctFromCitation) {
+      if (!hasContext) {
+        policyReason = "finding or verifier context is unavailable";
+      } else if (!inContext && !distinctFromCitation) {
         policyReason = "counter-evidence is outside context excerpts and identical to finding citation";
       } else if (!inContext) {
         policyReason = "counter-evidence is not present in verifier context excerpts";

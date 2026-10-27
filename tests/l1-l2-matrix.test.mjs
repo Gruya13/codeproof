@@ -283,6 +283,20 @@ test("T-B7: 15 lines passes, 16 lines fails, endLine < startLine fails, endLine 
   assert.equal(res16.passed, false);
   assert.match(res16.reason, /wider than 15 lines/);
 
+  // Prijavljeni raspon je kratak, ali stvarni snippet ne sme zaobići limit.
+  const res15ShortRange = checkCitation(
+    { path: "len.js", startLine: 1, endLine: 1, snippet: lines.slice(0, 15).join("\n") },
+    repo
+  );
+  assert.equal(res15ShortRange.passed, true, res15ShortRange.reason);
+
+  const res16ShortRange = checkCitation(
+    { path: "len.js", startLine: 1, endLine: 1, snippet: lines.slice(0, 16).join("\n") },
+    repo
+  );
+  assert.equal(res16ShortRange.passed, false);
+  assert.match(res16ShortRange.reason, /wider than 15 lines/);
+
   // endLine < startLine -> pada
   const resInverted = checkCitation(
     { path: "len.js", startLine: 10, endLine: 5, snippet: lines.slice(4, 10).join("\n") },
@@ -433,11 +447,14 @@ test("T-B11: strong refute with valid counter-citation yields 'refuted' status a
   t.after(cleanup);
 
   writeFileSync(join(dir, "auth.js"), "if (!user) return unauthorized();\n", "utf8");
+  writeFileSync(join(dir, "request.js"), "const user = request.user;\n", "utf8");
 
   const repo = {
     root: dir,
-    manifest: new Map([["auth.js", { path: "auth.js" }]])
+    manifest: new Map([["auth.js", { path: "auth.js" }], ["request.js", { path: "request.js" }]])
   };
+  const finding = { id: "F-001", evidence: [{ path: "request.js", startLine: 1, endLine: 1, snippet: "const user = request.user;" }] };
+  const excerpts = "### request.js\n1 | const user = request.user;\n### auth.js\n1 | if (!user) return unauthorized();";
 
   const verdict = {
     findingId: "F-001",
@@ -449,7 +466,7 @@ test("T-B11: strong refute with valid counter-citation yields 'refuted' status a
     ]
   };
 
-  const result = applyVerdict(verdict, "test-model", repo);
+  const result = applyVerdict(verdict, "test-model", repo, finding, excerpts);
   assert.equal(result.status, "refuted");
   assert.equal(result.verifier.mode, "strong");
   assert.equal(result.verifier.counterEvidenceL1.passed, true);
@@ -465,6 +482,8 @@ test("T-B12: strong refute with false snippet yields 'moderate' status and count
     root: dir,
     manifest: new Map([["auth.js", { path: "auth.js" }]])
   };
+  const finding = { id: "F-001", evidence: [{ path: "auth.js", startLine: 1, endLine: 1, snippet: "if (!user) return unauthorized();" }] };
+  const excerpts = "### auth.js\n1 | if (!user) return unauthorized();";
 
   const verdict = {
     findingId: "F-001",
@@ -476,10 +495,32 @@ test("T-B12: strong refute with false snippet yields 'moderate' status and count
     ]
   };
 
-  const result = applyVerdict(verdict, "test-model", repo);
+  const result = applyVerdict(verdict, "test-model", repo, finding, excerpts);
   assert.equal(result.status, "moderate");
   assert.notEqual(result.status, "refuted");
   assert.equal(result.verifier.counterEvidenceL1.passed, false);
+});
+
+test("strong refute without finding or verifier excerpts fails closed", (t) => {
+  const { dir, cleanup } = createTempRepo();
+  t.after(cleanup);
+  writeFileSync(join(dir, "target.js"), "const user = request.user;\nif (!user) return unauthorized();\n", "utf8");
+  const repo = { root: dir, manifest: new Map([["target.js", { path: "target.js" }]]) };
+  const finding = { id: "F-001", evidence: [{ path: "target.js", startLine: 1, endLine: 1, snippet: "const user = request.user;" }] };
+  const excerpts = "### target.js\n1 | const user = request.user;\n2 | if (!user) return unauthorized();";
+  const verdict = {
+    findingId: "F-001", verdict: "refute", mode: "strong", reason: "The guard exists at target.js:2.",
+    counterEvidence: [{ path: "target.js", startLine: 2, endLine: 2, snippet: "if (!user) return unauthorized();" }]
+  };
+
+  const noExcerpts = applyVerdict(verdict, "test-model", repo, finding);
+  assert.equal(noExcerpts.verifier.counterEvidenceL1.passed, true);
+  assert.equal(noExcerpts.status, "moderate");
+  assert.equal(noExcerpts.verifier.counterEvidencePolicy.inContext, false);
+
+  const noFinding = applyVerdict(verdict, "test-model", repo, null, excerpts);
+  assert.equal(noFinding.status, "moderate");
+  assert.equal(noFinding.verifier.counterEvidencePolicy.inContext, false);
 });
 
 test("T-B13: refute degradations: empty counterEvidence, missing mode, and weak mode all degrade to 'moderate'", (t) => {
@@ -501,7 +542,7 @@ test("T-B13: refute degradations: empty counterEvidence, missing mode, and weak 
   assert.equal(valA.ok, true);
   assert.equal(valA.verdicts[0].mode, "weak");
 
-  const resA = applyVerdict(valA.verdicts[0], "test-model", repo);
+  const resA = applyVerdict(valA.verdicts[0], "test-model", repo, { id: "F-001", evidence: [] }, "");
   assert.equal(resA.status, "moderate");
 
   // (b) refute bez mode -> L0 postavlja mode na weak
@@ -514,7 +555,7 @@ test("T-B13: refute degradations: empty counterEvidence, missing mode, and weak 
   assert.equal(valB.ok, true);
   assert.equal(valB.verdicts[0].mode, "weak");
 
-  const resB = applyVerdict(valB.verdicts[0], "test-model", repo);
+  const resB = applyVerdict(valB.verdicts[0], "test-model", repo, { id: "F-002", evidence: [] }, "");
   assert.equal(resB.status, "moderate");
 
   // (c) eksplicitno weak refute -> status moderate
@@ -524,7 +565,7 @@ test("T-B13: refute degradations: empty counterEvidence, missing mode, and weak 
     mode: "weak",
     reason: "Valid reason over 10 chars explaining weak refute"
   };
-  const resC = applyVerdict(verdictC, "test-model", repo);
+  const resC = applyVerdict(verdictC, "test-model", repo, { id: "F-003", evidence: [] }, "");
   assert.equal(resC.status, "moderate");
 });
 
@@ -665,19 +706,30 @@ test("T-B16: confirm -> 'verified', uncertain -> 'uncertain', mismatched finding
     root: dir,
     manifest: new Map([["index.js", { path: "index.js" }]])
   };
+  const finding = {
+    id: "F-001",
+    evidence: [
+      { path: "index.js", startLine: 1, endLine: 1, snippet: "const a = 1;" }
+    ]
+  };
+  const excerpts = "const a = 1;";
 
   // Direct applyVerdict assertions
   const resConfirm = applyVerdict(
     { findingId: "F-001", verdict: "confirm", reason: "Valid reason over 10 chars" },
     "test-model",
-    repo
+    repo,
+    finding,
+    excerpts
   );
   assert.equal(resConfirm.status, "verified");
 
   const resUncertain = applyVerdict(
     { findingId: "F-001", verdict: "uncertain", reason: "Valid reason over 10 chars" },
     "test-model",
-    repo
+    repo,
+    finding,
+    excerpts
   );
   assert.equal(resUncertain.status, "uncertain");
 
@@ -692,14 +744,7 @@ test("T-B16: confirm -> 'verified', uncertain -> 'uncertain', mismatched finding
     }
   ]);
 
-  const finding = {
-    id: "F-001",
-    evidence: [
-      { path: "index.js", startLine: 1, endLine: 1, snippet: "const a = 1;" }
-    ]
-  };
-
-  const res = await verifyOne({ finding, repo, agent, excerpts: "const a = 1;", maxTokens: 1000 });
+  const res = await verifyOne({ finding, repo, agent, excerpts: excerpts, maxTokens: 1000 });
   assert.equal(res.status, "uncertain");
   assert.match(res.verifier.reason, /no verdict for this finding/);
 });

@@ -32,3 +32,12 @@ test("mock response prices are charged and can exceed a Budget", async function 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("Budget tolerates floating point equality and still rejects a real overage", function () {
+  const budget = new Budget(0.3);
+  budget.charge(0.1);
+  budget.charge(0.2);
+  assert.equal(budget.exceeded, false);
+  budget.charge(0.1);
+  assert.equal(budget.exceeded, true);
+});

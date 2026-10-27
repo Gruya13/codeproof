@@ -82,6 +82,6 @@ export class Budget {
     this.calls += 1;
     if (costUsd === null || costUsd === undefined) return;
     this.spentUsd += costUsd;
-    if (this.spentUsd > this.limitUsd) this.exceeded = true;
+    if (this.spentUsd > this.limitUsd + 1e-9) this.exceeded = true;
   }
 }
