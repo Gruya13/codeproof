@@ -1,6 +1,6 @@
 # Golden benchmark run (provenance)
 
-This directory is a **verbatim copy** of one scored benchmark run, committed so a judge can inspect the artifacts without re-running the pipeline. Nothing here is edited by hand.
+The run artifacts in this directory (`run.json`, `findings.json`, `REPORT.md`, `rejected.md`) are **verbatim copies** of one scored benchmark run, committed so a judge can inspect the pipeline output without re-running it. This `README.md` is provenance documentation written after the run; it is not part of the run output and is the only hand-authored file in this directory.
 
 - run: `26ab3dd52bcd1e4f` (post-calibration, F4 bounded verifier context; scanner prompt v3)
 - mode: `bench`, `mock: false`, `repo.dirty: false`
