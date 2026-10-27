@@ -1,0 +1,18 @@
+{
+  "repo": "https://github.com/preactjs/preact.git",
+  "commit": "1c0f1f82340f096e5850386d617d6a3885693001",
+  "scope": "src",
+  "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/preact-src/_repo/src",
+  "clean": true,
+  "files": 17,
+  "loc": 6214,
+  "importEdges": 44,
+  "cycles": 4,
+  "digestChars": 2179,
+  "promptChars": 248961,
+  "promptFiles": 17,
+  "promptComplete": true,
+  "promptCap": 400000,
+  "estimatedInputTokens": 69156,
+  "dryRun": true
+}

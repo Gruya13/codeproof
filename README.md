@@ -77,6 +77,8 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 |---|---|---|---|
 | Calibration benchmark (n=8) | [reports/golden/](reports/golden/) | 8/8 recall, 100% precision, 0/4 traps published | a statistical claim; the set was used for calibration |
 | Real repository (unjs/ofetch) | [reports/real-world/ofetch/](reports/real-world/ofetch/) | 4/4 verified, all four match open upstream issues/PRs | novel discovery - the commit and issues are public |
+| Real repository (sindresorhus/execa) | [reports/real-world/execa-lib/](reports/real-world/execa-lib/) | 1 verified finding in run 2 (0 in run 1): Windows shebang parser drops interpreter arguments; hand-checked | a hit-rate claim; 2 runs, public commit, the Windows path was not executed |
+| Real repository (preactjs/preact) | [reports/real-world/preact-src/](reports/real-world/preact-src/) | 1 verified (refQueue not rolled back on a diff error) + 2 uncertain in run 2; 0 in run 1 | a hit-rate claim; static adjudication, error-boundary path only |
 | Controlled verifier | [reports/controlled-verifier/](reports/controlled-verifier/) | a strong refutation carries a machine-checked counter-citation | a scanner output - candidates are injected |
 | Historical recall (n=9) | [reports/historical/](reports/historical/) | 2/9 known fixes found; 7 known fixes missed | a benchmark metric; n=9, single directory per test |
 
@@ -116,6 +118,14 @@ The pipeline was also run on a real, widely used open-source project: [unjs/ofet
   - `withQuery` array values appended without replacing existing ones - PR [#594](https://github.com/unjs/ofetch/pull/594)
 - Runs are not bit-identical: three runs on this commit and scope produced 4/4, 3/3 and 4/4 verified findings ($0.2928, $0.1991, $0.5596). The latest valid run is the one committed here; earlier results are stated above.
 - This is an **anecdote, not a benchmark metric**. The analyzed commit is public and the upstream issues/PRs predate the analysis, so a model may have seen them; the run shows that the gate surfaces real, acknowledged problems - not that the findings are novel discoveries. The hand check also corrected the scanner's severity: the `withBase` issue is SSRF class upstream even though the scanner labelled it medium.
+
+### Additional real-repository runs (execa, preact)
+
+Two more real repositories were run with the same protocol (2 runs per frozen commit, scope fully inside the scanner prompt, hand check of every published finding; artifacts committed verbatim under [reports/real-world/](reports/real-world/)):
+
+- [sindresorhus/execa](https://github.com/sindresorhus/execa) `lib/` (8,227 LOC): run 1 proposed nothing, run 2 verified one Windows-only shebang parser defect (`split(' ', 2)` drops interpreter arguments and returns a space-containing interpreter path). Hand verdict: confirmed, undocumented, no matching upstream issue; Windows path not executed here.
+- [preactjs/preact](https://github.com/preactjs/preact) `src/` (6,214 LOC): run 1 proposed nothing, run 2 verified one error-path defect (`refQueue` is not rolled back when `diff()` throws, while `commitQueue` is) and left two candidates uncertain. Hand verdict: confirmed plausible defect (static), error-boundary path, no matching upstream issue.
+- Both are anecdotes, not benchmark metrics; the commits are public (contamination possible) and both directories include the full runs, not only the successful one.
 
 ## Historical recall test (qualitative)
 

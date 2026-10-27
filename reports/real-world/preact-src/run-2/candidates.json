@@ -1,0 +1,128 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"diff() truncates commitQueue on error but never truncates refQueue, so refs queued by the failed subtree remain and are still applied in commitRoot.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 368, \"path\": \"diff/index.js\", \"snippet\": \"commitQueue.length = oldCommitQueueLength;\", \"startLine\": 368}, {\"endLine\": 125, \"path\": \"diff/children.js\", \"snippet\": \"if (childVNode.ref) {\\n\\t\\t\\t\\trefQueue.push(\\n\\t\\t\\t\\t\\tchildVNode.ref,\\n\\t\\t\\t\\t\\tchildVNode._component || newDom,\\n\\t\\t\\t\\t\\tchildVNode\\n\\t\\t\\t\\t);\", \"startLine\": 119}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"refQueue not rolled back on diff error\"}, {\"category\": \"correctness\", \"claim\": \"Component._excess range handle is stored and reused via || without ever being cleared in unmount, so a re-suspend keeps a stale start marker and unmount leaks the reference.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 419, \"path\": \"diff/index.js\", \"snippet\": \"startMarker =\\n\\t\\t\\t\\t\\t\\tnewVNode._component._excess ||\\n\\t\\t\\t\\t\\t\\t(newVNode._component._excess = startMarker);\", \"startLine\": 417}, {\"endLine\": 820, \"path\": \"diff/index.js\", \"snippet\": \"if (\\n\\t\\t!skipRemove &&\\n\\t\\t(r = vnode._component) &&\\n\\t\\t(r = r._excess) &&\\n\\t\\t(end = rangeEnd(r, (nodes = [])))\\n\\t) {\", \"startLine\": 811}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Suspended range handle never cleared\"}, {\"category\": \"correctness\", \"claim\": \"MATCHED is set on oldChildren during matching but only new-vnode flags are cleared after each child, so flags left on old vnodes after a throw persist into the next diff and cause findMatchingIndex to skip live nodes.\", \"confidence\": 0.8, \"evidence\": [{\"endLine\": 252, \"path\": \"diff/children.js\", \"snippet\": \"if (oldVNode) {\\n\\t\\t\\t\\toldVNode._flags |= MATCHED;\\n\\t\\t\\t}\", \"startLine\": 250}, {\"endLine\": 147, \"path\": \"diff/children.js\", \"snippet\": \"// Clear placement and LIS flags; MATCHED only belongs to old vnodes.\\n\\t\\tchildVNode._flags &= ~(INSERT_VNODE | LIS_CANDIDATE);\", \"startLine\": 146}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Old-vnode MATCHED flag never reset\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "diff() truncates commitQueue on error but never truncates refQueue, so refs queued by the failed subtree remain and are still applied in commitRoot.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 368,
+            "path": "diff/index.js",
+            "snippet": "commitQueue.length = oldCommitQueueLength;",
+            "startLine": 368
+          },
+          {
+            "endLine": 125,
+            "path": "diff/children.js",
+            "snippet": "if (childVNode.ref) {\n\t\t\t\trefQueue.push(\n\t\t\t\t\tchildVNode.ref,\n\t\t\t\t\tchildVNode._component || newDom,\n\t\t\t\t\tchildVNode\n\t\t\t\t);",
+            "startLine": 119
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "refQueue not rolled back on diff error"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 368-368 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The catch at diff/index.js:368 only resets commitQueue.length with no refQueue rollback in the shown handler, while diff/children.js:119-125 pushes ref triples into the shared refQueue during a subtree diff, and component.js:154 passes that same refQueue to commitRoot after diff returns."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Component._excess range handle is stored and reused via || without ever being cleared in unmount, so a re-suspend keeps a stale start marker and unmount leaks the reference.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 419,
+            "path": "diff/index.js",
+            "snippet": "startMarker =\n\t\t\t\t\t\tnewVNode._component._excess ||\n\t\t\t\t\t\t(newVNode._component._excess = startMarker);",
+            "startLine": 417
+          },
+          {
+            "endLine": 820,
+            "path": "diff/index.js",
+            "snippet": "if (\n\t\t!skipRemove &&\n\t\t(r = vnode._component) &&\n\t\t(r = r._excess) &&\n\t\t(end = rangeEnd(r, (nodes = [])))\n\t) {",
+            "startLine": 811
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Suspended range handle never cleared"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "uncertain",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 417-419 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "uncertain",
+        "reason": "The excerpt at diff/index.js:417-419 only proves _excess is assigned and reused, with diff/index.js:416 stating this preserves the original range on re-suspend; the cited unmount evidence ends at the opening condition around diff/index.js:811-820 without its body, and no other _excess assignments or clears are shown, so it cannot be settled whether unmount or a successful render clears it or whether the marker is detached on re-suspend. The full unmount function, the successful-render path in diff/index.js, and a repo-wide search for _excess would be needed."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "MATCHED is set on oldChildren during matching but only new-vnode flags are cleared after each child, so flags left on old vnodes after a throw persist into the next diff and cause findMatchingIndex to skip live nodes.",
+        "confidence": 0.8,
+        "evidence": [
+          {
+            "endLine": 252,
+            "path": "diff/children.js",
+            "snippet": "if (oldVNode) {\n\t\t\t\toldVNode._flags |= MATCHED;\n\t\t\t}",
+            "startLine": 250
+          },
+          {
+            "endLine": 147,
+            "path": "diff/children.js",
+            "snippet": "// Clear placement and LIS flags; MATCHED only belongs to old vnodes.\n\t\tchildVNode._flags &= ~(INSERT_VNODE | LIS_CANDIDATE);",
+            "startLine": 146
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Old-vnode MATCHED flag never reset"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "uncertain",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 250-252 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "uncertain",
+        "reason": "The excerpts show MATCHED being set on old vnodes at diff/children.js:250-252, but they do not show findMatchingIndex, any MATCHED reset in the unshown portions of diff/children.js, or the throw/suspend retry path, so persistence into the next diff and skipping of live nodes cannot be settled from the given context."
+      }
+    }
+  ]
+}
