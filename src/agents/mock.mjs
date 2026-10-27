@@ -15,7 +15,7 @@ export function createMockAgent(options) {
     return response?.costUsd ?? response?.costPerCall ?? scenario.costUsd ?? scenario.costPerCall ?? 0;
   }
   return async function complete(request) {
-    if (request.role === "scanner") {
+    if (request.role === "scanner" || request.role === "scanner-secondary") {
       let text;
       if (Array.isArray(scenario.scannerRaw) && scenario.scannerRaw.length > 0) {
         text = scannerCallCount < scenario.scannerRaw.length
@@ -36,7 +36,7 @@ export function createMockAgent(options) {
         httpStatus: 200
       };
     }
-    if (request.role === "verifier") {
+    if (request.role === "verifier" || request.role === "verifier-secondary") {
       const findingId = extractFindingId(request.messages);
       const verdict = scenario.verdicts.find(function (item) { return item.findingId === findingId; });
       const one = verdict || {

@@ -39,6 +39,15 @@ test("config-hash: changing VERIFIER_CONTEXT_CHARS changes configSha256", functi
   assert.notEqual(hash1, hash2);
 });
 
+test("config-hash: dual-scan mode and its secondary model are part of the run identity", function () {
+  assert.equal(loadConfig({}).dualScan, false);
+  assert.equal(loadConfig({ DUAL_SCAN: "1" }).dualScan, true);
+  assert.equal(loadConfig({ DUAL_SCAN: "1", SECONDARY_SCANNER_MODEL: "muse-spark-1.2" }).secondaryScannerModel, "muse-spark-1.2");
+  const off = computeConfigSha256({ ...baseConfig, dualScan: false }, "smoke");
+  const on = computeConfigSha256({ ...baseConfig, dualScan: true, secondaryScannerModel: "muse-wonder-1.0" }, "smoke");
+  assert.notEqual(off, on);
+});
+
 test("config-hash: the hard-budget gate is part of the run identity", function () {
   const hash1 = computeConfigSha256({ ...baseConfig, hardBudget: true }, "demo");
   const hash2 = computeConfigSha256({ ...baseConfig, hardBudget: false }, "demo");

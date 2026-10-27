@@ -1,0 +1,423 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"withFragment cannot clear a fragment with empty string: early return on falsy hash makes the later hash==='' branch unreachable, contradicting documented withFragment(\\\"/foo#bar\\\",\\\"\\\") => \\\"/foo\\\".\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 743, \"path\": \"utils.ts\", \"snippet\": \"export function withFragment(input: string, hash: string): string {\\n  if (!hash || hash === \\\"#\\\") {\\n    return input;\\n  }\\n  const parsed = parseURL(input);\\n  parsed.hash = hash === \\\"\\\" ? \\\"\\\" : \\\"#\\\" + encodeHash(hash);\\n  return stringifyParsedURL(parsed);\\n}\", \"startLine\": 736}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"withFragment empty hash never clears fragment\"}, {\"category\": \"correctness\", \"claim\": \"withoutLeadingSlash coerces empty result to \\\"/\\\": withoutLeadingSlash(\\\"\\\") and withoutLeadingSlash(\\\"/\\\") both return \\\"/\\\" instead of \\\"\\\", corrupting root/empty segments and append/join results.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 237, \"path\": \"utils.ts\", \"snippet\": \"export function withoutLeadingSlash(input = \\\"\\\"): string {\\n  return (hasLeadingSlash(input) ? input.slice(1) : input) || \\\"/\\\";\\n}\", \"startLine\": 235}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"withoutLeadingSlash returns slash for empty input\"}, {\"category\": \"correctness\", \"claim\": \"parseAuth splits on every colon and keeps only the second segment, so password containing colon loses data: \\\"user:pass:word\\\" parses password as \\\"pass\\\" instead of \\\"pass:word\\\".\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 139, \"path\": \"parse.ts\", \"snippet\": \"export function parseAuth(input = \\\"\\\"): ParsedAuth {\\n  const [username, password] = input.split(\\\":\\\");\\n  return {\\n    username: decode(username),\\n    password: decode(password),\\n  };\\n}\", \"startLine\": 133}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"parseAuth drops extra colons in password\"}, {\"category\": \"correctness\", \"claim\": \"Base prefix checks accept only \\\"/\\\" and \\\"?\\\" as delimiters and ignore \\\"#\\\": withBase(\\\"/foo#bar\\\",\\\"/foo\\\") duplicates the base instead of returning input, and withoutBase is inconsistent for hash-suffixed paths.\", \"confidence\": 0.78, \"evidence\": [{\"endLine\": 302, \"path\": \"utils.ts\", \"snippet\": \"  const _base = withoutTrailingSlash(base);\\n  if (input.startsWith(_base)) {\\n    const nextChar = input[_base.length];\\n    // Ensure '/admin-dashboard' is not considered as having base '/admin/'\\n    if (!nextChar || nextChar === \\\"/\\\" || nextChar === \\\"?\\\") {\\n      return input;\\n    }\\n  }\\n  return joinURL(_base, input);\", \"startLine\": 294}, {\"endLine\": 330, \"path\": \"utils.ts\", \"snippet\": \"  const _base = withoutTrailingSlash(base);\\n  if (!input.startsWith(_base)) {\\n    return input;\\n  }\\n  // Ensure '/admin-dashboard' is not considered as having base '/admin/'\\n  const nextChar = input[_base.length];\\n  if (nextChar && nextChar !== \\\"/\\\" && nextChar !== \\\"?\\\") {\\n    return input;\\n  }\", \"startLine\": 322}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"withBase/withoutBase ignore hash delimiter\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "withFragment cannot clear a fragment with empty string: early return on falsy hash makes the later hash==='' branch unreachable, contradicting documented withFragment(\"/foo#bar\",\"\") => \"/foo\".",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 743,
+            "path": "utils.ts",
+            "snippet": "export function withFragment(input: string, hash: string): string {\n  if (!hash || hash === \"#\") {\n    return input;\n  }\n  const parsed = parseURL(input);\n  parsed.hash = hash === \"\" ? \"\" : \"#\" + encodeHash(hash);\n  return stringifyParsedURL(parsed);\n}",
+            "startLine": 736
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "withFragment empty hash never clears fragment"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 736-743 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: utils.ts:737 returns input unchanged when hash is empty because !hash is true for \"\", so the hash===\"\" clearing branch at utils.ts:741 is unreachable and contradicts the documented example at utils.ts:731."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "withoutLeadingSlash coerces empty result to \"/\": withoutLeadingSlash(\"\") and withoutLeadingSlash(\"/\") both return \"/\" instead of \"\", corrupting root/empty segments and append/join results.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 237,
+            "path": "utils.ts",
+            "snippet": "export function withoutLeadingSlash(input = \"\"): string {\n  return (hasLeadingSlash(input) ? input.slice(1) : input) || \"/\";\n}",
+            "startLine": 235
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "withoutLeadingSlash returns slash for empty input"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 235-237 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The implementation at utils.ts:235-236 returns `(hasLeadingSlash(input) ? input.slice(1) : input) || \"/\"`, so both \"\" and \"/\" (which slices to \"\") coerce to \"/\", and url.ts:126 appends that result after withTrailingSlash, yielding a double slash for a root pathname."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "parseAuth splits on every colon and keeps only the second segment, so password containing colon loses data: \"user:pass:word\" parses password as \"pass\" instead of \"pass:word\".",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 139,
+            "path": "parse.ts",
+            "snippet": "export function parseAuth(input = \"\"): ParsedAuth {\n  const [username, password] = input.split(\":\");\n  return {\n    username: decode(username),\n    password: decode(password),\n  };\n}",
+            "startLine": 133
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "parseAuth drops extra colons in password"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 133-139 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at parse.ts:134 destructures only the first two elements of input.split(\":\"), so \"user:pass:word\" yields username \"user\" and password \"pass\" with \"word\" discarded, exactly as claimed."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Base prefix checks accept only \"/\" and \"?\" as delimiters and ignore \"#\": withBase(\"/foo#bar\",\"/foo\") duplicates the base instead of returning input, and withoutBase is inconsistent for hash-suffixed paths.",
+        "confidence": 0.78,
+        "evidence": [
+          {
+            "endLine": 302,
+            "path": "utils.ts",
+            "snippet": "  const _base = withoutTrailingSlash(base);\n  if (input.startsWith(_base)) {\n    const nextChar = input[_base.length];\n    // Ensure '/admin-dashboard' is not considered as having base '/admin/'\n    if (!nextChar || nextChar === \"/\" || nextChar === \"?\") {\n      return input;\n    }\n  }\n  return joinURL(_base, input);",
+            "startLine": 294
+          },
+          {
+            "endLine": 330,
+            "path": "utils.ts",
+            "snippet": "  const _base = withoutTrailingSlash(base);\n  if (!input.startsWith(_base)) {\n    return input;\n  }\n  // Ensure '/admin-dashboard' is not considered as having base '/admin/'\n  const nextChar = input[_base.length];\n  if (nextChar && nextChar !== \"/\" && nextChar !== \"?\") {\n    return input;\n  }",
+            "startLine": 322
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "withBase/withoutBase ignore hash delimiter"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 294-302 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at utils.ts:298 accepts only '/', '?' or end-of-string after the base in withBase, so '/foo#bar' falls through to joinURL at utils.ts:302, and utils.ts:328 similarly rejects '#' in withoutBase, returning the unstripped input."
+      }
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "parseURL loses opaque-protocol URLs such as mailto:foo@example.com: hasProtocol accepts a scheme without //, but the subsequent match requires //, so the match fails and protocol, hostAndPath, pathname, search and hash all default to empty.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 75,
+            "path": "parse.ts",
+            "snippet": "  if (!hasProtocol(input, { acceptRelative: true })) {\n    return defaultProto ? parseURL(defaultProto + input) : parsePath(input);\n  }\n\n  const [, protocol = \"\", auth, hostAndPath = \"\"] =\n    input\n      .replace(/\\\\/g, \"/\")\n      .match(/^[\\s\\0]*([\\w+.-]{2,}:)?\\/\\/([^/@]+@)?(.*)/) || [];",
+            "startLine": 68
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "parseURL drops non-hierarchical protocol URLs"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 68-75 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-spark-1.3",
+        "verdict": "confirm",
+        "reason": "utils.ts:12 PROTOCOL_REGEX makes hasProtocol true for mailto: without //, so parse.ts:68 does not early-return, but parse.ts:75 match requires // and fails, falling back to || [] with protocol=\"\" and hostAndPath=\"\" leading to empty pathname/search/hash."
+      }
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "joinRelativeURL(\"../a\", \"b\") returns \"a/b\" instead of \"../a/b\": the \"..\" decrements segmentsDepth to -1, but pushing the following normal segment increments it back to 0, so the later leading-../ prefix logic is skipped and the parent reference is lost.",
+        "confidence": 0.92,
+        "evidence": [
+          {
+            "endLine": 488,
+            "path": "utils.ts",
+            "snippet": "      if (s === \"..\") {\n        if (segments.length === 1 && hasProtocol(segments[0])) {\n          continue;\n        }\n        segments.pop();\n        segmentsDepth--;\n        continue;\n      }\n      // eslint-disable-next-line unicorn/prefer-at\n      if (sindex === 1 && segments[segments.length - 1]?.endsWith(\":/\")) {\n        segments[segments.length - 1] += \"/\" + s;\n        continue;\n      }\n      segments.push(s);\n      segmentsDepth++;",
+            "startLine": 474
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "joinRelativeURL discards leading ../ segments"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 474-488 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-spark-1.3",
+        "verdict": "confirm",
+        "reason": "Trace of utils.ts:474-488 confirms the bug: '..' does segments.pop() and segmentsDepth-- to -1, then 'a' does segments.push() and segmentsDepth++ back to 0, so utils.ts:494 takes the >=0 branch and never adds the '../' prefix, yielding 'a/b'."
+      }
+    },
+    {
+      "index": 6,
+      "candidate": {
+        "category": "correctness",
+        "claim": "stringifyParsedURL(parseURL(\"data:text/plain,hello\")) produces \"data://text/plain,hello\": parseURL special-cases data:/blob: URLs without //, but stringifyParsedURL unconditionally appends // to every protocol, corrupting opaque-scheme URLs on round-trip.",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "endLine": 194,
+            "path": "parse.ts",
+            "snippet": "  const proto =\n    parsed.protocol || parsed[protocolRelative]\n      ? (parsed.protocol || \"\") + \"//\"\n      : \"\";\n  return proto + auth + host + pathname + search + hash;",
+            "startLine": 190
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "stringifyParsedURL adds // to opaque protocols"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 190-194 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-spark-1.3",
+        "verdict": "confirm",
+        "reason": "parse.ts:190-194 shows proto is built as (parsed.protocol || \"\") + \"//\" whenever protocol is truthy with no exemption for opaque schemes, so a data: parsed object with empty host stringifies to data://..."
+      }
+    },
+    {
+      "index": 7,
+      "candidate": {
+        "category": "correctness",
+        "claim": "new $URL(\"//example.com/foo\").href returns \"/foo\" and loses the host: parseURL stores host \"example.com\" with an empty protocol, so hasProtocol is falsy and href returns only fullpath instead of the protocol-relative URL.",
+        "confidence": 0.86,
+        "evidence": [
+          {
+            "endLine": 115,
+            "path": "url.ts",
+            "snippet": "  get href(): string {\n    const auth = this.encodedAuth;\n    const originWithAuth =\n      (this.protocol ? this.protocol + \"//\" : \"\") +\n      (auth ? auth + \"@\" : \"\") +\n      encodeHost(this.host);\n    return this.hasProtocol && this.isAbsolute\n      ? originWithAuth + this.fullpath\n      : this.fullpath;\n  }",
+            "startLine": 106
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "$URL href drops host for protocol-relative URLs"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 106-115 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-spark-1.3",
+        "verdict": "confirm",
+        "reason": "parse.ts:87-93 stores protocol \"\" with host \"example.com\" for \"//example.com/foo\", so url.ts:56-57 hasProtocol is 0 (falsy) and url.ts:112-114 `hasProtocol && isAbsolute` fails, returning only fullpath \"/foo\" and dropping the host."
+      }
+    },
+    {
+      "index": 8,
+      "candidate": {
+        "category": "correctness",
+        "claim": "parseHost(\"[::1]:8080\") returns hostname \"[\" and no port because [^/:]* stops at the first colon inside the IPv6 brackets; this also breaks $URL hostname/port getters for IPv6 hosts that parseURL otherwise preserves.",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "endLine": 163,
+            "path": "parse.ts",
+            "snippet": "export function parseHost(input = \"\"): ParsedHost {\n  const [hostname, port] = (input.match(/([^/:]*):?(\\d+)?/) || []).splice(1);\n  return {\n    hostname: decode(hostname),\n    port,\n  };\n}",
+            "startLine": 157
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "parseHost breaks IPv6 literal hosts"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 157-163 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-spark-1.3",
+        "verdict": "confirm",
+        "reason": "parse.ts:158 uses /([^/:]*):?(\\d+)?/ which on \"[::1]:8080\" stops at the first colon and captures hostname \"[\" with undefined port, and url.ts:41-45 shows $URL hostname/port getters delegate directly to parseHost so they inherit the breakage."
+      }
+    },
+    {
+      "index": 9,
+      "candidate": {
+        "category": "correctness",
+        "claim": "withFragment(\"/foo#bar\", \"\") returns \"/foo#bar\" unchanged, contradicting its documented \"/foo\" result: the early !hash return makes the hash === \"\" clearing assignment below unreachable.",
+        "confidence": 0.94,
+        "evidence": [
+          {
+            "endLine": 743,
+            "path": "utils.ts",
+            "snippet": "export function withFragment(input: string, hash: string): string {\n  if (!hash || hash === \"#\") {\n    return input;\n  }\n  const parsed = parseURL(input);\n  parsed.hash = hash === \"\" ? \"\" : \"#\" + encodeHash(hash);\n  return stringifyParsedURL(parsed);\n}",
+            "startLine": 736
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "withFragment cannot remove an existing fragment"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "duplicate-of F-001"
+    },
+    {
+      "index": 10,
+      "candidate": {
+        "category": "correctness",
+        "claim": "parseAuth(\"user:pa:ss\") returns password \"pa\" and silently drops \":ss\": destructuring split(\":\") keeps only the first two parts, although only the first colon separates username from password and later colons belong to the password.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 139,
+            "path": "parse.ts",
+            "snippet": "export function parseAuth(input = \"\"): ParsedAuth {\n  const [username, password] = input.split(\":\");\n  return {\n    username: decode(username),\n    password: decode(password),\n  };\n}",
+            "startLine": 133
+          }
+        ],
+        "id": "F-007",
+        "kind": "direct",
+        "severity": "low",
+        "title": "parseAuth truncates passwords containing colons"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "duplicate-of F-003"
+    },
+    {
+      "index": 11,
+      "candidate": {
+        "category": "correctness",
+        "claim": "withoutBase(\"/foo#section\", \"/foo\") returns the input unchanged instead of \"/#section\": the boundary check accepts \"/\" and \"?\" after the base but not \"#\", even though a fragment terminates the path just like a query does.",
+        "confidence": 0.82,
+        "evidence": [
+          {
+            "endLine": 330,
+            "path": "utils.ts",
+            "snippet": "  const _base = withoutTrailingSlash(base);\n  if (!input.startsWith(_base)) {\n    return input;\n  }\n  // Ensure '/admin-dashboard' is not considered as having base '/admin/'\n  const nextChar = input[_base.length];\n  if (nextChar && nextChar !== \"/\" && nextChar !== \"?\") {\n    return input;\n  }",
+            "startLine": 322
+          }
+        ],
+        "id": "F-008",
+        "kind": "direct",
+        "severity": "low",
+        "title": "withoutBase does not recognize fragment as path boundary"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 322-330 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-spark-1.3",
+        "verdict": "confirm",
+        "reason": "utils.ts:328 checks `nextChar !== \"/\" && nextChar !== \"?\"` with no `#` case, so utils.ts:329 returns the input unchanged for `/foo#section` with base `/foo`, confirming the fragment boundary is missed."
+      }
+    }
+  ]
+}

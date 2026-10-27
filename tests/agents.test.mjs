@@ -62,6 +62,13 @@ test("agents: meta mode records role, model, usage and cost and charges the budg
   assert.ok(budget.spentUsd > 0, "budget must be charged");
 });
 
+test("agents: dual-scan roles map to the secondary scanner and the cross verifier", async function () {
+  const { agents, calls } = makeAgents({ secondaryScannerModel: "muse-spark-1.2", secondaryVerifierModel: "muse-spark-1.3" });
+  await agents.complete({ role: "scanner-secondary", messages: [{ role: "user", content: "x" }], maxTokens: 10 });
+  await agents.complete({ role: "verifier-secondary", messages: [{ role: "user", content: "x" }], maxTokens: 10 });
+  assert.deepEqual(calls.map(function (call) { return call.body.model; }), ["muse-spark-1.2", "muse-spark-1.3"]);
+});
+
 test("agents: each role uses its configured model", async function () {
   const { agents, calls } = makeAgents();
   for (const role of ["scanner", "verifier", "repro"]) {

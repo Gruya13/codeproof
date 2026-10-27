@@ -36,7 +36,7 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026). 
 
 The pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`), and the deterministic suite is green on Node 22 and Node 26:
 
-- **Deterministic tests** (`make test`): **148/148** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), commit-based ingestion (dirty working tree cannot change the analysis), L3 cases (reproducer must import and call repository code that exists in the snapshot, no non-determinism, no trivial assertions, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), agent layer (role/label/cost recording, mock and meta adapters, soft and hard budget gates), dirty-JSON and truncation handling, fault injection, config-hash determinism.
+- **Deterministic tests** (`make test`): **158/158** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), commit-based ingestion (dirty working tree cannot change the analysis), L3 cases (reproducer must import and call repository code that exists in the snapshot, no non-determinism, no trivial assertions, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), agent layer (role/label/cost recording, mock and meta adapters, soft and hard budget gates), dirty-JSON and truncation handling, fault injection, config-hash determinism.
 - **Clean clone**: `make clean-clone` (tmpfs + `env -i`) and the Docker variant `make clean-clone-docker` (node:22-alpine) pass `make test`, `make demo`, `make replay` and `make score RUN=reports/golden` on a fresh clone.
 - **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts with no model calls - **9/9 identical, 0 mismatches**.
 - **Calibration benchmark with L3**: **8/8** recall (100%), 100% precision, 0/4 traps, 0 false refutations, **9/9 published findings execution-proven** - golden run and its generated reproducers are committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
@@ -60,6 +60,18 @@ ingest -> scan -> verify -> repro -> publish
 
 Scan and verify are static: the analyzed code is never executed while the scanner and verifier run. L3 executes only the generated test, on a snapshot, inside the sandbox described above; that isolation is process-level, not OS-level. Nothing is written to the analyzed repository.
 
+## Dual-scanner mode (opt-in)
+
+`DUAL_SCAN=1` turns **both Meta models into producers**: Muse Spark and Muse Wonder each scan the repository with the same prompt and schema, and their candidates are merged:
+
+- the same file with overlapping cited lines = one finding, tagged with both proposers; ids are renumbered so the two scanners cannot collide (`scannerIds` keeps the originals);
+- every finding records `proposedBy` in `findings.json` and shows `**Proposed by:**` in the report; `run.json` records per-scanner models, candidate counts, cost and L0 rejects;
+- **cross-verification:** the verifier is the model that did *not* propose the finding - a Wonder-proposed finding is cross-examined by Spark, a Spark-proposed finding by Wonder. A finding proposed by both is verified by the default verifier. The adversarial check therefore stays in place for every candidate.
+
+**Why it exists.** In the model-ablation run on `unjs/ufo`, Wonder alone proposed five real defects that Spark never proposed; the single-scanner pipeline could not publish them because the producer never proposed them, and Spark as a verifier confirmed all seven Wonder findings. Dual-scan closes that recall gap at a known price: the second scan is roughly one extra Wonder pass, so the mode is opt-in and `run.json` records the cost per scanner.
+
+**Limits:** both models are from the same vendor family, so cross-verification is independent by role and model, not by provenance; duplicate detection is heuristic (file + overlapping lines), so two citations of the same defect that do not overlap remain two findings; the hard budget gate can refuse the second scan or later verifications, and `run.json` records the abort reason.
+
 ## Meta AI tooling used
 
 - **Two models in one gate:** Muse Spark 1.3 as producer, Muse Wonder as adversarial verifier - not one model grading itself.
@@ -76,6 +88,7 @@ make demo        # deterministic end-to-end demo, mock adapter, no network
 make test        # L1/L2 gate, L3 runner, dirty JSON, fault injection, config hash (Node >= 22)
 make controlled  # controlled verifier test: injected candidates, real API (needs MODEL_API_KEY)
 make bench       # scored benchmark: bench/seed-repo, MAX_FINDINGS=12, mode bench (needs MODEL_API_KEY); REPRO=0 disables L3
+DUAL_SCAN=1 make bench  # both models scan; each candidate is verified by the other model
 make score       # score the newest benchmark run; RUN=reports/<id> selects one explicitly
 make replay      # re-run L0/L1 over the committed golden artifacts (no model calls)
 make clean-clone # fresh clone in tmpfs with env -i, make test/demo/score
@@ -110,6 +123,7 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 | Real repository (unjs/ofetch) with L3 | [reports/real-world/ofetch/l3/](reports/real-world/ofetch/l3/) | one finding **execution-proven**: generated test reproduces the `isJSONSerializable(null)` TypeError on the analyzed commit (matches upstream issue #571) | one repository, n = 2 runs; the commit and issue are public |
 | Real-repository probe round with L3 (4 repos) | [reports/real-world/probes-27-10/](reports/real-world/probes-27-10/) | defu, p-queue, zustand, yup: 7 candidates, 6 published (4 hand-confirmed), no false positives; L3 reported `repro-unavailable` on the TypeScript trees | not a benchmark; one run per repository, n = 4 |
 | Real-repository probe round II with L3 (5 repos) | [reports/real-world/probes-27-10b/](reports/real-world/probes-27-10b/) | semver, dotenv, json5, ufo, validator.js: 11 candidates, 10 published (4 hand-confirmed), 1 L1 reject, **1 execution-proven** (`LRUCache.set` loses the entry on update) | not a benchmark; one run per repository, n = 5 |
+| Dual-scanner run (ufo) | [reports/real-world/dual-scan/](reports/real-world/dual-scan/) | same commit as the single-scanner run: **4 → 10 published findings** (6 proposed only by Wonder, each cross-verified by Spark), 0 false positives, 3x cost | one run, n = 1; same vendor family |
 | Real repository (sindresorhus/execa) | [reports/real-world/execa-lib/](reports/real-world/execa-lib/) | 1 verified finding in run 2 (0 in run 1): Windows shebang parser drops interpreter arguments; hand-checked | a hit-rate claim; 2 runs, public commit, the Windows path was not executed |
 | Real repository (preactjs/preact) | [reports/real-world/preact-src/](reports/real-world/preact-src/) | 1 verified (refQueue not rolled back on a diff error) + 2 uncertain in run 2; 0 in run 1 | a hit-rate claim; static adjudication, error-boundary path only |
 | Real repository (moment/luxon) | [reports/real-world/luxon-src/](reports/real-world/luxon-src/) | 1 verified in both runs (latent internal `uncomputeOrdinal` defect; public dates correct) + 1 organic refuted claim in run 2 | a hit-rate claim; the verified finding is latent, static + public-API adjudication |

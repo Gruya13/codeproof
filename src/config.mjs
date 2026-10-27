@@ -33,7 +33,9 @@ export function loadConfig(env) {
     reproMaxTokens: Number(env.REPRO_MAX_TOKENS || "8000"),
     reproTimeoutMs: Number(env.REPRO_TIMEOUT_MS || "2000"),
     reproAttempts: Number(env.REPRO_ATTEMPTS || "3"),
-    hardBudget: env.HARD_BUDGET !== "0"
+    hardBudget: env.HARD_BUDGET !== "0",
+    dualScan: env.DUAL_SCAN === "1",
+    secondaryScannerModel: env.SECONDARY_SCANNER_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0"
   };
 }
 
@@ -53,7 +55,9 @@ export function computeConfigSha256(config, mode) {
     reproMaxTokens: config.reproMaxTokens,
     reproTimeoutMs: config.reproTimeoutMs,
     reproAttempts: config.reproAttempts,
-    hardBudget: config.hardBudget
+    hardBudget: config.hardBudget,
+    dualScan: config.dualScan,
+    secondaryScannerModel: config.secondaryScannerModel
   });
   return createHash("sha256").update(payload).digest("hex");
 }

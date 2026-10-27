@@ -93,6 +93,16 @@ export function buildReport(options) {
     lines.push("");
     lines.push("**Claim:** " + finding.claim);
     lines.push("");
+    if (Array.isArray(item.proposedBy) && item.proposedBy.length > 0) {
+      const labels = item.proposedBy.map(function (label) {
+        if (label === "spark") return "Muse Spark";
+        if (label === "wonder") return "Muse Wonder";
+        if (label === "controlled") return "injected candidate";
+        return label;
+      });
+      lines.push("**Proposed by:** " + (labels.length > 1 ? labels.join(" + ") : labels[0]));
+      lines.push("");
+    }
     const itemRepro = item.repro;
     const executionProven = Boolean(itemRepro && itemRepro.status === "reproduced");
     lines.push("**Evidence level:** citation-proven + adversarially-confirmed" + (executionProven ? " + **execution-proven (generated test fails on the analyzed commit)**" : ""));

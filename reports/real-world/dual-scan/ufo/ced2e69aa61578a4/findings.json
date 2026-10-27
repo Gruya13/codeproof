@@ -1,0 +1,820 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "withFragment cannot clear a fragment with empty string: early return on falsy hash makes the later hash==='' branch unreachable, contradicting documented withFragment(\"/foo#bar\",\"\") => \"/foo\".",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 743,
+          "path": "utils.ts",
+          "snippet": "export function withFragment(input: string, hash: string): string {\n  if (!hash || hash === \"#\") {\n    return input;\n  }\n  const parsed = parseURL(input);\n  parsed.hash = hash === \"\" ? \"\" : \"#\" + encodeHash(hash);\n  return stringifyParsedURL(parsed);\n}",
+          "startLine": 736
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "withFragment empty hash never clears fragment"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark",
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-001",
+      "F-006"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 736-743 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: utils.ts:737 returns input unchanged when hash is empty because !hash is true for \"\", so the hash===\"\" clearing branch at utils.ts:741 is unreachable and contradicts the documented example at utils.ts:731."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-RXPV6Y/snapshot/parse' imported from /tmp/codeproof-repro-RXPV6Y/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-RXPV6Y/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 140,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-RXPV6Y/snapshot/parse' imported from /tmp/codeproof-repro-RXPV6Y/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-RXPV6Y/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 130,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-RXPV6Y/snapshot/parse' imported from /tmp/codeproof-repro-RXPV6Y/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-RXPV6Y/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 130,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { withFragment } from \"./utils.ts\";\n\nlet result;\nlet thrown = null;\ntry {\n  result = withFragment(\"/foo#bar\", \"\");\n} catch (error) {\n  thrown = error;\n}\nassert.equal(thrown, null);\nassert.equal(result, \"/foo\");\nassert.equal(withFragment(\"/foo\", \"bar\"), \"/foo#bar\");\nassert.equal(withFragment(\"/foo#bar\", \"baz\"), \"/foo#baz\");\n",
+      "expectedBehavior": "withFragment(\"/foo#bar\", \"\") returns \"/foo\" per documented example, clearing the fragment",
+      "rationale": "The early falsy-hash return makes the empty-string clearing branch unreachable, so the documented empty-hash case returns the input unchanged.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 9868,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 7293,
+        "outputTokens": 1048,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.050132
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "withoutLeadingSlash coerces empty result to \"/\": withoutLeadingSlash(\"\") and withoutLeadingSlash(\"/\") both return \"/\" instead of \"\", corrupting root/empty segments and append/join results.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 237,
+          "path": "utils.ts",
+          "snippet": "export function withoutLeadingSlash(input = \"\"): string {\n  return (hasLeadingSlash(input) ? input.slice(1) : input) || \"/\";\n}",
+          "startLine": 235
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "withoutLeadingSlash returns slash for empty input"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 235-237 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The implementation at utils.ts:235-236 returns `(hasLeadingSlash(input) ? input.slice(1) : input) || \"/\"`, so both \"\" and \"/\" (which slices to \"\") coerce to \"/\", and url.ts:126 appends that result after withTrailingSlash, yielding a double slash for a root pathname."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-o77OuA/snapshot/parse' imported from /tmp/codeproof-repro-o77OuA/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-o77OuA/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 130,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-o77OuA/snapshot/parse' imported from /tmp/codeproof-repro-o77OuA/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-o77OuA/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 129,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-o77OuA/snapshot/parse' imported from /tmp/codeproof-repro-o77OuA/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-o77OuA/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 127,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { withoutLeadingSlash } from \"./utils.ts\";\nassert.strictEqual(withoutLeadingSlash(\"/foo\"), \"foo\");\nassert.strictEqual(withoutLeadingSlash(\"foo\"), \"foo\");\nassert.strictEqual(withoutLeadingSlash(\"/foo/bar\"), \"foo/bar\");\nassert.strictEqual(withoutLeadingSlash(\"\"), \"\");\nassert.strictEqual(withoutLeadingSlash(\"/\"), \"\");\nassert.strictEqual(withoutLeadingSlash(), \"\");\n",
+      "expectedBehavior": "withoutLeadingSlash(\"\") and withoutLeadingSlash(\"/\") return \"\" (only the leading slash is removed), while \"/foo\" returns \"foo\".",
+      "rationale": "The implementation `(hasLeadingSlash(input) ? input.slice(1) : input) || \"/\"` coerces the empty string result to \"/\", so empty and root inputs incorrectly return \"/\".",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 18339,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 7258,
+        "outputTokens": 1957,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.068172
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "parseAuth splits on every colon and keeps only the second segment, so password containing colon loses data: \"user:pass:word\" parses password as \"pass\" instead of \"pass:word\".",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 139,
+          "path": "parse.ts",
+          "snippet": "export function parseAuth(input = \"\"): ParsedAuth {\n  const [username, password] = input.split(\":\");\n  return {\n    username: decode(username),\n    password: decode(password),\n  };\n}",
+          "startLine": 133
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "parseAuth drops extra colons in password"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark",
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-003",
+      "F-007"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 133-139 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at parse.ts:134 destructures only the first two elements of input.split(\":\"), so \"user:pass:word\" yields username \"user\" and password \"pass\" with \"word\" discarded, exactly as claimed."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: testCode must bind at least one named or default symbol from the repository import",
+      "artifacts": null,
+      "durationMs": 31915,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2754,
+        "outputTokens": 4451,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.100036
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Base prefix checks accept only \"/\" and \"?\" as delimiters and ignore \"#\": withBase(\"/foo#bar\",\"/foo\") duplicates the base instead of returning input, and withoutBase is inconsistent for hash-suffixed paths.",
+      "confidence": 0.78,
+      "evidence": [
+        {
+          "endLine": 302,
+          "path": "utils.ts",
+          "snippet": "  const _base = withoutTrailingSlash(base);\n  if (input.startsWith(_base)) {\n    const nextChar = input[_base.length];\n    // Ensure '/admin-dashboard' is not considered as having base '/admin/'\n    if (!nextChar || nextChar === \"/\" || nextChar === \"?\") {\n      return input;\n    }\n  }\n  return joinURL(_base, input);",
+          "startLine": 294
+        },
+        {
+          "endLine": 330,
+          "path": "utils.ts",
+          "snippet": "  const _base = withoutTrailingSlash(base);\n  if (!input.startsWith(_base)) {\n    return input;\n  }\n  // Ensure '/admin-dashboard' is not considered as having base '/admin/'\n  const nextChar = input[_base.length];\n  if (nextChar && nextChar !== \"/\" && nextChar !== \"?\") {\n    return input;\n  }",
+          "startLine": 322
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "withBase/withoutBase ignore hash delimiter"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-004"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 294-302 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at utils.ts:298 accepts only '/', '?' or end-of-string after the base in withBase, so '/foo#bar' falls through to joinURL at utils.ts:302, and utils.ts:328 similarly rejects '#' in withoutBase, returning the unstripped input."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-lx0Z9W/snapshot/parse' imported from /tmp/codeproof-repro-lx0Z9W/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-lx0Z9W/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 127,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-lx0Z9W/snapshot/parse' imported from /tmp/codeproof-repro-lx0Z9W/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-lx0Z9W/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 132,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-lx0Z9W/snapshot/parse' imported from /tmp/codeproof-repro-lx0Z9W/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-lx0Z9W/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 127,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { withBase, withoutBase } from \"./utils.ts\";\n\n// Hash is a delimiter after the base, like '/' and '?'\nassert.equal(withBase(\"/foo#bar\", \"/foo\"), \"/foo#bar\");\nassert.equal(withBase(\"/foo#bar\", \"/foo/\"), \"/foo#bar\");\nassert.equal(withoutBase(\"/foo#bar\", \"/foo\"), \"/#bar\");\n\n// Existing query-delimiter behaviour (consistency anchors)\nassert.equal(withBase(\"/foo?bar\", \"/foo\"), \"/foo?bar\");\nassert.equal(withoutBase(\"/foo?bar\", \"/foo\"), \"/?bar\");\nassert.equal(withoutBase(\"/foo/bar#baz\", \"/foo\"), \"/bar#baz\");\n\n// Non-delimiter prefixes must not be treated as having the base\nassert.equal(withBase(\"/foobar#baz\", \"/foo\"), \"/foo/foobar#baz\");\nassert.equal(withoutBase(\"/foobar#baz\", \"/foo\"), \"/foobar#baz\");\nassert.equal(withoutBase(\"/foo-bar#baz\", \"/foo\"), \"/foo-bar#baz\");\n",
+      "expectedBehavior": "withBase('/foo#bar','/foo') returns '/foo#bar' without duplicating the base, and withoutBase('/foo#bar','/foo') returns '/#bar' analogously to the query case, while non-delimiter prefixes like '/foobar#baz' are not treated as having base '/foo'.",
+      "rationale": "The '#' fragment delimiter is treated like '?' and '/' as a boundary after the base in both functions; the current code only checks '/' and '?', so hash-suffixed inputs fail.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 25189,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 7443,
+        "outputTokens": 3424,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.098252
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "parseURL loses opaque-protocol URLs such as mailto:foo@example.com: hasProtocol accepts a scheme without //, but the subsequent match requires //, so the match fails and protocol, hostAndPath, pathname, search and hash all default to empty.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 75,
+          "path": "parse.ts",
+          "snippet": "  if (!hasProtocol(input, { acceptRelative: true })) {\n    return defaultProto ? parseURL(defaultProto + input) : parsePath(input);\n  }\n\n  const [, protocol = \"\", auth, hostAndPath = \"\"] =\n    input\n      .replace(/\\\\/g, \"/\")\n      .match(/^[\\s\\0]*([\\w+.-]{2,}:)?\\/\\/([^/@]+@)?(.*)/) || [];",
+          "startLine": 68
+        }
+      ],
+      "id": "F-005",
+      "kind": "direct",
+      "severity": "high",
+      "title": "parseURL drops non-hierarchical protocol URLs"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 68-75 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-spark-1.3",
+      "verdict": "confirm",
+      "reason": "utils.ts:12 PROTOCOL_REGEX makes hasProtocol true for mailto: without //, so parse.ts:68 does not early-return, but parse.ts:75 match requires // and fails, falling back to || [] with protocol=\"\" and hostAndPath=\"\" leading to empty pathname/search/hash."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-bfIBaW/snapshot/encoding' imported from /tmp/codeproof-repro-bfIBaW/snapshot/parse.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-bfIBaW/snapshot/encoding'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 116,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-bfIBaW/snapshot/encoding' imported from /tmp/codeproof-repro-bfIBaW/snapshot/parse.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-bfIBaW/snapshot/encoding'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 114,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-bfIBaW/snapshot/encoding' imported from /tmp/codeproof-repro-bfIBaW/snapshot/parse.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-bfIBaW/snapshot/encoding'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 123,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { parseURL } from \"./parse.ts\";\n\nlet thrown = null;\nlet parsed;\ntry {\n  parsed = parseURL(\"mailto:foo@example.com\");\n} catch (error) {\n  thrown = error;\n}\nassert.equal(thrown, null);\nassert.equal(parsed.protocol, \"mailto:\");\nassert.equal(parsed.pathname, \"foo@example.com\");\nassert.equal(parsed.host, \"\");\nassert.equal(parsed.auth, \"\");\nassert.equal(parsed.search, \"\");\nassert.equal(parsed.hash, \"\");\n\nlet parsed2;\ntry {\n  parsed2 = parseURL(\"mailto:foo@example.com?subject=hello#frag\");\n} catch (error) {\n  thrown = error;\n}\nassert.equal(thrown, null);\nassert.equal(parsed2.protocol, \"mailto:\");\nassert.equal(parsed2.pathname, \"foo@example.com\");\nassert.equal(parsed2.search, \"?subject=hello\");\nassert.equal(parsed2.hash, \"#frag\");\n",
+      "expectedBehavior": "parseURL('mailto:foo@example.com') preserves the opaque URL: protocol 'mailto:' and pathname 'foo@example.com' (with search/hash parsed when present), instead of returning empty protocol/pathname/search/hash.",
+      "rationale": "hasProtocol accepts a scheme without // but the subsequent regex requires //, so mailto: URLs fall through with all fields empty. The test asserts the WHATWG/special-protocol-style opaque handling already used for blob:/data: in parse.ts.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 16827,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2817,
+        "outputTokens": 2664,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.064548
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "joinRelativeURL(\"../a\", \"b\") returns \"a/b\" instead of \"../a/b\": the \"..\" decrements segmentsDepth to -1, but pushing the following normal segment increments it back to 0, so the later leading-../ prefix logic is skipped and the parent reference is lost.",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "endLine": 488,
+          "path": "utils.ts",
+          "snippet": "      if (s === \"..\") {\n        if (segments.length === 1 && hasProtocol(segments[0])) {\n          continue;\n        }\n        segments.pop();\n        segmentsDepth--;\n        continue;\n      }\n      // eslint-disable-next-line unicorn/prefer-at\n      if (sindex === 1 && segments[segments.length - 1]?.endsWith(\":/\")) {\n        segments[segments.length - 1] += \"/\" + s;\n        continue;\n      }\n      segments.push(s);\n      segmentsDepth++;",
+          "startLine": 474
+        }
+      ],
+      "id": "F-006",
+      "kind": "direct",
+      "severity": "high",
+      "title": "joinRelativeURL discards leading ../ segments"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 474-488 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-spark-1.3",
+      "verdict": "confirm",
+      "reason": "Trace of utils.ts:474-488 confirms the bug: '..' does segments.pop() and segmentsDepth-- to -1, then 'a' does segments.push() and segmentsDepth++ back to 0, so utils.ts:494 takes the >=0 branch and never adds the '../' prefix, yielding 'a/b'."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-5eA7vN/snapshot/parse' imported from /tmp/codeproof-repro-5eA7vN/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-5eA7vN/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 135,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-5eA7vN/snapshot/parse' imported from /tmp/codeproof-repro-5eA7vN/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-5eA7vN/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 128,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-5eA7vN/snapshot/parse' imported from /tmp/codeproof-repro-5eA7vN/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-5eA7vN/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 134,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { joinRelativeURL } from \"./utils.ts\";\n\nassert.equal(joinRelativeURL(\"../a\", \"b\"), \"../a/b\");\nassert.equal(joinRelativeURL(\"../a\"), \"../a\");\nassert.equal(joinRelativeURL(\"../../a\", \"b\"), \"../../a/b\");\nassert.equal(joinRelativeURL(\"/a\", \"../b\", \"./c\"), \"/b/c\");\n",
+      "expectedBehavior": "joinRelativeURL(\"../a\", \"b\") should preserve the leading parent reference and return \"../a/b\"",
+      "rationale": "Directly asserts the claimed case plus related leading-../ cases against the real joinRelativeURL export; on the buggy code depth returns to 0 so the ../ prefix is dropped.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 10680,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 7367,
+        "outputTokens": 1414,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.057748
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "stringifyParsedURL(parseURL(\"data:text/plain,hello\")) produces \"data://text/plain,hello\": parseURL special-cases data:/blob: URLs without //, but stringifyParsedURL unconditionally appends // to every protocol, corrupting opaque-scheme URLs on round-trip.",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "endLine": 194,
+          "path": "parse.ts",
+          "snippet": "  const proto =\n    parsed.protocol || parsed[protocolRelative]\n      ? (parsed.protocol || \"\") + \"//\"\n      : \"\";\n  return proto + auth + host + pathname + search + hash;",
+          "startLine": 190
+        }
+      ],
+      "id": "F-007",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "stringifyParsedURL adds // to opaque protocols"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-003"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 190-194 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-spark-1.3",
+      "verdict": "confirm",
+      "reason": "parse.ts:190-194 shows proto is built as (parsed.protocol || \"\") + \"//\" whenever protocol is truthy with no exemption for opaque schemes, so a data: parsed object with empty host stringifies to data://..."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-VWvpzx/snapshot/encoding' imported from /tmp/codeproof-repro-VWvpzx/snapshot/parse.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-VWvpzx/snapshot/encoding'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 111,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-VWvpzx/snapshot/encoding' imported from /tmp/codeproof-repro-VWvpzx/snapshot/parse.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-VWvpzx/snapshot/encoding'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 115,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-VWvpzx/snapshot/encoding' imported from /tmp/codeproof-repro-VWvpzx/snapshot/parse.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-VWvpzx/snapshot/encoding'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 112,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { parseURL, stringifyParsedURL } from \"./parse.ts\";\n\nassert.equal(\n  stringifyParsedURL(parseURL(\"data:text/plain,hello\")),\n  \"data:text/plain,hello\",\n);\nassert.equal(\n  stringifyParsedURL(parseURL(\"blob:https://example.com/id\")),\n  \"blob:https://example.com/id\",\n);\nassert.equal(\n  stringifyParsedURL(parseURL(\"javascript:alert(1)\")),\n  \"javascript:alert(1)\",\n);\nassert.equal(\n  stringifyParsedURL(parseURL(\"http://foo.com/foo?test=123#token\")),\n  \"http://foo.com/foo?test=123#token\",\n);\n",
+      "expectedBehavior": "stringifyParsedURL(parseURL(url)) round-trips opaque-scheme URLs without adding //: data:text/plain,hello stays data:text/plain,hello (and blob:/javascript: similarly), while http:// URLs keep //.",
+      "rationale": "parseURL special-cases data:/blob:/javascript:/vbscript: as opaque URLs without //, but stringifyParsedURL unconditionally appends // to any protocol, so the round-trip assertion fails on the buggy code.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 8976,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2770,
+        "outputTokens": 1303,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0362128
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "new $URL(\"//example.com/foo\").href returns \"/foo\" and loses the host: parseURL stores host \"example.com\" with an empty protocol, so hasProtocol is falsy and href returns only fullpath instead of the protocol-relative URL.",
+      "confidence": 0.86,
+      "evidence": [
+        {
+          "endLine": 115,
+          "path": "url.ts",
+          "snippet": "  get href(): string {\n    const auth = this.encodedAuth;\n    const originWithAuth =\n      (this.protocol ? this.protocol + \"//\" : \"\") +\n      (auth ? auth + \"@\" : \"\") +\n      encodeHost(this.host);\n    return this.hasProtocol && this.isAbsolute\n      ? originWithAuth + this.fullpath\n      : this.fullpath;\n  }",
+          "startLine": 106
+        }
+      ],
+      "id": "F-008",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "$URL href drops host for protocol-relative URLs"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-004"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 106-115 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-spark-1.3",
+      "verdict": "confirm",
+      "reason": "parse.ts:87-93 stores protocol \"\" with host \"example.com\" for \"//example.com/foo\", so url.ts:56-57 hasProtocol is 0 (falsy) and url.ts:112-114 `hasProtocol && isAbsolute` fails, returning only fullpath \"/foo\" and dropping the host."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: testCode must call an imported repository symbol outside the import statements (imported: $URL)",
+      "artifacts": null,
+      "durationMs": 19979,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1746,
+        "outputTokens": 2026,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0465768
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "parseHost(\"[::1]:8080\") returns hostname \"[\" and no port because [^/:]* stops at the first colon inside the IPv6 brackets; this also breaks $URL hostname/port getters for IPv6 hosts that parseURL otherwise preserves.",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "endLine": 163,
+          "path": "parse.ts",
+          "snippet": "export function parseHost(input = \"\"): ParsedHost {\n  const [hostname, port] = (input.match(/([^/:]*):?(\\d+)?/) || []).splice(1);\n  return {\n    hostname: decode(hostname),\n    port,\n  };\n}",
+          "startLine": 157
+        }
+      ],
+      "id": "F-009",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "parseHost breaks IPv6 literal hosts"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-005"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 157-163 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-spark-1.3",
+      "verdict": "confirm",
+      "reason": "parse.ts:158 uses /([^/:]*):?(\\d+)?/ which on \"[::1]:8080\" stops at the first colon and captures hostname \"[\" with undefined port, and url.ts:41-45 shows $URL hostname/port getters delegate directly to parseHost so they inherit the breakage."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-XkOI7a/snapshot/encoding' imported from /tmp/codeproof-repro-XkOI7a/snapshot/parse.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-XkOI7a/snapshot/encoding'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 112,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-XkOI7a/snapshot/encoding' imported from /tmp/codeproof-repro-XkOI7a/snapshot/parse.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-XkOI7a/snapshot/encoding'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 118,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-XkOI7a/snapshot/encoding' imported from /tmp/codeproof-repro-XkOI7a/snapshot/parse.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-XkOI7a/snapshot/encoding'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 112,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { parseHost, parseURL } from \"./parse.ts\";\n\nlet error;\nlet withPort;\ntry {\n  withPort = parseHost(\"[::1]:8080\");\n} catch (e) {\n  error = e;\n}\nassert.equal(error, undefined);\nassert.equal(withPort.hostname, \"[::1]\");\nassert.equal(withPort.port, \"8080\");\n\nlet noPort;\ntry {\n  noPort = parseHost(\"[::1]\");\n} catch (e) {\n  error = e;\n}\nassert.equal(error, undefined);\nassert.equal(noPort.hostname, \"[::1]\");\nassert.equal(noPort.port, undefined);\n\nconst full = parseHost(\"[2001:db8::1]:443\");\nassert.equal(full.hostname, \"[2001:db8::1]\");\nassert.equal(full.port, \"443\");\n\nconst plain = parseHost(\"foo.com:8080\");\nassert.equal(plain.hostname, \"foo.com\");\nassert.equal(plain.port, \"8080\");\n\nconst parsed = parseURL(\"http://[::1]:8080/foo\");\nassert.equal(parsed.host, \"[::1]:8080\");\nconst fromURL = parseHost(parsed.host);\nassert.equal(fromURL.hostname, \"[::1]\");\nassert.equal(fromURL.port, \"8080\");\n",
+      "expectedBehavior": "parseHost(\"[::1]:8080\") returns hostname \"[::1]\" and port \"8080\"; IPv6 literals without a port keep the full bracketed hostname, and a host preserved by parseURL round-trips through parseHost.",
+      "rationale": "parseHost's [^/:]* pattern stops at the first colon inside IPv6 brackets, returning \"[\" with no port. The test asserts the bracketed hostname and port for several IPv6 forms and for a host obtained via parseURL.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 31465,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2776,
+        "outputTokens": 3191,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0739968
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "withoutBase(\"/foo#section\", \"/foo\") returns the input unchanged instead of \"/#section\": the boundary check accepts \"/\" and \"?\" after the base but not \"#\", even though a fragment terminates the path just like a query does.",
+      "confidence": 0.82,
+      "evidence": [
+        {
+          "endLine": 330,
+          "path": "utils.ts",
+          "snippet": "  const _base = withoutTrailingSlash(base);\n  if (!input.startsWith(_base)) {\n    return input;\n  }\n  // Ensure '/admin-dashboard' is not considered as having base '/admin/'\n  const nextChar = input[_base.length];\n  if (nextChar && nextChar !== \"/\" && nextChar !== \"?\") {\n    return input;\n  }",
+          "startLine": 322
+        }
+      ],
+      "id": "F-010",
+      "kind": "direct",
+      "severity": "low",
+      "title": "withoutBase does not recognize fragment as path boundary"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-008"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 322-330 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-spark-1.3",
+      "verdict": "confirm",
+      "reason": "utils.ts:328 checks `nextChar !== \"/\" && nextChar !== \"?\"` with no `#` case, so utils.ts:329 returns the input unchanged for `/foo#section` with base `/foo`, confirming the fragment boundary is missed."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-AsN6rc/snapshot/parse' imported from /tmp/codeproof-repro-AsN6rc/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-AsN6rc/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 125,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-AsN6rc/snapshot/parse' imported from /tmp/codeproof-repro-AsN6rc/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-AsN6rc/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 128,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-AsN6rc/snapshot/parse' imported from /tmp/codeproof-repro-AsN6rc/snapshot/utils.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-AsN6rc/snapshot/parse'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 123,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { withoutBase } from \"./utils.ts\";\n\nlet result;\nlet error = null;\ntry {\n  result = withoutBase(\"/foo#section\", \"/foo\");\n} catch (e) {\n  error = e;\n}\nassert.equal(error, null);\nassert.equal(result, \"/#section\");\nassert.equal(withoutBase(\"/foo?query=1\", \"/foo\"), \"/?query=1\");\nassert.equal(withoutBase(\"/foo/bar#section\", \"/foo\"), \"/bar#section\");\nassert.equal(withoutBase(\"/foobar#section\", \"/foo\"), \"/foobar#section\");\nassert.equal(withoutBase(\"/foo-bar\", \"/foo\"), \"/foo-bar\");\n",
+      "expectedBehavior": "withoutBase(\"/foo#section\", \"/foo\") returns \"/#section\" because '#' terminates the path like '?' does, while non-boundary prefixes remain unchanged.",
+      "rationale": "Imports withoutBase from ./utils.ts and asserts fragment-boundary stripping; on the buggy code the '#' check is missing so the input is returned unchanged and the equality assertion fails.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 8480,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 7321,
+        "outputTokens": 1094,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.050236800000000005
+    },
+    "evidenceLevel": "citation+adversarial"
+  }
+]

@@ -37,6 +37,19 @@ test("report is execution-proven and shows the generated test when L3 reproduced
   assert.match(report, /Reproduced by execution \(L3\) \| 1/);
 });
 
+test("report shows which scanner proposed a finding", function () {
+  const both = buildReport({ repo: { files: [], loc: 0, edges: [], cycles: [] }, run: baseRun, published: [{
+    finding: sampleFinding(), status: "verified", proposedBy: ["spark", "wonder"],
+    verifier: { model: "m", verdict: "confirm", reason: "confirmed" }, repro: null
+  }] });
+  assert.match(both, /\*\*Proposed by:\*\* Muse Spark \+ Muse Wonder/);
+  const wonder = buildReport({ repo: { files: [], loc: 0, edges: [], cycles: [] }, run: baseRun, published: [{
+    finding: sampleFinding(), status: "verified", proposedBy: ["wonder"],
+    verifier: { model: "m", verdict: "confirm", reason: "confirmed" }, repro: null
+  }] });
+  assert.match(wonder, /\*\*Proposed by:\*\* Muse Wonder/);
+});
+
 test("report marks a verified finding without execution proof", function () {
   const published = [{
     finding: sampleFinding(), status: "verified",
