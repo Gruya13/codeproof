@@ -1,0 +1,89 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "defu is cast to DefuInstance which requires fn/arrayFn/extend but the implementation never assigns them, so defu.fn, defu.arrayFn and defu.extend are undefined at runtime.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 53,
+          "path": "defu.ts",
+          "snippet": "// Standard version\nexport const defu = createDefu() as DefuInstance;\nexport default defu;",
+          "startLine": 51
+        },
+        {
+          "endLine": 57,
+          "path": "types.ts",
+          "snippet": "export interface DefuInstance {\n  <Source extends Input, Defaults extends Array<Input | IgnoredInput>>(\n    source: Source | IgnoredInput,\n    ...defaults: Defaults\n  ): Defu<Source, Defaults>;\n  fn: DefuFn;\n  arrayFn: DefuFn;\n  extend(merger?: Merger): DefuFn;\n}",
+          "startLine": 49
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "defu instance missing fn/arrayFn/extend implementations"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 51-53 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: defu.ts:52 casts the bare function returned by createDefu at defu.ts:45-49 to DefuInstance without assigning fn/arrayFn/extend required at types.ts:54-56, and defuFn/defuArrayFn at defu.ts:56 and defu.ts:64 are separate exports never attached to defu."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-ncVwxd/snapshot/_utils' imported from /tmp/codeproof-repro-ncVwxd/snapshot/defu.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-ncVwxd/snapshot/_utils'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 115,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-ncVwxd/snapshot/_utils' imported from /tmp/codeproof-repro-ncVwxd/snapshot/defu.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-ncVwxd/snapshot/_utils'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 105,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-ncVwxd/snapshot/_utils' imported from /tmp/codeproof-repro-ncVwxd/snapshot/defu.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-ncVwxd/snapshot/_utils'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 106,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { defu, defuFn, defuArrayFn } from \"./defu.ts\";\n\n// Contract from types.ts DefuInstance: fn, arrayFn and extend must be functions.\nassert.equal(typeof defu.fn, \"function\");\nassert.equal(typeof defu.arrayFn, \"function\");\nassert.equal(typeof defu.extend, \"function\");\n\n// Baseline defu behaviour still holds.\nassert.deepEqual(defu({ a: 1 }, { a: 2, b: 2 }), { a: 1, b: 2 });\n\n// defu.fn must behave like defuFn: call function source values with defaults.\nconst inc = (v) => v + 1;\nassert.deepEqual(defu.fn({ count: inc }, { count: 41 }), { count: 42 });\nassert.deepEqual(defu.fn({ count: inc }, { count: 41 }), defuFn({ count: inc }, { count: 41 }));\n\n// defu.arrayFn must behave like defuArrayFn: call functions for array defaults.\nconst append = (v) => [...v, 4];\nassert.deepEqual(defu.arrayFn({ list: append }, { list: [1, 2, 3] }), { list: [1, 2, 3, 4] });\nassert.deepEqual(\n  defu.arrayFn({ list: append }, { list: [1, 2, 3] }),\n  defuArrayFn({ list: append }, { list: [1, 2, 3] }),\n);\n\n// defu.extend must return a defu function using the supplied merger.\nconst custom = defu.extend((obj, key, value) => {\n  if (typeof value === \"string\") {\n    obj[key] = value.toUpperCase();\n    return true;\n  }\n});\nassert.equal(typeof custom, \"function\");\nassert.deepEqual(custom({ name: \"hi\" }, { name: \"bye\", extra: 1 }), { name: \"HI\", extra: 1 });\nassert.deepEqual(defu.extend()({ a: 1 }, { a: 2, b: 2 }), { a: 1, b: 2 });\n",
+      "expectedBehavior": "defu.fn, defu.arrayFn and defu.extend are functions per DefuInstance: fn behaves like defuFn, arrayFn like defuArrayFn, and extend(merger) returns a custom defu function.",
+      "rationale": "Asserts the DefuInstance contract from types.ts against the runtime defu export; on the analyzed commit those properties are undefined so typeof assertions fail, and functional checks verify they match defuFn/defuArrayFn/createDefu semantics.",
+      "reason": "test did not demonstrate the claim consistently",
+      "artifacts": null,
+      "durationMs": 41406,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1296,
+        "outputTokens": 7501,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.155204
+    },
+    "evidenceLevel": "citation+adversarial"
+  }
+]

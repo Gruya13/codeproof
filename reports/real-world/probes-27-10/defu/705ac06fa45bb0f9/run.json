@@ -1,0 +1,187 @@
+{
+  "runId": "705ac06fa45bb0f9",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "8ea131e060a5decc1daf1a00a812ac87e2eedac5aba3902d1eae824e8eac21f8",
+  "repo": {
+    "source": "local",
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/_repo/defu/src",
+    "commit": "82632b66f5914e9946edce300e10633a3d5c0cb7",
+    "dirty": false,
+    "loc": 197,
+    "files": 3
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    },
+    {
+      "role": "repro",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+    }
+  ],
+  "usage": {
+    "inputTokens": 7256,
+    "outputTokens": 12077,
+    "cachedTokens": 244,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 1,
+        "inputTokens": 2458,
+        "outputTokens": 7131,
+        "cachedTokens": 0,
+        "costUsd": 0.03337925
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 1,
+        "inputTokens": 3397,
+        "outputTokens": 946,
+        "cachedTokens": 0,
+        "costUsd": 0.032508
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "calls": 1,
+        "inputTokens": 1401,
+        "outputTokens": 4000,
+        "cachedTokens": 244,
+        "costUsd": 0.0846768
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 2458,
+        "outputTokens": 7131,
+        "cachedTokens": 0,
+        "costUsd": 0.03337925,
+        "durationMs": 35360,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 1,
+        "inputTokens": 3397,
+        "outputTokens": 946,
+        "cachedTokens": 0,
+        "costUsd": 0.032508,
+        "durationMs": 5031,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 1401,
+        "outputTokens": 4000,
+        "cachedTokens": 244,
+        "costUsd": 0.0846768,
+        "durationMs": 18877,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      }
+    ],
+    "costUsd": 0.15056405,
+    "measured": true
+  },
+  "calls": 3,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-27T19:20:39.417Z",
+    "durationMs": 59336
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 6
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 35362
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 23934
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 15
+    }
+  ],
+  "budget": {
+    "limitUsd": 2,
+    "spentUsd": 0.150564,
+    "measured": true,
+    "exceeded": false,
+    "aborted": false,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 1,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 0,
+    "verified": 1,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "reproduced": 0
+  },
+  "repro": {
+    "enabled": true,
+    "model": "muse-wonder-1.0",
+    "timeoutMs": 2000,
+    "attempts": 3,
+    "counts": {
+      "reproduced": 0,
+      "notReproduced": 0,
+      "unavailable": 0,
+      "inconclusive": 1
+    }
+  },
+  "outputs": {
+    "report": "reports/real-world/probes-27-10/defu/705ac06fa45bb0f9/REPORT.md",
+    "findings": "reports/real-world/probes-27-10/defu/705ac06fa45bb0f9/findings.json",
+    "rejected": "reports/real-world/probes-27-10/defu/705ac06fa45bb0f9/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.1.0"
+  }
+}

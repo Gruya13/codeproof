@@ -1,0 +1,16 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "expectedBehavior": "validateSync's ValidationError.value should be the cast/validated value (20, a number) matching async validate, not the original input ('20')",
+  "rationale": "number().max(10) casts '20' to 20 before failing max; async error carries 20 while buggy sync error carries the original string '20'.",
+  "reason": "generated test imports paths that are not in the analyzed snapshot: ./src/index.ts",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 9552,
+    "outputTokens": 1983,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.0769408
+}

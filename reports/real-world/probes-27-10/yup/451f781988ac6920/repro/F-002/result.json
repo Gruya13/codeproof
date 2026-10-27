@@ -1,0 +1,16 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "expectedBehavior": "Whitespace-only ref keys (e.g. '   ', '\\t\\n') must throw TypeError 'ref must be a non-empty string' after trimming, like the empty string does.",
+  "rationale": "Reference constructor sets this.key = key.trim() but checks key === '' on the untrimmed input, so '   ' becomes an empty key without throwing. The test records any thrown error and asserts a TypeError was thrown, failing when no error is recorded.",
+  "reason": "generated test imports paths that are not in the analyzed snapshot: ./src/Reference.ts",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1400,
+    "outputTokens": 2074,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.0461528
+}

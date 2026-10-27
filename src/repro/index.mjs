@@ -6,7 +6,7 @@ import { parseDirtyJson } from "../run/json.mjs";
 import { gitPrefix, readFileAtCommit } from "../run/index.mjs";
 
 export const REPRO_SYSTEM_PROMPT = [
-  "Write one standalone Node ESM test file for the finding. It MUST import the real exported API from the repository using a path relative to its root, for example import { validate } from './src/validation.ts'. A test that does not import the analyzed repository code is not a reproducer and will be rejected. Node can import TypeScript directly.",
+  "Write one standalone Node ESM test file for the finding. It MUST import the real exported API from the repository using a path relative to its root. The root is the analyzed directory itself: every path in the file list is already relative to it, so import exactly as listed (for example './validation.ts', not './src/validation.ts' when the list shows 'validation.ts'). A test that does not import the analyzed repository code is not a reproducer and will be rejected. Node can import TypeScript directly.",
   "Assert the correct behavior with node:assert/strict so the test fails on the analyzed commit specifically because of the claim. Derive the expected behavior from the claim or a documented function contract; do not invent a new requirement.",
   "If the claimed defect makes the code throw (a crash on some input), catch that error inside the test and turn it into an assertion failure: record the thrown error in a variable and assert on the recorded value. An uncaught runtime error is not recorded as an assertion failure and the reproducer will be reported as inconclusive instead of execution-proven.",
   "The test must be at most 60 lines. Use only node:assert/strict for assertions. Do not call assert.fail(), intercept process.exit, use require, make network calls (fetch, http, https, net), read files outside the repository, set a timeout longer than 1000 ms, or use infinite loops.",
@@ -270,13 +270,29 @@ export async function attemptRepro({ finding, agent, repoRoot, commit, excerpts,
     testCode: "", expectedBehavior: "", rationale: "", reason: "", artifacts: null };
   let snapshot = null;
   try {
-    const call = await agent.complete({
+    const baseMaxTokens = config.reproMaxTokens || 8000;
+    const request = {
       role: "repro",
       messages: buildReproMessages({ finding, repoRoot, commit, excerpts }),
       responseFormat: REPRO_RESPONSE_FORMAT,
       temperature: 0,
-      maxTokens: config.reproMaxTokens || 4000
-    });
+      maxTokens: baseMaxTokens
+    };
+    let call = await agent.complete(request);
+    // A truncated model response cannot be parsed. Retry once with a doubled budget,
+    // the same way the scanner retries on truncation - L3 must not fail for a tooling reason.
+    if (call.finishReason === "length") {
+      const retry = await agent.complete({ ...request, maxTokens: baseMaxTokens * 2 });
+      const sum = function (left, right) {
+        const a = left || { inputTokens: 0, outputTokens: 0, cachedTokens: 0 };
+        const b = right || { inputTokens: 0, outputTokens: 0, cachedTokens: 0 };
+        return { inputTokens: (a.inputTokens || 0) + (b.inputTokens || 0), outputTokens: (a.outputTokens || 0) + (b.outputTokens || 0), cachedTokens: (a.cachedTokens || 0) + (b.cachedTokens || 0) };
+      };
+      const cost = (call.costUsd || 0) + (retry.costUsd || 0);
+      retry.usage = sum(call.usage, retry.usage);
+      retry.costUsd = cost;
+      call = retry;
+    }
     model = call.model || null;
     usage = call.usage || null;
     costUsd = call.costUsd === undefined ? null : call.costUsd;
@@ -311,9 +327,23 @@ export async function attemptRepro({ finding, agent, repoRoot, commit, excerpts,
           result.classification = run.classification;
           result.attempts = run.attempts;
           result.deterministic = run.deterministic;
-          result.status = run.deterministic && run.classification === "assertion-failure" ? "reproduced"
-            : run.classification === "passed" ? "not-reproduced" : "inconclusive";
-          result.reason = run.reason || (result.status === "reproduced" ? "assertion failed consistently on analyzed commit" : "test did not demonstrate the claim consistently");
+          // A test that cannot run because the repository's own imports are not directly
+          // executable by Node (extensionless specifiers, missing build output) is not a
+          // failed reproducer: it is an unavailable environment. Report it honestly.
+          const internalImportFailure = run.classification === "invalid-test" && run.attempts.some(function (attempt) {
+            const stderr = String(attempt.stderr || "");
+            return /ERR_MODULE_NOT_FOUND/.test(stderr) && stderr.indexOf(".codeproof-repro.test.mjs") === -1;
+          });
+          if (internalImportFailure) {
+            result.status = "unavailable";
+            result.classification = run.classification;
+            result.attempts = run.attempts;
+            result.reason = "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)";
+          } else {
+            result.status = run.deterministic && run.classification === "assertion-failure" ? "reproduced"
+              : run.classification === "passed" ? "not-reproduced" : "inconclusive";
+            result.reason = run.reason || (result.status === "reproduced" ? "assertion failed consistently on analyzed commit" : "test did not demonstrate the claim consistently");
+          }
         }
       }
     }

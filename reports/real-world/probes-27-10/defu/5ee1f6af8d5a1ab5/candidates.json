@@ -1,0 +1,46 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"defu is cast to DefuInstance which requires fn/arrayFn/extend but the implementation never assigns them, so defu.fn, defu.arrayFn and defu.extend are undefined at runtime.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 53, \"path\": \"defu.ts\", \"snippet\": \"// Standard version\\nexport const defu = createDefu() as DefuInstance;\\nexport default defu;\", \"startLine\": 51}, {\"endLine\": 57, \"path\": \"types.ts\", \"snippet\": \"export interface DefuInstance {\\n  <Source extends Input, Defaults extends Array<Input | IgnoredInput>>(\\n    source: Source | IgnoredInput,\\n    ...defaults: Defaults\\n  ): Defu<Source, Defaults>;\\n  fn: DefuFn;\\n  arrayFn: DefuFn;\\n  extend(merger?: Merger): DefuFn;\\n}\", \"startLine\": 49}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"defu instance missing fn/arrayFn/extend implementations\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "defu is cast to DefuInstance which requires fn/arrayFn/extend but the implementation never assigns them, so defu.fn, defu.arrayFn and defu.extend are undefined at runtime.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 53,
+            "path": "defu.ts",
+            "snippet": "// Standard version\nexport const defu = createDefu() as DefuInstance;\nexport default defu;",
+            "startLine": 51
+          },
+          {
+            "endLine": 57,
+            "path": "types.ts",
+            "snippet": "export interface DefuInstance {\n  <Source extends Input, Defaults extends Array<Input | IgnoredInput>>(\n    source: Source | IgnoredInput,\n    ...defaults: Defaults\n  ): Defu<Source, Defaults>;\n  fn: DefuFn;\n  arrayFn: DefuFn;\n  extend(merger?: Merger): DefuFn;\n}",
+            "startLine": 49
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "defu instance missing fn/arrayFn/extend implementations"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 51-53 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: defu.ts:52 casts the bare function returned by createDefu at defu.ts:45-49 to DefuInstance without assigning fn/arrayFn/extend required at types.ts:54-56, and defuFn/defuArrayFn at defu.ts:56 and defu.ts:64 are separate exports never attached to defu."
+      }
+    }
+  ]
+}

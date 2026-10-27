@@ -227,6 +227,22 @@ test("attemptRepro refuses a generated test whose import is not in the analyzed 
   assert.match(result.reason, /not in the analyzed snapshot/);
 });
 
+test("attemptRepro retries once when the reproducer call is truncated", async function (t) {
+  const workDir = tempSnapshot(t);
+  const commit = gitHead();
+  const code = "import assert from 'node:assert/strict';\nimport { PRICES } from './src/config.mjs';\nassert.ok(PRICES);\nassert.equal(1, 2);\n";
+  let calls = 0;
+  const agent = { async complete() {
+    calls += 1;
+    if (calls === 1) return { text: "{\"findingId\":\"F-001\",\"kind\":\"test\",\"testCode\":\"", finishReason: "length", model: "fake", usage: { inputTokens: 10, outputTokens: 20, cachedTokens: 0 }, costUsd: 0.01 };
+    return { text: JSON.stringify(reproResponse(code)), finishReason: "stop", model: "fake", usage: { inputTokens: 10, outputTokens: 20, cachedTokens: 0 }, costUsd: 0.02 };
+  } };
+  const finding = { id: "F-001", title: "Truncated call", claim: "The reproducer answer was truncated.", evidence: [] };
+  const result = await attemptRepro({ finding, agent, repoRoot, commit, excerpts: "", config: { reproWorkDir: workDir }, outDir: null });
+  assert.equal(calls, 2);
+  assert.equal(result.status, "reproduced", result.reason);
+});
+
 test("attemptRepro rejects a self-contained test before spending a runner", async function (t) {
   const workDir = tempSnapshot(t);
   const agent = { async complete() { return { text: JSON.stringify(reproResponse(selfContainedCode)), model: "fake-repro" }; } };

@@ -1,0 +1,16 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "expectedBehavior": "concat does not mutate or share the base schema's exclusiveTests; adding a non-exclusive test to the base afterwards stacks instead of replacing.",
+  "rationale": "concat assigns base.exclusiveTests by reference and then test() mutates it when adding the other schema's exclusive test, so the base becomes exclusive and later non-exclusive additions replace instead of stack.",
+  "reason": "generated test imports paths that are not in the analyzed snapshot: ./src/index.ts",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 9495,
+    "outputTokens": 6331,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.16367279999999998
+}

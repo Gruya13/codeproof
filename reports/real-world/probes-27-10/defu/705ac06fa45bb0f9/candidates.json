@@ -1,0 +1,52 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"defu is cast to DefuInstance which requires fn, arrayFn and extend, but the implementation never assigns them; defu.fn/defu.arrayFn/defu.extend are undefined at runtime so typed calls throw.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 53, \"path\": \"defu.ts\", \"snippet\": \"// Standard version\\nexport const defu = createDefu() as DefuInstance;\\nexport default defu;\", \"startLine\": 51}, {\"endLine\": 57, \"path\": \"types.ts\", \"snippet\": \"export interface DefuInstance {\\n  <Source extends Input, Defaults extends Array<Input | IgnoredInput>>(\\n    source: Source | IgnoredInput,\\n    ...defaults: Defaults\\n  ): Defu<Source, Defaults>;\\n  fn: DefuFn;\\n  arrayFn: DefuFn;\\n  extend(merger?: Merger): DefuFn;\\n}\", \"startLine\": 49}, {\"endLine\": 61, \"path\": \"defu.ts\", \"snippet\": \"// Custom version with function merge support\\nexport const defuFn = createDefu((object, key, currentValue) => {\\n  if (object[key] !== undefined && typeof currentValue === \\\"function\\\") {\\n    object[key] = currentValue(object[key]);\\n    return true;\\n  }\\n});\", \"startLine\": 55}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"defu instance missing fn/arrayFn/extend implementations\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "defu is cast to DefuInstance which requires fn, arrayFn and extend, but the implementation never assigns them; defu.fn/defu.arrayFn/defu.extend are undefined at runtime so typed calls throw.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 53,
+            "path": "defu.ts",
+            "snippet": "// Standard version\nexport const defu = createDefu() as DefuInstance;\nexport default defu;",
+            "startLine": 51
+          },
+          {
+            "endLine": 57,
+            "path": "types.ts",
+            "snippet": "export interface DefuInstance {\n  <Source extends Input, Defaults extends Array<Input | IgnoredInput>>(\n    source: Source | IgnoredInput,\n    ...defaults: Defaults\n  ): Defu<Source, Defaults>;\n  fn: DefuFn;\n  arrayFn: DefuFn;\n  extend(merger?: Merger): DefuFn;\n}",
+            "startLine": 49
+          },
+          {
+            "endLine": 61,
+            "path": "defu.ts",
+            "snippet": "// Custom version with function merge support\nexport const defuFn = createDefu((object, key, currentValue) => {\n  if (object[key] !== undefined && typeof currentValue === \"function\") {\n    object[key] = currentValue(object[key]);\n    return true;\n  }\n});",
+            "startLine": 55
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "defu instance missing fn/arrayFn/extend implementations"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 51-53 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: types.ts:49-57 requires fn, arrayFn and extend on DefuInstance, but defu.ts:45-52 shows createDefu returns a bare arrow function and defu is only cast with `as DefuInstance` with no property assignments anywhere in defu.ts."
+      }
+    }
+  ]
+}

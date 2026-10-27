@@ -1,0 +1,364 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Schema.concat shares the base exclusiveTests object by reference and then mutates it via test(), polluting the base schema.",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "endLine": 312,
+          "path": "schema.ts",
+          "snippet": "    // start with the current tests\n    combined.tests = base.tests;\n    combined.exclusiveTests = base.exclusiveTests;",
+          "startLine": 310
+        },
+        {
+          "endLine": 799,
+          "path": "schema.ts",
+          "snippet": "    if (opts.name) next.exclusiveTests[opts.name] = !!opts.exclusive;",
+          "startLine": 799
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "concat shares and mutates base exclusiveTests"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 310-312 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Concat assigns the base object by reference at schema.ts:311-312, then within withMutation at schema.ts:316-320 calls test() on the mutated combined schema, and test() mutates that object in place at schema.ts:799 via next.exclusiveTests[opts.name] assignment, so the base schema's exclusiveTests is polluted."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport { string } from './src/index.ts';\n\nconst base = string().test({\n  name: 'shared',\n  message: 'base test',\n  exclusive: false,\n  test: () => true,\n});\nconst other = string().test({\n  name: 'shared',\n  message: 'other test',\n  exclusive: true,\n  test: () => true,\n});\n\nassert.equal(base.exclusiveTests.shared, false);\n\nconst combined = base.concat(other);\n\nassert.equal(combined.exclusiveTests.shared, true);\nassert.notStrictEqual(combined.exclusiveTests, base.exclusiveTests);\nassert.equal(base.exclusiveTests.shared, false);\n\nconst derived = base.test({\n  name: 'shared',\n  message: 'derived test',\n  exclusive: false,\n  test: () => true,\n});\nconst sharedCount = derived.tests.filter(\n  (fn) => fn.OPTIONS?.name === 'shared',\n).length;\nassert.equal(sharedCount, 2);\n",
+      "expectedBehavior": "concat does not mutate or share the base schema's exclusiveTests; adding a non-exclusive test to the base afterwards stacks instead of replacing.",
+      "rationale": "concat assigns base.exclusiveTests by reference and then test() mutates it when adding the other schema's exclusive test, so the base becomes exclusive and later non-exclusive additions replace instead of stack.",
+      "reason": "generated test imports paths that are not in the analyzed snapshot: ./src/index.ts",
+      "artifacts": null,
+      "durationMs": 39851,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 9495,
+        "outputTokens": 6331,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.16367279999999998
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Reference constructor trims the key but checks the original untrimmed key for emptiness, so whitespace-only refs bypass validation.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 38,
+          "path": "Reference.ts",
+          "snippet": "    this.key = key.trim();\n\n    if (key === '') throw new TypeError('ref must be a non-empty string');",
+          "startLine": 36
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "whitespace ref bypasses non-empty check"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 36-38 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: Reference.ts:36 assigns this.key = key.trim() while Reference.ts:38 checks the original key === '', so a whitespace-only key yields an empty this.key without throwing."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport Reference, { create } from './src/Reference.ts';\n\nfunction attempt(fn) {\n  let error = null;\n  let value = null;\n  try {\n    value = fn();\n  } catch (e) {\n    error = e;\n  }\n  return { error, value };\n}\n\n// Control: empty string already throws the documented error.\n{\n  const { error } = attempt(() => new Reference(''));\n  assert.ok(error instanceof TypeError, 'empty ref should throw TypeError');\n  assert.equal(error.message, 'ref must be a non-empty string');\n}\n\n// Control: a normal key is trimmed and accepted.\n{\n  const { error, value } = attempt(() => new Reference(' foo '));\n  assert.equal(error, null);\n  assert.equal(value.key, 'foo');\n}\n\n// Whitespace-only keys trim to '' and must also throw.\nfor (const key of [' ', '   ', '\\t', '\\n', ' \\t\\n ']) {\n  const { error, value } = attempt(() => new Reference(key));\n  assert.ok(\n    error instanceof TypeError,\n    `whitespace-only ref ${JSON.stringify(key)} should throw TypeError, got value=${value && JSON.stringify(value.key)}`,\n  );\n  assert.equal(error.message, 'ref must be a non-empty string');\n}\n\n// The create() factory must enforce the same check.\n{\n  const { error } = attempt(() => create('   '));\n  assert.ok(error instanceof TypeError, 'create(whitespace) should throw TypeError');\n  assert.equal(error.message, 'ref must be a non-empty string');\n}\n",
+      "expectedBehavior": "Whitespace-only ref keys (e.g. '   ', '\\t\\n') must throw TypeError 'ref must be a non-empty string' after trimming, like the empty string does.",
+      "rationale": "Reference constructor sets this.key = key.trim() but checks key === '' on the untrimmed input, so '   ' becomes an empty key without throwing. The test records any thrown error and asserts a TypeError was thrown, failing when no error is recorded.",
+      "reason": "generated test imports paths that are not in the analyzed snapshot: ./src/Reference.ts",
+      "artifacts": null,
+      "durationMs": 9763,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1400,
+        "outputTokens": 2074,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0461528
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "validateSync constructs ValidationError with the original input value while async validate uses the validated value, losing cast results on sync errors.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 595,
+          "path": "schema.ts",
+          "snippet": "        (errors, validated) => {\n          if (errors.length)\n            reject(\n              new ValidationError(\n                errors!,\n                validated,\n                undefined,\n                undefined,\n                disableStackTrace,\n              ),\n            );",
+          "startLine": 585
+        },
+        {
+          "endLine": 627,
+          "path": "schema.ts",
+          "snippet": "      (errors, validated) => {\n        if (errors.length)\n          throw new ValidationError(\n            errors!,\n            value,\n            undefined,\n            undefined,\n            disableStackTrace,\n          );",
+          "startLine": 619
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "validateSync error uses wrong value"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 586-596 (+/-1 line tolerance)",
+      "lineTolerance": 1
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Async validate constructs ValidationError with validated at schema.ts:591, while validateSync receives validated in the same callback but constructs ValidationError with the original value at schema.ts:623, losing the cast result on sync errors."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport { number } from './src/index.ts';\n\nconst schema = number().max(10);\n\nlet asyncError;\ntry {\n  await schema.validate('20');\n} catch (err) {\n  asyncError = err;\n}\nassert.ok(asyncError);\nassert.strictEqual(asyncError.name, 'ValidationError');\nassert.strictEqual(asyncError.value, 20);\n\nlet syncError;\ntry {\n  schema.validateSync('20');\n} catch (err) {\n  syncError = err;\n}\nassert.ok(syncError);\nassert.strictEqual(syncError.name, 'ValidationError');\nassert.strictEqual(syncError.value, 20);\nassert.strictEqual(syncError.value, asyncError.value);\n",
+      "expectedBehavior": "validateSync's ValidationError.value should be the cast/validated value (20, a number) matching async validate, not the original input ('20')",
+      "rationale": "number().max(10) casts '20' to 20 before failing max; async error carries 20 while buggy sync error carries the original string '20'.",
+      "reason": "generated test imports paths that are not in the analyzed snapshot: ./src/index.ts",
+      "artifacts": null,
+      "durationMs": 11564,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 9552,
+        "outputTokens": 1983,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0769408
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Error sorting matches keys by substring includes instead of exact path segment, so unrelated paths containing the key sort incorrectly.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 12,
+          "path": "util/sortByKeyOrder.ts",
+          "snippet": "function findIndex(arr: readonly string[], err: ValidationError) {\n  let idx = Infinity;\n  arr.some((key, ii) => {\n    if (err.path?.includes(key)) {\n      idx = ii;\n      return true;\n    }\n  });\n  return idx;\n}",
+          "startLine": 3
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "sortByKeyOrder uses substring match"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 3-12 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at util/sortByKeyOrder.ts:6 uses err.path?.includes(key) as a substring test with no path-segment or prefix boundary, so paths such as 'address.name' or 'ab' can match an earlier unrelated key like 'name' or 'a' and be sorted by that key's index."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-I4VODz/snapshot/ValidationError' imported from /tmp/codeproof-repro-I4VODz/snapshot/util/sortByKeyOrder.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-I4VODz/snapshot/ValidationError'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 111,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-I4VODz/snapshot/ValidationError' imported from /tmp/codeproof-repro-I4VODz/snapshot/util/sortByKeyOrder.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-I4VODz/snapshot/ValidationError'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 109,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-I4VODz/snapshot/ValidationError' imported from /tmp/codeproof-repro-I4VODz/snapshot/util/sortByKeyOrder.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-I4VODz/snapshot/ValidationError'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 108,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport sortByKeyOrder from './util/sortByKeyOrder.ts';\n\nconst byOrder = sortByKeyOrder(['name', 'age']);\nconst username = { path: 'username' };\nconst age = { path: 'age' };\nconst message = { path: 'message' };\nconst name = { path: 'name' };\n\n// 'username' only contains 'name' as a substring, not an exact path,\n// so it is unmatched and must sort after the exact 'age' key.\nassert.equal(Math.sign(byOrder(username, age)), 1);\nassert.equal(Math.sign(byOrder(age, username)), -1);\nassert.deepEqual(\n  [username, age].sort(byOrder).map((e) => e.path),\n  ['age', 'username'],\n);\n\n// 'message' only contains 'age' as a substring, so it must sort after 'age'.\nassert.equal(Math.sign(byOrder(message, age)), 1);\nassert.deepEqual(\n  [message, age].sort(byOrder).map((e) => e.path),\n  ['age', 'message'],\n);\n\n// Exact matches still sort by the declared key order.\nassert.deepEqual(\n  [age, name].sort(byOrder).map((e) => e.path),\n  ['name', 'age'],\n);\n",
+      "expectedBehavior": "Paths that only contain a key as a substring (e.g. 'username' containing 'name', 'message' containing 'age') are treated as unmatched and sort after exact key matches, while exact matches sort by declared key order.",
+      "rationale": "The comparator in util/sortByKeyOrder.ts uses err.path?.includes(key), so 'username' incorrectly gets the index of 'name' and 'message' the index of 'age'. The test imports the real sortByKeyOrder and asserts unmatched substring paths sort after exact matches.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 22209,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 798,
+        "outputTokens": 3997,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.08220480000000001
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Standard-schema path building interpolates undefined error.path producing a literal 'undefined' segment instead of using the parent path alone.",
+      "confidence": 0.82,
+      "evidence": [
+        {
+          "endLine": 122,
+          "path": "standardSchema.ts",
+          "snippet": "export function createStandardIssues(\n  error: ValidationError,\n  parentPath?: string,\n): StandardIssue[] {\n  const path = parentPath ? `${parentPath}.${error.path}` : error.path;",
+          "startLine": 118
+        },
+        {
+          "endLine": 143,
+          "path": "standardSchema.ts",
+          "snippet": "  const path = parentPath ? `${parentPath}.${error.path}` : error.path;\n\n  return error.inner.flatMap((err) => issuesFromValidationError(err, path));",
+          "startLine": 141
+        }
+      ],
+      "id": "F-005",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "standard path joins undefined segment"
+    },
+    "status": "uncertain",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 118-122 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "uncertain",
+      "reason": "verifier output was not parseable JSON (empty model output), finish_reason=length"
+    },
+    "repro": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "truncate() uses 32-bit bitwise truncation which overflows for values outside signed 32-bit range instead of Math.trunc semantics.",
+      "confidence": 0.75,
+      "evidence": [
+        {
+          "endLine": 136,
+          "path": "number.ts",
+          "snippet": "  truncate() {\n    return this.transform((value) => (!isAbsent(value) ? value | 0 : value));\n  }",
+          "startLine": 134
+        }
+      ],
+      "id": "F-006",
+      "kind": "direct",
+      "severity": "low",
+      "title": "truncate overflows via bitwise OR"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 134-136 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: number.ts:135 implements truncate() as `value | 0`, which performs ToInt32 conversion and wraps values outside the signed 32-bit range, unlike Math.trunc, and number.ts:143 also routes round('trunc') to this implementation."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-7S1UJ3/snapshot/locale' imported from /tmp/codeproof-repro-7S1UJ3/snapshot/number.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-7S1UJ3/snapshot/locale'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 111,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-7S1UJ3/snapshot/locale' imported from /tmp/codeproof-repro-7S1UJ3/snapshot/number.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-7S1UJ3/snapshot/locale'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 106,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-7S1UJ3/snapshot/locale' imported from /tmp/codeproof-repro-7S1UJ3/snapshot/number.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-7S1UJ3/snapshot/locale'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 105,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport { create } from './number.ts';\n\nconst schema = create().truncate();\nlet error;\nlet small;\nlet large;\nlet negativeLarge;\nlet huge;\ntry {\n  small = schema.cast(-12.9);\n  large = schema.cast(2147483648.9);\n  negativeLarge = schema.cast(-2147483649.9);\n  huge = schema.cast(4294967297.8);\n} catch (caught) {\n  error = caught;\n}\nassert.equal(error, undefined);\nassert.equal(small, Math.trunc(-12.9));\nassert.equal(large, Math.trunc(2147483648.9));\nassert.equal(negativeLarge, Math.trunc(-2147483649.9));\nassert.equal(huge, Math.trunc(4294967297.8));\n",
+      "expectedBehavior": "truncate() should follow Math.trunc semantics for values outside the signed 32-bit range",
+      "rationale": "2147483648.9, -2147483649.9, and 4294967297.8 overflow value|0 to -2147483648, 2147483647, and 1 respectively, while Math.trunc preserves the full magnitude.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 25979,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2403,
+        "outputTokens": 3919,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0870648
+    },
+    "evidenceLevel": "citation+adversarial"
+  }
+]

@@ -30,7 +30,7 @@ export function loadConfig(env) {
     verifierContextChars: Number(env.VERIFIER_CONTEXT_CHARS || "24000"),
     reproEnabled: env.USE_MOCK !== "1" && env.REPRO !== "0",
     reproModel: env.REPRO_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0",
-    reproMaxTokens: Number(env.REPRO_MAX_TOKENS || "4000"),
+    reproMaxTokens: Number(env.REPRO_MAX_TOKENS || "8000"),
     reproTimeoutMs: Number(env.REPRO_TIMEOUT_MS || "2000"),
     reproAttempts: Number(env.REPRO_ATTEMPTS || "3")
   };

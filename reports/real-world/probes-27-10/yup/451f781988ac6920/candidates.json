@@ -1,0 +1,233 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Schema.concat shares the base exclusiveTests object by reference and then mutates it via test(), polluting the base schema.\", \"confidence\": 0.88, \"evidence\": [{\"endLine\": 312, \"path\": \"schema.ts\", \"snippet\": \"    // start with the current tests\\n    combined.tests = base.tests;\\n    combined.exclusiveTests = base.exclusiveTests;\", \"startLine\": 310}, {\"endLine\": 799, \"path\": \"schema.ts\", \"snippet\": \"    if (opts.name) next.exclusiveTests[opts.name] = !!opts.exclusive;\", \"startLine\": 799}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"concat shares and mutates base exclusiveTests\"}, {\"category\": \"correctness\", \"claim\": \"Reference constructor trims the key but checks the original untrimmed key for emptiness, so whitespace-only refs bypass validation.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 38, \"path\": \"Reference.ts\", \"snippet\": \"    this.key = key.trim();\\n\\n    if (key === '') throw new TypeError('ref must be a non-empty string');\", \"startLine\": 36}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"whitespace ref bypasses non-empty check\"}, {\"category\": \"correctness\", \"claim\": \"validateSync constructs ValidationError with the original input value while async validate uses the validated value, losing cast results on sync errors.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 595, \"path\": \"schema.ts\", \"snippet\": \"        (errors, validated) => {\\n          if (errors.length)\\n            reject(\\n              new ValidationError(\\n                errors!,\\n                validated,\\n                undefined,\\n                undefined,\\n                disableStackTrace,\\n              ),\\n            );\", \"startLine\": 585}, {\"endLine\": 627, \"path\": \"schema.ts\", \"snippet\": \"      (errors, validated) => {\\n        if (errors.length)\\n          throw new ValidationError(\\n            errors!,\\n            value,\\n            undefined,\\n            undefined,\\n            disableStackTrace,\\n          );\", \"startLine\": 619}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"validateSync error uses wrong value\"}, {\"category\": \"correctness\", \"claim\": \"Error sorting matches keys by substring includes instead of exact path segment, so unrelated paths containing the key sort incorrectly.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 12, \"path\": \"util/sortByKeyOrder.ts\", \"snippet\": \"function findIndex(arr: readonly string[], err: ValidationError) {\\n  let idx = Infinity;\\n  arr.some((key, ii) => {\\n    if (err.path?.includes(key)) {\\n      idx = ii;\\n      return true;\\n    }\\n  });\\n  return idx;\\n}\", \"startLine\": 3}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"sortByKeyOrder uses substring match\"}, {\"category\": \"correctness\", \"claim\": \"Standard-schema path building interpolates undefined error.path producing a literal 'undefined' segment instead of using the parent path alone.\", \"confidence\": 0.82, \"evidence\": [{\"endLine\": 122, \"path\": \"standardSchema.ts\", \"snippet\": \"export function createStandardIssues(\\n  error: ValidationError,\\n  parentPath?: string,\\n): StandardIssue[] {\\n  const path = parentPath ? `${parentPath}.${error.path}` : error.path;\", \"startLine\": 118}, {\"endLine\": 143, \"path\": \"standardSchema.ts\", \"snippet\": \"  const path = parentPath ? `${parentPath}.${error.path}` : error.path;\\n\\n  return error.inner.flatMap((err) => issuesFromValidationError(err, path));\", \"startLine\": 141}], \"id\": \"F-005\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"standard path joins undefined segment\"}, {\"category\": \"correctness\", \"claim\": \"truncate() uses 32-bit bitwise truncation which overflows for values outside signed 32-bit range instead of Math.trunc semantics.\", \"confidence\": 0.75, \"evidence\": [{\"endLine\": 136, \"path\": \"number.ts\", \"snippet\": \"  truncate() {\\n    return this.transform((value) => (!isAbsent(value) ? value | 0 : value));\\n  }\", \"startLine\": 134}], \"id\": \"F-006\", \"kind\": \"direct\", \"severity\": \"low\", \"title\": \"truncate overflows via bitwise OR\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Schema.concat shares the base exclusiveTests object by reference and then mutates it via test(), polluting the base schema.",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "endLine": 312,
+            "path": "schema.ts",
+            "snippet": "    // start with the current tests\n    combined.tests = base.tests;\n    combined.exclusiveTests = base.exclusiveTests;",
+            "startLine": 310
+          },
+          {
+            "endLine": 799,
+            "path": "schema.ts",
+            "snippet": "    if (opts.name) next.exclusiveTests[opts.name] = !!opts.exclusive;",
+            "startLine": 799
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "concat shares and mutates base exclusiveTests"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 310-312 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Concat assigns the base object by reference at schema.ts:311-312, then within withMutation at schema.ts:316-320 calls test() on the mutated combined schema, and test() mutates that object in place at schema.ts:799 via next.exclusiveTests[opts.name] assignment, so the base schema's exclusiveTests is polluted."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Reference constructor trims the key but checks the original untrimmed key for emptiness, so whitespace-only refs bypass validation.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 38,
+            "path": "Reference.ts",
+            "snippet": "    this.key = key.trim();\n\n    if (key === '') throw new TypeError('ref must be a non-empty string');",
+            "startLine": 36
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "whitespace ref bypasses non-empty check"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 36-38 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: Reference.ts:36 assigns this.key = key.trim() while Reference.ts:38 checks the original key === '', so a whitespace-only key yields an empty this.key without throwing."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "validateSync constructs ValidationError with the original input value while async validate uses the validated value, losing cast results on sync errors.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 595,
+            "path": "schema.ts",
+            "snippet": "        (errors, validated) => {\n          if (errors.length)\n            reject(\n              new ValidationError(\n                errors!,\n                validated,\n                undefined,\n                undefined,\n                disableStackTrace,\n              ),\n            );",
+            "startLine": 585
+          },
+          {
+            "endLine": 627,
+            "path": "schema.ts",
+            "snippet": "      (errors, validated) => {\n        if (errors.length)\n          throw new ValidationError(\n            errors!,\n            value,\n            undefined,\n            undefined,\n            disableStackTrace,\n          );",
+            "startLine": 619
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "validateSync error uses wrong value"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 586-596 (+/-1 line tolerance)",
+        "lineTolerance": 1
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Async validate constructs ValidationError with validated at schema.ts:591, while validateSync receives validated in the same callback but constructs ValidationError with the original value at schema.ts:623, losing the cast result on sync errors."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Error sorting matches keys by substring includes instead of exact path segment, so unrelated paths containing the key sort incorrectly.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 12,
+            "path": "util/sortByKeyOrder.ts",
+            "snippet": "function findIndex(arr: readonly string[], err: ValidationError) {\n  let idx = Infinity;\n  arr.some((key, ii) => {\n    if (err.path?.includes(key)) {\n      idx = ii;\n      return true;\n    }\n  });\n  return idx;\n}",
+            "startLine": 3
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "sortByKeyOrder uses substring match"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 3-12 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at util/sortByKeyOrder.ts:6 uses err.path?.includes(key) as a substring test with no path-segment or prefix boundary, so paths such as 'address.name' or 'ab' can match an earlier unrelated key like 'name' or 'a' and be sorted by that key's index."
+      }
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Standard-schema path building interpolates undefined error.path producing a literal 'undefined' segment instead of using the parent path alone.",
+        "confidence": 0.82,
+        "evidence": [
+          {
+            "endLine": 122,
+            "path": "standardSchema.ts",
+            "snippet": "export function createStandardIssues(\n  error: ValidationError,\n  parentPath?: string,\n): StandardIssue[] {\n  const path = parentPath ? `${parentPath}.${error.path}` : error.path;",
+            "startLine": 118
+          },
+          {
+            "endLine": 143,
+            "path": "standardSchema.ts",
+            "snippet": "  const path = parentPath ? `${parentPath}.${error.path}` : error.path;\n\n  return error.inner.flatMap((err) => issuesFromValidationError(err, path));",
+            "startLine": 141
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "standard path joins undefined segment"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "uncertain",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 118-122 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "uncertain",
+        "reason": "verifier output was not parseable JSON (empty model output), finish_reason=length"
+      }
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "truncate() uses 32-bit bitwise truncation which overflows for values outside signed 32-bit range instead of Math.trunc semantics.",
+        "confidence": 0.75,
+        "evidence": [
+          {
+            "endLine": 136,
+            "path": "number.ts",
+            "snippet": "  truncate() {\n    return this.transform((value) => (!isAbsent(value) ? value | 0 : value));\n  }",
+            "startLine": 134
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "low",
+        "title": "truncate overflows via bitwise OR"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 134-136 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: number.ts:135 implements truncate() as `value | 0`, which performs ToInt32 conversion and wraps values outside the signed 32-bit range, unlike Math.trunc, and number.ts:143 also routes round('trunc') to this implementation."
+      }
+    }
+  ]
+}
