@@ -69,11 +69,13 @@ test("CLI banner exposes modes, models and controlled provenance", function () {
   assert.match(controlled, /scanner=skipped/);
 });
 
-test("README declares evidence levels and the planned L3 boundary", function () {
+test("README declares evidence levels and the L3 execution boundary", function () {
   const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
   assert.match(readme, /Every finding carries the level of proof it earned: machine-checked citation, adversarial confirmation, or a failing test\./);
   assert.match(readme, /## Evidence levels/);
-  assert.match(readme, /execution-proven.*not implemented yet/);
+  assert.match(readme, /execution-proven/);
+  assert.match(readme, /L3 - execution proof/);
+  assert.doesNotMatch(readme, /not implemented yet/);
 });
 
 test("report labels a model snippet when no committed blob is available", function () {
