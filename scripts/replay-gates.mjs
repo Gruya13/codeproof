@@ -4,7 +4,7 @@
 // recorded in run.json.
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { ingest } from "../src/ingest/index.mjs";
 import { checkCitation } from "../src/verify/index.mjs";
 import { validateFindingsL0 } from "../src/scan/index.mjs";
@@ -37,6 +37,30 @@ function parseArgs(argv) {
   return options;
 }
 
+function displayPath(target) {
+  const rel = relative(process.cwd(), target);
+  return rel === "" ? "." : rel;
+}
+
+// The run artifact stores the absolute checkout path of the machine that produced
+// it. In a fresh clone (possibly another machine/container) that path does not
+// exist, so fall back to the longest existing suffix of that path that stays
+// inside the current repository.
+function resolveScope(options, run) {
+  if (options.repo !== null) return resolve(options.repo);
+  const stored = run.repo && run.repo.path ? String(run.repo.path) : null;
+  if (!stored) return null;
+  const candidates = [resolve(stored)];
+  const segments = stored.split(/[\\/]+/).filter(Boolean);
+  for (let size = segments.length - 1; size >= 1; size -= 1) {
+    candidates.push(resolve(segments.slice(-size).join("/")));
+  }
+  return candidates.find(function (candidate) {
+    const rel = relative(process.cwd(), candidate);
+    return rel !== "" && !rel.startsWith("..") && !rel.startsWith("/") && existsSync(candidate);
+  }) || null;
+}
+
 function main() {
   const options = parseArgs(process.argv.slice(2));
   const runDir = resolve(options.run);
@@ -46,11 +70,9 @@ function main() {
   if (!existsSync(findingsPath)) throw new Error("findings.json not found in " + runDir);
   const run = JSON.parse(readFileSync(runPath, "utf8"));
   const published = JSON.parse(readFileSync(findingsPath, "utf8"));
-  const target = resolve(options.repo || run.repo.path || "");
-  const scopeOk = options.repo !== null || (run.repo && run.repo.path && existsSync(run.repo.path));
-  const repoPath = scopeOk && options.repo === null ? run.repo.path : target;
-  if (!existsSync(repoPath)) {
-    throw new Error("analyzed scope is not available: " + repoPath + " (use --repo <path>)");
+  const repoPath = resolveScope(options, run);
+  if (!repoPath) {
+    throw new Error("analyzed scope is not available (relative path not found in this clone; use --repo <path>)");
   }
   const repo = ingest(repoPath);
   const manifest = new Map(repo.files.map(function (file) { return [file.path, file]; }));
@@ -84,12 +106,12 @@ function main() {
   }
   const payload = {
     tool: "replay-gates",
-    createdAt: new Date().toISOString(),
-    runDir: runDir,
+    createdAt: run.timings && run.timings.startedAt ? run.timings.startedAt : "unknown",
+    runDir: displayPath(runDir),
     runId: run.runId,
     mode: run.mode,
     commit: commit,
-    scope: repoPath,
+    scope: displayPath(repoPath),
     candidateCount: published.length,
     matched: published.length - mismatches,
     mismatches: mismatches,
@@ -103,8 +125,8 @@ function main() {
   if (options.json) console.log(JSON.stringify(payload, null, 2));
   else {
     console.log("Replay gates (no model calls)");
-    console.log("  run      " + runDir + " (id " + run.runId + ", mode " + run.mode + ")");
-    console.log("  commit   " + commit + "  scope " + repoPath);
+    console.log("  run      " + displayPath(runDir) + " (id " + run.runId + ", mode " + run.mode + ")");
+    console.log("  commit   " + commit + "  scope " + displayPath(repoPath));
     console.log("  items    " + published.length + " published findings");
     console.log("  result   " + payload.matched + "/" + published.length + " identical, " + mismatches + " mismatch");
     for (const item of results) {

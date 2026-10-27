@@ -17,6 +17,7 @@ docker run --rm -i -v "$ROOT:/src:ro" node:22-alpine sh -c '
   make test > /tmp/test.log 2>&1
   grep -E "^(ℹ|#) (tests|pass|fail)" /tmp/test.log | sed "s/^/  /"
   make demo > /tmp/demo.log 2>&1 && echo "  demo ok"
+  make replay > /tmp/replay.log 2>&1 && echo "  replay ok"
   make score RUN=reports/golden > /tmp/score.log 2>&1 && echo "  score ok"
   test -z "$(git status --porcelain)" && echo "  PASS"
 '

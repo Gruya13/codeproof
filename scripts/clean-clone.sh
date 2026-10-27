@@ -36,13 +36,16 @@ run_isolated() {
   env -i PATH="$NODE_DIR:/usr/local/bin:/usr/bin:/bin" HOME="$TMP/home" TMPDIR="$TMP" "$@"
 }
 
-echo "  step    1/3 make test"
+echo "  step    1/4 make test"
 run_isolated make test > "$TMP/test.log" 2>&1 || { tail -20 "$TMP/test.log"; exit 1; }
 tail -3 "$TMP/test.log" | sed "s/^/          /"
-echo "  step    2/3 make demo"
+echo "  step    2/4 make demo"
 run_isolated make demo > "$TMP/demo.log" 2>&1 || { tail -20 "$TMP/demo.log"; exit 1; }
 grep -E "run-id|Cost" "$TMP/demo.log" | sed "s/^/          /" || true
-echo "  step    3/3 make score RUN=reports/golden"
+echo "  step    3/4 make replay"
+run_isolated make replay > "$TMP/replay.log" 2>&1 || { tail -20 "$TMP/replay.log"; exit 1; }
+grep -E "result|written" "$TMP/replay.log" | sed "s/^/          /" || true
+echo "  step    4/4 make score RUN=reports/golden"
 run_isolated make score RUN=reports/golden > "$TMP/score.log" 2>&1 || { tail -20 "$TMP/score.log"; exit 1; }
 grep -E "recall|precision|traps|False refutations" "$TMP/score.log" | sed "s/^/          /" || true
 
@@ -52,4 +55,4 @@ if [ -n "$STATUS" ]; then
   echo "$STATUS" | sed "s/^/          /"
   exit 1
 fi
-echo "  PASS    tests, demo and golden score pass from a clean clone with a stripped environment"
+echo "  PASS    tests, demo, replay and golden score pass from a clean clone with a stripped environment"
