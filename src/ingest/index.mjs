@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, extname, posix } from "node:path";
-import { sha256Hex } from "../run/index.mjs";
+import { gitPrefix, readFileAtCommit, sha256Hex } from "../run/index.mjs";
 
 const ANALYZABLE = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const SKIP_DIRS = new Set(["node_modules", "dist", "build", "out", "coverage"]);
@@ -23,6 +23,19 @@ function listGitFiles(target) {
   try {
     const output = execFileSync("git", ["-C", target, "ls-files", "-z"], { encoding: "utf8", maxBuffer: 10 * 1024 * 1024 });
     return output.split("\0").filter(function (entry) { return entry !== ""; });
+  } catch (error) {
+    return null;
+  }
+}
+
+// Files of the analyzed commit, relative to the analyzed target directory. The `commit -- .`
+// form keeps the paths relative to the target (a `commit:prefix` treeish resolves against the
+// repository root and yields an empty listing when the process cwd is a subdirectory).
+function listCommittedFiles(target, commit) {
+  try {
+    if (gitPrefix(target) === null) return null;
+    const output = execFileSync("git", ["-C", target, "ls-tree", "-r", "--name-only", commit, "--", "."], { encoding: "utf8", maxBuffer: 10 * 1024 * 1024 });
+    return output.split("\n").filter(Boolean);
   } catch (error) {
     return null;
   }
@@ -137,8 +150,15 @@ function findCycles(nodes, edges) {
   return cycles;
 }
 
-export function ingest(rootPath) {
-  const tracked = listGitFiles(rootPath);
+// `options.commit` makes ingestion read the file list AND the file contents from that commit.
+// The working tree then cannot change the analysis: the scanned source and the L1 citation check
+// see exactly the same bytes. Without a commit (or for a non-git target) ingestion falls back to
+// the checked-out working tree, which keeps the mock demo working.
+export function ingest(rootPath, options = {}) {
+  const commit = options.commit && String(options.commit) !== "0000000" ? String(options.commit) : null;
+  const committed = commit === null ? null : listCommittedFiles(rootPath, commit);
+  const fromCommit = committed !== null && committed.length > 0;
+  const tracked = fromCommit ? committed : listGitFiles(rootPath);
   const files = tracked !== null && tracked.length > 0
     ? tracked.filter(function (relativePath) { return ANALYZABLE.has(extname(relativePath)); }).sort()
     : walk(rootPath, rootPath, []).sort();
@@ -147,7 +167,10 @@ export function ingest(rootPath) {
   const entries = [];
   const sourceByRel = new Map();
   for (const rel of files) {
-    const source = readFileSync(join(rootPath, rel), "utf8");
+    const source = fromCommit ? readFileAtCommit(rootPath, commit, rel) : readFileSync(join(rootPath, rel), "utf8");
+    if (source === null) {
+      throw new Error("file is listed in commit " + commit + " but could not be read from git: " + rel);
+    }
     sourceByRel.set(rel, source);
     const lineCount = source.split("\n").length - (source.endsWith("\n") ? 1 : 0);
     entries.push({ path: rel, loc: lineCount, sha256: sha256Hex(source) });
@@ -162,7 +185,7 @@ export function ingest(rootPath) {
   const nodes = files.slice();
   const cycles = findCycles(nodes, edges);
   const loc = entries.reduce(function (sum, entry) { return sum + entry.loc; }, 0);
-  return { root: rootPath, files: entries, edges: edges, cycles: cycles, loc: loc };
+  return { root: rootPath, commit: fromCommit ? commit : null, sources: sourceByRel, files: entries, edges: edges, cycles: cycles, loc: loc };
 }
 
 export function repoDigest(result) {
@@ -190,7 +213,9 @@ export function filesWithLineNumbers(result, maxChars) {
   const parts = [];
   let used = 0;
   for (const file of result.files) {
-    const source = readFileSync(join(result.root, file.path), "utf8");
+    const source = result.sources && result.sources.has(file.path)
+      ? result.sources.get(file.path)
+      : readFileSync(join(result.root, file.path), "utf8");
     const numbered = source.split("\n").map(function (line, index) {
       return String(index + 1) + " | " + line;
     }).join("\n");

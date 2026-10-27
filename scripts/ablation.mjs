@@ -81,8 +81,8 @@ async function main() {
   if (!config.apiKey) throw new Error("MODEL_API_KEY is required for the ablation run");
   const target = resolve(args.repo);
   const expected = JSON.parse(readFileSync(join(target, "expected.json"), "utf8"));
-  const repo = ingest(target);
   const commit = await gitCommit(target);
+  const repo = ingest(target, { commit: commit });
   console.log("  repo     " + target + " @ " + String(commit).slice(0, 7) + "  " + repo.files.length + " files / " + repo.loc + " LOC");
   const budget = new Budget(config.budgetUsd);
   const agents = createAgents({

@@ -63,8 +63,54 @@ const FORBIDDEN_CODE = [
   [/\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|mkdir|mkdirSync|rm|rmSync|unlink|unlinkSync|rename|renameSync)\s*\(/i, "file write"],
   [/\bsetTimeout\s*\([^,]+,\s*(?:[1-9]\d{3,}|[2-9]\d{2,})\s*\)/i, "long timeout"],
   [/\bconsole\s*\.\s*(?:error|warn|log|info|debug)\s*\(/i, "console output (it could mask the real failure class)"],
-  [/\bprocess\s*\.\s*(?:stdout|stderr)\s*\.\s*write\s*\(/i, "direct stream output (it could mask the real failure class)"]
+  [/\bprocess\s*\.\s*(?:stdout|stderr)\s*\.\s*write\s*\(/i, "direct stream output (it could mask the real failure class)"],
+  [/\bMath\s*\.\s*random\s*\(/i, "non-deterministic Math.random (the proof must fail 3/3 the same way)"],
+  [/\bDate\s*\.\s*now\s*\(/i, "non-deterministic Date.now (the proof must fail 3/3 the same way)"],
+  [/\bnew\s+Date\s*\(/i, "non-deterministic Date construction (use fixed values instead)"],
+  [/\bperformance\s*\.\s*now\s*\(/i, "non-deterministic performance.now"],
+  [/\bprocess\s*\.\s*env\b/i, "process.env (the sandbox environment is empty on purpose)"],
+  [/node:(?:fs|os|process|worker_threads|cluster)\b/i, "ambient runtime module"],
+  [/\bassert\s*\.\s*ok\s*\(\s*true\s*[,)]/i, "trivial assertion assert.ok(true)"],
+  [/\bassert\s*\.\s*(?:equal|strictEqual)\s*\(\s*-?1\s*,\s*-?1\s*[,)]/i, "trivial assertion (same literal on both sides)"],
+  [/\bassert\s*\.\s*(?:equal|strictEqual)\s*\(\s*true\s*,\s*true\s*[,)]/i, "trivial assertion (same literal on both sides)"]
 ];
+
+const ASSERTION_PATTERN = /\bassert\s*\.\s*(?:ok|equal|strictEqual|notEqual|notStrictEqual|deepEqual|deepStrictEqual|match|doesNotMatch|throws|doesNotThrow|rejects|fails)\s*\(/;
+
+// Identifiers bound by a STATIC relative import - the symbols a reproducer must actually call.
+// Covers named imports (including aliases), default imports, namespace imports and combinations.
+export function extractImportedIdentifiers(testCode) {
+  const source = String(testCode || "");
+  const names = [];
+  const pattern = /import\s+(?:([A-Za-z_$][\w$]*)\s*(?:,\s*)?)?(?:\{([^}]*)\}\s*)?(?:\*\s+as\s+([A-Za-z_$][\w$]*)\s*)?from\s*['"](\.[^'"]+)['"]/g;
+  let match = pattern.exec(source);
+  while (match !== null) {
+    const [, defaultName, namedBlock, namespaceName, relativePath] = match;
+    if (defaultName) names.push(defaultName);
+    if (namespaceName) names.push(namespaceName);
+    if (namedBlock) {
+      for (const part of namedBlock.split(",")) {
+        const cleaned = part.trim();
+        if (cleaned === "") continue;
+        const alias = cleaned.split(/\s+as\s+/);
+        const bound = (alias.length > 1 ? alias[1] : alias[0]).trim();
+        if (/^[A-Za-z_$][\w$]*$/.test(bound)) names.push(bound);
+      }
+    }
+    if (!relativePath) { /* unreachable with this pattern, kept for clarity */ }
+    match = pattern.exec(source);
+  }
+  return [...new Set(names)];
+}
+
+// Which imported repository symbols are actually used outside the import statements.
+export function extractUsedImportedSymbols(testCode) {
+  const source = String(testCode || "");
+  const body = source.replace(/^\s*import\b.*$/gm, "");
+  return extractImportedIdentifiers(source).filter(function (name) {
+    return new RegExp("\\b" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b").test(body);
+  });
+}
 
 export function parseReproResponse(text) {
   return parseDirtyJson(text);
@@ -111,6 +157,11 @@ export function validateReproL0(parsed) {
       if (parsed.testCode.split("\n").length > 60) errors.push("testCode exceeds 60 lines");
       if (!/node:assert(?:\/strict)?/.test(parsed.testCode)) errors.push("testCode must import node:assert");
       if (extractReproImports(parsed.testCode).length === 0) errors.push("testCode must import the analyzed repository code with a relative path");
+      if (!ASSERTION_PATTERN.test(parsed.testCode)) errors.push("testCode must contain at least one node:assert assertion");
+      const imported = extractImportedIdentifiers(parsed.testCode);
+      const used = extractUsedImportedSymbols(parsed.testCode);
+      if (imported.length === 0) errors.push("testCode must bind at least one named or default symbol from the repository import");
+      else if (used.length === 0) errors.push("testCode must call an imported repository symbol outside the import statements (imported: " + imported.join(", ") + ")");
       for (const [pattern, label] of FORBIDDEN_CODE) {
         if (pattern.test(parsed.testCode)) errors.push("forbidden " + label);
       }

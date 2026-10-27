@@ -140,7 +140,7 @@ async function main() {
     reproModel: config.reproModel, reproEnabled: config.reproEnabled && !controlled }));
 
   const ingestStarted = Date.now();
-  const repo = ingest(target);
+  const repo = ingest(target, { commit: commit });
   phases.push({ name: "ingest", status: "ok", durationMs: Date.now() - ingestStarted });
   console.log("  ingest   " + String(Date.now() - ingestStarted).padStart(4) + " ms  " +
     repo.files.length + " files, " + repo.loc + " LOC, " + repo.edges.length + " imports, " + repo.cycles.length + " cycles");
@@ -154,6 +154,7 @@ async function main() {
     verifierModel: config.verifierModel,
     reproModel: config.reproModel,
     maxRetries: config.maxRetries,
+    hardBudget: config.hardBudget,
     budget: budget
   });
 
@@ -370,7 +371,7 @@ async function main() {
     mode: mode,
     mock: mock,
     configSha256: configSha256,
-    repo: { source: "local", path: target, commit: commit, dirty: dirty, loc: repo.loc, files: repo.files.length },
+    repo: { source: repo.commit ? "commit" : "worktree", path: target, commit: commit, dirty: dirty, loc: repo.loc, files: repo.files.length },
     models: mock
       ? [{ role: "scanner-correctness", id: "mock-scanner" }, { role: "verifier", id: "mock-verifier" }]
       : controlled
@@ -396,6 +397,7 @@ async function main() {
       spentUsd: aborted ? budget.spentUsd : (measured ? Math.round(budget.spentUsd * 1e6) / 1e6 : null),
       measured: measured,
       exceeded: budget.exceeded,
+      hard: Boolean(config.hardBudget),
       aborted: aborted,
       skippedFindings: skippedFindings
     },

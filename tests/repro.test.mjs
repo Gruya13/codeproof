@@ -11,6 +11,7 @@ import {
   attemptRepro,
   buildReproMessages,
   classifyReproRun,
+  extractImportedIdentifiers,
   extractReproImports,
   parseReproResponse,
   prepareSnapshot,
@@ -72,6 +73,36 @@ test("a URL string as test data does not trip the static validator", function ()
   const code = "import assert from 'node:assert/strict';\nimport { parseURL } from './sample.js';\nassert.equal(typeof parseURL('https://example.com/a?b=1'), 'object');\n";
   const result = validateReproL0(reproResponse(code));
   assert.equal(result.ok, true, result.errors.join("; "));
+});
+
+test("L0 requires an assertion and a call to an imported repository symbol", function () {
+  const noAssertion = validateReproL0(reproResponse("import assert from 'node:assert/strict';\nimport { value } from './sample.js';\n"));
+  assert.equal(noAssertion.ok, false);
+  assert.match(noAssertion.errors.join(" "), /at least one node:assert assertion/);
+  const unusedImport = validateReproL0(reproResponse("import assert from 'node:assert/strict';\nimport { value } from './sample.js';\nassert.equal(1, 2);"));
+  assert.equal(unusedImport.ok, false);
+  assert.match(unusedImport.errors.join(" "), /call an imported repository symbol/);
+  const valid = validateReproL0(reproResponse("import assert from 'node:assert/strict';\nimport { value } from './sample.js';\nassert.equal(value, 7);"));
+  assert.equal(valid.ok, true, valid.errors.join("; "));
+  assert.deepEqual(extractImportedIdentifiers("import { a, b as c } from './x.js';\nimport d from './y.js';\nimport * as ns from './z.js';").sort(), ["a", "c", "d", "ns"]);
+});
+
+test("L0 rejects non-deterministic and ambient constructs", function () {
+  const base = "import assert from 'node:assert/strict';\nimport { value } from './sample.js';\n";
+  for (const snippet of ["const n = Math.random();", "const n = Date.now();", "const n = new Date();", "const n = performance.now();", "const n = process.env.HOME;"]) {
+    const result = validateReproL0(reproResponse(base + snippet + "\nassert.equal(value, 7);"));
+    assert.equal(result.ok, false, snippet);
+  }
+  const deterministic = validateReproL0(reproResponse(base + "const n = 42;\nassert.equal(value, 7);\nassert.equal(n, 42);"));
+  assert.equal(deterministic.ok, true, deterministic.errors.join("; "));
+});
+
+test("L0 rejects trivial assertions that would pass or fail without the code", function () {
+  const base = "import assert from 'node:assert/strict';\nimport { value } from './sample.js';\nassert.equal(value, 7);\n";
+  for (const line of ["assert.ok(true);", "assert.equal(1, 1);", "assert.equal(true, true);"]) {
+    const result = validateReproL0(reproResponse(base + line));
+    assert.equal(result.ok, false, line);
+  }
 });
 
 test("unsupported response needs a reason and no code", function () {

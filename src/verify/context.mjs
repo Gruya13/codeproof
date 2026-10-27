@@ -26,9 +26,12 @@ export function extractIdentifiers(text) {
   return [...found];
 }
 
-function readSource(root, relativePath) {
+// Prefer the content that was ingested from the analyzed commit: the verifier context and the
+// L1 citation check must see the same bytes even when the working tree has uncommitted changes.
+function readSource(repo, relativePath) {
+  if (repo && repo.sources && repo.sources.has(relativePath)) return repo.sources.get(relativePath);
   try {
-    return readFileSync(join(root, relativePath), "utf8");
+    return readFileSync(join(repo.root, relativePath), "utf8");
   } catch (error) {
     return null;
   }
@@ -99,7 +102,7 @@ export function buildVerifierContext(input) {
   );
   const candidates = [];
   for (const file of repo.files) {
-    const content = readSource(repo.root, file.path);
+    const content = readSource(repo, file.path);
     let score = 0;
     if (file.path === citedPath) score += 1000;
     if (neighbors.has(file.path)) score += 100;

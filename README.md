@@ -36,7 +36,7 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026). 
 
 The pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`), and the deterministic suite is green on Node 22 and Node 26:
 
-- **Deterministic tests** (`make test`): **125/125** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), L3 cases (reproducer must import repository code that exists in the snapshot, forbidden output constructs, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), dirty-JSON and truncation handling, fault injection, config-hash determinism.
+- **Deterministic tests** (`make test`): **140/140** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), commit-based ingestion (dirty working tree cannot change the analysis), L3 cases (reproducer must import and call repository code that exists in the snapshot, no non-determinism, no trivial assertions, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), agent layer (role/label/cost recording, mock and meta adapters, soft and hard budget gates), dirty-JSON and truncation handling, fault injection, config-hash determinism.
 - **Clean clone**: `make clean-clone` (tmpfs + `env -i`) and the Docker variant `make clean-clone-docker` (node:22-alpine) pass `make test`, `make demo`, `make replay` and `make score RUN=reports/golden` on a fresh clone.
 - **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts with no model calls - **9/9 identical, 0 mismatches**.
 - **Calibration benchmark with L3**: **8/8** recall (100%), 100% precision, 0/4 traps, 0 false refutations, **9/9 published findings execution-proven** - golden run and its generated reproducers are committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
@@ -52,7 +52,7 @@ ingest -> scan -> verify -> repro -> publish
 
 | Phase | What it does |
 |---|---|
-| ingest | fixes the file list from the commit (git-tracked files only; walking fallback for non-git targets), LOC and a sha256 manifest; builds a regex import graph and detects cycles |
+| ingest | reads the **file list and the file contents from the analyzed commit** (`git ls-tree` + `git show`), so uncommitted changes cannot alter the analysis; LOC and a sha256 manifest; builds a regex import graph and detects cycles. Falls back to the working tree for non-git targets (mock demo) |
 | scan | the producer model (Muse Spark) returns findings as schema-constrained JSON: one claim, one verbatim citation, no speculation |
 | verify | deterministic L1 citation check; then Muse Wonder tries to refute inside a bounded, relevant-file context (strong refute needs a machine-checked counter-citation) |
 | repro | for each confirmed finding, Muse Wonder writes a standalone `node:assert` test; it runs on a `git archive` snapshot of the analyzed commit in a permission-model sandbox (no network, no writes outside the snapshot, 2 s timeout, three runs); the finding is execution-proven only if the test fails 3/3 with an assertion error |
@@ -81,7 +81,12 @@ make replay      # re-run L0/L1 over the committed golden artifacts (no model ca
 make clean-clone # fresh clone in tmpfs with env -i, make test/demo/score
 make clean-clone-docker # same inside node:22-alpine (needs Docker)
 make probe-repo ARGS="--repo <url> --commit <sha> --scope <dir> --runs 2 --dry-run"
+make ablation   # held-out fixture through four gate levels (scanner / +L1 / +L2 / +L3)
+node scripts/model-ablation.mjs --repo <dir> --codeproof-run <run>  # Spark alone vs Wonder alone vs CodeProof
+node scripts/reverse-verify.mjs --repo <dir> --ablation <json> --variant wonder-only  # cross-examine a single model's findings
 ```
+
+Budgets: each run has a hard cap (`BUDGET_USD`, default 2 USD). Before every model call the agent layer estimates the worst-case price (input tokens at 3 chars/token, no cache hits, the full `max_tokens` output budget) and **refuses the call if it would not fit**; the default is a hard gate, `HARD_BUDGET=0` restores the old post-hoc behaviour. `run.json` records `budget.hard`.
 
 `make demo` prints a **MOCK MODE** banner and writes `mock: true` into `run.json`; the analyzed fixture is synthetic and checked in on purpose. A real run needs a key (never committed):
 
@@ -210,9 +215,10 @@ This repository is created during the hackathon; the first commit is tagged `hac
 ## Limits
 
 - Only direct correctness defects; omission, security and style findings are out of scope for this milestone.
+- **Budget is enforced up front, but with an estimate:** the hard gate uses a conservative upper bound (3 chars/token, no cache, full output budget). It can therefore refuse a call that would in reality have fit; the estimate is never allowed to understate the cost. `HARD_BUDGET=0` disables the pre-flight gate and keeps only the post-hoc limit.
 - No completeness claim: the report shows what passed the gate, not everything that exists in a repository.
 - L1 proves that every citation exists in the commit and matches the declared line range. Whether the claim matches the code is judged by the verifier model and is presented as such.
-- TypeScript/JavaScript only. Scan and verify are static; L3 executes only the generated test in a sandboxed Node process. The test must import the analyzed repository code and the import must resolve inside the committed snapshot - a self-contained test is rejected at L0.
+- TypeScript/JavaScript only. Scan and verify are static; L3 executes only the generated test in a sandboxed Node process. The test must import **and call** the analyzed repository code, the import must resolve inside the committed snapshot, it may not use non-deterministic or ambient APIs (`Math.random`, `Date.now`, `new Date`, `performance.now`, `process.env`, `node:fs`/`os`/`process`), and trivial assertions (`assert.ok(true)`, `assert.equal(1, 1)`) are rejected at L0 - a self-contained test is no proof of anything.
 - **L3 caveats:** isolation is process-level (Node permission model + network guard + 2 s timeout), not OS-level. TypeScript is executed through Node's built-in type stripping, so a repository that needs its own build step, external dependencies or extensionless internal imports yields `repro-unavailable` - most TypeScript source trees do use extensionless imports. **CommonJS repositories** (`require` resolution) and ESM with explicit `.js`/`.ts` extensions are directly executable. L3 has been measured on the calibration fixture, on ofetch (explicit extensions) and on semver (CommonJS); on the two probe rounds it was correctly reported as unavailable rather than faked whenever execution was not possible. A failing test proves that a concrete input misbehaves on the analyzed commit; combined with the claim it is evidence, not a semantic proof of every consequence.
 - Hand checks may downgrade the scanner's severity (for example a latent internal defect or an error-path-only issue); such findings are labelled as latent/partial in the corresponding HAND-CHECK.md. Real-repository findings are qualitative anecdotes, never benchmark metrics.
 

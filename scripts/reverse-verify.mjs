@@ -53,8 +53,8 @@ async function main() {
   const config = loadConfig(process.env);
   if (!config.apiKey) throw new Error("MODEL_API_KEY is required");
   const target = resolve(args.repo);
-  const repo = ingest(target);
   const commit = await gitCommit(target);
+  const repo = ingest(target, { commit: commit });
   const manifest = new Map(repo.files.map(function (file) { return [file.path, file]; }));
   const gateRepo = { root: target, manifest: manifest, commit: commit };
   const ablation = JSON.parse(readFileSync(resolve(args.ablation), "utf8"));

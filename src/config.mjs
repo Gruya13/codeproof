@@ -32,7 +32,8 @@ export function loadConfig(env) {
     reproModel: env.REPRO_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0",
     reproMaxTokens: Number(env.REPRO_MAX_TOKENS || "8000"),
     reproTimeoutMs: Number(env.REPRO_TIMEOUT_MS || "2000"),
-    reproAttempts: Number(env.REPRO_ATTEMPTS || "3")
+    reproAttempts: Number(env.REPRO_ATTEMPTS || "3"),
+    hardBudget: env.HARD_BUDGET !== "0"
   };
 }
 
@@ -51,9 +52,18 @@ export function computeConfigSha256(config, mode) {
     reproModel: config.reproModel,
     reproMaxTokens: config.reproMaxTokens,
     reproTimeoutMs: config.reproTimeoutMs,
-    reproAttempts: config.reproAttempts
+    reproAttempts: config.reproAttempts,
+    hardBudget: config.hardBudget
   });
   return createHash("sha256").update(payload).digest("hex");
+}
+
+// Worst-case cost of one call: no cache hits and the full max_tokens output budget.
+// Used by the hard budget gate before a request is sent.
+export function estimateCost(model, inputTokens, outputTokens) {
+  const price = PRICES[model];
+  if (!price) return 0;
+  return ((inputTokens || 0) * price.input + (outputTokens || 0) * price.output) / 1e6;
 }
 
 export function costOf(model, usage) {

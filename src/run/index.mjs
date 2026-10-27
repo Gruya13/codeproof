@@ -78,6 +78,11 @@ export class Budget {
     this.calls = 0;
     this.exceeded = false;
   }
+  // The hard gate calls this before a request is sent, with a worst-case estimate.
+  canAfford(estimatedCostUsd) {
+    if (estimatedCostUsd === null || estimatedCostUsd === undefined) return true;
+    return this.spentUsd + estimatedCostUsd <= this.limitUsd + 1e-9;
+  }
   charge(costUsd) {
     this.calls += 1;
     if (costUsd === null || costUsd === undefined) return;

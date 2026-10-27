@@ -26,6 +26,8 @@ test("cli runs a full mock demo end-to-end and writes a run.json with mode demo 
   assert.equal(run.mock, true);
   assert.equal(typeof run.repo.dirty, "boolean");
   assert.equal(run.repo.dirty, false);
+  assert.equal(run.repo.source, "commit", "ingestion inside a git repository must read the analyzed commit");
+  assert.equal(run.budget.hard, Boolean(process.env.HARD_BUDGET !== "0"));
   assert.equal(run.findings.proposed, 4);
   assert.ok(run.findings.verified >= 1);
 });
