@@ -30,13 +30,13 @@ CodeProof statically reviews a TypeScript/JavaScript repository. L1 checks all c
 
 Tagline: Every finding carries the level of proof it earned: machine-checked citation, adversarial confirmation, or a failing test.
 
-Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), Indie Developer track.
+Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026). Track: **Indie Developer**; theme: **Push the Frontier** (software engineering and developer tooling).
 
 ## Status
 
 The pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`), and the deterministic suite is green on Node 22 and Node 26:
 
-- **Deterministic tests** (`make test`): **120/120** on Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), L3 runner cases (assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), dirty-JSON and truncation handling, fault injection, config-hash determinism.
+- **Deterministic tests** (`make test`): **125/125** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), L3 cases (reproducer must import repository code that exists in the snapshot, forbidden output constructs, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), dirty-JSON and truncation handling, fault injection, config-hash determinism.
 - **Clean clone**: `make clean-clone` (tmpfs + `env -i`) and the Docker variant `make clean-clone-docker` (node:22-alpine) pass `make test`, `make demo`, `make replay` and `make score RUN=reports/golden` on a fresh clone.
 - **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts with no model calls - **9/9 identical, 0 mismatches**.
 - **Calibration benchmark with L3**: **8/8** recall (100%), 100% precision, 0/4 traps, 0 false refutations, **9/9 published findings execution-proven** - golden run and its generated reproducers are committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
@@ -100,8 +100,9 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 
 | Evidence | Artifact | What it shows | What it does not show |
 |---|---|---|---|
-| Calibration benchmark (n=8) | [reports/golden/](reports/golden/) | 7/8 recall (strict L1), 100% precision, 0/4 traps published | a statistical claim; the set was used for calibration |
+| Calibration benchmark (n=8) | [reports/golden/](reports/golden/) | 8/8 recall, 100% precision, 0/4 traps published, 9/9 published findings execution-proven | a statistical claim; the set was used for calibration |
 | Real repository (unjs/ofetch) | [reports/real-world/ofetch/](reports/real-world/ofetch/) | 4/4 verified, all four match open upstream issues/PRs | novel discovery - the commit and issues are public |
+| Real repository (unjs/ofetch) with L3 | [reports/real-world/ofetch/l3/](reports/real-world/ofetch/l3/) | one finding **execution-proven**: generated test reproduces the `isJSONSerializable(null)` TypeError on the analyzed commit (matches upstream issue #571) | one repository, n = 2 runs; the commit and issue are public |
 | Real repository (sindresorhus/execa) | [reports/real-world/execa-lib/](reports/real-world/execa-lib/) | 1 verified finding in run 2 (0 in run 1): Windows shebang parser drops interpreter arguments; hand-checked | a hit-rate claim; 2 runs, public commit, the Windows path was not executed |
 | Real repository (preactjs/preact) | [reports/real-world/preact-src/](reports/real-world/preact-src/) | 1 verified (refQueue not rolled back on a diff error) + 2 uncertain in run 2; 0 in run 1 | a hit-rate claim; static adjudication, error-boundary path only |
 | Real repository (moment/luxon) | [reports/real-world/luxon-src/](reports/real-world/luxon-src/) | 1 verified in both runs (latent internal `uncomputeOrdinal` defect; public dates correct) + 1 organic refuted claim in run 2 | a hit-rate claim; the verified finding is latent, static + public-API adjudication |
@@ -135,7 +136,7 @@ Every published finding in this run has an execution proof: the model wrote a te
 
 **Attempts (no cherry-picking):** eight benchmark attempts. (1) invalidated: ingest included `dist/` build artifacts, fixed in `b0e6568`; (2) valid baseline: 7/8; (3) aborted: scanner output truncated at the token limit, tooling fixed in `d0cde39`; (4) valid post-calibration run: 8/8; (5) F4 validation run before the configuration hash fix: 8/8; (6) F4 final run: 8/8 (previous gate); (7) strict-L1 run: 7/8; (8) strict-L1 + L3 run: 8/8 with 9/9 execution-proven, shown above. Model output is not bit-identical, so the number of attempts is always stated.
 
-This is a calibration set: prompts are tuned on the same fixture, so the numbers are **post-calibration** and n = 8 is not a statistical claim. L3 was measured on this fixture and on the held-out set below; it has not been measured on the real repositories.
+This is a calibration set: prompts are tuned on the same fixture, so the numbers are **post-calibration** and n = 8 is not a statistical claim. L3 was also measured on the held-out set below and on one real repository (ofetch, see [Real-repository execution proof](#real-repository-execution-proof-qualitative)).
 
 ## Held-out generalization (qualitative)
 
@@ -180,6 +181,15 @@ Three more real repositories were run with the same protocol (2 runs per frozen 
 
 The real-API probe round (axios real/injected, fastify, TTL cache, safety, parallel) is committed under [reports/probes/](reports/probes/) with the full protocol and caveats in [REAL-WORLD-ROUND.md](reports/probes/REAL-WORLD-ROUND.md); it is separate from the benchmark and from the four hand-checked repositories above.
 
+## Real-repository execution proof (qualitative)
+
+Two runs of the full pipeline **with L3 enabled** on [unjs/ofetch](https://github.com/unjs/ofetch) at commit `1dbc37f` (19 files / 1,470 LOC) are in [reports/real-world/ofetch/l3/](reports/real-world/ofetch/l3/).
+
+- **Finding (execution-proven):** `isJSONSerializable` compares `typeof value` (a string) to `null`, so `null` falls through to `value.buffer` and throws `TypeError`. The model wrote a test that calls `isJSONSerializable(null)`, catches the thrown error, and asserts it did not throw; the test fails 3/3 with `AssertionError: ... got: TypeError: Cannot read properties of null (reading 'buffer')` on the analyzed commit. The test is committed with its runner output.
+- Same defect as upstream [issue #571](https://github.com/unjs/ofetch/issues/571) (fixed in PRs #572/#636); the model may have seen the public issue, so this is evidence that the gate proves real acknowledged defects by execution, not a novel-discovery claim.
+- A second verified finding (retry/`AbortSignal`) stayed `inconclusive`: a faithful test needs `fetch`, which the sandbox forbids. That is the intended `repro-unavailable` path, not a failed claim.
+- The first run produced a test that triggered the same `TypeError` as an uncaught runtime error and was correctly reported as `inconclusive`; the prompt now asks the model to convert a thrown error into an assertion failure, which made the proof explicit. Both runs are committed. Cost: $0.1634 + $0.4239; n = 2 runs, one repository.
+
 ## Historical recall test (qualitative)
 
 A different question than precision: can the gate find a **known bug** if we replay history? For 9 known fix commits in two mature libraries (vercel/swr, sindresorhus/ky), the analyzed commit is the **parent of the fix** and the scope is the directory of the file the fix changes. Artifacts and per-test costs: [reports/historical/](reports/historical/).
@@ -200,7 +210,7 @@ This repository is created during the hackathon; the first commit is tagged `hac
 - Only direct correctness defects; omission, security and style findings are out of scope for this milestone.
 - No completeness claim: the report shows what passed the gate, not everything that exists in a repository.
 - L1 proves that every citation exists in the commit and matches the declared line range. Whether the claim matches the code is judged by the verifier model and is presented as such.
-- TypeScript/JavaScript only. Scan and verify are static; L3 executes only the generated test in a sandboxed Node process.
+- TypeScript/JavaScript only. Scan and verify are static; L3 executes only the generated test in a sandboxed Node process. The test must import the analyzed repository code and the import must resolve inside the committed snapshot - a self-contained test is rejected at L0.
 - **L3 caveats:** isolation is process-level (Node permission model + network guard + 2 s timeout), not OS-level. TypeScript is executed through Node's built-in type stripping, so a repository that needs its own build step or external dependencies yields `repro-unavailable`. A failing test proves that a concrete input misbehaves on the analyzed commit; combined with the claim it is evidence, not a semantic proof of every consequence. L3 has been measured on the synthetic calibration fixture; on real repositories it may often be unavailable.
 - Hand checks may downgrade the scanner's severity (for example a latent internal defect or an error-path-only issue); such findings are labelled as latent/partial in the corresponding HAND-CHECK.md. Real-repository findings are qualitative anecdotes, never benchmark metrics.
 

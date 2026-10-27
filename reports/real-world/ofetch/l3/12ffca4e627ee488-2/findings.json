@@ -1,0 +1,145 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "isJSONSerializable compares typeof result `t` to null instead of `value`, so null falls through and `value.buffer` throws TypeError instead of returning a boolean.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 24,
+          "path": "src/utils.ts",
+          "snippet": "export function isJSONSerializable(value: any): boolean {\n  if (value === undefined) {\n    return false;\n  }\n  const t = typeof value;\n  if (t === \"string\" || t === \"number\" || t === \"boolean\" || t === null) {\n    return true;\n  }",
+          "startLine": 17
+        },
+        {
+          "endLine": 33,
+          "path": "src/utils.ts",
+          "snippet": "  if (Array.isArray(value)) {\n    return true;\n  }\n  if (value.buffer) {\n    return false;\n  }",
+          "startLine": 28
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "isJSONSerializable crashes on null value due to wrong null check"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 17-24 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at src/utils.ts:22 compares the string `t` (typeof value) to null, so null with typeof \"object\" passes src/utils.ts:25 and src/utils.ts:28 and reaches src/utils.ts:31 where `value.buffer` on null throws a TypeError."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: isJSONSerializable(null) should not throw, got: TypeError: Cannot read properties of null (reading 'buffer')\n+ actual - expected\n\n+ TypeError: Cannot read properties of null (reading 'buffer')\n+     at isJSONSerializable (file:///tmp/codeproof-repro-Uv4PKt/snapshot/src/utils.ts:31:13)\n+     at file:///tmp/codeproof-repro-Uv4PKt/snapshot/.codeproof-repro.test.mjs:7:12\n+     at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n+     at async node:internal/modules/esm/loader:650:26\n+     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n- null\n\n    at file:///tmp/codeproof-repro-Uv4PKt/snapshot/.codeproof-repro.test.mjs:11:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: TypeError: Cannot read properties of null (reading 'buffer')\n      at isJSONSerializable (file:///tmp/codeproof-repro-Uv4PKt/snapshot/src/utils.ts:31:13)\n      at file:///tmp/codeproof-repro-Uv4PKt/snapshot/.codeproof-repro.test.mjs:7:12\n      at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n      at async node:internal/modules/esm/loader:650:26\n      at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5),\n  expected: null,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 102,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: isJSONSerializable(null) should not throw, got: TypeError: Cannot read properties of null (reading 'buffer')\n+ actual - expected\n\n+ TypeError: Cannot read properties of null (reading 'buffer')\n+     at isJSONSerializable (file:///tmp/codeproof-repro-Uv4PKt/snapshot/src/utils.ts:31:13)\n+     at file:///tmp/codeproof-repro-Uv4PKt/snapshot/.codeproof-repro.test.mjs:7:12\n+     at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n+     at async node:internal/modules/esm/loader:650:26\n+     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n- null\n\n    at file:///tmp/codeproof-repro-Uv4PKt/snapshot/.codeproof-repro.test.mjs:11:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: TypeError: Cannot read properties of null (reading 'buffer')\n      at isJSONSerializable (file:///tmp/codeproof-repro-Uv4PKt/snapshot/src/utils.ts:31:13)\n      at file:///tmp/codeproof-repro-Uv4PKt/snapshot/.codeproof-repro.test.mjs:7:12\n      at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n      at async node:internal/modules/esm/loader:650:26\n      at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5),\n  expected: null,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 102,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: isJSONSerializable(null) should not throw, got: TypeError: Cannot read properties of null (reading 'buffer')\n+ actual - expected\n\n+ TypeError: Cannot read properties of null (reading 'buffer')\n+     at isJSONSerializable (file:///tmp/codeproof-repro-Uv4PKt/snapshot/src/utils.ts:31:13)\n+     at file:///tmp/codeproof-repro-Uv4PKt/snapshot/.codeproof-repro.test.mjs:7:12\n+     at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n+     at async node:internal/modules/esm/loader:650:26\n+     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n- null\n\n    at file:///tmp/codeproof-repro-Uv4PKt/snapshot/.codeproof-repro.test.mjs:11:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: TypeError: Cannot read properties of null (reading 'buffer')\n      at isJSONSerializable (file:///tmp/codeproof-repro-Uv4PKt/snapshot/src/utils.ts:31:13)\n      at file:///tmp/codeproof-repro-Uv4PKt/snapshot/.codeproof-repro.test.mjs:7:12\n      at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n      at async node:internal/modules/esm/loader:650:26\n      at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5),\n  expected: null,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 104,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { isJSONSerializable } from \"./src/utils.ts\";\n\nlet thrown = null;\nlet result;\ntry {\n  result = isJSONSerializable(null);\n} catch (error) {\n  thrown = error;\n}\nassert.equal(thrown, null, `isJSONSerializable(null) should not throw, got: ${thrown}`);\nassert.equal(result, true, \"null is JSON serializable, expected true\");\nassert.equal(isJSONSerializable(\"x\"), true);\nassert.equal(isJSONSerializable(42), true);\nassert.equal(isJSONSerializable(true), true);\nassert.equal(isJSONSerializable(undefined), false);\n",
+      "expectedBehavior": "isJSONSerializable(null) returns true without throwing, since null is JSON-serializable and the early primitive branch was intended to return true for it.",
+      "rationale": "The buggy check `t === null` (typeof result compared to null) never matches, so null falls through to `value.buffer` and throws TypeError. Catching the throw and asserting no error plus result===true fails on the buggy code and passes when fixed.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 6989,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1998,
+        "outputTokens": 1423,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.036452
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Retry passes `...context.options` containing the already-aborted timeout signal, and the next attempt combines it with `AbortSignal.any`, so the retried fetch starts already aborted instead of with a fresh timeout.",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "endLine": 178,
+          "path": "src/fetch.ts",
+          "snippet": "    if (context.options.timeout) {\n      context.options.signal = context.options.signal\n        ? AbortSignal.any([\n            AbortSignal.timeout(context.options.timeout),\n            context.options.signal,\n          ])\n        : AbortSignal.timeout(context.options.timeout);\n    }",
+          "startLine": 171
+        },
+        {
+          "endLine": 75,
+          "path": "src/fetch.ts",
+          "snippet": "        // Timeout\n        return $fetchRaw(context.request, {\n          ...context.options,\n          retry: retries - 1,\n        });",
+          "startLine": 71
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Timeout retry reuses aborted signal causing immediate abort"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 171-178 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Mutation at src/fetch.ts:171-178 stores the timeout/AbortSignal.any signal back into context.options.signal, and the retry at src/fetch.ts:71-75 spreads ...context.options into the next $fetchRaw call, so the next attempt re-enters src/fetch.ts:171-178 with an already-aborted signal and AbortSignal.any produces an already-aborted signal."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: forbidden fetch; forbidden URL; forbidden console output (it could mask the real failure class)",
+      "artifacts": null,
+      "durationMs": 4932,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 3196,
+        "outputTokens": 1029,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.033364
+    },
+    "evidenceLevel": "citation+adversarial"
+  }
+]

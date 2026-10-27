@@ -1,0 +1,187 @@
+{
+  "runId": "12ffca4e627ee488",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "8ea131e060a5decc1daf1a00a812ac87e2eedac5aba3902d1eae824e8eac21f8",
+  "repo": {
+    "source": "local",
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/_repo/ofetch",
+    "commit": "1dbc37fd1ceab832fc7c90cad81b1091c95ba563",
+    "dirty": false,
+    "loc": 1470,
+    "files": 19
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    },
+    {
+      "role": "repro",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+    }
+  ],
+  "usage": {
+    "inputTokens": 24008,
+    "outputTokens": 11586,
+    "cachedTokens": 0,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 1,
+        "inputTokens": 14205,
+        "outputTokens": 7956,
+        "cachedTokens": 0,
+        "costUsd": 0.05156925
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 1,
+        "inputTokens": 7919,
+        "outputTokens": 2343,
+        "cachedTokens": 0,
+        "costUsd": 0.078536
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "calls": 1,
+        "inputTokens": 1884,
+        "outputTokens": 1287,
+        "cachedTokens": 0,
+        "costUsd": 0.033276
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 14205,
+        "outputTokens": 7956,
+        "cachedTokens": 0,
+        "costUsd": 0.05156925,
+        "durationMs": 35292,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 1,
+        "inputTokens": 7919,
+        "outputTokens": 2343,
+        "cachedTokens": 0,
+        "costUsd": 0.078536,
+        "durationMs": 12866,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 1884,
+        "outputTokens": 1287,
+        "cachedTokens": 0,
+        "costUsd": 0.033276,
+        "durationMs": 6230,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      }
+    ],
+    "costUsd": 0.16338125,
+    "measured": true
+  },
+  "calls": 3,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-27T19:13:06.306Z",
+    "durationMs": 54772
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 11
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 35293
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 19445
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 5
+    }
+  ],
+  "budget": {
+    "limitUsd": 2,
+    "spentUsd": 0.163381,
+    "measured": true,
+    "exceeded": false,
+    "aborted": false,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 3,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 2,
+    "verified": 1,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "reproduced": 0
+  },
+  "repro": {
+    "enabled": true,
+    "model": "muse-wonder-1.0",
+    "timeoutMs": 2000,
+    "attempts": 3,
+    "counts": {
+      "reproduced": 0,
+      "notReproduced": 0,
+      "unavailable": 0,
+      "inconclusive": 1
+    }
+  },
+  "outputs": {
+    "report": "reports/real-world/ofetch/l3/12ffca4e627ee488/REPORT.md",
+    "findings": "reports/real-world/ofetch/l3/12ffca4e627ee488/findings.json",
+    "rejected": "reports/real-world/ofetch/l3/12ffca4e627ee488/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.1.0"
+  }
+}

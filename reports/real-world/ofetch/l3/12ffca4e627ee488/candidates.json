@@ -1,0 +1,98 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"typeof value never equals null, so null falls through the string/number/boolean check and reaches `value.buffer`, throwing TypeError on null input.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 32, \"path\": \"src/utils.ts\", \"snippet\": \"  const t = typeof value;\\n  if (t === \\\"string\\\" || t === \\\"number\\\" || t === \\\"boolean\\\" || t === null) {\\n    return true;\\n  }\\n  if (t !== \\\"object\\\") {\\n    return false; // bigint, function, symbol, undefined\\n  }\\n  if (Array.isArray(value)) {\\n    return true;\\n  }\\n  if (value.buffer) {\\n    return false;\", \"startLine\": 21}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"isJSONSerializable crashes on null due to `t === null` check\"}, {\"category\": \"correctness\", \"claim\": \"withBase treats any string prefix as already-based, so input '/api-foo' with base '/api' is incorrectly returned unchanged instead of being joined.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 51, \"path\": \"src/utils.url.ts\", \"snippet\": \"export function withBase(input = \\\"\\\", base = \\\"\\\"): string {\\n  if (!base || base === \\\"/\\\") {\\n    return input;\\n  }\\n\\n  const _base = withoutTrailingSlash(base);\\n  if (input.startsWith(_base)) {\\n    return input;\\n  }\\n\\n  return joinURL(_base, input);\", \"startLine\": 40}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"withBase prefix check missing segment boundary\"}, {\"category\": \"correctness\", \"claim\": \"When input URL already has a query string, array values are appended without deleting the existing key while scalar values use set, leaving stale values duplicated.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 99, \"path\": \"src/utils.url.ts\", \"snippet\": \"  for (const [key, value] of Object.entries(query)) {\\n    if (value === undefined) {\\n      searchParams.delete(key);\\n    } else if (Array.isArray(value)) {\\n      for (const item of value) {\\n        searchParams.append(key, normalizeQueryValue(item));\\n      }\\n    } else {\\n      searchParams.set(key, normalizeQueryValue(value));\\n    }\", \"startLine\": 89}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"withQuery array merge appends instead of replacing existing params\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "typeof value never equals null, so null falls through the string/number/boolean check and reaches `value.buffer`, throwing TypeError on null input.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 32,
+            "path": "src/utils.ts",
+            "snippet": "  const t = typeof value;\n  if (t === \"string\" || t === \"number\" || t === \"boolean\" || t === null) {\n    return true;\n  }\n  if (t !== \"object\") {\n    return false; // bigint, function, symbol, undefined\n  }\n  if (Array.isArray(value)) {\n    return true;\n  }\n  if (value.buffer) {\n    return false;",
+            "startLine": 21
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "isJSONSerializable crashes on null due to `t === null` check"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 21-32 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: at src/utils.ts:22 `t === null` compares the string result of `typeof` to null and can never be true, so null (typeof \"object\") passes src/utils.ts:25, fails Array.isArray at src/utils.ts:28, and dereferences null at src/utils.ts:31 via `value.buffer`, throwing a TypeError."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "withBase treats any string prefix as already-based, so input '/api-foo' with base '/api' is incorrectly returned unchanged instead of being joined.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 51,
+            "path": "src/utils.url.ts",
+            "snippet": "export function withBase(input = \"\", base = \"\"): string {\n  if (!base || base === \"/\") {\n    return input;\n  }\n\n  const _base = withoutTrailingSlash(base);\n  if (input.startsWith(_base)) {\n    return input;\n  }\n\n  return joinURL(_base, input);",
+            "startLine": 40
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "withBase prefix check missing segment boundary"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 12 non-blank lines but snippet has 11"
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "When input URL already has a query string, array values are appended without deleting the existing key while scalar values use set, leaving stale values duplicated.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 99,
+            "path": "src/utils.url.ts",
+            "snippet": "  for (const [key, value] of Object.entries(query)) {\n    if (value === undefined) {\n      searchParams.delete(key);\n    } else if (Array.isArray(value)) {\n      for (const item of value) {\n        searchParams.append(key, normalizeQueryValue(item));\n      }\n    } else {\n      searchParams.set(key, normalizeQueryValue(value));\n    }",
+            "startLine": 89
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "withQuery array merge appends instead of replacing existing params"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 11 non-blank lines but snippet has 10"
+      }
+    }
+  ]
+}

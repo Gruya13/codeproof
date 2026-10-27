@@ -1,0 +1,47 @@
+{
+  "status": "inconclusive",
+  "classification": "error",
+  "deterministic": false,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31\n  if (value.buffer) {\n            ^\n\nTypeError: Cannot read properties of null (reading 'buffer')\n    at isJSONSerializable (file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31:13)\n    at file:///tmp/codeproof-repro-mrod7i/snapshot/.codeproof-repro.test.mjs:6:14\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n\nNode.js v26.8.2\n",
+      "durationMs": 100,
+      "classification": "error"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31\n  if (value.buffer) {\n            ^\n\nTypeError: Cannot read properties of null (reading 'buffer')\n    at isJSONSerializable (file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31:13)\n    at file:///tmp/codeproof-repro-mrod7i/snapshot/.codeproof-repro.test.mjs:6:14\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n\nNode.js v26.8.2\n",
+      "durationMs": 98,
+      "classification": "error"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31\n  if (value.buffer) {\n            ^\n\nTypeError: Cannot read properties of null (reading 'buffer')\n    at isJSONSerializable (file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31:13)\n    at file:///tmp/codeproof-repro-mrod7i/snapshot/.codeproof-repro.test.mjs:6:14\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n\nNode.js v26.8.2\n",
+      "durationMs": 100,
+      "classification": "error"
+    }
+  ],
+  "expectedBehavior": "isJSONSerializable(null) returns true (null is JSON-serializable and was intended to hit the early true branch) without throwing",
+  "rationale": "typeof null is 'object', so the buggy `t === null` check never matches; null then reaches `value.buffer` and throws TypeError. Asserting it returns true fails on the buggy code via that throw.",
+  "reason": "test did not demonstrate the claim consistently",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1884,
+    "outputTokens": 1287,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.033276
+}

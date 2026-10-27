@@ -1,0 +1,83 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "typeof value never equals null, so null falls through the string/number/boolean check and reaches `value.buffer`, throwing TypeError on null input.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 32,
+          "path": "src/utils.ts",
+          "snippet": "  const t = typeof value;\n  if (t === \"string\" || t === \"number\" || t === \"boolean\" || t === null) {\n    return true;\n  }\n  if (t !== \"object\") {\n    return false; // bigint, function, symbol, undefined\n  }\n  if (Array.isArray(value)) {\n    return true;\n  }\n  if (value.buffer) {\n    return false;",
+          "startLine": 21
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "isJSONSerializable crashes on null due to `t === null` check"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 21-32 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: at src/utils.ts:22 `t === null` compares the string result of `typeof` to null and can never be true, so null (typeof \"object\") passes src/utils.ts:25, fails Array.isArray at src/utils.ts:28, and dereferences null at src/utils.ts:31 via `value.buffer`, throwing a TypeError."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": "error",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31\n  if (value.buffer) {\n            ^\n\nTypeError: Cannot read properties of null (reading 'buffer')\n    at isJSONSerializable (file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31:13)\n    at file:///tmp/codeproof-repro-mrod7i/snapshot/.codeproof-repro.test.mjs:6:14\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n\nNode.js v26.8.2\n",
+          "durationMs": 100,
+          "classification": "error"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31\n  if (value.buffer) {\n            ^\n\nTypeError: Cannot read properties of null (reading 'buffer')\n    at isJSONSerializable (file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31:13)\n    at file:///tmp/codeproof-repro-mrod7i/snapshot/.codeproof-repro.test.mjs:6:14\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n\nNode.js v26.8.2\n",
+          "durationMs": 98,
+          "classification": "error"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31\n  if (value.buffer) {\n            ^\n\nTypeError: Cannot read properties of null (reading 'buffer')\n    at isJSONSerializable (file:///tmp/codeproof-repro-mrod7i/snapshot/src/utils.ts:31:13)\n    at file:///tmp/codeproof-repro-mrod7i/snapshot/.codeproof-repro.test.mjs:6:14\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)\n\nNode.js v26.8.2\n",
+          "durationMs": 100,
+          "classification": "error"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport { isJSONSerializable } from './src/utils.ts';\n\n// null is valid JSON (JSON.stringify(null) === 'null') and the early-return\n// branch was intended to include it, so it must return true, not throw.\nassert.equal(isJSONSerializable(null), true);\nassert.equal(isJSONSerializable('x'), true);\nassert.equal(isJSONSerializable(42), true);\nassert.equal(isJSONSerializable(true), true);\nassert.equal(isJSONSerializable(undefined), false);\n",
+      "expectedBehavior": "isJSONSerializable(null) returns true (null is JSON-serializable and was intended to hit the early true branch) without throwing",
+      "rationale": "typeof null is 'object', so the buggy `t === null` check never matches; null then reaches `value.buffer` and throws TypeError. Asserting it returns true fails on the buggy code via that throw.",
+      "reason": "test did not demonstrate the claim consistently",
+      "artifacts": null,
+      "durationMs": 6550,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1884,
+        "outputTokens": 1287,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.033276
+    },
+    "evidenceLevel": "citation+adversarial"
+  }
+]
