@@ -1,0 +1,210 @@
+{
+  "repo": {
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/bench/held-out",
+    "commit": "dde34bc5a32fbd9aac3425e704e3a6b2ae226968",
+    "files": 10,
+    "loc": 60
+  },
+  "expected": {
+    "problems": 6,
+    "traps": 4
+  },
+  "candidates": [
+    {
+      "id": "F-001",
+      "title": "cart total overwrites sum instead of accumulating",
+      "severity": "critical",
+      "l1": {
+        "passed": true,
+        "checks": [
+          {
+            "passed": true,
+            "reason": "citation matches lines 3-5 (+/-1 line tolerance)",
+            "lineTolerance": 0
+          }
+        ]
+      },
+      "l2": {
+        "status": "verified",
+        "reason": "The loop at src/cart.js:4 assigns `sum = item.price` on each iteration without adding to the accumulator initialized at src/cart.js:2, so total() returns only the last item's price."
+      },
+      "l3": {
+        "status": "reproduced",
+        "classification": "assertion-failure",
+        "reason": "assertion failed consistently on analyzed commit"
+      }
+    },
+    {
+      "id": "F-002",
+      "title": "clamp swaps min and max bounds",
+      "severity": "high",
+      "l1": {
+        "passed": true,
+        "checks": [
+          {
+            "passed": true,
+            "reason": "citation matches lines 1-2 (+/-1 line tolerance)",
+            "lineTolerance": 0
+          }
+        ]
+      },
+      "l2": {
+        "status": "verified",
+        "reason": "The code at src/clamp.js:2 is Math.min(Math.max(value, max), min), which swaps the bounds and returns min for in-range inputs instead of clamping correctly."
+      },
+      "l3": {
+        "status": "reproduced",
+        "classification": "assertion-failure",
+        "reason": "assertion failed consistently on analyzed commit"
+      }
+    },
+    {
+      "id": "F-003",
+      "title": "findLast returns first match",
+      "severity": "high",
+      "l1": {
+        "passed": true,
+        "checks": [
+          {
+            "passed": true,
+            "reason": "citation matches lines 1-4 (+/-1 line tolerance)",
+            "lineTolerance": 0
+          }
+        ]
+      },
+      "l2": {
+        "status": "verified",
+        "reason": "The loop at src/find-last.js:2 iterates forward from index 0 and src/find-last.js:3 returns on the first predicate match, confirming findLast returns the first rather than last match."
+      },
+      "l3": {
+        "status": "reproduced",
+        "classification": "assertion-failure",
+        "reason": "assertion failed consistently on analyzed commit"
+      }
+    },
+    {
+      "id": "F-004",
+      "title": "paging slice off-by-one drops last element",
+      "severity": "high",
+      "l1": {
+        "passed": true,
+        "checks": [
+          {
+            "passed": true,
+            "reason": "citation matches lines 1-3 (+/-1 line tolerance)",
+            "lineTolerance": 0
+          }
+        ]
+      },
+      "l2": {
+        "status": "verified",
+        "reason": "The code at src/paging.js:3 uses items.slice(start, start + size - 1) with an exclusive end index, returning size-1 elements and omitting the element at start+size-1 from a full page."
+      },
+      "l3": {
+        "status": "reproduced",
+        "classification": "assertion-failure",
+        "reason": "assertion failed consistently on analyzed commit"
+      }
+    },
+    {
+      "id": "F-005",
+      "title": "sort comparator returns boolean instead of number",
+      "severity": "high",
+      "l1": {
+        "passed": true,
+        "checks": [
+          {
+            "passed": true,
+            "reason": "citation matches lines 1-3 (+/-1 line tolerance)",
+            "lineTolerance": 0
+          }
+        ]
+      },
+      "l2": {
+        "status": "verified",
+        "reason": "The comparator at src/sort.js:2 returns the boolean left.price < right.price, which coerces to only 1 or 0 and never a negative value, so it cannot implement a correct numeric ordering."
+      },
+      "l3": {
+        "status": "reproduced",
+        "classification": "assertion-failure",
+        "reason": "assertion failed consistently on analyzed commit"
+      }
+    }
+  ],
+  "configs": [
+    {
+      "name": "scanner only",
+      "metrics": {
+        "published": 5,
+        "truePositives": 5,
+        "falsePositives": 0,
+        "trapLeaks": 0,
+        "recall": 0.833,
+        "precision": 1,
+        "hits": [
+          "problem:H-03",
+          "problem:H-01",
+          "problem:H-06",
+          "problem:H-02",
+          "problem:H-04"
+        ]
+      }
+    },
+    {
+      "name": "+ L1",
+      "metrics": {
+        "published": 5,
+        "truePositives": 5,
+        "falsePositives": 0,
+        "trapLeaks": 0,
+        "recall": 0.833,
+        "precision": 1,
+        "hits": [
+          "problem:H-03",
+          "problem:H-01",
+          "problem:H-06",
+          "problem:H-02",
+          "problem:H-04"
+        ]
+      }
+    },
+    {
+      "name": "+ L1 + L2",
+      "metrics": {
+        "published": 5,
+        "truePositives": 5,
+        "falsePositives": 0,
+        "trapLeaks": 0,
+        "recall": 0.833,
+        "precision": 1,
+        "hits": [
+          "problem:H-03",
+          "problem:H-01",
+          "problem:H-06",
+          "problem:H-02",
+          "problem:H-04"
+        ]
+      }
+    },
+    {
+      "name": "+ L1 + L2 + L3",
+      "metrics": {
+        "published": 5,
+        "truePositives": 5,
+        "falsePositives": 0,
+        "trapLeaks": 0,
+        "recall": 0.833,
+        "precision": 1,
+        "hits": [
+          "problem:H-03",
+          "problem:H-01",
+          "problem:H-06",
+          "problem:H-02",
+          "problem:H-04"
+        ]
+      }
+    }
+  ],
+  "costUsd": 0.277859,
+  "durationMs": 78177
+}

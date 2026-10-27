@@ -135,7 +135,24 @@ Every published finding in this run has an execution proof: the model wrote a te
 
 **Attempts (no cherry-picking):** eight benchmark attempts. (1) invalidated: ingest included `dist/` build artifacts, fixed in `b0e6568`; (2) valid baseline: 7/8; (3) aborted: scanner output truncated at the token limit, tooling fixed in `d0cde39`; (4) valid post-calibration run: 8/8; (5) F4 validation run before the configuration hash fix: 8/8; (6) F4 final run: 8/8 (previous gate); (7) strict-L1 run: 7/8; (8) strict-L1 + L3 run: 8/8 with 9/9 execution-proven, shown above. Model output is not bit-identical, so the number of attempts is always stated.
 
-This is a calibration set: prompts are tuned on the same fixture, so the numbers are **post-calibration** and n = 8 is not a statistical claim. L3 was measured only on this fixture and on the mock demo; it has not been measured on the real repositories below.
+This is a calibration set: prompts are tuned on the same fixture, so the numbers are **post-calibration** and n = 8 is not a statistical claim. L3 was measured on this fixture and on the held-out set below; it has not been measured on the real repositories.
+
+## Held-out generalization (qualitative)
+
+A separate small fixture in [bench/held-out/](bench/held-out/) contains **6 defects and 4 traps** that look suspicious but are correct. It was written **after** the scanner prompt was frozen and was never used for tuning. `make ablation` pushes one candidate set through four gate levels.
+
+| Configuration | Published | True positives | False positives | Trap leaks | Recall | Precision |
+|---|---:|---:|---:|---:|---:|---:|
+| scanner only | 5 | 5 | 0 | 0 | 0.833 | 1 |
+| + L1 | 5 | 5 | 0 | 0 | 0.833 | 1 |
+| + L1 + L2 | 5 | 5 | 0 | 0 | 0.833 | 1 |
+| + L1 + L2 + L3 | 5 | 5 | 0 | 0 | 0.833 | 1 |
+
+- **5/6 held-out defects found**; all 5 are **execution-proven** (generated test fails 3/3 with a matching assertion). The missing defect is an async retry that silently returns `undefined` - the scanner did not propose it in this run.
+- **No trap was published and no false positive appeared**, so the gates did not change the published set on this run; that is a precision result, not evidence that the gates are redundant.
+- **Scanner variance:** an earlier scan of the same fixture (before the fixture was committed, so L1 could not read the commit) proposed all 6 defects; the measured run proposed 5. One run is reported; n = 6 is small.
+- Measured cost of the measured run: **$0.2779**, 78.2 s. Artifacts: [reports/ablations/held-out-dde34bc/](reports/ablations/held-out-dde34bc/) (`ABLATION.md`, `ablation.json` with every candidate's L1/L2/L3 outcome).
+- This is **not a benchmark metric** and is not used for any headline number.
 
 ## Real-repository run (qualitative)
 

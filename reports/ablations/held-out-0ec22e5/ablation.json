@@ -1,0 +1,169 @@
+{
+  "repo": {
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/bench/held-out",
+    "commit": "0ec22e5a10c06a6f362d5fdab5b73413c359dfae",
+    "files": 10,
+    "loc": 60
+  },
+  "expected": {
+    "problems": 6,
+    "traps": 4
+  },
+  "candidates": [
+    {
+      "id": "F-001",
+      "title": "cart total overwrites sum instead of accumulating",
+      "severity": "high",
+      "l1": {
+        "passed": false,
+        "checks": [
+          {
+            "passed": false,
+            "reason": "path is not present in the analyzed commit: src/cart.js"
+          }
+        ]
+      },
+      "l2": null,
+      "l3": null
+    },
+    {
+      "id": "F-002",
+      "title": "clamp min and max arguments swapped",
+      "severity": "high",
+      "l1": {
+        "passed": false,
+        "checks": [
+          {
+            "passed": false,
+            "reason": "path is not present in the analyzed commit: src/clamp.js"
+          }
+        ]
+      },
+      "l2": null,
+      "l3": null
+    },
+    {
+      "id": "F-003",
+      "title": "findLast returns first match instead of last",
+      "severity": "high",
+      "l1": {
+        "passed": false,
+        "checks": [
+          {
+            "passed": false,
+            "reason": "path is not present in the analyzed commit: src/find-last.js"
+          }
+        ]
+      },
+      "l2": null,
+      "l3": null
+    },
+    {
+      "id": "F-004",
+      "title": "paging slice off-by-one drops last item",
+      "severity": "high",
+      "l1": {
+        "passed": false,
+        "checks": [
+          {
+            "passed": false,
+            "reason": "path is not present in the analyzed commit: src/paging.js"
+          }
+        ]
+      },
+      "l2": null,
+      "l3": null
+    },
+    {
+      "id": "F-005",
+      "title": "retry swallows final error and returns undefined",
+      "severity": "high",
+      "l1": {
+        "passed": false,
+        "checks": [
+          {
+            "passed": false,
+            "reason": "path is not present in the analyzed commit: src/retry.js"
+          }
+        ]
+      },
+      "l2": null,
+      "l3": null
+    },
+    {
+      "id": "F-006",
+      "title": "sort comparator returns boolean instead of number",
+      "severity": "high",
+      "l1": {
+        "passed": false,
+        "checks": [
+          {
+            "passed": false,
+            "reason": "path is not present in the analyzed commit: src/sort.js"
+          }
+        ]
+      },
+      "l2": null,
+      "l3": null
+    }
+  ],
+  "configs": [
+    {
+      "name": "scanner only",
+      "metrics": {
+        "published": 6,
+        "truePositives": 6,
+        "falsePositives": 0,
+        "trapLeaks": 0,
+        "recall": 1,
+        "precision": 1,
+        "hits": [
+          "problem:H-03",
+          "problem:H-01",
+          "problem:H-06",
+          "problem:H-02",
+          "problem:H-05",
+          "problem:H-04"
+        ]
+      }
+    },
+    {
+      "name": "+ L1",
+      "metrics": {
+        "published": 0,
+        "truePositives": 0,
+        "falsePositives": 0,
+        "trapLeaks": 0,
+        "recall": 0,
+        "precision": null,
+        "hits": []
+      }
+    },
+    {
+      "name": "+ L1 + L2",
+      "metrics": {
+        "published": 0,
+        "truePositives": 0,
+        "falsePositives": 0,
+        "trapLeaks": 0,
+        "recall": 0,
+        "precision": null,
+        "hits": []
+      }
+    },
+    {
+      "name": "+ L1 + L2 + L3",
+      "metrics": {
+        "published": 0,
+        "truePositives": 0,
+        "falsePositives": 0,
+        "trapLeaks": 0,
+        "recall": 0,
+        "precision": null,
+        "hits": []
+      }
+    }
+  ],
+  "costUsd": 0.01480225,
+  "durationMs": 14762
+}

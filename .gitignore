@@ -14,6 +14,8 @@ reports/*
 !reports/historical/**
 !reports/probes/
 !reports/probes/**
+!reports/ablations/
+!reports/ablations/**
 reports/probes/**/_repo/
 reports/probes/agy-batch3.md
 *.log
