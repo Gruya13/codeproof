@@ -1,0 +1,16 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "reproducer failed L0: testCode must bind at least one named or default symbol from the repository import",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 12002,
+    "outputTokens": 16286,
+    "cachedTokens": 5876
+  },
+  "costUsd": 0.3513992
+}

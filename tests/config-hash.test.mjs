@@ -60,7 +60,7 @@ test("estimateCost is a worst-case upper bound with no cache discount", function
   // 1M input tokens on Spark 1.3 cost 1.25 USD; 1M output tokens cost 4.25 USD.
   assert.equal(estimateCost("muse-spark-1.3", 1_000_000, 0), 1.25);
   assert.equal(estimateCost("muse-spark-1.3", 0, 1_000_000), 4.25);
-  assert.equal(estimateCost("unknown-model", 1000, 1000), 0);
+  assert.equal(estimateCost("unknown-model", 1000, 1000), null, "an unknown price must not be treated as free");
   assert.ok(estimateCost("muse-wonder-1.0", 1000, 1000) > estimateCost("muse-spark-1.3", 1000, 1000));
 });
 

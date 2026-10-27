@@ -1,0 +1,159 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "cachedIndentRegex passes cacheIndex (0..3) to the factory instead of the requested indent, so every indent regex is built with one fewer space than required and indents >4 are capped to {0,3}.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 14,
+          "path": "rules.ts",
+          "snippet": "function cachedIndentRegex(createRegex: (indent: number) => RegExp) {\n  const cache: RegExp[] = [];\n  return (indent: number) => {\n    const cacheIndex = Math.max(0, Math.min(3, indent - 1));\n    let regex = cache[cacheIndex];\n    if (!regex) {\n      regex = createRegex(cacheIndex);\n      cache[cacheIndex] = regex;\n    }\n    return regex;\n  };\n}",
+          "startLine": 3
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Indent regex cache builds wrong {0,n} limit"
+    },
+    "status": "uncertain",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 3-14 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "uncertain",
+      "reason": "The excerpt at rules.ts:3-9 shows cacheIndex is passed to createRegex, but no factory definition or cachedIndentRegex call site is shown, so it cannot be settled whether the factory expects the raw indent or intentionally receives indent-1 (e.g. adds 1 when building {0,n}); the call sites and factory bodies in rules.ts beyond line 74 are needed."
+    },
+    "repro": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Lexer.blockTokens unconditionally sets state.top=true on return, and Tokenizer.list sets state.top=false for items without saving/restoring, so a nested list clobbers the outer list-item context and subsequent tokens in the same item are lexed as top-level.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 310,
+          "path": "Lexer.ts",
+          "snippet": "    this.state.top = true;\n    return tokens;",
+          "startLine": 309
+        },
+        {
+          "endLine": 520,
+          "path": "Tokenizer.ts",
+          "snippet": "      for (const item of list.items) {\n        this.lexer.state.top = false;\n        item.tokens = this.lexer.blockTokens(item.text, []);",
+          "startLine": 518
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Nested blockTokens clobbers state.top"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 309-310 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Lexer.ts:309-310 unconditionally sets this.state.top=true on blockTokens return, Tokenizer.ts:518-520 sets this.lexer.state.top=false before blockTokens for each list item without saving/restoring it, and Lexer.ts:273 gates paragraph lexing on this.state.top, so a nested list's return leaves the outer item lexed as top-level."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'paragraph'\n- 'text'\n\n    at file:///tmp/codeproof-repro-Jt7NIJ/snapshot/.codeproof-repro.test.mjs:21:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'paragraph',\n  expected: 'text',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 149,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'paragraph'\n- 'text'\n\n    at file:///tmp/codeproof-repro-Jt7NIJ/snapshot/.codeproof-repro.test.mjs:21:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'paragraph',\n  expected: 'text',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 169,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'paragraph'\n- 'text'\n\n    at file:///tmp/codeproof-repro-Jt7NIJ/snapshot/.codeproof-repro.test.mjs:21:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'paragraph',\n  expected: 'text',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 151,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport { _Lexer } from './Lexer.ts';\n\nlet caught = null;\nlet tokens;\ntry {\n  const lexer = new _Lexer();\n  // Simulate Tokenizer.list lexing an outer list item: it sets top=false\n  // before calling blockTokens for the item's contents.\n  lexer.state.top = false;\n  tokens = lexer.blockTokens('- inner\\n\\ntail', []);\n} catch (err) {\n  caught = err;\n}\n\nassert.equal(caught, null);\nassert.ok(tokens);\nassert.equal(tokens[0]?.type, 'list');\nconst tail = tokens.find((token) => token.text === 'tail');\nassert.ok(tail, 'tail should be lexed as a separate token after the nested list');\nassert.equal(tail.type, 'text');\n",
+      "expectedBehavior": "After a nested list inside a non-top (list-item) context, following content in the same item is lexed as text, not a top-level paragraph.",
+      "rationale": "Sets lexer.state.top=false as Tokenizer.list does for list items, lexes a nested list followed by a blank-line-separated tail, and asserts the tail token remains type 'text'. Buggy code clobbers top to true after the nested list, producing a 'paragraph' token.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 132672,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 12956,
+        "outputTokens": 19416,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.440144
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "outputLink saves outerInRawBlock but only restores it when bailing on nested links; on the success path the inner inlineTokens raw-block state leaks to the outer inline run and suppresses escaping afterwards.",
+      "confidence": 0.82,
+      "evidence": [
+        {
+          "endLine": 30,
+          "path": "Tokenizer.ts",
+          "snippet": "  const outerInLink = lexer.state.inLink;\n  const outerLinkEmitted = lexer.state.linkEmitted;\n  const outerInRawBlock = lexer.state.inRawBlock;\n  lexer.state.inLink = true;\n  lexer.state.linkEmitted = false;\n  const tokens = lexer.inlineTokens(text);\n  const textHasLink = lexer.state.linkEmitted;\n  lexer.state.linkEmitted = outerLinkEmitted;\n  lexer.state.inLink = outerInLink;",
+          "startLine": 22
+        },
+        {
+          "endLine": 43,
+          "path": "Tokenizer.ts",
+          "snippet": "  if (!isImage) {\n    // CommonMark: \"Links may not contain other links, at any level of nesting.\"\n    // Bail so the caller falls through to text and the inner link is the one kept.\n    // Images are exempt: their text is flattened into an alt attribute.\n    if (textHasLink) {\n      // these tokens are discarded, so undo the raw-block state they opened;\n      // leaving it set would suppress escaping for the text that is re-scanned\n      lexer.state.inRawBlock = outerInRawBlock;\n      return;\n    }\n    lexer.state.linkEmitted = true;\n  }",
+          "startLine": 32
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Link success path leaks inRawBlock state"
+    },
+    "status": "uncertain",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 22-30 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "uncertain",
+      "reason": "verifier output was not parseable JSON (empty model output), finish_reason=length"
+    },
+    "repro": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

@@ -1,0 +1,122 @@
+{
+  "raw": "{\"findings\":[{\"category\":\"correctness\",\"claim\":\"cachedIndentRegex passes cacheIndex (0..3) to the factory instead of the requested indent, so every indent regex is built with one fewer space than required and indents >4 are capped to {0,3}.\",\"confidence\":0.9,\"evidence\":[{\"endLine\":14,\"path\":\"rules.ts\",\"snippet\":\"function cachedIndentRegex(createRegex: (indent: number) => RegExp) {\\n  const cache: RegExp[] = [];\\n  return (indent: number) => {\\n    const cacheIndex = Math.max(0, Math.min(3, indent - 1));\\n    let regex = cache[cacheIndex];\\n    if (!regex) {\\n      regex = createRegex(cacheIndex);\\n      cache[cacheIndex] = regex;\\n    }\\n    return regex;\\n  };\\n}\",\"startLine\":3}],\"id\":\"F-001\",\"kind\":\"direct\",\"severity\":\"high\",\"title\":\"Indent regex cache builds wrong {0,n} limit\"},{\"category\":\"correctness\",\"claim\":\"Lexer.blockTokens unconditionally sets state.top=true on return, and Tokenizer.list sets state.top=false for items without saving/restoring, so a nested list clobbers the outer list-item context and subsequent tokens in the same item are lexed as top-level.\",\"confidence\":0.85,\"evidence\":[{\"endLine\":310,\"path\":\"Lexer.ts\",\"snippet\":\"    this.state.top = true;\\n    return tokens;\",\"startLine\":309},{\"endLine\":520,\"path\":\"Tokenizer.ts\",\"snippet\":\"      for (const item of list.items) {\\n        this.lexer.state.top = false;\\n        item.tokens = this.lexer.blockTokens(item.text, []);\",\"startLine\":518}],\"id\":\"F-002\",\"kind\":\"direct\",\"severity\":\"high\",\"title\":\"Nested blockTokens clobbers state.top\"},{\"category\":\"correctness\",\"claim\":\"outputLink saves outerInRawBlock but only restores it when bailing on nested links; on the success path the inner inlineTokens raw-block state leaks to the outer inline run and suppresses escaping afterwards.\",\"confidence\":0.82,\"evidence\":[{\"endLine\":30,\"path\":\"Tokenizer.ts\",\"snippet\":\"  const outerInLink = lexer.state.inLink;\\n  const outerLinkEmitted = lexer.state.linkEmitted;\\n  const outerInRawBlock = lexer.state.inRawBlock;\\n  lexer.state.inLink = true;\\n  lexer.state.linkEmitted = false;\\n  const tokens = lexer.inlineTokens(text);\\n  const textHasLink = lexer.state.linkEmitted;\\n  lexer.state.linkEmitted = outerLinkEmitted;\\n  lexer.state.inLink = outerInLink;\",\"startLine\":22},{\"endLine\":43,\"path\":\"Tokenizer.ts\",\"snippet\":\"  if (!isImage) {\\n    // CommonMark: \\\"Links may not contain other links, at any level of nesting.\\\"\\n    // Bail so the caller falls through to text and the inner link is the one kept.\\n    // Images are exempt: their text is flattened into an alt attribute.\\n    if (textHasLink) {\\n      // these tokens are discarded, so undo the raw-block state they opened;\\n      // leaving it set would suppress escaping for the text that is re-scanned\\n      lexer.state.inRawBlock = outerInRawBlock;\\n      return;\\n    }\\n    lexer.state.linkEmitted = true;\\n  }\",\"startLine\":32}],\"id\":\"F-003\",\"kind\":\"direct\",\"severity\":\"medium\",\"title\":\"Link success path leaks inRawBlock state\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "cachedIndentRegex passes cacheIndex (0..3) to the factory instead of the requested indent, so every indent regex is built with one fewer space than required and indents >4 are capped to {0,3}.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 14,
+            "path": "rules.ts",
+            "snippet": "function cachedIndentRegex(createRegex: (indent: number) => RegExp) {\n  const cache: RegExp[] = [];\n  return (indent: number) => {\n    const cacheIndex = Math.max(0, Math.min(3, indent - 1));\n    let regex = cache[cacheIndex];\n    if (!regex) {\n      regex = createRegex(cacheIndex);\n      cache[cacheIndex] = regex;\n    }\n    return regex;\n  };\n}",
+            "startLine": 3
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Indent regex cache builds wrong {0,n} limit"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "uncertain",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 3-14 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "uncertain",
+        "reason": "The excerpt at rules.ts:3-9 shows cacheIndex is passed to createRegex, but no factory definition or cachedIndentRegex call site is shown, so it cannot be settled whether the factory expects the raw indent or intentionally receives indent-1 (e.g. adds 1 when building {0,n}); the call sites and factory bodies in rules.ts beyond line 74 are needed."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Lexer.blockTokens unconditionally sets state.top=true on return, and Tokenizer.list sets state.top=false for items without saving/restoring, so a nested list clobbers the outer list-item context and subsequent tokens in the same item are lexed as top-level.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 310,
+            "path": "Lexer.ts",
+            "snippet": "    this.state.top = true;\n    return tokens;",
+            "startLine": 309
+          },
+          {
+            "endLine": 520,
+            "path": "Tokenizer.ts",
+            "snippet": "      for (const item of list.items) {\n        this.lexer.state.top = false;\n        item.tokens = this.lexer.blockTokens(item.text, []);",
+            "startLine": 518
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Nested blockTokens clobbers state.top"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 309-310 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Lexer.ts:309-310 unconditionally sets this.state.top=true on blockTokens return, Tokenizer.ts:518-520 sets this.lexer.state.top=false before blockTokens for each list item without saving/restoring it, and Lexer.ts:273 gates paragraph lexing on this.state.top, so a nested list's return leaves the outer item lexed as top-level."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "outputLink saves outerInRawBlock but only restores it when bailing on nested links; on the success path the inner inlineTokens raw-block state leaks to the outer inline run and suppresses escaping afterwards.",
+        "confidence": 0.82,
+        "evidence": [
+          {
+            "endLine": 30,
+            "path": "Tokenizer.ts",
+            "snippet": "  const outerInLink = lexer.state.inLink;\n  const outerLinkEmitted = lexer.state.linkEmitted;\n  const outerInRawBlock = lexer.state.inRawBlock;\n  lexer.state.inLink = true;\n  lexer.state.linkEmitted = false;\n  const tokens = lexer.inlineTokens(text);\n  const textHasLink = lexer.state.linkEmitted;\n  lexer.state.linkEmitted = outerLinkEmitted;\n  lexer.state.inLink = outerInLink;",
+            "startLine": 22
+          },
+          {
+            "endLine": 43,
+            "path": "Tokenizer.ts",
+            "snippet": "  if (!isImage) {\n    // CommonMark: \"Links may not contain other links, at any level of nesting.\"\n    // Bail so the caller falls through to text and the inner link is the one kept.\n    // Images are exempt: their text is flattened into an alt attribute.\n    if (textHasLink) {\n      // these tokens are discarded, so undo the raw-block state they opened;\n      // leaving it set would suppress escaping for the text that is re-scanned\n      lexer.state.inRawBlock = outerInRawBlock;\n      return;\n    }\n    lexer.state.linkEmitted = true;\n  }",
+            "startLine": 32
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Link success path leaks inRawBlock state"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "uncertain",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 22-30 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "uncertain",
+        "reason": "verifier output was not parseable JSON (empty model output), finish_reason=length"
+      }
+    }
+  ]
+}

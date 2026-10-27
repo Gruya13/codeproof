@@ -4,7 +4,7 @@
 // difference is the architecture (one model vs producer+verifier vs producer+verifier+L3).
 // Spark-only and Wonder-only candidates are additionally checked with L1 (a deterministic check,
 // not a model) so the citation quality of both models can be compared on equal terms.
-import { resolve, join } from "node:path";
+import { basename, resolve, join } from "node:path";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { loadConfig, costOf } from "../src/config.mjs";
 import { ingest, repoDigest, filesWithLineNumbers } from "../src/ingest/index.mjs";
@@ -142,7 +142,7 @@ async function main() {
     },
     variants: results
   };
-  const outDir = resolve(args.out, "ufo-" + String(commit).slice(0, 7) + "-" + Date.now().toString(36));
+  const outDir = resolve(args.out, basename(target) + "-" + String(commit).slice(0, 7) + "-" + Date.now().toString(36));
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, "model-ablation.json"), JSON.stringify(report, null, 2) + "\n");
   const lines = [

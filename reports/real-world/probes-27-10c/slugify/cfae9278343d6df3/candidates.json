@@ -1,0 +1,145 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"String.replace interprets `$` sequences in the replacement string, so a separator like `$&`, `$'`, `$1` or `$$` is expanded instead of inserted literally.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 108, \"path\": \"index.js\", \"snippet\": \"\\tstring = string.replace(patternSlug, options.separator);\", \"startLine\": 108}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Separator `$` patterns expanded in slug replacement\"}, {\"category\": \"correctness\", \"claim\": \"removeMootSeparators passes the user separator as the replacement string to replaceAll, so `$&`/`$'`/`$$` in the separator are expanded instead of inserted literally.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 20, \"path\": \"index.js\", \"snippet\": \"\\treturn string\\n\\t\\t.replaceAll(new RegExp(`(?:${escapedSeparator}){2,}`, 'g'), separator)\\n\\t\\t.replaceAll(new RegExp(`^(?:${escapedSeparator})|(?:${escapedSeparator})$`, 'g'), '');\", \"startLine\": 18}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Separator `$` patterns expanded when collapsing separators\"}, {\"category\": \"correctness\", \"claim\": \"After inserting the separator, all backslashes are unconditionally deleted, so separator `\\\\` is erased and preserveCharacters `\\\\` can never be preserved.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 109, \"path\": \"index.js\", \"snippet\": \"\\tstring = string.replace(patternSlug, options.separator);\\n\\tstring = string.replaceAll('\\\\\\\\', '');\", \"startLine\": 108}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Unconditional backslash deletion defeats separator/preserve\"}, {\"category\": \"correctness\", \"claim\": \"String.replaceAll interprets `$` sequences in the replacement string, so a custom replacement value containing `$&`/`$'`/`$1`/`$$` is expanded instead of inserted literally.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 88, \"path\": \"index.js\", \"snippet\": \"\\t\\tfor (const [key, value] of options.customReplacements) {\\n\\t\\t\\tstring = string.replaceAll(key, value);\\n\\t\\t}\", \"startLine\": 86}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Custom replacement value `$` patterns expanded\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "String.replace interprets `$` sequences in the replacement string, so a separator like `$&`, `$'`, `$1` or `$$` is expanded instead of inserted literally.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 108,
+            "path": "index.js",
+            "snippet": "\tstring = string.replace(patternSlug, options.separator);",
+            "startLine": 108
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Separator `$` patterns expanded in slug replacement"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 108-108 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "At index.js:108 options.separator is passed directly as the string replacement argument to String.replace, so special substitution patterns such as $& , $$ and $' in the separator are expanded per JavaScript semantics instead of being inserted literally, and no function replacer or escaping guards that call."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "removeMootSeparators passes the user separator as the replacement string to replaceAll, so `$&`/`$'`/`$$` in the separator are expanded instead of inserted literally.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 20,
+            "path": "index.js",
+            "snippet": "\treturn string\n\t\t.replaceAll(new RegExp(`(?:${escapedSeparator}){2,}`, 'g'), separator)\n\t\t.replaceAll(new RegExp(`^(?:${escapedSeparator})|(?:${escapedSeparator})$`, 'g'), '');",
+            "startLine": 18
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Separator `$` patterns expanded when collapsing separators"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 18-20 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at index.js:19 passes the raw user separator as the string replacement to replaceAll while index.js:16 only escapes it for the RegExp pattern, so JavaScript replacement patterns such as $$, $&, and $' in the separator will be expanded rather than inserted literally."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "After inserting the separator, all backslashes are unconditionally deleted, so separator `\\` is erased and preserveCharacters `\\` can never be preserved.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 109,
+            "path": "index.js",
+            "snippet": "\tstring = string.replace(patternSlug, options.separator);\n\tstring = string.replaceAll('\\\\', '');",
+            "startLine": 108
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Unconditional backslash deletion defeats separator/preserve"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 108-109 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "At index.js:108 the separator is inserted via replace, then index.js:109 unconditionally runs replaceAll('\\\\','') deleting every backslash, so a '\\\\' separator is erased and a backslash exempted from patternSlug by preserveCharacters handling at index.js:43-50 is likewise deleted with no later restoration."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "String.replaceAll interprets `$` sequences in the replacement string, so a custom replacement value containing `$&`/`$'`/`$1`/`$$` is expanded instead of inserted literally.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 88,
+            "path": "index.js",
+            "snippet": "\t\tfor (const [key, value] of options.customReplacements) {\n\t\t\tstring = string.replaceAll(key, value);\n\t\t}",
+            "startLine": 86
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Custom replacement value `$` patterns expanded"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 86-88 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "At index.js:86-88 the user-supplied replacement value is passed directly as the string replacement argument to string.replaceAll(key, value) with no function replacer or escaping, so JavaScript substitution patterns such as $&, $', $`, and $$ in the value are expanded rather than inserted literally."
+      }
+    }
+  ]
+}

@@ -172,7 +172,7 @@ export function ingest(rootPath, options = {}) {
       throw new Error("file is listed in commit " + commit + " but could not be read from git: " + rel);
     }
     sourceByRel.set(rel, source);
-    const lineCount = source.split("\n").length - (source.endsWith("\n") ? 1 : 0);
+    const lineCount = source === "" ? 0 : source.split("\n").length - (source.endsWith("\n") ? 1 : 0);
     entries.push({ path: rel, loc: lineCount, sha256: sha256Hex(source) });
   }
   const edges = [];

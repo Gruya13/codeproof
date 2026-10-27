@@ -80,7 +80,8 @@ export class Budget {
   }
   // The hard gate calls this before a request is sent, with a worst-case estimate.
   canAfford(estimatedCostUsd) {
-    if (estimatedCostUsd === null || estimatedCostUsd === undefined) return true;
+    // An unmeasurable call cannot be allowed: a zero estimate would silently disable the cap.
+    if (estimatedCostUsd === null || estimatedCostUsd === undefined || !Number.isFinite(estimatedCostUsd)) return false;
     return this.spentUsd + estimatedCostUsd <= this.limitUsd + 1e-9;
   }
   charge(costUsd) {

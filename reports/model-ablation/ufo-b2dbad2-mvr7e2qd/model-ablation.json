@@ -1,0 +1,141 @@
+{
+  "repo": {
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/src",
+    "commit": "b2dbad2812b6b0a157875401b631109e6ab8d29c",
+    "files": 13,
+    "loc": 2626
+  },
+  "codeproofRun": "reports/self-analysis/afe3e8dd50723038",
+  "codeProof": {
+    "published": 6,
+    "verified": 5,
+    "reproduced": 4,
+    "findings": [
+      {
+        "id": "F-001",
+        "title": "Unknown model bypasses hard budget estimate",
+        "where": "config.mjs:63-67, run/index.mjs:82-85"
+      },
+      {
+        "id": "F-002",
+        "title": "Unknown model cost never charged to budget",
+        "where": "config.mjs:69-75, run/index.mjs:86-91"
+      },
+      {
+        "id": "F-003",
+        "title": "Multiline imports fake reproducer usage check",
+        "where": "repro/index.mjs:107-113"
+      },
+      {
+        "id": "F-004",
+        "title": "Trailing-comma fix corrupts string contents",
+        "where": "run/json.mjs:3-14"
+      },
+      {
+        "id": "F-005",
+        "title": "Missing excerpts treated as in-context",
+        "where": "verify/index.mjs:134-135"
+      },
+      {
+        "id": "F-006",
+        "title": "Empty file counted as one line",
+        "where": "ingest/index.mjs:175-175"
+      }
+    ]
+  },
+  "variants": [
+    {
+      "variant": "spark-only",
+      "model": "muse-spark-1.3",
+      "run": 1,
+      "calls": 1,
+      "durationMs": 54079,
+      "costUsd": 0.07024345,
+      "usage": {
+        "inputTokens": 36703,
+        "outputTokens": 15204,
+        "cachedTokens": 36593
+      },
+      "finishReason": "stop",
+      "candidates": 4,
+      "l0Valid": 4,
+      "l1Valid": 4,
+      "overlapWithCodeProof": 4,
+      "newVsCodeProof": 0,
+      "findings": [
+        {
+          "id": "F-001",
+          "title": "Unknown model estimated as free cost",
+          "claim": "estimateCost returns 0 for an unknown model instead of a worst-case upper bound, so the hard-budget gate in agents/index.mjs never blocks and Budget.charge (costOf returns null) never accrues, bypassing the spend cap.",
+          "severity": "high",
+          "where": "config.mjs:63-67",
+          "l1": true,
+          "evidence": [
+            {
+              "endLine": 67,
+              "path": "config.mjs",
+              "snippet": "export function estimateCost(model, inputTokens, outputTokens) {\n  const price = PRICES[model];\n  if (!price) return 0;\n  return ((inputTokens || 0) * price.input + (outputTokens || 0) * price.output) / 1e6;\n}",
+              "startLine": 63
+            }
+          ]
+        },
+        {
+          "id": "F-002",
+          "title": "Multiline imports bypass used-symbol check",
+          "claim": "Body is built by deleting only single-line import statements, so a multi-line import leaves its named list and trailing from-line in the body. An imported symbol that is never used outside imports still matches the leftover text, so validateReproL0 incorrectly passes tests that never call repository code.",
+          "severity": "high",
+          "where": "repro/index.mjs:107-113",
+          "l1": true,
+          "evidence": [
+            {
+              "endLine": 113,
+              "path": "repro/index.mjs",
+              "snippet": "export function extractUsedImportedSymbols(testCode) {\n  const source = String(testCode || \"\");\n  const body = source.replace(/^\\s*import\\b.*$/gm, \"\");\n  return extractImportedIdentifiers(source).filter(function (name) {\n    return new RegExp(\"\\\\b\" + name.replace(/[.*+?^${}()|[\\]\\\\]/g, \"\\\\$&\") + \"\\\\b\").test(body);\n  });\n}",
+              "startLine": 107
+            }
+          ]
+        },
+        {
+          "id": "F-003",
+          "title": "Missing excerpts reported as present",
+          "claim": "isSnippetInExcerpts returns true when excerpts is not a string, asserting presence when there is no context to check against. Missing context should be false, otherwise a strong refute can be treated as in-context.",
+          "severity": "medium",
+          "where": "verify/index.mjs:134-137",
+          "l1": true,
+          "evidence": [
+            {
+              "endLine": 137,
+              "path": "verify/index.mjs",
+              "snippet": "export function isSnippetInExcerpts(snippet, excerpts) {\n  if (typeof excerpts !== \"string\") return true;\n  const snippetLines = normalizeSnippetLines(snippet);\n  if (snippetLines.length === 0) return false;",
+              "startLine": 134
+            }
+          ]
+        },
+        {
+          "id": "F-004",
+          "title": "Empty file counted as one line",
+          "claim": "Empty source splits to [\"\"] with length 1 and does not end with newline, so lineCount computes as 1 instead of 0. Empty files are counted as 1 LOC and inflate repo LOC.",
+          "severity": "low",
+          "where": "ingest/index.mjs:170-176",
+          "l1": true,
+          "evidence": [
+            {
+              "endLine": 176,
+              "path": "ingest/index.mjs",
+              "snippet": "    const source = fromCommit ? readFileAtCommit(rootPath, commit, rel) : readFileSync(join(rootPath, rel), \"utf8\");\n    if (source === null) {\n      throw new Error(\"file is listed in commit \" + commit + \" but could not be read from git: \" + rel);\n    }\n    sourceByRel.set(rel, source);\n    const lineCount = source.split(\"\\n\").length - (source.endsWith(\"\\n\") ? 1 : 0);\n    entries.push({ path: rel, loc: lineCount, sha256: sha256Hex(source) });",
+              "startLine": 170
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "variant": "wonder-only",
+      "model": "muse-wonder-1.0",
+      "run": 1,
+      "error": "unparseable output: empty model output",
+      "durationMs": 330351,
+      "costUsd": 1.1132456000000002
+    }
+  ]
+}

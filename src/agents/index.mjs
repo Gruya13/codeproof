@@ -29,7 +29,10 @@ export function createAgents(options) {
   }
 
   function hardBudgetError(estimated, model) {
-    const error = new Error("hard budget: the next call on " + model + " could cost up to " + estimated.toFixed(4) + " USD, which does not fit into the remaining " + Math.max(0, budget.limitUsd - budget.spentUsd).toFixed(4) + " USD");
+    const detail = estimated === null || estimated === undefined
+      ? "the price of model " + model + " is unknown"
+      : "the next call on " + model + " could cost up to " + estimated.toFixed(4) + " USD, which does not fit into the remaining " + Math.max(0, budget.limitUsd - budget.spentUsd).toFixed(4) + " USD";
+    const error = new Error("hard budget: " + detail);
     error.code = "BUDGET_EXCEEDED";
     return error;
   }
@@ -41,6 +44,11 @@ export function createAgents(options) {
   }
 
   function record(role, result) {
+    if (!options.mock && (result.costUsd === null || result.costUsd === undefined)) {
+      const error = new Error("the price of model " + result.model + " is unknown; refusing to run with an unmeasured budget");
+      error.code = "UNKNOWN_PRICE";
+      throw error;
+    }
     callLog.push({
       role: role,
       model: result.model,

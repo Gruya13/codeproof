@@ -1,0 +1,261 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "parseLocale fallback for hyphenated locales drops isLocal/object and recurses without them, so a local lookup can mutate the global locale L.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 29,
+          "path": "index.js",
+          "snippet": "    const presetSplit = preset.split('-')\n    if (!l && presetSplit.length > 1) {\n      return parseLocale(presetSplit[0])\n    }",
+          "startLine": 26
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Locale fallback loses isLocal flag"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 26-29 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Recursion at index.js:28 calls parseLocale(presetSplit[0]) without isLocal/object, so a local call such as index.js:87 with isLocal=true recurses with isLocal undefined and reaches index.js:35 where L is mutated."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: testCode must bind at least one named or default symbol from the repository import",
+      "artifacts": null,
+      "durationMs": 103755,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 12002,
+        "outputTokens": 16286,
+        "cachedTokens": 5876
+      },
+      "costUsd": 0.3513992
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Duration ISO string parsing slices from group 2 onward and never applies the leading -/+ sign captured in group 1, so negative durations parse as positive.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 12,
+          "path": "plugin/duration/index.js",
+          "snippet": "const DURATION_REGEX_PARSE = /^(-|\\+)?P(?:([-+]?[0-9,.]*)Y)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)W)?(?:([-+]?[0-9,.]*)D)?(?:T(?:([-+]?[0-9,.]*)H)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)S)?)?$/",
+          "startLine": 12
+        },
+        {
+          "endLine": 96,
+          "path": "plugin/duration/index.js",
+          "snippet": "    if (typeof input === 'string') {\n      const d = input.match(DURATION_REGEX_PARSE)\n      if (d) {\n        const properties = d.slice(2)\n        const numberD = properties.map(value => (value != null ? Number(value) : 0));\n        [\n          this.$d.years,\n          this.$d.months,\n          this.$d.weeks,\n          this.$d.days,\n          this.$d.hours,\n          this.$d.minutes,\n          this.$d.seconds\n        ] = numberD",
+          "startLine": 83
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Duration ISO leading sign ignored"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 12-12 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The regex at plugin/duration/index.js:12 captures the leading sign in group 1, but parsing at plugin/duration/index.js:86 uses d.slice(2) and maps those values directly to the duration fields without applying d[1], so a leading '-' is discarded and negative durations parse as positive."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-BhjAJc/snapshot/constant' imported from /tmp/codeproof-repro-BhjAJc/snapshot/index.js\nDid you mean to import \"./constant.js\"?\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-BhjAJc/snapshot/constant'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 66,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-BhjAJc/snapshot/constant' imported from /tmp/codeproof-repro-BhjAJc/snapshot/index.js\nDid you mean to import \"./constant.js\"?\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-BhjAJc/snapshot/constant'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 64,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-BhjAJc/snapshot/constant' imported from /tmp/codeproof-repro-BhjAJc/snapshot/index.js\nDid you mean to import \"./constant.js\"?\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-BhjAJc/snapshot/constant'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 66,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport dayjs from './index.js';\nimport duration from './plugin/duration/index.js';\n\ndayjs.extend(duration);\n\nlet error = null;\nlet negativeDay;\nlet negativeTime;\nlet positiveDay;\ntry {\n  negativeDay = dayjs.duration('-P1D');\n  negativeTime = dayjs.duration('-PT2H30M');\n  positiveDay = dayjs.duration('P1D');\n} catch (e) {\n  error = e;\n}\nassert.equal(error, null);\nassert.equal(negativeDay.asDays(), -1);\nassert.equal(negativeDay.days(), -1);\nassert.equal(negativeDay.asMilliseconds(), -86400000);\nassert.equal(negativeDay.toISOString(), '-P1D');\nassert.equal(negativeTime.asMinutes(), -150);\nassert.equal(negativeTime.hours(), -2);\nassert.equal(negativeTime.minutes(), -30);\nassert.equal(positiveDay.asDays(), 1);\n",
+      "expectedBehavior": "dayjs.duration('-P1D') should be negative: asDays() -1, asMilliseconds() -86400000, toISOString() '-P1D'; '-PT2H30M' should be -150 minutes with hours -2 and minutes -30, while unsigned durations remain positive.",
+      "rationale": "The duration regex captures the leading sign in group 1 but parsing slices from group 2, so the sign is dropped. The test imports the real dayjs core and duration plugin and asserts negative ISO durations retain their sign, which fails when the sign is ignored.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 32067,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 4741,
+        "outputTokens": 4984,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.118644
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Adding/subtracting a Duration to a Dayjs drops the weeks component because manipulateDuration never adds weeks.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 268,
+          "path": "plugin/duration/index.js",
+          "snippet": "const manipulateDuration = (date, duration, k) =>\n  date.add(duration.years() * k, 'y')\n    .add(duration.months() * k, 'M')\n    .add(duration.days() * k, 'd')\n    .add(duration.hours() * k, 'h')\n    .add(duration.minutes() * k, 'm')\n    .add(duration.seconds() * k, 's')\n    .add(duration.milliseconds() * k, 'ms')",
+          "startLine": 261
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Duration weeks omitted when adding to date"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 261-268 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "manipulateDuration at plugin/duration/index.js:261-268 adds years, months, days, hours, minutes, seconds and milliseconds but no weeks, while weeks() is a distinct accessor at plugin/duration/index.js:253-254 separate from days() at plugin/duration/index.js:251-252, and Dayjs add/subtract delegate duration inputs to it at plugin/duration/index.js:282-295."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-z6SWMj/snapshot/constant' imported from /tmp/codeproof-repro-z6SWMj/snapshot/index.js\nDid you mean to import \"./constant.js\"?\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-z6SWMj/snapshot/constant'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 72,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-z6SWMj/snapshot/constant' imported from /tmp/codeproof-repro-z6SWMj/snapshot/index.js\nDid you mean to import \"./constant.js\"?\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-z6SWMj/snapshot/constant'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 66,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-z6SWMj/snapshot/constant' imported from /tmp/codeproof-repro-z6SWMj/snapshot/index.js\nDid you mean to import \"./constant.js\"?\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-z6SWMj/snapshot/constant'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 64,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict'\nimport dayjs from './index.js'\nimport duration from './plugin/duration/index.js'\n\ndayjs.extend(duration)\n\nconst start = dayjs('2023-01-01')\nconst twoWeeksObj = dayjs.duration({ weeks: 2 })\nconst twoWeeksIso = dayjs.duration('P2W')\n\nassert.equal(twoWeeksObj.weeks(), 2)\nassert.equal(twoWeeksIso.weeks(), 2)\nassert.equal(start.add(twoWeeksObj).format('YYYY-MM-DD'), '2023-01-15')\nassert.equal(start.add(twoWeeksIso).format('YYYY-MM-DD'), '2023-01-15')\nassert.equal(dayjs('2023-01-15').subtract(dayjs.duration({ weeks: 1 })).format('YYYY-MM-DD'), '2023-01-08')\nassert.equal(dayjs('2023-01-15').subtract(dayjs.duration('P1W')).format('YYYY-MM-DD'), '2023-01-08')\nassert.equal(start.add(dayjs.duration({ weeks: 1, days: 1 })).format('YYYY-MM-DD'), '2023-01-09')\n",
+      "expectedBehavior": "Adding a Duration with a weeks component to a Dayjs date advances the date by 7 days per week (and subtracting moves it back), e.g. 2023-01-01 + P2W = 2023-01-15.",
+      "rationale": "manipulateDuration in plugin/duration/index.js adds years/months/days/hours/minutes/seconds/ms but never weeks, so a Duration parsed from {weeks} or 'P2W' (where days() is 0 and weeks() is stored separately) is dropped when added to a date.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 59838,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 9166,
+        "outputTokens": 10292,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.2415768
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "utc valueOf uses || for $localOffset, so a stored local offset of 0 is treated as falsy and replaced with getTimezoneOffset, producing a wrong timestamp.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 123,
+          "path": "plugin/utc/index.js",
+          "snippet": "  proto.valueOf = function () {\n    const addedOffset = !this.$utils().u(this.$offset)\n      ? this.$offset + (this.$x.$localOffset || this.$d.getTimezoneOffset()) : 0\n    return this.$d.valueOf() - (addedOffset * MILLISECONDS_A_MINUTE)\n  }",
+          "startLine": 119
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "high",
+      "title": "UTC valueOf falsy handling of zero offset"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 119-123 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at plugin/utc/index.js:121 uses (this.$x.$localOffset || this.$d.getTimezoneOffset()), so a stored 0 from plugin/utc/index.js:107 is falsy and replaced by getTimezoneOffset(), changing addedOffset and the returned timestamp at plugin/utc/index.js:122 when that value differs."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "run budget exceeded before the reproducer call"
+    },
+    "evidenceLevel": "citation+adversarial"
+  }
+]

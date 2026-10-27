@@ -247,10 +247,12 @@ async function main() {
   const published = [];
   let l1Rejected = 0;
   let aborted = false;
+  let abortReason = null;
   let safetyFilterHit = false;
   let skippedFindings = [];
-  function skipFrom(index) {
+  function skipFrom(index, reason) {
     aborted = true;
+    if (reason && !abortReason) abortReason = reason;
     skippedFindings = proposed.slice(index).map(function (finding) { return finding.id; });
     for (let remaining = index; remaining < proposed.length; remaining++) {
       candidateAudit[scanValidated.acceptedIndices[remaining]].status = "skipped-budget";
@@ -265,7 +267,7 @@ async function main() {
       outcome = await verifyOne({ finding: finding, repo: repoForGate, agent: agents, excerpts: verifierContext.text, maxTokens: config.verifierMaxTokens });
     } catch (error) {
       if (error.code === "BUDGET_EXCEEDED") {
-        skipFrom(index);
+        skipFrom(index, error.message);
         break;
       }
       if (error.code === "CONTENT_FILTERED") {
@@ -306,8 +308,8 @@ async function main() {
           });
         } catch (error) {
           if (error.code === "BUDGET_EXCEEDED") {
-            skipFrom(index + 1);
-            repro = { status: "inconclusive", classification: null, attempts: [], deterministic: false, testCode: "", expectedBehavior: "", rationale: "", reason: "run budget exceeded before the reproducer call" };
+            skipFrom(index + 1, error.message);
+            repro = { status: "inconclusive", classification: null, attempts: [], deterministic: false, testCode: "", expectedBehavior: "", rationale: "", reason: "budget gate refused the reproducer call: " + error.message };
           } else {
             repro = { status: "inconclusive", classification: null, attempts: [], deterministic: false, testCode: "", expectedBehavior: "", rationale: "", reason: "reproducer failed: " + error.message };
           }
@@ -399,6 +401,7 @@ async function main() {
       exceeded: budget.exceeded,
       hard: Boolean(config.hardBudget),
       aborted: aborted,
+      abortReason: abortReason,
       skippedFindings: skippedFindings
     },
     findings: counts,
@@ -441,7 +444,7 @@ async function main() {
   console.log("  Cache:    " + totalCached + " of " + totalInput + " input tokens served from cache");
   console.log("");
   if (aborted) {
-    console.error("ERROR: run budget exceeded: spent " + budget.spentUsd + " USD of " + budget.limitUsd);
+    console.error("ERROR: run aborted by the budget gate: " + (abortReason || ("budget exceeded: spent " + budget.spentUsd + " USD of " + budget.limitUsd)));
     process.exitCode = 1;
   } else if (safetyFilterHit) {
     console.error("ERROR: safety filter blocked the model response on one or more findings");

@@ -62,7 +62,7 @@ export function computeConfigSha256(config, mode) {
 // Used by the hard budget gate before a request is sent.
 export function estimateCost(model, inputTokens, outputTokens) {
   const price = PRICES[model];
-  if (!price) return 0;
+  if (!price) return null; // unknown price: the caller must fail closed, never assume zero
   return ((inputTokens || 0) * price.input + (outputTokens || 0) * price.output) / 1e6;
 }
 

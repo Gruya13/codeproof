@@ -1,0 +1,16 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "reproducer failed L0: forbidden file write; forbidden ambient runtime module",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 3431,
+    "outputTokens": 3991,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.0926168
+}

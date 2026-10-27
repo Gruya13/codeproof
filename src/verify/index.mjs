@@ -132,7 +132,8 @@ export function normalizeSnippetLines(snippet) {
 }
 
 export function isSnippetInExcerpts(snippet, excerpts) {
-  if (typeof excerpts !== "string") return true;
+  // No context means we cannot claim the snippet is present: fail closed.
+  if (typeof excerpts !== "string") return false;
   const snippetLines = normalizeSnippetLines(snippet);
   if (snippetLines.length === 0) return false;
 

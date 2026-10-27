@@ -99,6 +99,20 @@ test("agents: the hard budget allows a call that fits", async function () {
   assert.equal(calls.length, 1);
 });
 
+test("agents: an unknown model price fails closed at the hard gate and at accounting", async function () {
+  // hard gate: the estimate is null, so the call is refused before the network
+  const hard = makeAgents({ scannerModel: "unknown-model-9", hardBudget: true });
+  await assert.rejects(hard.agents.complete({ role: "scanner", messages: [{ role: "user", content: "x" }], maxTokens: 10 }), function (error) {
+    return error.code === "BUDGET_EXCEEDED" && /price of model/.test(error.message);
+  });
+  assert.equal(hard.calls.length, 0, "an unknown price must be refused before spending");
+  // accounting without the hard gate: a null cost is not silently ignored
+  const soft = makeAgents({ scannerModel: "unknown-model-9", hardBudget: false });
+  await assert.rejects(soft.agents.complete({ role: "scanner", messages: [{ role: "user", content: "x" }], maxTokens: 10 }), function (error) {
+    return error.code === "UNKNOWN_PRICE";
+  });
+});
+
 test("agents: mock mode returns the scenario and still records the call", async function (t) {
   const dir = mkdtempSync(join(tmpdir(), "agents-mock-"));
   t.after(function () { rmSync(dir, { recursive: true, force: true }); });

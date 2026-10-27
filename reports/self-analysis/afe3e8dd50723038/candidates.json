@@ -1,0 +1,228 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"estimateCost returns 0 for unknown models, so the hard-budget gate computes a zero worst-case cost and canAfford always passes, breaking the spend cap.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 67, \"path\": \"config.mjs\", \"snippet\": \"export function estimateCost(model, inputTokens, outputTokens) {\\n  const price = PRICES[model];\\n  if (!price) return 0;\\n  return ((inputTokens || 0) * price.input + (outputTokens || 0) * price.output) / 1e6;\\n}\", \"startLine\": 63}, {\"endLine\": 85, \"path\": \"run/index.mjs\", \"snippet\": \"  canAfford(estimatedCostUsd) {\\n    if (estimatedCostUsd === null || estimatedCostUsd === undefined) return true;\\n    return this.spentUsd + estimatedCostUsd <= this.limitUsd + 1e-9;\\n  }\", \"startLine\": 82}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"Unknown model bypasses hard budget estimate\"}, {\"category\": \"correctness\", \"claim\": \"costOf returns null for unknown models and Budget.charge ignores null, so spentUsd never increases and exceeded is never set.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 75, \"path\": \"config.mjs\", \"snippet\": \"export function costOf(model, usage) {\\n  const price = PRICES[model];\\n  if (!price) return null;\\n  const cached = Math.min(usage.cachedTokens || 0, usage.inputTokens || 0);\\n  const uncached = Math.max(0, (usage.inputTokens || 0) - cached);\\n  return (uncached * price.input + cached * price.cachedInput + (usage.outputTokens || 0) * price.output) / 1e6;\\n}\", \"startLine\": 69}, {\"endLine\": 91, \"path\": \"run/index.mjs\", \"snippet\": \"  charge(costUsd) {\\n    this.calls += 1;\\n    if (costUsd === null || costUsd === undefined) return;\\n    this.spentUsd += costUsd;\\n    if (this.spentUsd > this.limitUsd + 1e-9) this.exceeded = true;\\n  }\", \"startLine\": 86}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"Unknown model cost never charged to budget\"}, {\"category\": \"correctness\", \"claim\": \"Body stripping only removes single lines starting with import, so continuation lines of a multiline import remain and imported names falsely test as used outside imports.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 113, \"path\": \"repro/index.mjs\", \"snippet\": \"export function extractUsedImportedSymbols(testCode) {\\n  const source = String(testCode || \\\"\\\");\\n  const body = source.replace(/^\\\\s*import\\\\b.*$/gm, \\\"\\\");\\n  return extractImportedIdentifiers(source).filter(function (name) {\\n    return new RegExp(\\\"\\\\\\\\b\\\" + name.replace(/[.*+?^${}()|[\\\\]\\\\\\\\]/g, \\\"\\\\\\\\$&\\\") + \\\"\\\\\\\\b\\\").test(body);\\n  });\\n}\", \"startLine\": 107}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Multiline imports fake reproducer usage check\"}, {\"category\": \"correctness\", \"claim\": \"Trailing-comma replacement runs without respecting string literals, so valid JSON containing comma-brace inside a string is corrupted before parsing.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 14, \"path\": \"run/json.mjs\", \"snippet\": \"function parseRelaxed(candidate) {\\n  try {\\n    return JSON.parse(candidate);\\n  } catch (error) {\\n    // fall through to trailing-comma tolerance\\n  }\\n  try {\\n    return JSON.parse(candidate.replace(/,\\\\s*([}\\\\]])/g, \\\"$1\\\"));\\n  } catch (error) {\\n    return undefined;\\n  }\\n}\", \"startLine\": 3}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Trailing-comma fix corrupts string contents\"}, {\"category\": \"correctness\", \"claim\": \"When verifier excerpts are missing the function returns true, reporting a snippet as present in context instead of absent.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 135, \"path\": \"verify/index.mjs\", \"snippet\": \"export function isSnippetInExcerpts(snippet, excerpts) {\\n  if (typeof excerpts !== \\\"string\\\") return true;\", \"startLine\": 134}], \"id\": \"F-005\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Missing excerpts treated as in-context\"}, {\"category\": \"correctness\", \"claim\": \"Empty source splits to one element and does not end with newline, so an empty file is counted as 1 LOC instead of 0.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 175, \"path\": \"ingest/index.mjs\", \"snippet\": \"    const lineCount = source.split(\\\"\\\\n\\\").length - (source.endsWith(\\\"\\\\n\\\") ? 1 : 0);\", \"startLine\": 175}], \"id\": \"F-006\", \"kind\": \"direct\", \"severity\": \"low\", \"title\": \"Empty file counted as one line\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "estimateCost returns 0 for unknown models, so the hard-budget gate computes a zero worst-case cost and canAfford always passes, breaking the spend cap.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 67,
+            "path": "config.mjs",
+            "snippet": "export function estimateCost(model, inputTokens, outputTokens) {\n  const price = PRICES[model];\n  if (!price) return 0;\n  return ((inputTokens || 0) * price.input + (outputTokens || 0) * price.output) / 1e6;\n}",
+            "startLine": 63
+          },
+          {
+            "endLine": 85,
+            "path": "run/index.mjs",
+            "snippet": "  canAfford(estimatedCostUsd) {\n    if (estimatedCostUsd === null || estimatedCostUsd === undefined) return true;\n    return this.spentUsd + estimatedCostUsd <= this.limitUsd + 1e-9;\n  }",
+            "startLine": 82
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "Unknown model bypasses hard budget estimate"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 63-67 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: config.mjs:65 returns 0 when PRICES[model] is missing, agents/index.mjs:28 forwards that value from estimateRequestCost, and agents/index.mjs:105-108 only rejects when budget.canAfford(estimate) fails, so an unknown env-configured model (config.mjs:19) gets a zero worst-case estimate that satisfies run/index.mjs:84 while spent remains within the limit."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "costOf returns null for unknown models and Budget.charge ignores null, so spentUsd never increases and exceeded is never set.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 75,
+            "path": "config.mjs",
+            "snippet": "export function costOf(model, usage) {\n  const price = PRICES[model];\n  if (!price) return null;\n  const cached = Math.min(usage.cachedTokens || 0, usage.inputTokens || 0);\n  const uncached = Math.max(0, (usage.inputTokens || 0) - cached);\n  return (uncached * price.input + cached * price.cachedInput + (usage.outputTokens || 0) * price.output) / 1e6;\n}",
+            "startLine": 69
+          },
+          {
+            "endLine": 91,
+            "path": "run/index.mjs",
+            "snippet": "  charge(costUsd) {\n    this.calls += 1;\n    if (costUsd === null || costUsd === undefined) return;\n    this.spentUsd += costUsd;\n    if (this.spentUsd > this.limitUsd + 1e-9) this.exceeded = true;\n  }",
+            "startLine": 86
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "Unknown model cost never charged to budget"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 69-75 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "costOf returns null for an unpriced model at config.mjs:71, and Budget.charge returns at run/index.mjs:88 before increasing spentUsd at run/index.mjs:89 or setting exceeded at run/index.mjs:90, while agents/index.mjs:58 charges result.costUsd through that path."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Body stripping only removes single lines starting with import, so continuation lines of a multiline import remain and imported names falsely test as used outside imports.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 113,
+            "path": "repro/index.mjs",
+            "snippet": "export function extractUsedImportedSymbols(testCode) {\n  const source = String(testCode || \"\");\n  const body = source.replace(/^\\s*import\\b.*$/gm, \"\");\n  return extractImportedIdentifiers(source).filter(function (name) {\n    return new RegExp(\"\\\\b\" + name.replace(/[.*+?^${}()|[\\]\\\\]/g, \"\\\\$&\") + \"\\\\b\").test(body);\n  });\n}",
+            "startLine": 107
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Multiline imports fake reproducer usage check"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 107-113 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at repro/index.mjs:109 strips only single lines via /^\\s*import\\b.*$/gm, while repro/index.mjs:85-92 extracts identifiers from multiline named-import blocks, so continuation-line names remain in body and satisfy the usage test at repro/index.mjs:110-111."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Trailing-comma replacement runs without respecting string literals, so valid JSON containing comma-brace inside a string is corrupted before parsing.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 14,
+            "path": "run/json.mjs",
+            "snippet": "function parseRelaxed(candidate) {\n  try {\n    return JSON.parse(candidate);\n  } catch (error) {\n    // fall through to trailing-comma tolerance\n  }\n  try {\n    return JSON.parse(candidate.replace(/,\\s*([}\\]])/g, \"$1\"));\n  } catch (error) {\n    return undefined;\n  }\n}",
+            "startLine": 3
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Trailing-comma fix corrupts string contents"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "moderate",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 3-14 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "refute",
+        "reason": "Valid JSON is not corrupted because run/json.mjs:5 returns JSON.parse(candidate) on success, so the replacement at run/json.mjs:10 only runs after that parse has already failed.",
+        "mode": "weak"
+      }
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "When verifier excerpts are missing the function returns true, reporting a snippet as present in context instead of absent.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 135,
+            "path": "verify/index.mjs",
+            "snippet": "export function isSnippetInExcerpts(snippet, excerpts) {\n  if (typeof excerpts !== \"string\") return true;",
+            "startLine": 134
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Missing excerpts treated as in-context"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 134-135 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at verify/index.mjs:135 returns true whenever excerpts is not a string, so missing excerpts (undefined/null) are treated as containing the snippet."
+      }
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Empty source splits to one element and does not end with newline, so an empty file is counted as 1 LOC instead of 0.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 175,
+            "path": "ingest/index.mjs",
+            "snippet": "    const lineCount = source.split(\"\\n\").length - (source.endsWith(\"\\n\") ? 1 : 0);",
+            "startLine": 175
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "low",
+        "title": "Empty file counted as one line"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 175-175 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "At ingest/index.mjs:175, ''.split('\\n') has length 1 and ''.endsWith('\\n') is false, so lineCount computes to 1, and the loop at ingest/index.mjs:169-176 contains no empty-source guard before assigning that loc."
+      }
+    }
+  ]
+}

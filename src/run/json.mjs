@@ -1,5 +1,31 @@
 const FENCE = String.fromCharCode(96).repeat(3);
 
+// Remove commas that sit right before a closing bracket, but only outside string literals:
+// a naive regex would corrupt valid JSON like {"a": ",}"} while trying to be tolerant.
+function stripTrailingCommas(source) {
+  let out = "";
+  let inString = false;
+  let escaped = false;
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    if (inString) {
+      out += char;
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === '"') inString = false;
+      continue;
+    }
+    if (char === '"') { inString = true; out += char; continue; }
+    if (char === ",") {
+      let next = index + 1;
+      while (next < source.length && /\s/.test(source[next])) next += 1;
+      if (source[next] === "}" || source[next] === "]") continue;
+    }
+    out += char;
+  }
+  return out;
+}
+
 function parseRelaxed(candidate) {
   try {
     return JSON.parse(candidate);
@@ -7,7 +33,7 @@ function parseRelaxed(candidate) {
     // fall through to trailing-comma tolerance
   }
   try {
-    return JSON.parse(candidate.replace(/,\s*([}\]])/g, "$1"));
+    return JSON.parse(stripTrailingCommas(candidate));
   } catch (error) {
     return undefined;
   }

@@ -1,0 +1,207 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"parseLocale fallback for hyphenated locales drops isLocal/object and recurses without them, so a local lookup can mutate the global locale L.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 29, \"path\": \"index.js\", \"snippet\": \"    const presetSplit = preset.split('-')\\n    if (!l && presetSplit.length > 1) {\\n      return parseLocale(presetSplit[0])\\n    }\", \"startLine\": 26}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Locale fallback loses isLocal flag\"}, {\"category\": \"correctness\", \"claim\": \"Duration ISO string parsing slices from group 2 onward and never applies the leading -/+ sign captured in group 1, so negative durations parse as positive.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 12, \"path\": \"plugin/duration/index.js\", \"snippet\": \"const DURATION_REGEX_PARSE = /^(-|\\\\+)?P(?:([-+]?[0-9,.]*)Y)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)W)?(?:([-+]?[0-9,.]*)D)?(?:T(?:([-+]?[0-9,.]*)H)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)S)?)?$/\", \"startLine\": 12}, {\"endLine\": 96, \"path\": \"plugin/duration/index.js\", \"snippet\": \"    if (typeof input === 'string') {\\n      const d = input.match(DURATION_REGEX_PARSE)\\n      if (d) {\\n        const properties = d.slice(2)\\n        const numberD = properties.map(value => (value != null ? Number(value) : 0));\\n        [\\n          this.$d.years,\\n          this.$d.months,\\n          this.$d.weeks,\\n          this.$d.days,\\n          this.$d.hours,\\n          this.$d.minutes,\\n          this.$d.seconds\\n        ] = numberD\", \"startLine\": 83}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Duration ISO leading sign ignored\"}, {\"category\": \"correctness\", \"claim\": \"Adding/subtracting a Duration to a Dayjs drops the weeks component because manipulateDuration never adds weeks.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 268, \"path\": \"plugin/duration/index.js\", \"snippet\": \"const manipulateDuration = (date, duration, k) =>\\n  date.add(duration.years() * k, 'y')\\n    .add(duration.months() * k, 'M')\\n    .add(duration.days() * k, 'd')\\n    .add(duration.hours() * k, 'h')\\n    .add(duration.minutes() * k, 'm')\\n    .add(duration.seconds() * k, 's')\\n    .add(duration.milliseconds() * k, 'ms')\", \"startLine\": 261}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Duration weeks omitted when adding to date\"}, {\"category\": \"correctness\", \"claim\": \"utc valueOf uses || for $localOffset, so a stored local offset of 0 is treated as falsy and replaced with getTimezoneOffset, producing a wrong timestamp.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 123, \"path\": \"plugin/utc/index.js\", \"snippet\": \"  proto.valueOf = function () {\\n    const addedOffset = !this.$utils().u(this.$offset)\\n      ? this.$offset + (this.$x.$localOffset || this.$d.getTimezoneOffset()) : 0\\n    return this.$d.valueOf() - (addedOffset * MILLISECONDS_A_MINUTE)\\n  }\", \"startLine\": 119}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"UTC valueOf falsy handling of zero offset\"}, {\"category\": \"correctness\", \"claim\": \"offsetFromString does not default missing minutes, so hour-only offsets like +02 produce NaN instead of 120 minutes.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 4, \"path\": \"plugin/utc/index.js\", \"snippet\": \"const REGEX_VALID_OFFSET_FORMAT = /[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?/g\\nconst REGEX_OFFSET_HOURS_MINUTES_FORMAT = /([+-]|\\\\d\\\\d)/g\", \"startLine\": 3}, {\"endLine\": 20, \"path\": \"plugin/utc/index.js\", \"snippet\": \"  const [indicator, hoursOffset, minutesOffset] = `${offset[0]}`.match(REGEX_OFFSET_HOURS_MINUTES_FORMAT) || ['-', 0, 0]\\n  const totalOffsetInMinutes = (+hoursOffset * 60) + (+minutesOffset)\\n\\n  if (totalOffsetInMinutes === 0) {\\n    return 0\\n  }\\n\\n  return indicator === '+' ? totalOffsetInMinutes : -totalOffsetInMinutes\", \"startLine\": 13}], \"id\": \"F-005\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Hour-only UTC offset parses to NaN\"}, {\"category\": \"correctness\", \"claim\": \"Fractional seconds are truncated to 3 chars without scaling, so .5 becomes 5ms instead of 500ms and .56 becomes 56ms instead of 560ms.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 78, \"path\": \"index.js\", \"snippet\": \"      const m = d[2] - 1 || 0\\n      const ms = (d[7] || '0').substring(0, 3)\\n      if (utc) {\\n        return new Date(Date.UTC(d[1], m, d[3]\\n          || 1, d[4] || 0, d[5] || 0, d[6] || 0, ms))\\n      }\\n      return new Date(d[1], m, d[3]\\n        || 1, d[4] || 0, d[5] || 0, d[6] || 0, ms)\", \"startLine\": 71}], \"id\": \"F-006\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Millisecond fraction not scaled to milliseconds\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "parseLocale fallback for hyphenated locales drops isLocal/object and recurses without them, so a local lookup can mutate the global locale L.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 29,
+            "path": "index.js",
+            "snippet": "    const presetSplit = preset.split('-')\n    if (!l && presetSplit.length > 1) {\n      return parseLocale(presetSplit[0])\n    }",
+            "startLine": 26
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Locale fallback loses isLocal flag"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 26-29 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Recursion at index.js:28 calls parseLocale(presetSplit[0]) without isLocal/object, so a local call such as index.js:87 with isLocal=true recurses with isLocal undefined and reaches index.js:35 where L is mutated."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Duration ISO string parsing slices from group 2 onward and never applies the leading -/+ sign captured in group 1, so negative durations parse as positive.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 12,
+            "path": "plugin/duration/index.js",
+            "snippet": "const DURATION_REGEX_PARSE = /^(-|\\+)?P(?:([-+]?[0-9,.]*)Y)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)W)?(?:([-+]?[0-9,.]*)D)?(?:T(?:([-+]?[0-9,.]*)H)?(?:([-+]?[0-9,.]*)M)?(?:([-+]?[0-9,.]*)S)?)?$/",
+            "startLine": 12
+          },
+          {
+            "endLine": 96,
+            "path": "plugin/duration/index.js",
+            "snippet": "    if (typeof input === 'string') {\n      const d = input.match(DURATION_REGEX_PARSE)\n      if (d) {\n        const properties = d.slice(2)\n        const numberD = properties.map(value => (value != null ? Number(value) : 0));\n        [\n          this.$d.years,\n          this.$d.months,\n          this.$d.weeks,\n          this.$d.days,\n          this.$d.hours,\n          this.$d.minutes,\n          this.$d.seconds\n        ] = numberD",
+            "startLine": 83
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Duration ISO leading sign ignored"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 12-12 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The regex at plugin/duration/index.js:12 captures the leading sign in group 1, but parsing at plugin/duration/index.js:86 uses d.slice(2) and maps those values directly to the duration fields without applying d[1], so a leading '-' is discarded and negative durations parse as positive."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Adding/subtracting a Duration to a Dayjs drops the weeks component because manipulateDuration never adds weeks.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 268,
+            "path": "plugin/duration/index.js",
+            "snippet": "const manipulateDuration = (date, duration, k) =>\n  date.add(duration.years() * k, 'y')\n    .add(duration.months() * k, 'M')\n    .add(duration.days() * k, 'd')\n    .add(duration.hours() * k, 'h')\n    .add(duration.minutes() * k, 'm')\n    .add(duration.seconds() * k, 's')\n    .add(duration.milliseconds() * k, 'ms')",
+            "startLine": 261
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Duration weeks omitted when adding to date"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 261-268 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "manipulateDuration at plugin/duration/index.js:261-268 adds years, months, days, hours, minutes, seconds and milliseconds but no weeks, while weeks() is a distinct accessor at plugin/duration/index.js:253-254 separate from days() at plugin/duration/index.js:251-252, and Dayjs add/subtract delegate duration inputs to it at plugin/duration/index.js:282-295."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "utc valueOf uses || for $localOffset, so a stored local offset of 0 is treated as falsy and replaced with getTimezoneOffset, producing a wrong timestamp.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 123,
+            "path": "plugin/utc/index.js",
+            "snippet": "  proto.valueOf = function () {\n    const addedOffset = !this.$utils().u(this.$offset)\n      ? this.$offset + (this.$x.$localOffset || this.$d.getTimezoneOffset()) : 0\n    return this.$d.valueOf() - (addedOffset * MILLISECONDS_A_MINUTE)\n  }",
+            "startLine": 119
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "high",
+        "title": "UTC valueOf falsy handling of zero offset"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 119-123 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at plugin/utc/index.js:121 uses (this.$x.$localOffset || this.$d.getTimezoneOffset()), so a stored 0 from plugin/utc/index.js:107 is falsy and replaced by getTimezoneOffset(), changing addedOffset and the returned timestamp at plugin/utc/index.js:122 when that value differs."
+      }
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "offsetFromString does not default missing minutes, so hour-only offsets like +02 produce NaN instead of 120 minutes.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 4,
+            "path": "plugin/utc/index.js",
+            "snippet": "const REGEX_VALID_OFFSET_FORMAT = /[+-]\\d\\d(?::?\\d\\d)?/g\nconst REGEX_OFFSET_HOURS_MINUTES_FORMAT = /([+-]|\\d\\d)/g",
+            "startLine": 3
+          },
+          {
+            "endLine": 20,
+            "path": "plugin/utc/index.js",
+            "snippet": "  const [indicator, hoursOffset, minutesOffset] = `${offset[0]}`.match(REGEX_OFFSET_HOURS_MINUTES_FORMAT) || ['-', 0, 0]\n  const totalOffsetInMinutes = (+hoursOffset * 60) + (+minutesOffset)\n\n  if (totalOffsetInMinutes === 0) {\n    return 0\n  }\n\n  return indicator === '+' ? totalOffsetInMinutes : -totalOffsetInMinutes",
+            "startLine": 13
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Hour-only UTC offset parses to NaN"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "skipped-budget"
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Fractional seconds are truncated to 3 chars without scaling, so .5 becomes 5ms instead of 500ms and .56 becomes 56ms instead of 560ms.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 78,
+            "path": "index.js",
+            "snippet": "      const m = d[2] - 1 || 0\n      const ms = (d[7] || '0').substring(0, 3)\n      if (utc) {\n        return new Date(Date.UTC(d[1], m, d[3]\n          || 1, d[4] || 0, d[5] || 0, d[6] || 0, ms))\n      }\n      return new Date(d[1], m, d[3]\n        || 1, d[4] || 0, d[5] || 0, d[6] || 0, ms)",
+            "startLine": 71
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Millisecond fraction not scaled to milliseconds"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "skipped-budget"
+    }
+  ]
+}

@@ -85,6 +85,11 @@ test("L0 requires an assertion and a call to an imported repository symbol", fun
   const valid = validateReproL0(reproResponse("import assert from 'node:assert/strict';\nimport { value } from './sample.js';\nassert.equal(value, 7);"));
   assert.equal(valid.ok, true, valid.errors.join("; "));
   assert.deepEqual(extractImportedIdentifiers("import { a, b as c } from './x.js';\nimport d from './y.js';\nimport * as ns from './z.js';").sort(), ["a", "c", "d", "ns"]);
+  // a multi-line import must not leave its continuation lines in the body
+  const multiline = "import assert from 'node:assert/strict';\nimport {\n  alphaSymbol,\n  betaSymbol\n} from './sample.js';\nassert.ok(true);";
+  const multilineResult = validateReproL0(reproResponse(multiline));
+  assert.equal(multilineResult.ok, false);
+  assert.match(multilineResult.errors.join(" "), /call an imported repository symbol/);
 });
 
 test("L0 rejects non-deterministic and ambient constructs", function () {

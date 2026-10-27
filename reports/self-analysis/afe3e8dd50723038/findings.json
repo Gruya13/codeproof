@@ -1,0 +1,421 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "estimateCost returns 0 for unknown models, so the hard-budget gate computes a zero worst-case cost and canAfford always passes, breaking the spend cap.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 67,
+          "path": "config.mjs",
+          "snippet": "export function estimateCost(model, inputTokens, outputTokens) {\n  const price = PRICES[model];\n  if (!price) return 0;\n  return ((inputTokens || 0) * price.input + (outputTokens || 0) * price.output) / 1e6;\n}",
+          "startLine": 63
+        },
+        {
+          "endLine": 85,
+          "path": "run/index.mjs",
+          "snippet": "  canAfford(estimatedCostUsd) {\n    if (estimatedCostUsd === null || estimatedCostUsd === undefined) return true;\n    return this.spentUsd + estimatedCostUsd <= this.limitUsd + 1e-9;\n  }",
+          "startLine": 82
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "Unknown model bypasses hard budget estimate"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 63-67 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: config.mjs:65 returns 0 when PRICES[model] is missing, agents/index.mjs:28 forwards that value from estimateRequestCost, and agents/index.mjs:105-108 only rejects when budget.canAfford(estimate) fails, so an unknown env-configured model (config.mjs:19) gets a zero worst-case estimate that satisfies run/index.mjs:84 while spent remains within the limit."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model must not be free: estimateCost returned 0\n    at file:///tmp/codeproof-repro-OltYSC/snapshot/.codeproof-repro.test.mjs:18:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model must not be free: estimateCost returned 0\n    at file:///tmp/codeproof-repro-OltYSC/snapshot/.codeproof-repro.test.mjs:18:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 61,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model must not be free: estimateCost returned 0\n    at file:///tmp/codeproof-repro-OltYSC/snapshot/.codeproof-repro.test.mjs:18:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 57,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { estimateCost, costOf } from \"./config.mjs\";\n\n// Sanity: a known model has a positive worst-case estimate.\nassert.ok(estimateCost(\"muse-spark-1.3\", 1000, 1000) > 0);\n// Existing contract in the same file: costOf signals unknown models with null, not $0.\nassert.equal(costOf(\"no-such-model\", { inputTokens: 1000, cachedTokens: 0, outputTokens: 1000 }), null);\n\nlet est;\nlet thrown = null;\ntry {\n  est = estimateCost(\"no-such-model\", 1000000, 1000000);\n} catch (e) {\n  thrown = e;\n}\n// Unknown model must not produce a $0 worst-case that canAfford() always passes:\n// it must signal unknown (null), be positive/Infinity, or fail safe by throwing.\nassert.ok(\n  thrown !== null || est === null || est === Infinity || (typeof est === \"number\" && est > 0),\n  `unknown model must not be free: estimateCost returned ${String(est)}`\n);\nassert.notEqual(est, 0);\n",
+      "expectedBehavior": "estimateCost for an unknown model must not return 0 (free); it must signal unknown like costOf (null), return a positive/Infinity worst-case, or throw, so the hard-budget gate cannot always pass.",
+      "rationale": "Buggy estimateCost returns 0 for unknown models, so spent+0 <= limit always passes. Test asserts a non-zero/unknown signal using the real config.mjs API; it fails on the buggy 0 return.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 26003,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1816,
+        "outputTokens": 4526,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0968568
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "costOf returns null for unknown models and Budget.charge ignores null, so spentUsd never increases and exceeded is never set.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 75,
+          "path": "config.mjs",
+          "snippet": "export function costOf(model, usage) {\n  const price = PRICES[model];\n  if (!price) return null;\n  const cached = Math.min(usage.cachedTokens || 0, usage.inputTokens || 0);\n  const uncached = Math.max(0, (usage.inputTokens || 0) - cached);\n  return (uncached * price.input + cached * price.cachedInput + (usage.outputTokens || 0) * price.output) / 1e6;\n}",
+          "startLine": 69
+        },
+        {
+          "endLine": 91,
+          "path": "run/index.mjs",
+          "snippet": "  charge(costUsd) {\n    this.calls += 1;\n    if (costUsd === null || costUsd === undefined) return;\n    this.spentUsd += costUsd;\n    if (this.spentUsd > this.limitUsd + 1e-9) this.exceeded = true;\n  }",
+          "startLine": 86
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "Unknown model cost never charged to budget"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 69-75 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "costOf returns null for an unpriced model at config.mjs:71, and Budget.charge returns at run/index.mjs:88 before increasing spentUsd at run/index.mjs:89 or setting exceeded at run/index.mjs:90, while agents/index.mjs:58 charges result.costUsd through that path."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model bypassed budget: cost=null spentUsd=0 exceeded=false\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-4XAos2/snapshot/.codeproof-repro.test.mjs:31:8 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 61,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model bypassed budget: cost=null spentUsd=0 exceeded=false\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-4XAos2/snapshot/.codeproof-repro.test.mjs:31:8 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model bypassed budget: cost=null spentUsd=0 exceeded=false\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-4XAos2/snapshot/.codeproof-repro.test.mjs:31:8 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 60,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { costOf } from \"./config.mjs\";\n\n// Unknown-model usage must not be free: it must be charged to the budget\n// (spentUsd increases and/or exceeded trips) or fail closed with an error.\nlet cost = null;\nlet costError = null;\ntry {\n  cost = costOf(\"unknown-model-xyz\", { inputTokens: 1000000, outputTokens: 1000000, cachedTokens: 0 });\n} catch (error) {\n  costError = error;\n}\nlet budget = null;\nlet chargeError = null;\ntry {\n  const run = await import(\"./run/index.mjs\");\n  const Budget = run.Budget ?? Object.values(run).find((v) => typeof v === \"function\" && v.prototype && typeof v.prototype.charge === \"function\");\n  if (Budget) {\n    for (const args of [[0.01], [0.01, true], [{ limitUsd: 0.01, budgetUsd: 0.01, hardBudget: true }]]) {\n      try {\n        const candidate = new Budget(...args);\n        if (candidate && typeof candidate.charge === \"function\" && \"spentUsd\" in candidate) { budget = candidate; break; }\n      } catch {}\n    }\n  }\n  if (budget) {\n    try { budget.charge(cost); } catch (error) { chargeError = error; }\n  }\n} catch {}\nconst charged = budget ? budget.spentUsd > 0 || budget.exceeded === true : typeof cost === \"number\" && cost > 0;\nassert.equal(costError !== null || chargeError !== null || charged, true, `unknown model bypassed budget: cost=${cost} spentUsd=${budget?.spentUsd} exceeded=${budget?.exceeded}`);\n",
+      "expectedBehavior": "Unknown-model usage must not bypass the budget: charging it should increase spentUsd and/or trip exceeded, or fail closed instead of silently returning/ignoring a null cost.",
+      "rationale": "Exercises the real costOf -> Budget.charge path cited in the finding. On the analyzed code costOf returns null and charge ignores null, so spentUsd stays 0 and exceeded stays false, causing the final assertion to fail.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 39283,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1868,
+        "outputTokens": 7492,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.1563848
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Body stripping only removes single lines starting with import, so continuation lines of a multiline import remain and imported names falsely test as used outside imports.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 113,
+          "path": "repro/index.mjs",
+          "snippet": "export function extractUsedImportedSymbols(testCode) {\n  const source = String(testCode || \"\");\n  const body = source.replace(/^\\s*import\\b.*$/gm, \"\");\n  return extractImportedIdentifiers(source).filter(function (name) {\n    return new RegExp(\"\\\\b\" + name.replace(/[.*+?^${}()|[\\]\\\\]/g, \"\\\\$&\") + \"\\\\b\").test(body);\n  });\n}",
+          "startLine": 107
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Multiline imports fake reproducer usage check"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 107-113 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at repro/index.mjs:109 strips only single lines via /^\\s*import\\b.*$/gm, while repro/index.mjs:85-92 extracts identifiers from multiline named-import blocks, so continuation-line names remain in body and satisfy the usage test at repro/index.mjs:110-111."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   'alphaSymbol',\n+   'betaSymbol'\n+ ]\n- []\n\n    at file:///tmp/codeproof-repro-zvtXtJ/snapshot/.codeproof-repro.test.mjs:13:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'alphaSymbol', 'betaSymbol' ],\n  expected: [],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 61,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   'alphaSymbol',\n+   'betaSymbol'\n+ ]\n- []\n\n    at file:///tmp/codeproof-repro-zvtXtJ/snapshot/.codeproof-repro.test.mjs:13:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'alphaSymbol', 'betaSymbol' ],\n  expected: [],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   'alphaSymbol',\n+   'betaSymbol'\n+ ]\n- []\n\n    at file:///tmp/codeproof-repro-zvtXtJ/snapshot/.codeproof-repro.test.mjs:13:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'alphaSymbol', 'betaSymbol' ],\n  expected: [],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 64,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport { extractUsedImportedSymbols } from './repro/index.mjs';\n\nconst multilineOnly = [\n  'import {',\n  '  alphaSymbol,',\n  '  betaSymbol',\n  \"} from './repro/index.mjs';\",\n  'const value = 42;',\n  'assert.equal(value, 42);'\n].join('\\n');\n\nassert.deepStrictEqual(extractUsedImportedSymbols(multilineOnly), []);\n\nconst multilineUsed = [\n  'import {',\n  '  alphaSymbol,',\n  '  betaSymbol',\n  \"} from './repro/index.mjs';\",\n  'alphaSymbol(value);'\n].join('\\n');\n\nassert.deepStrictEqual(extractUsedImportedSymbols(multilineUsed), ['alphaSymbol']);\n",
+      "expectedBehavior": "extractUsedImportedSymbols returns [] when imported names appear only in a multiline import, and returns only the genuinely used name when one imported name is used after the multiline import.",
+      "rationale": "Body stripping uses /^\\s*import\\b.*$/gm, removing only the first line of a multiline import. Continuation lines containing alphaSymbol/betaSymbol remain in the body, so the word-boundary check falsely reports them as used. The test supplies multiline imports with no post-import use and with only alphaSymbol used.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 18316,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 7511,
+        "outputTokens": 3314,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0953968
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Trailing-comma replacement runs without respecting string literals, so valid JSON containing comma-brace inside a string is corrupted before parsing.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 14,
+          "path": "run/json.mjs",
+          "snippet": "function parseRelaxed(candidate) {\n  try {\n    return JSON.parse(candidate);\n  } catch (error) {\n    // fall through to trailing-comma tolerance\n  }\n  try {\n    return JSON.parse(candidate.replace(/,\\s*([}\\]])/g, \"$1\"));\n  } catch (error) {\n    return undefined;\n  }\n}",
+          "startLine": 3
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Trailing-comma fix corrupts string contents"
+    },
+    "status": "moderate",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 3-14 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "refute",
+      "reason": "Valid JSON is not corrupted because run/json.mjs:5 returns JSON.parse(candidate) on success, so the replacement at run/json.mjs:10 only runs after that parse has already failed.",
+      "mode": "weak"
+    },
+    "repro": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "When verifier excerpts are missing the function returns true, reporting a snippet as present in context instead of absent.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 135,
+          "path": "verify/index.mjs",
+          "snippet": "export function isSnippetInExcerpts(snippet, excerpts) {\n  if (typeof excerpts !== \"string\") return true;",
+          "startLine": 134
+        }
+      ],
+      "id": "F-005",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Missing excerpts treated as in-context"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 134-135 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at verify/index.mjs:135 returns true whenever excerpts is not a string, so missing excerpts (undefined/null) are treated as containing the snippet."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-dSKYBL/snapshot/.codeproof-repro.test.mjs:12:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-dSKYBL/snapshot/.codeproof-repro.test.mjs:12:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-dSKYBL/snapshot/.codeproof-repro.test.mjs:12:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 59,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { isSnippetInExcerpts } from \"./verify/index.mjs\";\n\nconst snippet = \"const answer = 42;\";\nconst excerpts = \"10 | const answer = 42;\\n11 | return answer;\";\n\n// Controls: behavior with real string excerpts.\nassert.equal(isSnippetInExcerpts(snippet, excerpts), true);\nassert.equal(isSnippetInExcerpts(\"const missing = 1;\", excerpts), false);\n\n// Missing excerpts cannot contain the snippet, so they must be absent.\nassert.equal(isSnippetInExcerpts(snippet, undefined), false);\nassert.equal(isSnippetInExcerpts(snippet, null), false);\nassert.equal(isSnippetInExcerpts(snippet), false);\nassert.equal(isSnippetInExcerpts(snippet, 42), false);\nassert.equal(isSnippetInExcerpts(snippet, {}), false);\n",
+      "expectedBehavior": "isSnippetInExcerpts returns false when excerpts are missing or not a string, instead of reporting the snippet as present in context.",
+      "rationale": "Directly exercises the exported isSnippetInExcerpts guard cited at verify/index.mjs:135, with positive and negative controls for string excerpts.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 9270,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 6446,
+        "outputTokens": 1308,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.051944
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Empty source splits to one element and does not end with newline, so an empty file is counted as 1 LOC instead of 0.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 175,
+          "path": "ingest/index.mjs",
+          "snippet": "    const lineCount = source.split(\"\\n\").length - (source.endsWith(\"\\n\") ? 1 : 0);",
+          "startLine": 175
+        }
+      ],
+      "id": "F-006",
+      "kind": "direct",
+      "severity": "low",
+      "title": "Empty file counted as one line"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 175-175 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At ingest/index.mjs:175, ''.split('\\n') has length 1 and ''.endsWith('\\n') is false, so lineCount computes to 1, and the loop at ingest/index.mjs:169-176 contains no empty-source guard before assigning that loc."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: forbidden file write; forbidden ambient runtime module",
+      "artifacts": null,
+      "durationMs": 23445,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 3431,
+        "outputTokens": 3991,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0926168
+    },
+    "evidenceLevel": "citation+adversarial"
+  }
+]

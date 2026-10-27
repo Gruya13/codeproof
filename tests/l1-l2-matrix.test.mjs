@@ -9,6 +9,7 @@ import {
   checkCitation,
   applyVerdict,
   buildVerifierMessages,
+  isSnippetInExcerpts,
   STRONG_REFUTE_RESPONSE_FORMAT,
   VERIFIER_SYSTEM_PROMPT,
   validateVerdictsL0,
@@ -661,6 +662,12 @@ test("T-B14b: characterization — unrelated counter-citation inside context sti
   assert.equal(result.verifier.counterEvidenceL1.passed, true);
   assert.equal(result.verifier.counterEvidencePolicy.inContext, true);
   assert.equal(result.verifier.counterEvidencePolicy.distinctFromCitation, true);
+});
+
+test("isSnippetInExcerpts fails closed when there is no excerpt context", function () {
+  assert.equal(isSnippetInExcerpts("const value = 1;", null), false);
+  assert.equal(isSnippetInExcerpts("const value = 1;", undefined), false);
+  assert.equal(isSnippetInExcerpts("const value = 1;", "   1 | const value = 1;"), true);
 });
 
 test("T-B15: strong refute identical to finding citation degrades to 'moderate' (F8 distinctFromCitation=false)", (t) => {

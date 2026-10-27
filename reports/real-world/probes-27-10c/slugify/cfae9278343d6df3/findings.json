@@ -1,0 +1,326 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "String.replace interprets `$` sequences in the replacement string, so a separator like `$&`, `$'`, `$1` or `$$` is expanded instead of inserted literally.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 108,
+          "path": "index.js",
+          "snippet": "\tstring = string.replace(patternSlug, options.separator);",
+          "startLine": 108
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Separator `$` patterns expanded in slug replacement"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 108-108 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At index.js:108 options.separator is passed directly as the string replacement argument to String.replace, so special substitution patterns such as $& , $$ and $' in the separator are expanded per JavaScript semantics instead of being inserted literally, and no function replacer or escaping guards that call."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-KrhI9P/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 75,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-KrhI9P/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 65,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-KrhI9P/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport slugify from './index.js';\n\nassert.equal(slugify('foo bar', {separator: '$&'}), 'foo$&bar');\nassert.equal(slugify('foo bar', {separator: '$$'}), 'foo$$bar');\nassert.equal(slugify('foo bar baz', {separator: \"$'\"}), \"foo$'bar$'baz\");\nassert.equal(slugify('foo bar', {separator: '$`'}), 'foo$`bar');\nassert.equal(slugify('foo bar', {separator: 'a$&b'}), 'fooa$&bbar');\n",
+      "expectedBehavior": "A separator containing `$` sequences is inserted literally: e.g. slugify('foo bar', {separator: '$&'}) returns 'foo$&bar', '$$' returns 'foo$$bar', and \"$'\" / '$`' are not expanded to matched/pre/post-match text.",
+      "rationale": "Line 108 passes options.separator directly as the String.replace replacement string, so `$&`, `$$`, `$'`, and '$`' are interpreted as special replacement patterns instead of literal separator text. The assertions check literal insertion and fail on the buggy expansion.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 16237,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2496,
+        "outputTokens": 2224,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.054464
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "removeMootSeparators passes the user separator as the replacement string to replaceAll, so `$&`/`$'`/`$$` in the separator are expanded instead of inserted literally.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 20,
+          "path": "index.js",
+          "snippet": "\treturn string\n\t\t.replaceAll(new RegExp(`(?:${escapedSeparator}){2,}`, 'g'), separator)\n\t\t.replaceAll(new RegExp(`^(?:${escapedSeparator})|(?:${escapedSeparator})$`, 'g'), '');",
+          "startLine": 18
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Separator `$` patterns expanded when collapsing separators"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 18-20 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at index.js:19 passes the raw user separator as the string replacement to replaceAll while index.js:16 only escapes it for the RegExp pattern, so JavaScript replacement patterns such as $$, $&, and $' in the separator will be expanded rather than inserted literally."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-gFNVrY/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 69,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-gFNVrY/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 67,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-gFNVrY/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 65,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport slugify from './index.js';\n\n// A separator containing `$&` must be inserted literally when\n// repeated separators are collapsed to a single separator.\nassert.equal(\n  slugify('foo$&$&bar', {separator: '$&', transliterate: false}),\n  'foo$&bar',\n);\nassert.equal(\n  slugify('foo$&$&$&bar', {separator: '$&', transliterate: false}),\n  'foo$&bar',\n);\nassert.equal(\n  slugify('foo$&$&bar$&$&baz', {separator: '$&', transliterate: false}),\n  'foo$&bar$&baz',\n);\n",
+      "expectedBehavior": "slugify with separator '$&' collapses repeated literal separators to a single literal '$&'",
+      "rationale": "Input already contains repeated literal '$&' separators. The preceding slug replacement expands '$&' to the matched run, leaving the repeats intact, so only removeMootSeparators' collapse step can change them. Buggy code expands '$&' to the whole ' $&$&' match and leaves repeats; a literal/function replacement yields one '$&'. transliterate:false avoids '&' being expanded to 'and'.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 42704,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2539,
+        "outputTokens": 6856,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.1463488
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "After inserting the separator, all backslashes are unconditionally deleted, so separator `\\` is erased and preserveCharacters `\\` can never be preserved.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 109,
+          "path": "index.js",
+          "snippet": "\tstring = string.replace(patternSlug, options.separator);\n\tstring = string.replaceAll('\\\\', '');",
+          "startLine": 108
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Unconditional backslash deletion defeats separator/preserve"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 108-109 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At index.js:108 the separator is inserted via replace, then index.js:109 unconditionally runs replaceAll('\\\\','') deleting every backslash, so a '\\\\' separator is erased and a backslash exempted from patternSlug by preserveCharacters handling at index.js:43-50 is likewise deleted with no later restoration."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-czFAxd/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 68,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-czFAxd/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 69,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-czFAxd/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 68,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport slugify from './index.js';\n\nlet sepError = null;\nlet sepResult;\ntry {\n  sepResult = slugify('foo bar baz', {separator: '\\\\'});\n} catch (error) {\n  sepError = error;\n}\nassert.equal(sepError, null);\nassert.equal(sepResult, 'foo\\\\bar\\\\baz');\n\nlet preserveError = null;\nlet preserveResult;\ntry {\n  preserveResult = slugify('foo\\\\bar baz', {preserveCharacters: ['\\\\'], transliterate: false});\n} catch (error) {\n  preserveError = error;\n}\nassert.equal(preserveError, null);\nassert.equal(preserveResult, 'foo\\\\bar-baz');\n",
+      "expectedBehavior": "separator '\\' and preserveCharacters ['\\\\'] are honored literally",
+      "rationale": "Line 109 deletes all backslashes after separator insertion, so both uses are erased.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 14777,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2505,
+        "outputTokens": 2248,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.054052800000000005
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "String.replaceAll interprets `$` sequences in the replacement string, so a custom replacement value containing `$&`/`$'`/`$1`/`$$` is expanded instead of inserted literally.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 88,
+          "path": "index.js",
+          "snippet": "\t\tfor (const [key, value] of options.customReplacements) {\n\t\t\tstring = string.replaceAll(key, value);\n\t\t}",
+          "startLine": 86
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Custom replacement value `$` patterns expanded"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 86-88 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At index.js:86-88 the user-supplied replacement value is passed directly as the string replacement argument to string.replaceAll(key, value) with no function replacer or escaping, so JavaScript substitution patterns such as $&, $', $`, and $$ in the value are expanded rather than inserted literally."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-S1eL61/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 66,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-S1eL61/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 68,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'escape-string-regexp' imported from /tmp/codeproof-repro-S1eL61/snapshot/index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 68,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport slugify from './index.js';\n\n// $& must be inserted literally, not expanded to the matched key 'x'.\n// Literal '$&' contains no slug characters, so the result should be empty.\nassert.strictEqual(\n  slugify('x', {transliterate: false, customReplacements: [['x', '$&']]}),\n  '',\n);\n\n// $' must be inserted literally, not expanded to the text after the match (' b').\nassert.strictEqual(\n  slugify('a x b', {transliterate: false, customReplacements: [['x', \"$'\"]]}),\n  'a-b',\n);\n\n// $` must be inserted literally, not expanded to the text before the match ('a ').\nassert.strictEqual(\n  slugify('a x b', {transliterate: false, customReplacements: [['x', '$`']]}),\n  'a-b',\n);\n\n// Repeated $& patterns must also stay literal.\nassert.strictEqual(\n  slugify('x', {transliterate: false, customReplacements: [['x', '$&-$&']]}),\n  '',\n);\n",
+      "expectedBehavior": "Custom replacement values are inserted literally when transliterate is false, so `$&`, `$'`, and `$\\u0060` are slugified as punctuation rather than expanded to the matched/preceding/following text.",
+      "rationale": "The else branch at index.js:86-88 passes the user-supplied value directly as the String.replaceAll replacement string, which interprets `$` patterns. Using transliterate:false exercises that branch; literal insertion would make `$&` become punctuation (removed as a separator), while the buggy expansion re-inserts the matched text and survives into the slug.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 21489,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2520,
+        "outputTokens": 3320,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.07648
+    },
+    "evidenceLevel": "citation+adversarial"
+  }
+]

@@ -104,9 +104,12 @@ export function extractImportedIdentifiers(testCode) {
 }
 
 // Which imported repository symbols are actually used outside the import statements.
+// Import statements may span several lines; strip whole statements, not single lines.
 export function extractUsedImportedSymbols(testCode) {
   const source = String(testCode || "");
-  const body = source.replace(/^\s*import\b.*$/gm, "");
+  const body = source
+    .replace(/^[ \t]*import\b[\s\S]*?\bfrom\s*['"][^'"]+['"]\s*;?/gm, "")
+    .replace(/^[ \t]*import\s*['"][^'"]+['"]\s*;?/gm, "");
   return extractImportedIdentifiers(source).filter(function (name) {
     return new RegExp("\\b" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b").test(body);
   });

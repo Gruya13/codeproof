@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model bypassed budget: cost=null spentUsd=0 exceeded=false\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-4XAos2/snapshot/.codeproof-repro.test.mjs:31:8 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 61,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model bypassed budget: cost=null spentUsd=0 exceeded=false\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-4XAos2/snapshot/.codeproof-repro.test.mjs:31:8 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 63,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model bypassed budget: cost=null spentUsd=0 exceeded=false\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-4XAos2/snapshot/.codeproof-repro.test.mjs:31:8 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 60,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "Unknown-model usage must not bypass the budget: charging it should increase spentUsd and/or trip exceeded, or fail closed instead of silently returning/ignoring a null cost.",
+  "rationale": "Exercises the real costOf -> Budget.charge path cited in the finding. On the analyzed code costOf returns null and charge ignores null, so spentUsd stays 0 and exceeded stays false, causing the final assertion to fail.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1868,
+    "outputTokens": 7492,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.1563848
+}

@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model must not be free: estimateCost returned 0\n    at file:///tmp/codeproof-repro-OltYSC/snapshot/.codeproof-repro.test.mjs:18:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 63,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model must not be free: estimateCost returned 0\n    at file:///tmp/codeproof-repro-OltYSC/snapshot/.codeproof-repro.test.mjs:18:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 61,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown model must not be free: estimateCost returned 0\n    at file:///tmp/codeproof-repro-OltYSC/snapshot/.codeproof-repro.test.mjs:18:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 57,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "estimateCost for an unknown model must not return 0 (free); it must signal unknown like costOf (null), return a positive/Infinity worst-case, or throw, so the hard-budget gate cannot always pass.",
+  "rationale": "Buggy estimateCost returns 0 for unknown models, so spent+0 <= limit always passes. Test asserts a non-zero/unknown signal using the real config.mjs API; it fails on the buggy 0 return.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1816,
+    "outputTokens": 4526,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.0968568
+}

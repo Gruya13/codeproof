@@ -1,0 +1,74 @@
+{
+  "repo": {
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/src",
+    "commit": "b2dbad2812b6b0a157875401b631109e6ab8d29c",
+    "files": 13,
+    "loc": 2626
+  },
+  "codeproofRun": "reports/self-analysis/afe3e8dd50723038",
+  "codeProof": {
+    "published": 6,
+    "verified": 5,
+    "reproduced": 4,
+    "findings": [
+      {
+        "id": "F-001",
+        "title": "Unknown model bypasses hard budget estimate",
+        "where": "config.mjs:63-67, run/index.mjs:82-85"
+      },
+      {
+        "id": "F-002",
+        "title": "Unknown model cost never charged to budget",
+        "where": "config.mjs:69-75, run/index.mjs:86-91"
+      },
+      {
+        "id": "F-003",
+        "title": "Multiline imports fake reproducer usage check",
+        "where": "repro/index.mjs:107-113"
+      },
+      {
+        "id": "F-004",
+        "title": "Trailing-comma fix corrupts string contents",
+        "where": "run/json.mjs:3-14"
+      },
+      {
+        "id": "F-005",
+        "title": "Missing excerpts treated as in-context",
+        "where": "verify/index.mjs:134-135"
+      },
+      {
+        "id": "F-006",
+        "title": "Empty file counted as one line",
+        "where": "ingest/index.mjs:175-175"
+      }
+    ]
+  },
+  "variants": [
+    {
+      "variant": "spark-only",
+      "model": "muse-spark-1.3",
+      "run": 1,
+      "calls": 1,
+      "durationMs": 37942,
+      "costUsd": 0.03444995,
+      "usage": {
+        "inputTokens": 36703,
+        "outputTokens": 6782,
+        "cachedTokens": 36593
+      },
+      "finishReason": "stop",
+      "candidates": 0,
+      "l0Valid": 0,
+      "l1Valid": 0,
+      "overlapWithCodeProof": 0,
+      "newVsCodeProof": 0,
+      "findings": []
+    },
+    {
+      "variant": "wonder-only",
+      "model": "muse-wonder-1.0",
+      "run": 1,
+      "error": "fetch failed"
+    }
+  ]
+}

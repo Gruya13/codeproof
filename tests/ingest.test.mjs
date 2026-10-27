@@ -62,6 +62,16 @@ test("ingest reads a scoped subdirectory from the commit, not the repository roo
   assert.match(scoped.sources.get("a.js"), /value = 1/);
 });
 
+test("ingest counts an empty file as 0 lines, not 1", function () {
+  const dir = mkdtempSync(join(tmpdir(), "codeproof-ingest-empty-"));
+  write(dir, "src/empty.js", "");
+  write(dir, "src/one.js", "const one = 1;\n");
+  const result = ingest(dir);
+  const byPath = new Map(result.files.map(function (file) { return [file.path, file.loc]; }));
+  assert.equal(byPath.get("src/empty.js"), 0);
+  assert.equal(byPath.get("src/one.js"), 1);
+});
+
 test("ingest falls back to walking and skips build directories when the target is not a git repository", function () {
   const dir = mkdtempSync(join(tmpdir(), "codeproof-ingest-walk-"));
   write(dir, "src/a.ts", "const a = 1;\n");

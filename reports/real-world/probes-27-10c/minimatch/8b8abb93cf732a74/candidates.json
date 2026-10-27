@@ -1,0 +1,75 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Empty-extglob detection checks ast.#parts.length which is always 0 before ast.push(...parts,part), so !(a|) with trailing empty alternative is misclassified as empty !() and compiled to starNoEmpty.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 505, \"path\": \"ast.ts\", \"snippet\": \"      if (c === ')') {\\n        if (acc === '' && ast.#parts.length === 0) {\\n          ast.#emptyExt = true\\n        }\\n        part.push(acc)\\n        acc = ''\\n        ast.push(...parts, part)\\n        return i\", \"startLine\": 498}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Empty extglob misdetected when ending with |\"}, {\"category\": \"correctness\", \"claim\": \"After splicing adopted children into parent, code updates p.#parent but never updates p.#parentIndex, leaving stale indices that break isStart/isEnd checks for moved parts.\", \"confidence\": 0.8, \"evidence\": [{\"endLine\": 584, \"path\": \"ast.ts\", \"snippet\": \"  #adopt(\\n    child: AST & {\\n      type: null\\n    },\\n    index: number,\\n  ) {\\n    const gc = child.#parts[0] as AST & { type: ExtglobType }\\n    this.#parts.splice(index, 1, ...gc.#parts)\\n    for (const p of gc.#parts) {\\n      if (typeof p === 'object') p.#parent = this\\n    }\\n    this.#toString = undefined\\n  }\", \"startLine\": 572}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Adopted AST parts keep stale parentIndex\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Empty-extglob detection checks ast.#parts.length which is always 0 before ast.push(...parts,part), so !(a|) with trailing empty alternative is misclassified as empty !() and compiled to starNoEmpty.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 505,
+            "path": "ast.ts",
+            "snippet": "      if (c === ')') {\n        if (acc === '' && ast.#parts.length === 0) {\n          ast.#emptyExt = true\n        }\n        part.push(acc)\n        acc = ''\n        ast.push(...parts, part)\n        return i",
+            "startLine": 498
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Empty extglob misdetected when ending with |"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 498-505 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The check at ast.ts:499 tests ast.#parts.length before ast.push(...parts, part) at ast.ts:504, while prior alternatives are accumulated only in the local parts array at ast.ts:494, so for !(a|) acc is '' and ast.#parts is still empty, incorrectly setting ast.#emptyExt at ast.ts:500."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "After splicing adopted children into parent, code updates p.#parent but never updates p.#parentIndex, leaving stale indices that break isStart/isEnd checks for moved parts.",
+        "confidence": 0.8,
+        "evidence": [
+          {
+            "endLine": 584,
+            "path": "ast.ts",
+            "snippet": "  #adopt(\n    child: AST & {\n      type: null\n    },\n    index: number,\n  ) {\n    const gc = child.#parts[0] as AST & { type: ExtglobType }\n    this.#parts.splice(index, 1, ...gc.#parts)\n    for (const p of gc.#parts) {\n      if (typeof p === 'object') p.#parent = this\n    }\n    this.#toString = undefined\n  }",
+            "startLine": 572
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Adopted AST parts keep stale parentIndex"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "uncertain",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 572-584 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "uncertain",
+        "reason": "The excerpt at ast.ts:579-582 shows #adopt splicing gc.#parts and updating only p.#parent, but the provided excerpts contain no #parentIndex declaration or assignment, no isStart/isEnd definitions, and no #adopt call sites or post-adoption re-indexing, so whether stale indices persist or affect those checks cannot be settled from the given context."
+      }
+    }
+  ]
+}

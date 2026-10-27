@@ -55,6 +55,14 @@ test("returns the first JSON object when multiple sibling objects exist", functi
   assert.equal(parsed.id, "F-001");
 });
 
+test("trailing-comma tolerance does not corrupt commas inside string literals", function () {
+  const parsed = parseDirtyJson("{\"a\": \",}\", \"b\": \",]\"}");
+  assert.equal(parsed.a, ",}");
+  assert.equal(parsed.b, ",]");
+  const tolerant = parseDirtyJson("{\"findings\": [1, 2,],}");
+  assert.deepEqual(tolerant.findings, [1, 2]);
+});
+
 test("T-C2: throws on truncated output (unclosed object, array or string)", function () {
   assert.throws(function () { parseDirtyJson("{\"findings\": [{\"id\": \"F-001\""); }, /no JSON object/);
   assert.throws(function () { parseDirtyJson("[1, 2, 3"); }, /no JSON object/);
