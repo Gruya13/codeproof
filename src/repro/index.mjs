@@ -296,10 +296,23 @@ export async function attemptRepro({ finding, agent, repoRoot, commit, excerpts,
     if (snapshot && snapshot.available) snapshot.cleanup();
   }
   result.durationMs = Date.now() - started;
+  result.model = model;
+  result.usage = usage;
+  result.costUsd = costUsd;
   try {
     result.artifacts = writeArtifacts(outDir, finding.id, result, model, usage, costUsd);
   } catch (error) {
     result.reason += "; artifact write failed: " + error.message;
   }
   return result;
+}
+
+// Persist the reproducer artifacts once the run output directory is known.
+export function writeReproArtifacts(outDir, findingId, repro) {
+  if (!outDir || !repro) return null;
+  try {
+    return writeArtifacts(outDir, findingId, repro, repro.model || null, repro.usage || null, repro.costUsd === undefined ? null : repro.costUsd);
+  } catch (error) {
+    return null;
+  }
 }

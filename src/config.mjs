@@ -27,7 +27,12 @@ export function loadConfig(env) {
     maxRetries: Number(env.MAX_RETRIES || "4"),
     scannerMaxTokens: Number(env.SCANNER_MAX_TOKENS || "16000"),
     verifierMaxTokens: Number(env.VERIFIER_MAX_TOKENS || "4000"),
-    verifierContextChars: Number(env.VERIFIER_CONTEXT_CHARS || "24000")
+    verifierContextChars: Number(env.VERIFIER_CONTEXT_CHARS || "24000"),
+    reproEnabled: env.USE_MOCK !== "1" && env.REPRO !== "0",
+    reproModel: env.REPRO_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0",
+    reproMaxTokens: Number(env.REPRO_MAX_TOKENS || "4000"),
+    reproTimeoutMs: Number(env.REPRO_TIMEOUT_MS || "2000"),
+    reproAttempts: Number(env.REPRO_ATTEMPTS || "3")
   };
 }
 
@@ -41,7 +46,12 @@ export function computeConfigSha256(config, mode) {
     citationMaxLines: config.citationMaxLines,
     scannerMaxTokens: config.scannerMaxTokens,
     verifierMaxTokens: config.verifierMaxTokens,
-    verifierContextChars: config.verifierContextChars
+    verifierContextChars: config.verifierContextChars,
+    reproEnabled: config.reproEnabled,
+    reproModel: config.reproModel,
+    reproMaxTokens: config.reproMaxTokens,
+    reproTimeoutMs: config.reproTimeoutMs,
+    reproAttempts: config.reproAttempts
   });
   return createHash("sha256").update(payload).digest("hex");
 }

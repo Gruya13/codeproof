@@ -55,6 +55,26 @@ export function createMockAgent(options) {
         httpStatus: 200
       };
     }
+    if (request.role === "repro") {
+      const reproFindingId = extractFindingId(request.messages) || "F-001";
+      return {
+        text: JSON.stringify({
+          findingId: reproFindingId,
+          kind: "unsupported",
+          testCode: "",
+          expectedBehavior: "mock mode does not execute generated tests",
+          rationale: "the mock adapter has no model that can write a reproducer",
+          unsupportedReason: "mock mode: no reproducer execution"
+        }),
+        usage: { inputTokens: 1200, outputTokens: 120, cachedTokens: 800 },
+        costUsd: responseCost(),
+        model: "mock-repro",
+        latencyMs: 2,
+        retries: 0,
+        finishReason: "stop",
+        httpStatus: 200
+      };
+    }
     return {
       text: "",
       usage: { inputTokens: 0, outputTokens: 0, cachedTokens: 0 },

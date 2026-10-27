@@ -11,6 +11,7 @@ import { buildReport, buildRejected } from "./synthesize/index.mjs";
 import { parseDirtyJson } from "./run/json.mjs";
 import { computeRunId, sha256Hex, gitCommit, repoIsClean, Budget } from "./run/index.mjs";
 import { createAgents } from "./agents/index.mjs";
+import { attemptRepro, writeReproArtifacts } from "./repro/index.mjs";
 
 function loadDotEnv(path) {
   if (!existsSync(path)) return;
@@ -69,7 +70,7 @@ export function buildRunBanner(options) {
   const title = options.controlled ? "CodeProof controlled verifier test" : options.mock ? "CodeProof demo" : options.mode === "bench" ? "CodeProof benchmark run" : "CodeProof run";
   lines.push(title + "  target=" + options.target);
   lines.push("  mode " + (options.mock ? "mock" : options.mode));
-  if (!options.mock) lines.push("  models scanner=" + (options.controlled ? "skipped" : options.scannerModel) + " verifier=" + options.verifierModel);
+  if (!options.mock) lines.push("  models scanner=" + (options.controlled ? "skipped" : options.scannerModel) + " verifier=" + options.verifierModel + " repro=" + (options.reproEnabled ? options.reproModel : "off"));
   lines.push("  run-id " + options.runId + (options.mock ? "  (mock)" : ""));
   return lines.join("\n");
 }
@@ -135,7 +136,8 @@ async function main() {
   const budget = new Budget(config.budgetUsd);
   console.log("");
   console.log(buildRunBanner({ mock: mock, controlled: controlled, mode: mode, target: target, runId: runId,
-    scannerModel: config.scannerModel, verifierModel: config.verifierModel }));
+    scannerModel: config.scannerModel, verifierModel: config.verifierModel,
+    reproModel: config.reproModel, reproEnabled: config.reproEnabled && !controlled }));
 
   const ingestStarted = Date.now();
   const repo = ingest(target);
@@ -150,6 +152,7 @@ async function main() {
     baseUrl: config.baseUrl,
     scannerModel: config.scannerModel,
     verifierModel: config.verifierModel,
+    reproModel: config.reproModel,
     maxRetries: config.maxRetries,
     budget: budget
   });
@@ -288,11 +291,34 @@ async function main() {
     if (outcome.status === "l1-rejected") {
       l1Rejected += 1;
     } else {
+      let repro = null;
+      if (outcome.status === "verified" && config.reproEnabled && !controlled && !mock) {
+        try {
+          repro = await attemptRepro({
+            finding: outcome.finding,
+            agent: agents,
+            repoRoot: target,
+            commit: commit,
+            excerpts: verifierContext.text,
+            config: config,
+            outDir: null
+          });
+        } catch (error) {
+          if (error.code === "BUDGET_EXCEEDED") {
+            skipFrom(index + 1);
+            repro = { status: "inconclusive", classification: null, attempts: [], deterministic: false, testCode: "", expectedBehavior: "", rationale: "", reason: "run budget exceeded before the reproducer call" };
+          } else {
+            repro = { status: "inconclusive", classification: null, attempts: [], deterministic: false, testCode: "", expectedBehavior: "", rationale: "", reason: "reproducer failed: " + error.message };
+          }
+        }
+      }
       published.push({
         finding: outcome.finding,
         status: outcome.status,
         l1: { passed: true, reason: outcome.l1.reason, lineTolerance: outcome.l1.lineTolerance === undefined ? 0 : outcome.l1.lineTolerance },
-        verifier: outcome.verifier
+        verifier: outcome.verifier,
+        repro: repro,
+        evidenceLevel: repro && repro.status === "reproduced" ? "execution-proven" : "citation+adversarial"
       });
     }
     if (budget.exceeded) skipFrom(index + 1);
@@ -305,11 +331,12 @@ async function main() {
     verified: published.filter(function (item) { return item.status === "verified"; }).length,
     moderate: published.filter(function (item) { return item.status === "moderate"; }).length,
     refuted: published.filter(function (item) { return item.status === "refuted"; }).length,
-    uncertain: published.filter(function (item) { return item.status === "uncertain"; }).length
+    uncertain: published.filter(function (item) { return item.status === "uncertain"; }).length,
+    reproduced: published.filter(function (item) { return item.repro && item.repro.status === "reproduced"; }).length
   };
   console.log("  verify   " + String(Date.now() - verifyStarted).padStart(4) + " ms  " +
     counts.verified + " verified, " + counts.refuted + " refuted, " + counts.moderate + " moderate, " +
-    counts.uncertain + " uncertain, " + counts.l1Rejected + " rejected at L1");
+    counts.uncertain + " uncertain, " + counts.l1Rejected + " rejected at L1, " + counts.reproduced + " reproduced");
 
   const publishStarted = Date.now();
   let outDir = resolve(args.out, runId);
@@ -322,7 +349,7 @@ async function main() {
   const outLabel = args.out + "/" + outDir.slice(resolve(args.out).length + 1);
   const byRoleMap = new Map();
   for (const call of agents.callLog) {
-    const role = call.role === "scanner" ? "scanner-correctness" : "verifier";
+    const role = call.role === "scanner" ? "scanner-correctness" : call.role === "repro" ? "repro" : "verifier";
     if (!byRoleMap.has(role)) {
       byRoleMap.set(role, { role: role, model: call.model, calls: 0, inputTokens: 0, outputTokens: 0, cachedTokens: 0, costUsd: mock ? null : 0 });
     }
@@ -348,7 +375,8 @@ async function main() {
       ? [{ role: "scanner-correctness", id: "mock-scanner" }, { role: "verifier", id: "mock-verifier" }]
       : controlled
         ? [{ role: "verifier", id: config.verifierModel }]
-        : [{ role: "scanner-correctness", id: config.scannerModel }, { role: "verifier", id: config.verifierModel }],
+        : [{ role: "scanner-correctness", id: config.scannerModel }, { role: "verifier", id: config.verifierModel }]
+            .concat(config.reproEnabled ? [{ role: "repro", id: config.reproModel }] : []),
     prompts: prompts,
     usage: {
       inputTokens: totalInput,
@@ -372,6 +400,18 @@ async function main() {
       skippedFindings: skippedFindings
     },
     findings: counts,
+    repro: {
+      enabled: Boolean(config.reproEnabled && !controlled && !mock),
+      model: config.reproModel,
+      timeoutMs: config.reproTimeoutMs,
+      attempts: config.reproAttempts,
+      counts: {
+        reproduced: counts.reproduced,
+        notReproduced: published.filter(function (item) { return item.repro && item.repro.status === "not-reproduced"; }).length,
+        unavailable: published.filter(function (item) { return item.repro && item.repro.status === "unavailable"; }).length,
+        inconclusive: published.filter(function (item) { return item.repro && item.repro.status === "inconclusive"; }).length
+      }
+    },
     outputs: {
       report: outLabel + "/REPORT.md",
       findings: outLabel + "/findings.json",
@@ -383,6 +423,9 @@ async function main() {
   writeFileSync(join(outDir, "rejected.md"), buildRejected({ published: published, candidates: candidateAudit, run: runJson }) + "\n");
   writeFileSync(join(outDir, "findings.json"), JSON.stringify(published, null, 2) + "\n");
   writeFileSync(join(outDir, "candidates.json"), JSON.stringify({ raw: scanRaw, candidates: candidateAudit }, null, 2) + "\n");
+  for (const item of published) {
+    if (item.repro) writeReproArtifacts(outDir, item.finding.id, item.repro);
+  }
   phases.push({ name: "publish", status: "ok", durationMs: Date.now() - publishStarted });
   runJson.timings.durationMs = Date.now() - startedAtMs;
   writeFileSync(join(outDir, "run.json"), JSON.stringify(runJson, null, 2) + "\n");

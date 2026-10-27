@@ -70,6 +70,9 @@ export function buildReport(options) {
   lines.push("| Findings proposed | " + run.findings.proposed + " |");
   lines.push("| Rejected at L1 (bad citation) | " + run.findings.l1Rejected + " |");
   lines.push("| Verified | " + run.findings.verified + " |");
+  const reproducedCount = published.filter(function (item) { return item.repro && item.repro.status === "reproduced"; }).length;
+  const executionEnabled = Boolean(run.repro && run.repro.enabled);
+  if (executionEnabled) lines.push("| Reproduced by execution (L3) | " + reproducedCount + " |");
   lines.push("| Moderate confidence | " + run.findings.moderate + " |");
   lines.push("| Refuted | " + run.findings.refuted + " |");
   lines.push("| Uncertain | " + run.findings.uncertain + " |");
@@ -90,13 +93,54 @@ export function buildReport(options) {
     lines.push("");
     lines.push("**Claim:** " + finding.claim);
     lines.push("");
-    lines.push("**Evidence level:** citation-proven + adversarially-confirmed");
+    const itemRepro = item.repro;
+    const executionProven = Boolean(itemRepro && itemRepro.status === "reproduced");
+    lines.push("**Evidence level:** citation-proven + adversarially-confirmed" + (executionProven ? " + **execution-proven (generated test fails on the analyzed commit)**" : ""));
     lines.push("");
+    if (itemRepro) {
+      const executionCheck = itemRepro.status === "reproduced"
+        ? "reproduced by execution (see Reproduced by execution)"
+        : itemRepro.status === "not-reproduced"
+          ? "not reproduced: the generated test passed on the analyzed commit"
+          : itemRepro.status === "unavailable"
+            ? "unavailable: " + (itemRepro.reason || "no faithful executable test could be written")
+            : "inconclusive: " + (itemRepro.reason || "the generated test could not settle the claim");
+      lines.push("**Execution check:** " + executionCheck);
+      lines.push("");
+    }
     const citation = citationBlock(finding, { root: options.repoRoot || (run.repo && run.repo.path), commit: run.repo && run.repo.commit });
     lines.push(citation.join("\n"));
     lines.push("");
     lines.push("**Verifier (" + item.verifier.model + "):** " + item.verifier.verdict + " - " + item.verifier.reason);
     lines.push("");
+  }
+  const reproducedItems = verified.filter(function (item) { return item.repro && item.repro.status === "reproduced"; });
+  if (reproducedItems.length > 0) {
+    lines.push("## Reproduced by execution");
+    lines.push("");
+    lines.push("For each finding below, the verifier model wrote a standalone test. The test runs on a `git archive` snapshot of the analyzed commit inside a permission-model sandbox: no network, no writes, 2 s timeout, three runs. The finding is execution-proven only if the test fails 3/3 with an assertion error.");
+    lines.push("");
+    for (const item of reproducedItems) {
+      const finding = item.finding;
+      const itemRepro = item.repro;
+      lines.push("### " + finding.id + " - " + finding.title);
+      lines.push("");
+      if (itemRepro.expectedBehavior) { lines.push("**Expected behavior:** " + itemRepro.expectedBehavior); lines.push(""); }
+      lines.push("**Generated test (fails on the analyzed commit):**");
+      lines.push(fence() + "js");
+      lines.push(String(itemRepro.testCode || "").trim());
+      lines.push(fence());
+      lines.push("");
+      const attempts = Array.isArray(itemRepro.attempts) ? itemRepro.attempts : [];
+      const lastAttempt = attempts.length > 0 ? attempts[attempts.length - 1] : null;
+      if (lastAttempt && lastAttempt.stderr) {
+        lines.push("**Runner output (last of " + attempts.length + " attempts):**");
+        lines.push(fence() + "text");
+        lines.push(String(lastAttempt.stderr).trim().split("\n").slice(-15).join("\n"));
+        lines.push(fence());
+        lines.push("");
+      }
+    }
   }
   lines.push("## Architecture");
   lines.push("");
@@ -108,7 +152,7 @@ export function buildReport(options) {
   lines.push("");
   lines.push("## Limits");
   lines.push("");
-  lines.push("- Static analysis only: the analyzed code is never executed.");
+  lines.push("- Scan and verify are static: the analyzed code is never executed while the scanner and verifier run. L3 runs only the generated test, on a git-archive snapshot, inside a permission-model sandbox (no network, no writes, 2 s timeout); isolation is process-level, not OS-level.");
   lines.push("- No completeness claim; this report shows what passed the gate, not everything that exists in the repository.");
   lines.push("- Only direct correctness defects; omission, security and style findings are out of scope for this milestone.");
   lines.push("- The L1 gate proves that a citation exists in the commit; the semantic match is judged by the verifier model and presented as such.");

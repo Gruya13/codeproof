@@ -59,6 +59,14 @@ export function createAgents(options) {
       maxRetries: options.maxRetries,
       fetchImpl: options.fetchImpl,
       sleepImpl: options.sleepImpl
+    }),
+    repro: createMetaAgent({
+      apiKey: options.apiKey,
+      baseUrl: options.baseUrl,
+      model: options.reproModel || options.verifierModel,
+      maxRetries: options.maxRetries,
+      fetchImpl: options.fetchImpl,
+      sleepImpl: options.sleepImpl
     })
   };
   return {
