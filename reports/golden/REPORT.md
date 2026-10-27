@@ -1,8 +1,8 @@
 # CodeProof report
 
-Commit: 95c324339300d5a7e05b74fe237f385bcf99a28f  |  run-id: 26ab3dd52bcd1e4f  |  mode: bench
+Commit: 06ab5f8dbcf2c8210492b49efe4f251147cb13d5  |  run-id: 231fc717dc282c88  |  mode: bench
 
-**Publishing rule:** a finding appears under *Verified findings* only if the deterministic citation gate (L1) passed and the adversarial verifier confirmed it. Refuted, uncertain and moderate findings are kept in separate sections - nothing is hidden, and nothing unproven is presented as verified.
+**Publishing rule:** a finding appears under *Verified findings* only if every citation passed L1 and the adversarial verifier confirmed it. This checks provenance and model agreement, not semantic proof. Refuted, uncertain and moderate findings are in rejected.md.
 
 ## Summary
 
@@ -11,23 +11,48 @@ Commit: 95c324339300d5a7e05b74fe237f385bcf99a28f  |  run-id: 26ab3dd52bcd1e4f  |
 | Files / LOC | 15 / 229 |
 | Import edges / cycles | 9 / 0 |
 | Findings proposed | 9 |
-| Rejected at L1 (bad citation) | 0 |
-| Verified | 9 |
+| Rejected at L1 (bad citation) | 1 |
+| Verified | 8 |
 | Moderate confidence | 0 |
 | Refuted | 0 |
 | Uncertain | 0 |
-| Calls / retries | 10 / 0 |
-| Tokens in / out | 20873 / 13893 |
-| Cached input tokens | 6801 |
-| Cost | $0.2190 |
+| Calls / retries | 9 / 0 |
+| Tokens in / out | 18974 / 15892 |
+| Cached input tokens | 2000 |
+| Cost | $0.2947 |
 
 ## Verified findings
 
-### F-001 - critical - validate condition always true
+### F-001 - critical - async forEach never awaited returns empty results
 
-**Claim:** validate uses !== with || so each condition is always true and valid payloads always report errors.
+**Claim:** collect uses forEach with an async callback and returns immediately, so results is always empty and async errors are never caught.
 
-**Citation:** src/validation.ts:6-15
+**Evidence level:** citation-proven + adversarially-confirmed
+
+**Citation (from commit, lines 3-13):** src/analytics.ts
+```text
+export async function collect(tasks: Task[]): Promise<number[]> {
+  const results: number[] = [];
+  try {
+    tasks.forEach(async (task) => {
+      results.push(await task());
+    });
+  } catch (error) {
+    console.error("analytics collection failed", error);
+  }
+  return results;
+}
+```
+
+**Verifier (muse-wonder-1.0):** confirm - The code at src/analytics.ts:6 uses tasks.forEach with an async callback whose awaited pushes at src/analytics.ts:7 are not awaited by collect, which returns the still-unpopulated results array at src/analytics.ts:12, and the surrounding try/catch at src/analytics.ts:5 cannot catch the callbacks' later async rejections.
+
+### F-002 - critical - validation condition always true
+
+**Claim:** validate uses || instead of && so each condition is always true and every payload reports missing id and value.
+
+**Evidence level:** citation-proven + adversarially-confirmed
+
+**Citation (from commit, lines 6-15):** src/validation.ts
 ```text
 export function validate(payload: Payload): string[] {
   const errors: string[] = [];
@@ -41,13 +66,15 @@ export function validate(payload: Payload): string[] {
 }
 ```
 
-**Verifier (muse-wonder-1.0):** confirm - The conditions at src/validation.ts:8 and src/validation.ts:11 use !== undefined || !== null, which is tautologically true for any value, so both errors are always pushed even for valid payloads.
+**Verifier (muse-wonder-1.0):** confirm - The conditions at src/validation.ts:8 and src/validation.ts:11 use !== undefined || !== null, which is tautologically true for any value, so both errors are always pushed for every payload.
 
-### F-002 - critical - ledger summary accumulates across calls
+### F-003 - critical - module accumulator makes repeated summary double-count
 
-**Claim:** buildSummary pushes into module-level totals then summarizes totals, so repeated calls double-count prior entries.
+**Claim:** buildSummary appends to module-level totals on every call then summarizes totals, so a second call double-counts prior entries.
 
-**Citation:** src/ledger.ts:6-19
+**Evidence level:** citation-proven + adversarially-confirmed
+
+**Citation (from commit, lines 6-19):** src/ledger.ts
 ```text
 const totals: Entry[] = [];
 
@@ -65,13 +92,15 @@ export function buildSummary(entries: Entry[]): string {
 }
 ```
 
-**Verifier (muse-wonder-1.0):** confirm - buildSummary at src/ledger.ts:12-15 calls post(entries), which pushes into the module-level totals at src/ledger.ts:6-9, then iterates all of totals with no reset inside buildSummary, so a second call re-summarizes entries from the first call.
+**Verifier (muse-wonder-1.0):** confirm - buildSummary at src/ledger.ts:12-15 calls post(entries), which pushes onto the module-level totals declared at src/ledger.ts:6-9, and then iterates totals rather than only its argument with no reset inside buildSummary, so a second call re-includes prior entries.
 
-### F-003 - high - rotateToken missing await on save
+### F-004 - high - missing await on async save before read
 
-**Claim:** rotateToken does not await store.save before store.get, so the read can race the write.
+**Claim:** rotateToken does not await store.save before store.get, so the read can race the write and return a stale token.
 
-**Citation:** src/session.ts:6-13
+**Evidence level:** citation-proven + adversarially-confirmed
+
+**Citation (from commit, lines 6-13):** src/session.ts
 ```text
 export async function rotateToken(
   store: SessionStore,
@@ -83,36 +112,16 @@ export async function rotateToken(
 }
 ```
 
-**Verifier (muse-wonder-1.0):** confirm - At src/session.ts:2 save returns Promise<void>, but src/session.ts:11 calls store.save without await before src/session.ts:12 returns store.get(userId), so the read can race the unfinished write.
+**Verifier (muse-wonder-1.0):** confirm - Confirmed: store.save returns Promise<void> at src/session.ts:2 but is called without await at src/session.ts:11 before store.get is returned at src/session.ts:12, so the read can race the pending write.
 
-### F-004 - high - collect does not await tasks
+### F-005 - high - interval handle replaced without clearing
 
-**Claim:** collect uses forEach with async callback and returns immediately, so results is returned before tasks complete.
+**Claim:** start replaces this.timer with a new setInterval without clearing any existing interval, leaking the prior timer.
 
-**Citation:** src/analytics.ts:3-13
+**Evidence level:** citation-proven + adversarially-confirmed
+
+**Citation (from commit, lines 4-11):** src/scheduler.ts
 ```text
-export async function collect(tasks: Task[]): Promise<number[]> {
-  const results: number[] = [];
-  try {
-    tasks.forEach(async (task) => {
-      results.push(await task());
-    });
-  } catch (error) {
-    console.error("analytics collection failed", error);
-  }
-  return results;
-}
-```
-
-**Verifier (muse-wonder-1.0):** confirm - Confirmed: src/analytics.ts:6 uses tasks.forEach with an async callback whose returned promises are discarded, and src/analytics.ts:12 returns results synchronously without awaiting them, so the array is returned before awaited task pushes at src/analytics.ts:7 complete.
-
-### F-005 - high - Scheduler start replaces timer without clear
-
-**Claim:** start overwrites this.timer with a new setInterval without clearing an existing interval, leaking the prior timer.
-
-**Citation:** src/scheduler.ts:3-11
-```text
-export class Scheduler {
   private timer: NodeJS.Timeout | null = null;
   private readonly ticks: Tick[] = [];
 
@@ -123,26 +132,30 @@ export class Scheduler {
   }
 ```
 
-**Verifier (muse-wonder-1.0):** confirm - Confirmed at src/scheduler.ts:7-11: start() directly assigns this.timer = setInterval(...) with no prior clearInterval or running guard, and no stop/clear method exists in src/scheduler.ts:13-20, so a second call orphans the previous interval.
+**Verifier (muse-wonder-1.0):** confirm - The code at src/scheduler.ts:7-11 assigns this.timer = setInterval(...) with no preceding clearInterval or guard, so a second start() call orphans the prior interval handle.
 
-### F-006 - high - numeric sort uses default lexicographic order
+### F-006 - high - numeric sort without comparator
 
-**Claim:** sort without comparator sorts lexicographically, so numeric scores order incorrectly and topScore can be wrong.
+**Claim:** sort without a comparator sorts numbers lexicographically, so sortScores and topScore return wrong order.
 
-**Citation:** src/scores.ts:1-3
+**Evidence level:** citation-proven + adversarially-confirmed
+
+**Citation (from commit, lines 1-3):** src/scores.ts
 ```text
 export function sortScores(scores: number[]): number[] {
   return scores.slice().sort();
 }
 ```
 
-**Verifier (muse-wonder-1.0):** confirm - The code at src/scores.ts:2 calls scores.slice().sort() with no comparator, which sorts numbers lexicographically as strings in JavaScript, and topScore at src/scores.ts:7 returns the last sorted element, so the maximum can be incorrect.
+**Verifier (muse-wonder-1.0):** confirm - The code at src/scores.ts:2 calls scores.slice().sort() with no comparator, so JavaScript sorts numbers lexicographically, and topScore at src/scores.ts:7 returns the last element of that incorrectly ordered array.
 
-### F-007 - medium - pageSlice off-by-one returns extra item
+### F-007 - high - page slice off-by-one returns extra item
 
-**Claim:** pageSlice uses slice(start, end + 1) where end is already start+size, returning size+1 items instead of one page.
+**Claim:** pageSlice slices to end+1 instead of end, returning size+1 elements per page.
 
-**Citation:** src/paging.ts:6-11
+**Evidence level:** citation-proven + adversarially-confirmed
+
+**Citation (from commit, lines 6-11):** src/paging.ts
 ```text
 export function pageSlice<T>(items: T[], request: PageRequest): T[] {
   const size = Math.max(1, request.size);
@@ -152,30 +165,15 @@ export function pageSlice<T>(items: T[], request: PageRequest): T[] {
 }
 ```
 
-**Verifier (muse-wonder-1.0):** confirm - Confirmed: at src/paging.ts:9 end is already start+size (exclusive bound for slice), so src/paging.ts:10 slice(start, end + 1) returns size+1 items when available.
+**Verifier (muse-wonder-1.0):** confirm - At src/paging.ts:9 end is start+size and at src/paging.ts:10 slice(start, end+1) is returned, so the exclusive slice bound yields size+1 elements when available.
 
-### F-008 - medium - withinQuota excludes inclusive max
+### F-009 - medium - falsy fallback discards legitimate zero
 
-**Claim:** withinQuota uses < while documented max is inclusive, so used+amount exactly equal to max is wrongly rejected.
+**Claim:** normalizeSettings uses || fallback so legitimate 0 values are replaced by defaults, contradicting the stated 0-is-legitimate rule.
 
-**Citation:** src/quota.ts:1-6
-```text
-/**
- * Returns true when the request fits. Max is inclusive: a request that uses
- * exactly the maximum is still within quota.
- */
-export function withinQuota(used: number, amount: number, max: number): boolean {
-  return used + amount < max;
-}
-```
+**Evidence level:** citation-proven + adversarially-confirmed
 
-**Verifier (muse-wonder-1.0):** confirm - At src/quota.ts:2-3 max is documented as inclusive, but src/quota.ts:6 uses strict <, so used+amount == max returns false.
-
-### F-009 - medium - normalizeSettings treats 0 as missing
-
-**Claim:** normalizeSettings uses || so explicit 0 is replaced by defaults, while 0 is documented as legitimate.
-
-**Citation:** src/settings.ts:11-16
+**Citation (from commit, lines 11-18):** src/settings.ts
 ```text
 export function normalizeSettings(raw: RawSettings): Settings {
   return {
@@ -183,17 +181,11 @@ export function normalizeSettings(raw: RawSettings): Settings {
     budgetCents: raw.budgetCents || 1000,
   };
 }
-```
-**Citation:** src/settings.ts:18-22
-```text
+
 // Optional values are read from settings where 0 is a legitimate value.
-export function optionalLimit(value: number | null | undefined, fallback: number): number {
-  if (value == null) return fallback;
-  return value;
-}
 ```
 
-**Verifier (muse-wonder-1.0):** confirm - normalizeSettings at src/settings.ts:13-14 uses || so an explicit 0 is replaced by 20/1000, contradicting src/settings.ts:18 stating 0 is a legitimate settings value and the null-only fallback pattern at src/settings.ts:20.
+**Verifier (muse-wonder-1.0):** confirm - normalizeSettings at src/settings.ts:13-14 uses `raw.pageSize || 20` and `raw.budgetCents || 1000`, so an input of 0 is replaced by the default, while src/settings.ts:18 states 0 is a legitimate value and src/settings.ts:20-21 shows the correct null-only fallback pattern.
 
 ## Architecture
 

@@ -25,7 +25,7 @@ L1 is a provenance check, not a semantic judge: it checks every cited snippet ag
 
 An AI review tool can produce a convincing but wrong claim even when it cites real lines. The developer then has to check both the provenance of the citation and the interpretation of the code. A tool can also miss an existing bug.
 
-CodeProof statically reviews a TypeScript/JavaScript repository. L1 checks all citations against the analyzed commit; Muse Wonder then judges the claim in an adversarial role. `Verified` means those two checks passed. The gates do not guarantee completeness or semantic accuracy: the historical calibration result is 8/8, and on nine known fixes the earlier gate found two. Zero false findings were recorded among the committed, hand-checked runs; the uncommitted swr-87cf235d run listed in historical results has three verified findings without committed adjudication.
+CodeProof statically reviews a TypeScript/JavaScript repository. L1 checks all citations against the analyzed commit; Muse Wonder then judges the claim in an adversarial role. `Verified` means those two checks passed. The gates do not guarantee completeness or semantic accuracy: the current calibration result is 7/8 with the strict gate (8/8 under the previous, looser gate), and on nine known fixes the earlier gate found two. Zero false findings were recorded among the committed, hand-checked runs; the uncommitted swr-87cf235d run listed in historical results has three verified findings without committed adjudication.
 
 Tagline: Every finding carries the level of proof it earned: machine-checked citation, adversarial confirmation, or a failing test.
 
@@ -35,10 +35,10 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), 
 
 The pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`), and the deterministic suite is green on Node 22 and Node 26:
 
-- **Deterministic tests** (`make test`): L1/L2 gate cases, dirty-JSON and truncation handling, fault injection, config-hash determinism and Node-22 compatibility. The exact current count is reported by the test command.
-- **Clean clone (previous gate)**: `make clean-clone` and `make clean-clone-docker` passed before the stricter L1 change. These checks need to be repeated after a new golden run.
-- **Replay**: `make replay` re-runs L0/L1 over committed golden artifacts with no model calls. Those artifacts predate the stricter gate and may no longer match; they remain unchanged until a new golden run.
-- **Calibration benchmark**: 8/8 recall, 100% precision, 0/4 traps, 0 false refutations - golden run committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
+- **Deterministic tests** (`make test`): **97/97** on Node 22 and Node 26 - L1/L2 gate cases (including the strict every-citation rule and the exact snippet-range length), dirty-JSON and truncation handling, fault injection, config-hash determinism and Node-22 compatibility.
+- **Clean clone**: `make clean-clone` (tmpfs + `env -i`) and the Docker variant `make clean-clone-docker` (node:22-alpine) pass `make test`, `make demo`, `make replay` and `make score RUN=reports/golden` on a fresh clone.
+- **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts with no model calls - **8/8 identical, 0 mismatches**.
+- **Calibration benchmark**: **7/8** recall (87.5%), 100% precision, 0/4 traps, 0 false refutations under the strict L1 gate - golden run committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
 - **Real repositories** (qualitative, each hand-checked and published with both runs): unjs/ofetch, sindresorhus/execa, preactjs/preact, moment/luxon - see [Real-repository run](#real-repository-run-qualitative). The real-API probe round (axios real + injected, fastify, prompt-cache TTL, safety, parallel calls) is under [reports/probes/](reports/probes/).
 - **Controlled verifier test**: two true findings confirmed and one deliberately false claim **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`); the committed run cost **$0.103** and served 3280 of 4065 input tokens from prompt cache. Recorded as `mode: controlled-verifier`, never as scanner output.
 - **Historical recall**: 2/9 known fixes found (both verified); one of the organic refutations is published in the record.
@@ -97,7 +97,7 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 
 | Evidence | Artifact | What it shows | What it does not show |
 |---|---|---|---|
-| Calibration benchmark (n=8) | [reports/golden/](reports/golden/) | 8/8 recall, 100% precision, 0/4 traps published | a statistical claim; the set was used for calibration |
+| Calibration benchmark (n=8) | [reports/golden/](reports/golden/) | 7/8 recall (strict L1), 100% precision, 0/4 traps published | a statistical claim; the set was used for calibration |
 | Real repository (unjs/ofetch) | [reports/real-world/ofetch/](reports/real-world/ofetch/) | 4/4 verified, all four match open upstream issues/PRs | novel discovery - the commit and issues are public |
 | Real repository (sindresorhus/execa) | [reports/real-world/execa-lib/](reports/real-world/execa-lib/) | 1 verified finding in run 2 (0 in run 1): Windows shebang parser drops interpreter arguments; hand-checked | a hit-rate claim; 2 runs, public commit, the Windows path was not executed |
 | Real repository (preactjs/preact) | [reports/real-world/preact-src/](reports/real-world/preact-src/) | 1 verified (refQueue not rolled back on a diff error) + 2 uncertain in run 2; 0 in run 1 | a hit-rate claim; static adjudication, error-boundary path only |
@@ -114,22 +114,24 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 
 Scored on the **calibration set**: frozen synthetic fixture with 8 injected defects, 4 traps and 2 pre-registered extra defects - 15 files / 229 LOC. Artifacts of the current run are committed verbatim in [reports/golden/](reports/golden/) (`run.json`, `findings.json`, `REPORT.md`, `rejected.md`).
 
-| Metric | Current (F4, golden) | Pre-calibration baseline | Threshold |
+| Metric | Current (strict L1, golden `231fc717`) | Previous gate (`26ab3dd`) | Threshold |
 |---|---|---|---|
-| End-to-end recall (verified) | **8/8 (100%)** | 7/8 (87.5%) | >= 6/8 |
-| Precision (verified-only) | **100%** (8 TP, 0 FP) | 100% (7 TP, 0 FP) | >= 90% |
+| End-to-end recall (verified) | **7/8 (87.5%)** | 8/8 (100%) | >= 6/8 |
+| Precision (verified-only) | **100%** (7 TP, 0 FP) | 100% (8 TP, 0 FP) | >= 90% |
 | Traps published as verified | **0/4** | 0/4 | 0/4 |
 | False refutations | **0** | 0 | <= 1 |
-| Cost / duration | **$0.2190** / 101.4 s | $0.2308 / 93.2 s | measured |
-| Prompt cache | 6,801 of 20,873 input tokens | 4,000 of 26,255 | reported |
-| Verifier context | bounded to 24,000 characters (F4) | whole repository | - |
-| Scanner prompt version | v3 | v2 | - |
+| Candidates rejected at L1 | **1** | 0 | reported |
+| Cost / duration | **$0.2947** / 98.8 s | $0.2190 / 101.4 s | measured |
+| Prompt cache | 2,000 of 18,974 input tokens | 6,801 of 20,873 | reported |
+| Verifier context | bounded to 24,000 characters | bounded to 24,000 characters | - |
+| Scanner prompt version | v3 | v3 | - |
+| Verifier prompt | v1, neutral examples | v1, example line taken from trap T-01 | - |
 
-The bounded verifier context cut benchmark input tokens from 29,408 to 20,873 (**-29%**) with identical metrics; observed cost fell from $0.2777 to $0.2190 on the compared attempts. The baseline missed B-05 (a timer handle replaced without clearing the previous interval); scanner prompt v3 adds generic audits for leaked resource handles and repeated-call accumulators, after which the frozen fixture was re-scanned and B-05 was found. One pre-registered extra defect (X-02, numeric sort without comparator) is found and correctly counted as neither TP nor FP; no trap was proposed by the scanner in any benchmark run, so the refutation path is demonstrated separately by the controlled verifier test.
+The stricter gate explains the difference: L1 now requires **every** citation to pass and the snippet to have exactly as many lines as the declared range. One candidate (F-008) is rejected at L1 because its snippet length did not match its declared range, so recall drops from 8/8 to 7/8. Precision stays at 100% and no trap was published. The earlier 8/8 is not hidden - both runs are described here and in [reports/golden/README.md](reports/golden/README.md). The bounded verifier context (F4) remains in place.
 
-**Attempts (no cherry-picking):** six benchmark attempts. (1) invalidated: ingest included `dist/` build artifacts, fixed in `b0e6568`; (2) valid baseline: 7/8; (3) aborted: scanner output truncated at the token limit, tooling fixed in `d0cde39`; (4) valid post-calibration run: 8/8; (5) F4 validation run before the configuration hash fix: 8/8; (6) F4 final run: 8/8, shown above. Model output is not bit-identical, so the number of attempts is always stated.
+**Attempts (no cherry-picking):** seven benchmark attempts. (1) invalidated: ingest included `dist/` build artifacts, fixed in `b0e6568`; (2) valid baseline: 7/8; (3) aborted: scanner output truncated at the token limit, tooling fixed in `d0cde39`; (4) valid post-calibration run: 8/8; (5) F4 validation run before the configuration hash fix: 8/8; (6) F4 final run: 8/8 (previous gate); (7) strict-L1 run: 7/8, shown above. Model output is not bit-identical, so the number of attempts is always stated.
 
-This is a calibration set: prompts are tuned on the same fixture, so the numbers are **post-calibration** and n = 8 is not a statistical claim. The pre-calibration baseline is shown for transparency.
+This is a calibration set: prompts are tuned on the same fixture, so the numbers are **post-calibration** and n = 8 is not a statistical claim.
 
 ## Real-repository run (qualitative)
 
@@ -153,6 +155,7 @@ Three more real repositories were run with the same protocol (2 runs per frozen 
 - [preactjs/preact](https://github.com/preactjs/preact) `src/` (6,214 LOC): run 1 proposed nothing, run 2 verified one error-path defect (`refQueue` is not rolled back when `diff()` throws, while `commitQueue` is) and left two candidates uncertain. Hand verdict: confirmed plausible defect (static), error-boundary path, no matching upstream issue.
 - [moment/luxon](https://github.com/moment/luxon) `src/` (8,582 LOC): both runs verified the same internal `uncomputeOrdinal` conversion defect (`findIndex` instead of `findLastIndex`), but 731 ordinal and 468 ISO-week public-API cases all returned correct dates, so the verified finding is latent (hand severity low, scanner said critical); run 2 additionally **refuted** a plausible-looking locale-week claim with a machine-checked counter-citation (organic L2 evidence).
 - All three are anecdotes, not benchmark metrics; the commits are public (contamination possible) and every directory includes the full runs, not only the successful one.
+- **Gate version caveat:** the real-repository, probe and historical runs above were produced with the previous (looser) L1 policy. Under the strict L1 they could reject some citations on re-run; they were not re-run, and they are reported exactly as produced.
 
 The real-API probe round (axios real/injected, fastify, TTL cache, safety, parallel) is committed under [reports/probes/](reports/probes/) with the full protocol and caveats in [REAL-WORLD-ROUND.md](reports/probes/REAL-WORLD-ROUND.md); it is separate from the benchmark and from the four hand-checked repositories above.
 
@@ -175,7 +178,7 @@ This repository is created during the hackathon; the first commit is tagged `hac
 
 - Only direct correctness defects; omission, security and style findings are out of scope for this milestone.
 - No completeness claim: the report shows what passed the gate, not everything that exists in a repository.
-- L1 proves that a citation exists in the commit. Whether the claim matches the code is judged by the verifier model and is presented as such.
+- L1 proves that every citation exists in the commit and matches the declared line range. Whether the claim matches the code is judged by the verifier model and is presented as such.
 - TypeScript/JavaScript only, static analysis only.
 - Hand checks may downgrade the scanner's severity (for example a latent internal defect or an error-path-only issue); such findings are labelled as latent/partial in the corresponding HAND-CHECK.md. Real-repository findings are qualitative anecdotes, never benchmark metrics.
 
