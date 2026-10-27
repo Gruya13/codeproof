@@ -80,6 +80,9 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 | Real repository (sindresorhus/execa) | [reports/real-world/execa-lib/](reports/real-world/execa-lib/) | 1 verified finding in run 2 (0 in run 1): Windows shebang parser drops interpreter arguments; hand-checked | a hit-rate claim; 2 runs, public commit, the Windows path was not executed |
 | Real repository (preactjs/preact) | [reports/real-world/preact-src/](reports/real-world/preact-src/) | 1 verified (refQueue not rolled back on a diff error) + 2 uncertain in run 2; 0 in run 1 | a hit-rate claim; static adjudication, error-boundary path only |
 | Real repository (moment/luxon) | [reports/real-world/luxon-src/](reports/real-world/luxon-src/) | 1 verified in both runs (latent internal `uncomputeOrdinal` defect; public dates correct) + 1 organic refuted claim in run 2 | a hit-rate claim; the verified finding is latent, static + public-API adjudication |
+| Real-API probe round: axios (real + injected) | [reports/probes/real/axios-lib/](reports/probes/real/axios-lib/), [reports/probes/real/axios-injected/](reports/probes/real/axios-injected/) | clean: 0 then 1 verified (an upstream revert regression); injected: 3/6 controlled defects in both runs, L1 100% | not a benchmark metric; the 6 defects were injected for this probe |
+| Real-API probe round: fastify | [reports/probes/real/fastify-lib/](reports/probes/real/fastify-lib/) | 3/3 verified; hand check: F-001 confirmed, F-002/F-003 partially confirmed at lower severity | not a benchmark metric; static adjudication for F-002/F-003 |
+| Safety / prompt-cache TTL / parallel probes | [reports/probes/](reports/probes/) | no content_filter on inert payloads; cache served at +2/+5/+10 min; 6/6 small parallel calls OK, shared prefix cache on 2/3 | single-run probes, not guarantees |
 | Controlled verifier | [reports/controlled-verifier/](reports/controlled-verifier/) | a strong refutation carries a machine-checked counter-citation | a scanner output - candidates are injected |
 | Historical recall (n=9) | [reports/historical/](reports/historical/) | 2/9 known fixes found; 7 known fixes missed | a benchmark metric; n=9, single directory per test |
 
@@ -128,6 +131,8 @@ Two more real repositories were run with the same protocol (2 runs per frozen co
 - [preactjs/preact](https://github.com/preactjs/preact) `src/` (6,214 LOC): run 1 proposed nothing, run 2 verified one error-path defect (`refQueue` is not rolled back when `diff()` throws, while `commitQueue` is) and left two candidates uncertain. Hand verdict: confirmed plausible defect (static), error-boundary path, no matching upstream issue.
 - [moment/luxon](https://github.com/moment/luxon) `src/` (8,582 LOC): both runs verified the same internal `uncomputeOrdinal` conversion defect (`findIndex` instead of `findLastIndex`), but 731 ordinal and 468 ISO-week public-API cases all returned correct dates, so the verified finding is latent (hand severity low, scanner said critical); run 2 additionally **refuted** a plausible-looking locale-week claim with a machine-checked counter-citation (organic L2 evidence).
 - Both are anecdotes, not benchmark metrics; the commits are public (contamination possible) and both directories include the full runs, not only the successful one.
+
+The real-API probe round (axios real/injected, fastify, TTL cache, safety, parallel) is committed under [reports/probes/](reports/probes/) with the full protocol and caveats in [REAL-WORLD-ROUND.md](reports/probes/REAL-WORLD-ROUND.md); it is separate from the benchmark and from the four hand-checked repositories above.
 
 ## Historical recall test (qualitative)
 
