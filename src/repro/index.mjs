@@ -59,7 +59,8 @@ const FORBIDDEN_CODE = [
   [/node:(?:net|http|https|tls|dgram|child_process)\b/i, "network or child process module"],
   [/\bchild_process\b/i, "child process module"],
   [/\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|mkdir|mkdirSync|rm|rmSync|unlink|unlinkSync|rename|renameSync)\s*\(/i, "file write"],
-  [/\bsetTimeout\s*\([^,]+,\s*(?:[1-9]\d{3,}|[2-9]\d{2,})\s*\)/i, "long timeout"]
+  [/\bsetTimeout\s*\([^,]+,\s*(?:[1-9]\d{3,}|[2-9]\d{2,})\s*\)/i, "long timeout"],
+  [/\bconsole\s*\.\s*(?:error|warn|log|info|debug)\s*\(/i, "console output (it could mask the real failure class)"]
 ];
 
 export function parseReproResponse(text) {

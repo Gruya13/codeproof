@@ -56,7 +56,7 @@ test("reproducer schema and parser accept a valid test", function () {
 
 test("reproducer L0 rejects absent assertions, forbidden code and long tests", function () {
   assert.match(validateReproL0(reproResponse("export const x = 1;")).errors.join(" "), /node:assert/);
-  for (const code of ["assert.fail()", "process.exit(1)", "require('x')", "fetch('x')", "http://example.com", "node:net", "node:http", "node:https", "child_process", "writeFileSync('x', 'y')"]) {
+  for (const code of ["assert.fail()", "process.exit(1)", "require('x')", "fetch('x')", "http://example.com", "node:net", "node:http", "node:https", "child_process", "writeFileSync('x', 'y')", "console.error('AssertionError')"]) {
     const result = validateReproL0(reproResponse("import assert from 'node:assert/strict';\n" + code));
     assert.equal(result.ok, false, code);
   }
