@@ -1,0 +1,55 @@
+{
+  "tool": "make-injected",
+  "createdAt": "2026-10-26T22:45:28.759Z",
+  "repo": "axios/axios",
+  "sourceClone": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/axios-lib/_repo",
+  "baseCommit": "790b5ba1d95a95e93d59b76995595c37f2b90a66",
+  "commit": "776d018340e310ab877a1ee9dada071b4f480b71",
+  "scope": "lib",
+  "toleranceLines": 2,
+  "defects": [
+    {
+      "id": "INJ-01",
+      "file": "helpers/isAbsoluteURL.js",
+      "startLine": 15,
+      "endLine": 18,
+      "statement": "isAbsoluteURL treats any non-string input as an absolute URL: a missing or non-string url bypasses the scheme check and is returned as absolute instead of false."
+    },
+    {
+      "id": "INJ-02",
+      "file": "helpers/combineURLs.js",
+      "startLine": 22,
+      "endLine": 22,
+      "statement": "combineURLs concatenates the base and the relative URL without the separator, so a relative path is glued to the last path segment of the base URL."
+    },
+    {
+      "id": "INJ-03",
+      "file": "helpers/buildURL.js",
+      "startLine": 63,
+      "endLine": 63,
+      "statement": "buildURL keeps the hash mark when stripping the fragment, so serialized params are appended after the fragment and never reach the server."
+    },
+    {
+      "id": "INJ-04",
+      "file": "core/InterceptorManager.js",
+      "startLine": 167,
+      "endLine": 169,
+      "statement": "InterceptorManager.forEach no longer skips null slots, so it calls the iteration callback with null for every ejected interceptor."
+    },
+    {
+      "id": "INJ-05",
+      "file": "helpers/scheduler.js",
+      "startLine": 7,
+      "endLine": 7,
+      "statement": "start() assigns a new interval without clearing the existing timer, so calling start() twice leaks the first interval and it keeps firing."
+    },
+    {
+      "id": "INJ-06",
+      "file": "helpers/session.js",
+      "startLine": 4,
+      "endLine": 4,
+      "statement": "store.save is not awaited before store.get, so the read can return the previous token instead of the value that was just saved."
+    }
+  ],
+  "pathNote": "paths are relative to the analyzed scope (lib/)"
+}

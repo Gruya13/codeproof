@@ -1,0 +1,166 @@
+{
+  "runId": "b67b6fc081d9302f",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "e52395aa1fb20258ceee47f2dd82a00474f94b216db71b74b66f1949e71be86d",
+  "repo": {
+    "source": "local",
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/axios-injected/_repo/lib",
+    "commit": "776d018340e310ab877a1ee9dada071b4f480b71",
+    "dirty": false,
+    "loc": 9564,
+    "files": 74
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "43e01b00acc59ce86aeafd47601d8ca5115f5364d945cb167478bfea82a42673"
+    }
+  ],
+  "usage": {
+    "inputTokens": 116463,
+    "outputTokens": 6387,
+    "cachedTokens": 94669,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 1,
+        "inputTokens": 93287,
+        "outputTokens": 4018,
+        "cachedTokens": 93169,
+        "costUsd": 0.031199349999999997
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 3,
+        "inputTokens": 23176,
+        "outputTokens": 2369,
+        "cachedTokens": 1500,
+        "costUsd": 0.134384
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 93287,
+        "outputTokens": 4018,
+        "cachedTokens": 93169,
+        "costUsd": 0.031199349999999997,
+        "durationMs": 16981,
+        "retries": 0
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 1,
+        "inputTokens": 7751,
+        "outputTokens": 679,
+        "cachedTokens": 500,
+        "costUsd": 0.042684,
+        "durationMs": 4920,
+        "retries": 0
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 7573,
+        "outputTokens": 865,
+        "cachedTokens": 500,
+        "costUsd": 0.045692,
+        "durationMs": 7102,
+        "retries": 0
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 3,
+        "inputTokens": 7852,
+        "outputTokens": 825,
+        "cachedTokens": 500,
+        "costUsd": 0.046008,
+        "durationMs": 7688,
+        "retries": 0
+      }
+    ],
+    "costUsd": 0.16558335,
+    "measured": true
+  },
+  "calls": 4,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-26T22:47:17.120Z",
+    "durationMs": 36786
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 28
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 16986
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 19751
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 1
+    }
+  ],
+  "budget": {
+    "limitUsd": 2,
+    "spentUsd": 0.165583,
+    "measured": true,
+    "exceeded": false,
+    "aborted": false,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 3,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 0,
+    "verified": 3,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0
+  },
+  "outputs": {
+    "report": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/axios-injected/run/b67b6fc081d9302f-2/REPORT.md",
+    "findings": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/axios-injected/run/b67b6fc081d9302f-2/findings.json",
+    "rejected": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/axios-injected/run/b67b6fc081d9302f-2/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.1.0"
+  }
+}

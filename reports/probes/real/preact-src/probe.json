@@ -1,0 +1,208 @@
+{
+  "tool": "probe-repo",
+  "createdAt": "2026-10-27T06:46:13.948Z",
+  "stats": {
+    "repo": "https://github.com/preactjs/preact.git",
+    "commit": "1c0f1f82340f096e5850386d617d6a3885693001",
+    "scope": "src",
+    "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/preact-src/_repo/src",
+    "clean": true,
+    "files": 17,
+    "loc": 6214,
+    "importEdges": 44,
+    "cycles": 4,
+    "digestChars": 2179,
+    "promptChars": 248961,
+    "promptFiles": 17,
+    "promptComplete": true,
+    "promptCap": 400000,
+    "estimatedInputTokens": 69156
+  },
+  "runs": [
+    {
+      "index": 1,
+      "runId": "f70bdd8da0dee52d",
+      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/preact-src/f70bdd8da0dee52d",
+      "exitCode": 0,
+      "elapsedMs": 42921,
+      "mode": "smoke",
+      "mock": false,
+      "repo": {
+        "source": "local",
+        "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/preact-src/_repo/src",
+        "commit": "1c0f1f82340f096e5850386d617d6a3885693001",
+        "dirty": false,
+        "loc": 6214,
+        "files": 17
+      },
+      "usage": {
+        "inputTokens": 72450,
+        "outputTokens": 10241,
+        "cachedTokens": 0,
+        "byRole": [
+          {
+            "role": "scanner-correctness",
+            "model": "muse-spark-1.3",
+            "calls": 1,
+            "inputTokens": 72450,
+            "outputTokens": 10241,
+            "cachedTokens": 0,
+            "costUsd": 0.13408675
+          }
+        ]
+      },
+      "costUsd": 0.13408675,
+      "measured": true,
+      "calls": 1,
+      "retries": 0,
+      "budget": {
+        "limitUsd": 2,
+        "spentUsd": 0.134087,
+        "measured": true,
+        "exceeded": false,
+        "aborted": false,
+        "skippedFindings": []
+      },
+      "findings": {
+        "proposed": 0,
+        "l0Rejected": {
+          "count": 0,
+          "items": []
+        },
+        "l1Rejected": 0,
+        "verified": 0,
+        "moderate": 0,
+        "refuted": 0,
+        "uncertain": 0
+      },
+      "l1PassRate": null,
+      "l1Checked": 0,
+      "phases": [
+        {
+          "name": "ingest",
+          "status": "ok",
+          "durationMs": 21
+        },
+        {
+          "name": "scan",
+          "status": "ok",
+          "durationMs": 42833
+        },
+        {
+          "name": "verify",
+          "status": "ok",
+          "durationMs": 0
+        },
+        {
+          "name": "publish",
+          "status": "ok",
+          "durationMs": 1
+        }
+      ],
+      "durationMs": 42872
+    },
+    {
+      "index": 2,
+      "runId": "f70bdd8da0dee52d",
+      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/preact-src/f70bdd8da0dee52d-2",
+      "exitCode": 0,
+      "elapsedMs": 231897,
+      "mode": "smoke",
+      "mock": false,
+      "repo": {
+        "source": "local",
+        "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/preact-src/_repo/src",
+        "commit": "1c0f1f82340f096e5850386d617d6a3885693001",
+        "dirty": false,
+        "loc": 6214,
+        "files": 17
+      },
+      "usage": {
+        "inputTokens": 105869,
+        "outputTokens": 32164,
+        "cachedTokens": 81741,
+        "byRole": [
+          {
+            "role": "scanner-correctness",
+            "model": "muse-spark-1.3",
+            "calls": 1,
+            "inputTokens": 72450,
+            "outputTokens": 14538,
+            "cachedTokens": 72433,
+            "costUsd": 0.07267269999999999
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "calls": 4,
+            "inputTokens": 33419,
+            "outputTokens": 17626,
+            "cachedTokens": 9308,
+            "costUsd": 0.4508256
+          }
+        ]
+      },
+      "costUsd": 0.5234983,
+      "measured": true,
+      "calls": 5,
+      "retries": 0,
+      "budget": {
+        "limitUsd": 2,
+        "spentUsd": 0.523498,
+        "measured": true,
+        "exceeded": false,
+        "aborted": false,
+        "skippedFindings": []
+      },
+      "findings": {
+        "proposed": 3,
+        "l0Rejected": {
+          "count": 0,
+          "items": []
+        },
+        "l1Rejected": 0,
+        "verified": 1,
+        "moderate": 0,
+        "refuted": 0,
+        "uncertain": 2
+      },
+      "l1PassRate": 1,
+      "l1Checked": 3,
+      "phases": [
+        {
+          "name": "ingest",
+          "status": "ok",
+          "durationMs": 21
+        },
+        {
+          "name": "scan",
+          "status": "ok",
+          "durationMs": 55188
+        },
+        {
+          "name": "verify",
+          "status": "ok",
+          "durationMs": 176621
+        },
+        {
+          "name": "publish",
+          "status": "ok",
+          "durationMs": 2
+        }
+      ],
+      "durationMs": 231848
+    }
+  ],
+  "summary": {
+    "runs": 2,
+    "totalCostUsd": 0.657585,
+    "costBeforeUsd": 0,
+    "avgL1PassRate": 1,
+    "verified": 1,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 2,
+    "l1Rejected": 0,
+    "promptComplete": true
+  }
+}

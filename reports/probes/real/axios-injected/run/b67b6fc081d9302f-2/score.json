@@ -1,0 +1,108 @@
+{
+  "defectsTotal": 6,
+  "defectsFoundAny": 3,
+  "defectsVerified": 3,
+  "recallAny": 0.5,
+  "recallVerified": 0.5,
+  "verifiedPublished": 3,
+  "verifiedFalsePositives": 0,
+  "precisionVerified": 1,
+  "l1Checked": 3,
+  "l1Passed": 3,
+  "l1PassRate": 1,
+  "l0Rejected": 0,
+  "toleranceLines": 2,
+  "expected": [
+    {
+      "id": "INJ-01",
+      "file": "helpers/isAbsoluteURL.js",
+      "startLine": 15,
+      "endLine": 18,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "isAbsoluteURL treats any non-string input as an absolute URL: a missing or non-string url bypasses the scheme check and is returned as absolute instead of false."
+    },
+    {
+      "id": "INJ-02",
+      "file": "helpers/combineURLs.js",
+      "startLine": 22,
+      "endLine": 22,
+      "found": true,
+      "statuses": [
+        "verified"
+      ],
+      "matches": [
+        {
+          "findingId": "F-001",
+          "status": "verified",
+          "path": "helpers/combineURLs.js",
+          "startLine": 11,
+          "lineDelta": 11
+        }
+      ],
+      "statement": "combineURLs concatenates the base and the relative URL without the separator, so a relative path is glued to the last path segment of the base URL."
+    },
+    {
+      "id": "INJ-03",
+      "file": "helpers/buildURL.js",
+      "startLine": 63,
+      "endLine": 63,
+      "found": true,
+      "statuses": [
+        "verified"
+      ],
+      "matches": [
+        {
+          "findingId": "F-002",
+          "status": "verified",
+          "path": "helpers/buildURL.js",
+          "startLine": 59,
+          "lineDelta": 4
+        }
+      ],
+      "statement": "buildURL keeps the hash mark when stripping the fragment, so serialized params are appended after the fragment and never reach the server."
+    },
+    {
+      "id": "INJ-04",
+      "file": "core/InterceptorManager.js",
+      "startLine": 167,
+      "endLine": 169,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "InterceptorManager.forEach no longer skips null slots, so it calls the iteration callback with null for every ejected interceptor."
+    },
+    {
+      "id": "INJ-05",
+      "file": "helpers/scheduler.js",
+      "startLine": 7,
+      "endLine": 7,
+      "found": true,
+      "statuses": [
+        "verified"
+      ],
+      "matches": [
+        {
+          "findingId": "F-003",
+          "status": "verified",
+          "path": "helpers/scheduler.js",
+          "startLine": 3,
+          "lineDelta": 4
+        }
+      ],
+      "statement": "start() assigns a new interval without clearing the existing timer, so calling start() twice leaks the first interval and it keeps firing."
+    },
+    {
+      "id": "INJ-06",
+      "file": "helpers/session.js",
+      "startLine": 4,
+      "endLine": 4,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "store.save is not awaited before store.get, so the read can return the previous token instead of the value that was just saved."
+    }
+  ],
+  "falsePositives": []
+}

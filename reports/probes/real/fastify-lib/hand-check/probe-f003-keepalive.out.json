@@ -1,0 +1,24 @@
+{
+ "withoutLogger": {
+  "withLogger": false,
+  "afterFirst": {
+   "socketMetaPresent": true,
+   "timeoutListeners": 2
+  },
+  "afterPlain": {
+   "socketMetaPresent": true,
+   "timeoutListeners": 2
+  }
+ },
+ "withLogger": {
+  "withLogger": true,
+  "afterFirst": {
+   "socketMetaPresent": false,
+   "timeoutListeners": 1
+  },
+  "afterPlain": {
+   "socketMetaPresent": false,
+   "timeoutListeners": 1
+  }
+ }
+}

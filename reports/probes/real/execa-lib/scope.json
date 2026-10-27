@@ -1,0 +1,18 @@
+{
+  "repo": "https://github.com/sindresorhus/execa.git",
+  "commit": "247faa0ff0641020e8790475989cee72df85d62b",
+  "scope": "lib",
+  "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/execa-lib/_repo/lib",
+  "clean": true,
+  "files": 110,
+  "loc": 8227,
+  "importEdges": 300,
+  "cycles": 5,
+  "digestChars": 17084,
+  "promptChars": 350469,
+  "promptFiles": 110,
+  "promptComplete": true,
+  "promptCap": 400000,
+  "estimatedInputTokens": 97353,
+  "dryRun": true
+}

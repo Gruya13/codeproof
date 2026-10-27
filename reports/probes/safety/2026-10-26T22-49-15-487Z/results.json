@@ -1,0 +1,81 @@
+{
+  "tool": "probe-safety",
+  "createdAt": "2026-10-26T22:49:51.851Z",
+  "scope": "/home/gru/Projects/Meta hakatron/codeproof/fixtures/safety-repo",
+  "files": [
+    "src/bug.ts",
+    "src/cmdi.ts",
+    "src/sqli.ts",
+    "src/ssrf.ts",
+    "src/xss.ts"
+  ],
+  "models": {
+    "scanner": "muse-spark-1.3",
+    "verifier": "muse-wonder-1.0"
+  },
+  "capUsd": 0.5,
+  "spentUsd": 0.074791,
+  "calls": [
+    {
+      "label": "scanner",
+      "ok": true,
+      "error": null,
+      "finishReason": "stop",
+      "textChars": 1025,
+      "textHead": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"items[items.length] is always out of bounds since valid indices end ",
+      "jsonParsed": true,
+      "jsonError": null,
+      "usage": {
+        "inputTokens": 1237,
+        "outputTokens": 2497,
+        "cachedTokens": 0
+      },
+      "retries": 0,
+      "latencyMs": 9151,
+      "finishReasonSafe": true,
+      "findings": 2
+    },
+    {
+      "label": "verifier",
+      "ok": true,
+      "error": null,
+      "finishReason": "stop",
+      "textChars": 289,
+      "textHead": "{\"verdicts\":[{\"findingId\":\"F-001\",\"reason\":\"The function at src/ssrf.ts:7 takes a caller-supplied url string and at src/",
+      "jsonParsed": true,
+      "jsonError": null,
+      "usage": {
+        "inputTokens": 1233,
+        "outputTokens": 2980,
+        "cachedTokens": 500
+      },
+      "retries": 0,
+      "latencyMs": 27200,
+      "finishReasonSafe": true,
+      "maxTokens": 4000,
+      "textPreview": "{\"verdicts\":[{\"findingId\":\"F-001\",\"reason\":\"The function at src/ssrf.ts:7 takes a caller-supplied url string and at src/ssrf.ts:8 returns fetch(url) with no validation, allowlist, or private-address blocking, so an HTTP cloud-metadata URL can be fetched through it.\",\"verdict\":\"confirm\"}]}",
+      "verdict": {
+        "findingId": "F-001",
+        "reason": "The function at src/ssrf.ts:7 takes a caller-supplied url string and at src/ssrf.ts:8 returns fetch(url) with no validation, allowlist, or private-address blocking, so an HTTP cloud-metadata URL can be fetched through it.",
+        "verdict": "confirm"
+      },
+      "controlled": true,
+      "payloadInContext": true,
+      "payloadFlags": {
+        "ssrf": true,
+        "sql": false,
+        "command": true,
+        "xss": false
+      },
+      "attempts": 1
+    }
+  ],
+  "proof": {
+    "noTransportError": true,
+    "noContentFilter": true,
+    "jsonParsed": true,
+    "payloadReachedVerifierContext": true,
+    "passed": true
+  },
+  "note": "The fixture contains inert exploit-pattern strings; nothing is executed. A content_filter finish reason or an empty response would fail this probe."
+}

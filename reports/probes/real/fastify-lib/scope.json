@@ -1,0 +1,18 @@
+{
+  "repo": "https://github.com/fastify/fastify.git",
+  "commit": "5df959f3af698823dd582f1c3661f3e80df0b5da",
+  "scope": "lib",
+  "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/fastify-lib/_repo/lib",
+  "clean": true,
+  "files": 31,
+  "loc": 8351,
+  "importEdges": 90,
+  "cycles": 0,
+  "digestChars": 3901,
+  "promptChars": 298719,
+  "promptFiles": 31,
+  "promptComplete": true,
+  "promptCap": 400000,
+  "estimatedInputTokens": 82978,
+  "dryRun": true
+}

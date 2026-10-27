@@ -1,0 +1,122 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"ContentTypeParser.remove deletes the parser but never invalidates the lookup cache, so getParser keeps returning the removed parser from cache on subsequent requests.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 190, \"path\": \"content-type-parser.js\", \"snippet\": \"ContentTypeParser.prototype.remove = function (contentType) {\\n  let parsers\\n\\n  if (typeof contentType === 'string') {\\n    contentType = new ContentType(contentType).toString()\\n    parsers = this.parserList\\n  } else {\\n    if (!(contentType instanceof RegExp)) throw new FST_ERR_CTP_INVALID_TYPE()\\n    contentType = contentType.toString()\\n    parsers = this.parserRegExpList\\n  }\\n\\n  const removed = this.customParsers.delete(contentType)\\n  const idx = parsers.findIndex(ct => ct.toString() === contentType)\", \"startLine\": 170}, {\"endLine\": 133, \"path\": \"content-type-parser.js\", \"snippet\": \"ContentTypeParser.prototype.getParser = function (contentType) {\\n  if (typeof contentType === 'string') {\\n    const cached = this.cache.get(contentType)\\n    if (cached !== undefined) return cached\\n    contentType = new ContentType(contentType)\\n  }\\n  const ct = contentType.toString()\\n\\n  let parser = this.cache.get(ct)\\n  if (parser !== undefined) return parser\\n  parser = this.customParsers.get(ct)\\n  if (parser !== undefined) {\\n    this.cache.set(ct, parser)\\n    return parser\", \"startLine\": 119}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"ContentTypeParser.remove does not clear cache\"}, {\"category\": \"correctness\", \"claim\": \"arrange404 re-binds an already-bound defaultRoute, so the second prefixed instance has no effect and 404 fallback keeps the first instance as `this`.\", \"confidence\": 0.92, \"evidence\": [{\"endLine\": 50, \"path\": \"four-oh-four.js\", \"snippet\": \"  function arrange404 (instance) {\\n    // Change the pointer of the fastify instance to itself, so register + prefix can add new 404 handler\\n    instance[kFourOhFourLevelInstance] = instance\\n    instance[kCanSetNotFoundHandler] = true\\n    // we need to bind instance for the context\\n    router.defaultRoute = router.defaultRoute.bind(instance)\\n  }\", \"startLine\": 44}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"404 defaultRoute double-bind loses instance\"}, {\"category\": \"correctness\", \"claim\": \"Socket timeout state stored on the reused keep-alive socket is overwritten per request and its cleanup only runs inside setupResponseListeners, which is skipped unless logger/onResponse/handlerTimeout is set, leaving stale request/reply and listener.\", \"confidence\": 0.88, \"evidence\": [{\"endLine\": 568, \"path\": \"route.js\", \"snippet\": \"    if (hasLogger === true || context.onResponse !== null || handlerTimeout > 0) {\\n      setupResponseListeners(reply)\\n    }\\n\\n    if (context.onTimeout !== null) {\\n      if (!request.raw.socket._meta) {\\n        request.raw.socket.on('timeout', handleTimeout)\\n      }\\n      request.raw.socket._meta = { context, request, reply, onTimeout: handleTimeout }\\n    }\", \"startLine\": 559}, {\"endLine\": 1001, \"path\": \"reply.js\", \"snippet\": \"    const socket = reply.request.raw.socket\\n    if (socket && socket._meta && socket._meta.request === reply.request) {\\n      socket.removeListener('timeout', socket._meta.onTimeout)\\n      socket._meta = null\\n    }\", \"startLine\": 997}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Socket onTimeout handle replaced without guaranteed cleanup\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "ContentTypeParser.remove deletes the parser but never invalidates the lookup cache, so getParser keeps returning the removed parser from cache on subsequent requests.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 190,
+            "path": "content-type-parser.js",
+            "snippet": "ContentTypeParser.prototype.remove = function (contentType) {\n  let parsers\n\n  if (typeof contentType === 'string') {\n    contentType = new ContentType(contentType).toString()\n    parsers = this.parserList\n  } else {\n    if (!(contentType instanceof RegExp)) throw new FST_ERR_CTP_INVALID_TYPE()\n    contentType = contentType.toString()\n    parsers = this.parserRegExpList\n  }\n\n  const removed = this.customParsers.delete(contentType)\n  const idx = parsers.findIndex(ct => ct.toString() === contentType)",
+            "startLine": 170
+          },
+          {
+            "endLine": 133,
+            "path": "content-type-parser.js",
+            "snippet": "ContentTypeParser.prototype.getParser = function (contentType) {\n  if (typeof contentType === 'string') {\n    const cached = this.cache.get(contentType)\n    if (cached !== undefined) return cached\n    contentType = new ContentType(contentType)\n  }\n  const ct = contentType.toString()\n\n  let parser = this.cache.get(ct)\n  if (parser !== undefined) return parser\n  parser = this.customParsers.get(ct)\n  if (parser !== undefined) {\n    this.cache.set(ct, parser)\n    return parser",
+            "startLine": 119
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "ContentTypeParser.remove does not clear cache"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 119-132 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: getParser returns this.cache entries before consulting customParsers at content-type-parser.js:119-132, while remove at content-type-parser.js:170-190 only deletes from customParsers and splices parserList/parserRegExpList without clearing this.cache, unlike removeAll which resets the cache at content-type-parser.js:163-168."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "arrange404 re-binds an already-bound defaultRoute, so the second prefixed instance has no effect and 404 fallback keeps the first instance as `this`.",
+        "confidence": 0.92,
+        "evidence": [
+          {
+            "endLine": 50,
+            "path": "four-oh-four.js",
+            "snippet": "  function arrange404 (instance) {\n    // Change the pointer of the fastify instance to itself, so register + prefix can add new 404 handler\n    instance[kFourOhFourLevelInstance] = instance\n    instance[kCanSetNotFoundHandler] = true\n    // we need to bind instance for the context\n    router.defaultRoute = router.defaultRoute.bind(instance)\n  }",
+            "startLine": 44
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "404 defaultRoute double-bind loses instance"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 44-50 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The router is created with the unbound fourOhFourFallBack at four-oh-four.js:36, arrange404 unconditionally replaces router.defaultRoute with router.defaultRoute.bind(instance) at four-oh-four.js:49, and fourOhFourFallBack dereferences this[kFourOhFourLevelInstance] at four-oh-four.js:165; under Function.prototype.bind semantics a second bind cannot change the first bound this."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Socket timeout state stored on the reused keep-alive socket is overwritten per request and its cleanup only runs inside setupResponseListeners, which is skipped unless logger/onResponse/handlerTimeout is set, leaving stale request/reply and listener.",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "endLine": 568,
+            "path": "route.js",
+            "snippet": "    if (hasLogger === true || context.onResponse !== null || handlerTimeout > 0) {\n      setupResponseListeners(reply)\n    }\n\n    if (context.onTimeout !== null) {\n      if (!request.raw.socket._meta) {\n        request.raw.socket.on('timeout', handleTimeout)\n      }\n      request.raw.socket._meta = { context, request, reply, onTimeout: handleTimeout }\n    }",
+            "startLine": 559
+          },
+          {
+            "endLine": 1001,
+            "path": "reply.js",
+            "snippet": "    const socket = reply.request.raw.socket\n    if (socket && socket._meta && socket._meta.request === reply.request) {\n      socket.removeListener('timeout', socket._meta.onTimeout)\n      socket._meta = null\n    }",
+            "startLine": 997
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Socket onTimeout handle replaced without guaranteed cleanup"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 559-568 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Route.js:559-561 gates setupResponseListeners on hasLogger/onResponse/handlerTimeout while route.js:563-568 unconditionally overwrites socket._meta for onTimeout, and the cited cleanup at reply.js:997-1001 is the normal-path removal, so a logger-disabled onTimeout route retains stale request/reply and the timeout listener; the hijack cleanup at reply.js:148-152 only covers hijacked replies, not normal completion."
+      }
+    }
+  ]
+}

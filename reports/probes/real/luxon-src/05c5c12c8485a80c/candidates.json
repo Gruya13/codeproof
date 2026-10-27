@@ -1,0 +1,40 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"uncomputeOrdinal uses findIndex(i < ordinal) which always returns 0 for ordinal>=1, so month is always 1 and day equals ordinal; ordinal-to-gregorian conversion is wrong for any ordinal >31.\", \"confidence\": 0.98, \"evidence\": [{\"endLine\": 45, \"path\": \"impl/conversions.js\", \"snippet\": \"function uncomputeOrdinal(year, ordinal) {\\n  const table = isLeapYear(year) ? leapLadder : nonLeapLadder,\\n    month0 = table.findIndex((i) => i < ordinal),\\n    day = ordinal - table[month0];\\n  return { month: month0 + 1, day };\\n}\", \"startLine\": 40}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"uncomputeOrdinal always returns January\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "uncomputeOrdinal uses findIndex(i < ordinal) which always returns 0 for ordinal>=1, so month is always 1 and day equals ordinal; ordinal-to-gregorian conversion is wrong for any ordinal >31.",
+        "confidence": 0.98,
+        "evidence": [
+          {
+            "endLine": 45,
+            "path": "impl/conversions.js",
+            "snippet": "function uncomputeOrdinal(year, ordinal) {\n  const table = isLeapYear(year) ? leapLadder : nonLeapLadder,\n    month0 = table.findIndex((i) => i < ordinal),\n    day = ordinal - table[month0];\n  return { month: month0 + 1, day };\n}",
+            "startLine": 40
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "uncomputeOrdinal always returns January"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 40-45 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at impl/conversions.js:42 uses table.findIndex((i) => i < ordinal) on ladders starting with 0 at impl/conversions.js:14-15, so for ordinal>=1 the first element satisfies the predicate, month0 is always 0, and impl/conversions.js:43-44 therefore return month 1 with day equal to ordinal, which is incorrect for ordinal>31."
+      }
+    }
+  ]
+}

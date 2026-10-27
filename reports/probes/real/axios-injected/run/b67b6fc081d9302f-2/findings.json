@@ -1,0 +1,92 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "combineURLs strips trailing slashes from baseURL and leading slashes from relativeURL then concatenates without inserting '/', producing e.g. 'http://a/b'+'c' as 'http://a/bc' instead of 'http://a/b/c'.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 23,
+          "path": "helpers/combineURLs.js",
+          "snippet": "export default function combineURLs(baseURL, relativeURL) {\n  if (!relativeURL) {\n    return baseURL;\n  }\n\n  let end = baseURL.length;\n\n  while (end > 0 && baseURL.charCodeAt(end - 1) === 47) {\n    end--;\n  }\n\n  return baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '');\n}",
+          "startLine": 11
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "combineURLs missing '/' separator"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 11-23 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at helpers/combineURLs.js:22 returns baseURL.slice(0, end) concatenated directly with relativeURL stripped of leading slashes, with no '/' inserted, so 'http://a/b' + 'c' yields 'http://a/bc'."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "buildURL keeps the '#' when stripping the fragment (slice to hashmarkIndex+1), so serialized params are appended after '#' inside the fragment instead of as a query string.",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "endLine": 65,
+          "path": "helpers/buildURL.js",
+          "snippet": "  if (serializedParams) {\n    const hashmarkIndex = url.indexOf('#');\n\n    if (hashmarkIndex !== -1) {\n      url = url.slice(0, hashmarkIndex + 1);\n    }\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;",
+          "startLine": 59
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "buildURL appends query after '#' fragment"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 59-65 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at helpers/buildURL.js:63 uses url.slice(0, hashmarkIndex + 1), retaining the '#', and helpers/buildURL.js:65 then appends '?'+serializedParams after it, placing the params inside the fragment."
+    }
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "createScheduler.start overwrites this.timer with a new setInterval without clearing an existing interval, leaking the previous timer handle.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 13,
+          "path": "helpers/scheduler.js",
+          "snippet": "export function createScheduler() {\n  return {\n    timer: null,\n    start(callback, intervalMs) {\n      this.timer = setInterval(callback, intervalMs);\n    },\n    stop() {\n      clearInterval(this.timer);\n      this.timer = null;\n    }\n  };",
+          "startLine": 3
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "scheduler start replaces timer without clearing"
+    },
+    "status": "verified",
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 3-13 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "helpers/scheduler.js:7 assigns this.timer = setInterval(callback, intervalMs) with no preceding clearInterval, and helpers/scheduler.js:10 in stop() is the only clearing path, so calling start twice loses the previous timer handle."
+    }
+  }
+]

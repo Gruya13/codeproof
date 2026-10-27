@@ -1,0 +1,18 @@
+{
+  "repo": "https://github.com/axios/axios.git",
+  "commit": "790b5ba1d95a95e93d59b76995595c37f2b90a66",
+  "scope": "lib",
+  "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/axios-lib/_repo/lib",
+  "clean": true,
+  "files": 72,
+  "loc": 9546,
+  "importEdges": 177,
+  "cycles": 0,
+  "digestChars": 10818,
+  "promptChars": 338330,
+  "promptFiles": 72,
+  "promptComplete": true,
+  "promptCap": 400000,
+  "estimatedInputTokens": 93981,
+  "dryRun": true
+}

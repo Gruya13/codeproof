@@ -1,0 +1,134 @@
+{
+  "tool": "probe-cache",
+  "createdAt": "2026-10-26T22:48:11.553Z",
+  "model": "muse-spark-1.3-contributor",
+  "scope": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/axios-lib/_repo/lib",
+  "files": 72,
+  "prefixChars": 338330,
+  "estimatedPrefixTokens": 93981,
+  "minutes": [
+    2,
+    5,
+    10
+  ],
+  "isolatedMinute": 10,
+  "capUsd": 0.5,
+  "spentUsd": 0.018697,
+  "calls": [
+    {
+      "series": "A",
+      "label": "warmup",
+      "requestedAt": "2026-10-26T22:48:11.555Z",
+      "elapsedSec": 4,
+      "inputTokens": 89849,
+      "outputTokens": 4,
+      "cachedTokens": 0,
+      "uncachedTokens": 89849,
+      "costUsd": 0.008986,
+      "latencyMs": 3558,
+      "retries": 0,
+      "finishReason": "length",
+      "text": ""
+    },
+    {
+      "series": "B",
+      "label": "warmup",
+      "requestedAt": "2026-10-26T22:48:11.583Z",
+      "elapsedSec": 4,
+      "inputTokens": 89849,
+      "outputTokens": 4,
+      "cachedTokens": 0,
+      "uncachedTokens": 89849,
+      "costUsd": 0.008986,
+      "latencyMs": 3727,
+      "retries": 0,
+      "finishReason": "length",
+      "text": ""
+    },
+    {
+      "series": "A",
+      "label": "t+2min",
+      "requestedAt": "2026-10-26T22:50:11.553Z",
+      "elapsedSec": 123,
+      "inputTokens": 89849,
+      "outputTokens": 4,
+      "cachedTokens": 89841,
+      "uncachedTokens": 8,
+      "costUsd": 0.000181,
+      "latencyMs": 2687,
+      "retries": 0,
+      "finishReason": "length",
+      "text": ""
+    },
+    {
+      "series": "A",
+      "label": "t+5min",
+      "requestedAt": "2026-10-26T22:53:11.641Z",
+      "elapsedSec": 302,
+      "inputTokens": 89849,
+      "outputTokens": 4,
+      "cachedTokens": 89841,
+      "uncachedTokens": 8,
+      "costUsd": 0.000181,
+      "latencyMs": 2402,
+      "retries": 0,
+      "finishReason": "length",
+      "text": ""
+    },
+    {
+      "series": "A",
+      "label": "t+10min",
+      "requestedAt": "2026-10-26T22:58:11.606Z",
+      "elapsedSec": 603,
+      "inputTokens": 89849,
+      "outputTokens": 4,
+      "cachedTokens": 89841,
+      "uncachedTokens": 8,
+      "costUsd": 0.000181,
+      "latencyMs": 3386,
+      "retries": 0,
+      "finishReason": "length",
+      "text": ""
+    },
+    {
+      "series": "B",
+      "label": "t+10min (isolated)",
+      "requestedAt": "2026-10-26T22:58:14.992Z",
+      "elapsedSec": 607,
+      "inputTokens": 89849,
+      "outputTokens": 4,
+      "cachedTokens": 89841,
+      "uncachedTokens": 8,
+      "costUsd": 0.000181,
+      "latencyMs": 3594,
+      "retries": 0,
+      "finishReason": "length",
+      "text": ""
+    }
+  ],
+  "verdict": [
+    {
+      "intervalMin": 2,
+      "cachedTokens": 89841,
+      "alive": true
+    },
+    {
+      "intervalMin": 5,
+      "cachedTokens": 89841,
+      "alive": true
+    },
+    {
+      "intervalMin": 10,
+      "cachedTokens": 89841,
+      "alive": true
+    },
+    {
+      "intervalMin": 10,
+      "cachedTokens": 89841,
+      "alive": true,
+      "isolated": true,
+      "warmupCached": null
+    }
+  ],
+  "note": "cached_tokens > 0 means the API reused the prefix cache on that call. The isolated series measures the cache after no refresh; the continuous series measures it while the prefix keeps being used. A zero may also mean the request landed on a different backend instance, so this probe reports lower bounds, not an exact TTL."
+}

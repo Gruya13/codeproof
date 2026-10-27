@@ -1,0 +1,40 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Shebang parsing uses split(' ', 2), so any interpreter arguments beyond the first are dropped, and for non-env interpreters the interpreter plus argument are returned as a single space-containing file path which cannot resolve correctly.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 162, \"path\": \"arguments/command-file.js\", \"snippet\": \"  const [interpreterPath, argument] = shebangLine.split(' ', 2);\\n  const interpreter = interpreterPath.split('/').at(-1);\\n  if (interpreter === 'env') {\\n    return argument;\\n  }\\n\\n  return argument ? `${interpreter} ${argument}` : interpreter;\", \"startLine\": 156}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Shebang interpreter arguments truncated and combined into file path\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Shebang parsing uses split(' ', 2), so any interpreter arguments beyond the first are dropped, and for non-env interpreters the interpreter plus argument are returned as a single space-containing file path which cannot resolve correctly.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 162,
+            "path": "arguments/command-file.js",
+            "snippet": "  const [interpreterPath, argument] = shebangLine.split(' ', 2);\n  const interpreter = interpreterPath.split('/').at(-1);\n  if (interpreter === 'env') {\n    return argument;\n  }\n\n  return argument ? `${interpreter} ${argument}` : interpreter;",
+            "startLine": 156
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Shebang interpreter arguments truncated and combined into file path"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 156-162 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at arguments/command-file.js:156 uses split(' ', 2), which discards all tokens after the second, and at arguments/command-file.js:157-162 it returns only the single argument for env or a space-joined `${interpreter} ${argument}` string as the interpreter value described at arguments/command-file.js:147-149, confirming truncation and the space-containing return."
+      }
+    }
+  ]
+}

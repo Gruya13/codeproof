@@ -1,0 +1,40 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"transformRequest returns the whole underlying ArrayBuffer for any ArrayBuffer view, ignoring byteOffset and byteLength, so a partial TypedArray/DataView sends incorrect bytes\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 72, \"path\": \"defaults/index.js\", \"snippet\": \"      if (utils.isArrayBufferView(data)) {\\n        return data.buffer;\\n      }\", \"startLine\": 70}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"ArrayBufferView loses view offset/length\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "transformRequest returns the whole underlying ArrayBuffer for any ArrayBuffer view, ignoring byteOffset and byteLength, so a partial TypedArray/DataView sends incorrect bytes",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 72,
+            "path": "defaults/index.js",
+            "snippet": "      if (utils.isArrayBufferView(data)) {\n        return data.buffer;\n      }",
+            "startLine": 70
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "ArrayBufferView loses view offset/length"
+      },
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 70-72 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "At defaults/index.js:70-72 transformRequest returns data.buffer for any ArrayBufferView without slicing by byteOffset or byteLength, so a partial TypedArray/DataView expands to its entire underlying buffer."
+      }
+    }
+  ]
+}

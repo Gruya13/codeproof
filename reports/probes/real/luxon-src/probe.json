@@ -1,0 +1,217 @@
+{
+  "tool": "probe-repo",
+  "createdAt": "2026-10-27T06:59:19.688Z",
+  "stats": {
+    "repo": "https://github.com/moment/luxon.git",
+    "commit": "f427515a38f6a671f8de663e6bcc040ed81f114e",
+    "scope": "src",
+    "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/luxon-src/_repo/src",
+    "clean": true,
+    "files": 24,
+    "loc": 8582,
+    "importEdges": 97,
+    "cycles": 15,
+    "digestChars": 5069,
+    "promptChars": 332249,
+    "promptFiles": 24,
+    "promptComplete": true,
+    "promptCap": 400000,
+    "estimatedInputTokens": 92291
+  },
+  "runs": [
+    {
+      "index": 1,
+      "runId": "05c5c12c8485a80c",
+      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/luxon-src/05c5c12c8485a80c",
+      "exitCode": 0,
+      "elapsedMs": 143879,
+      "mode": "smoke",
+      "mock": false,
+      "repo": {
+        "source": "local",
+        "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/luxon-src/_repo/src",
+        "commit": "f427515a38f6a671f8de663e6bcc040ed81f114e",
+        "dirty": false,
+        "loc": 8582,
+        "files": 24
+      },
+      "usage": {
+        "inputTokens": 204532,
+        "outputTokens": 29562,
+        "cachedTokens": 500,
+        "byRole": [
+          {
+            "role": "scanner-correctness",
+            "model": "muse-spark-1.3",
+            "calls": 2,
+            "inputTokens": 196444,
+            "outputTokens": 28110,
+            "cachedTokens": 0,
+            "costUsd": 0.3650225
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "calls": 1,
+            "inputTokens": 8088,
+            "outputTokens": 1452,
+            "cachedTokens": 500,
+            "costUsd": 0.059492
+          }
+        ]
+      },
+      "costUsd": 0.4245145,
+      "measured": true,
+      "calls": 3,
+      "retries": 0,
+      "budget": {
+        "limitUsd": 2,
+        "spentUsd": 0.424515,
+        "measured": true,
+        "exceeded": false,
+        "aborted": false,
+        "skippedFindings": []
+      },
+      "findings": {
+        "proposed": 1,
+        "l0Rejected": {
+          "count": 0,
+          "items": []
+        },
+        "l1Rejected": 0,
+        "verified": 1,
+        "moderate": 0,
+        "refuted": 0,
+        "uncertain": 0
+      },
+      "l1PassRate": 1,
+      "l1Checked": 1,
+      "phases": [
+        {
+          "name": "ingest",
+          "status": "ok",
+          "durationMs": 24
+        },
+        {
+          "name": "scan",
+          "status": "ok",
+          "durationMs": 132826
+        },
+        {
+          "name": "verify",
+          "status": "ok",
+          "durationMs": 10956
+        },
+        {
+          "name": "publish",
+          "status": "ok",
+          "durationMs": 1
+        }
+      ],
+      "durationMs": 143827
+    },
+    {
+      "index": 2,
+      "runId": "05c5c12c8485a80c",
+      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/luxon-src/05c5c12c8485a80c-2",
+      "exitCode": 0,
+      "elapsedMs": 324137,
+      "mode": "smoke",
+      "mock": false,
+      "repo": {
+        "source": "local",
+        "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/luxon-src/_repo/src",
+        "commit": "f427515a38f6a671f8de663e6bcc040ed81f114e",
+        "dirty": false,
+        "loc": 8582,
+        "files": 24
+      },
+      "usage": {
+        "inputTokens": 229537,
+        "outputTokens": 44903,
+        "cachedTokens": 107469,
+        "byRole": [
+          {
+            "role": "scanner-correctness",
+            "model": "muse-spark-1.3",
+            "calls": 2,
+            "inputTokens": 196444,
+            "outputTokens": 28859,
+            "cachedTokens": 98161,
+            "costUsd": 0.26022865
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "calls": 4,
+            "inputTokens": 33093,
+            "outputTokens": 16044,
+            "cachedTokens": 9308,
+            "costUsd": 0.4178816
+          }
+        ]
+      },
+      "costUsd": 0.67811025,
+      "measured": true,
+      "calls": 6,
+      "retries": 0,
+      "budget": {
+        "limitUsd": 2,
+        "spentUsd": 0.67811,
+        "measured": true,
+        "exceeded": false,
+        "aborted": false,
+        "skippedFindings": []
+      },
+      "findings": {
+        "proposed": 2,
+        "l0Rejected": {
+          "count": 0,
+          "items": []
+        },
+        "l1Rejected": 0,
+        "verified": 1,
+        "moderate": 0,
+        "refuted": 1,
+        "uncertain": 0
+      },
+      "l1PassRate": 1,
+      "l1Checked": 2,
+      "phases": [
+        {
+          "name": "ingest",
+          "status": "ok",
+          "durationMs": 21
+        },
+        {
+          "name": "scan",
+          "status": "ok",
+          "durationMs": 176032
+        },
+        {
+          "name": "verify",
+          "status": "ok",
+          "durationMs": 148016
+        },
+        {
+          "name": "publish",
+          "status": "ok",
+          "durationMs": 2
+        }
+      ],
+      "durationMs": 324087
+    }
+  ],
+  "summary": {
+    "runs": 2,
+    "totalCostUsd": 1.102625,
+    "costBeforeUsd": 0,
+    "avgL1PassRate": 1,
+    "verified": 2,
+    "moderate": 0,
+    "refuted": 1,
+    "uncertain": 0,
+    "l1Rejected": 0,
+    "promptComplete": true
+  }
+}
