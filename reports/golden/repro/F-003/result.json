@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'checking=200,savings=100'\n- 'checking=100,savings=50'\n            ^\n\n    at file:///tmp/codeproof-repro-6vQfyj/snapshot/.codeproof-repro.test.mjs:10:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'checking=200,savings=100',\n  expected: 'checking=100,savings=50',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 112,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'checking=200,savings=100'\n- 'checking=100,savings=50'\n            ^\n\n    at file:///tmp/codeproof-repro-6vQfyj/snapshot/.codeproof-repro.test.mjs:10:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'checking=200,savings=100',\n  expected: 'checking=100,savings=50',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 107,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'checking=200,savings=100'\n- 'checking=100,savings=50'\n            ^\n\n    at file:///tmp/codeproof-repro-6vQfyj/snapshot/.codeproof-repro.test.mjs:10:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'checking=200,savings=100',\n  expected: 'checking=100,savings=50',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 102,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "buildSummary(entries) summarizes only the entries passed to that call, so repeated calls with the same entries return the same result and do not include prior calls' entries",
+  "rationale": "buildSummary calls post() which appends to module-level totals and then sums all totals, so a second identical call double-counts the first call's entries.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 722,
+    "outputTokens": 2191,
+    "cachedTokens": 116
+  },
+  "costUsd": 0.046267199999999994
+}

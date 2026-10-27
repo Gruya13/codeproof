@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: second start() should clear the prior interval, so no ticks from the 10ms timer should fire\n\n11 !== 0\n\n    at file:///tmp/codeproof-repro-XdG6Wd/snapshot/.codeproof-repro.test.mjs:13:10\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processTimers (node:internal/timers:615:9) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 11,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 230,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: second start() should clear the prior interval, so no ticks from the 10ms timer should fire\n\n11 !== 0\n\n    at file:///tmp/codeproof-repro-XdG6Wd/snapshot/.codeproof-repro.test.mjs:13:10 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 11,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 236,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: second start() should clear the prior interval, so no ticks from the 10ms timer should fire\n\n11 !== 0\n\n    at file:///tmp/codeproof-repro-XdG6Wd/snapshot/.codeproof-repro.test.mjs:13:10 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 11,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 236,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "After start(10) followed by start(500), the first interval is cleared so no ticks fire within 120ms (the 500ms interval has not fired yet).",
+  "rationale": "Behavioral tick-count test: a leaked 10ms interval fires repeatedly during the wait, while a correctly cleared interval fires none. Captured timer handles are only used to clean up so the process can exit (Scheduler has no stop method).",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 614,
+    "outputTokens": 3415,
+    "cachedTokens": 116
+  },
+  "costUsd": 0.0703152
+}

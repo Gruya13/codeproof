@@ -2,14 +2,15 @@
 
 **Every finding carries the level of proof it earned: machine-checked citation, adversarial confirmation, or a failing test.**
 
-A finding appears in the main report only if two separate gates pass:
+A finding appears in the main report only if the gates pass:
 
 1. **L1 - deterministic citation gate.** The cited file, line range and verbatim snippet exist in the analyzed commit. Checked by code, not by a prompt.
 2. **L2 - adversarial verifier.** A different model (Muse Wonder) tries to refute the finding. A strong refutation must carry its own machine-checked counter-citation.
+3. **L3 - execution proof.** For every confirmed finding, the verifier model writes a small standalone test. The test must fail 3/3 on the analyzed commit inside a permission-model sandbox (no network, no writes, 2 s timeout) before the finding is labelled `execution-proven`.
 
 Candidates that fail L0 or L1, receive a weak refutation, remain uncertain, or are skipped for budget are recorded in `rejected.md`. Strong refutations are recorded there with their counter-citations.
 
-L1 is a provenance check, not a semantic judge: it checks every cited snippet against the analyzed commit. L2 is a model judgment, not a proof that the claimed defect exists. The current `verified` status means **citation-proven + adversarially-confirmed**, not execution-proven or semantically guaranteed.
+L1 is a provenance check, not a semantic judge: it checks every cited snippet against the analyzed commit. L2 is a model judgment, not a proof that the claimed defect exists. A finding is `verified` when L1 and L2 pass; it is additionally **execution-proven** only when the generated reproducer fails on the analyzed commit. None of these levels is a semantic guarantee.
 
 ## Evidence levels
 
@@ -17,7 +18,7 @@ L1 is a provenance check, not a semantic judge: it checks every cited snippet ag
 |---|---|---|
 | `citation-proven` | L1 checks every cited line against the analyzed commit. | Current |
 | `adversarially-confirmed` | L2 did not refute the claim; this is a model judgment. | Current; `verified` combines this with `citation-proven` |
-| `execution-proven` | A generated test fails on the analyzed commit. | Planned L3; not implemented yet |
+| `execution-proven` | L3: the verifier model wrote a test that fails 3/3 on the analyzed commit inside a sandboxed runner. | Current when a faithful executable test can be written; otherwise the finding stays at `citation-proven + adversarially-confirmed` |
 | `refuted` | The verifier supplied a counter-citation that passed the current mechanical policy. | Current; semantic relevance is not guaranteed |
 | `unresolved` | Weak refutation, uncertainty, failed citation or budget skip; not verified. | Current; see `rejected.md` |
 
@@ -25,7 +26,7 @@ L1 is a provenance check, not a semantic judge: it checks every cited snippet ag
 
 An AI review tool can produce a convincing but wrong claim even when it cites real lines. The developer then has to check both the provenance of the citation and the interpretation of the code. A tool can also miss an existing bug.
 
-CodeProof statically reviews a TypeScript/JavaScript repository. L1 checks all citations against the analyzed commit; Muse Wonder then judges the claim in an adversarial role. `Verified` means those two checks passed. The gates do not guarantee completeness or semantic accuracy: the current calibration result is 7/8 with the strict gate (8/8 under the previous, looser gate), and on nine known fixes the earlier gate found two. Zero false findings were recorded among the committed, hand-checked runs; the uncommitted swr-87cf235d run listed in historical results has three verified findings without committed adjudication.
+CodeProof statically reviews a TypeScript/JavaScript repository. L1 checks all citations against the analyzed commit; Muse Wonder then judges the claim in an adversarial role. `Verified` means L1 and L2 passed. The gates do not guarantee completeness or semantic accuracy: on the calibration set the current run is 8/8 with all nine published findings execution-proven, and on nine known fixes the earlier gate found two. Zero false findings were recorded among the committed, hand-checked runs; the uncommitted swr-87cf235d run listed in historical results has three verified findings without committed adjudication.
 
 Tagline: Every finding carries the level of proof it earned: machine-checked citation, adversarial confirmation, or a failing test.
 
@@ -35,10 +36,10 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), 
 
 The pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`), and the deterministic suite is green on Node 22 and Node 26:
 
-- **Deterministic tests** (`make test`): **97/97** on Node 22 and Node 26 - L1/L2 gate cases (including the strict every-citation rule and the exact snippet-range length), dirty-JSON and truncation handling, fault injection, config-hash determinism and Node-22 compatibility.
+- **Deterministic tests** (`make test`): **120/120** on Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), L3 runner cases (assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), dirty-JSON and truncation handling, fault injection, config-hash determinism.
 - **Clean clone**: `make clean-clone` (tmpfs + `env -i`) and the Docker variant `make clean-clone-docker` (node:22-alpine) pass `make test`, `make demo`, `make replay` and `make score RUN=reports/golden` on a fresh clone.
-- **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts with no model calls - **8/8 identical, 0 mismatches**.
-- **Calibration benchmark**: **7/8** recall (87.5%), 100% precision, 0/4 traps, 0 false refutations under the strict L1 gate - golden run committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
+- **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts with no model calls - **9/9 identical, 0 mismatches**.
+- **Calibration benchmark with L3**: **8/8** recall (100%), 100% precision, 0/4 traps, 0 false refutations, **9/9 published findings execution-proven** - golden run and its generated reproducers are committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
 - **Real repositories** (qualitative, each hand-checked and published with both runs): unjs/ofetch, sindresorhus/execa, preactjs/preact, moment/luxon - see [Real-repository run](#real-repository-run-qualitative). The real-API probe round (axios real + injected, fastify, prompt-cache TTL, safety, parallel calls) is under [reports/probes/](reports/probes/).
 - **Controlled verifier test**: two true findings confirmed and one deliberately false claim **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`); the committed run cost **$0.103** and served 3280 of 4065 input tokens from prompt cache. Recorded as `mode: controlled-verifier`, never as scanner output.
 - **Historical recall**: 2/9 known fixes found (both verified); one of the organic refutations is published in the record.
@@ -47,16 +48,17 @@ Numbers are only published when measured - `run.json` says `measured: false` whe
 
 ## How it works
 
-ingest -> scan -> verify -> publish
+ingest -> scan -> verify -> repro -> publish
 
 | Phase | What it does |
 |---|---|
 | ingest | fixes the file list from the commit (git-tracked files only; walking fallback for non-git targets), LOC and a sha256 manifest; builds a regex import graph and detects cycles |
 | scan | the producer model (Muse Spark) returns findings as schema-constrained JSON: one claim, one verbatim citation, no speculation |
 | verify | deterministic L1 citation check; then Muse Wonder tries to refute inside a bounded, relevant-file context (strong refute needs a machine-checked counter-citation) |
-| publish | `REPORT.md` (L1+L2 confirmed), `findings.json` (status per finding), `rejected.md` (all rejected and unresolved candidates), `run.json` (models, tokens, cache hits, cost, duration, commit) |
+| repro | for each confirmed finding, Muse Wonder writes a standalone `node:assert` test; it runs on a `git archive` snapshot of the analyzed commit in a permission-model sandbox (no network, no writes outside the snapshot, 2 s timeout, three runs); the finding is execution-proven only if the test fails 3/3 with an assertion error |
+| publish | `REPORT.md` (evidence level per finding, generated test and runner output for execution-proven findings), `findings.json` (status and reproducer result per finding), `rejected.md` (all rejected and unresolved candidates), `run.json` (models, tokens, cache hits, cost, duration, commit, repro counts) |
 
-Static analysis only: the analyzed code is never executed, patched, or sent anywhere except the Meta Model API.
+Scan and verify are static: the analyzed code is never executed while the scanner and verifier run. L3 executes only the generated test, on a snapshot, inside the sandbox described above; that isolation is process-level, not OS-level. Nothing is written to the analyzed repository.
 
 ## Meta AI tooling used
 
@@ -65,14 +67,15 @@ Static analysis only: the analyzed code is never executed, patched, or sent anyw
 - **Prompt caching:** the repository digest is a stable prefix; cached input tokens are read from `usage.prompt_tokens_details.cached_tokens` and written to `run.json`.
 - **Bounded verifier context:** the verifier sees the cited file, its import neighbours and identifier-matched files, capped at 24,000 characters; the digest and the cap are recorded per run so cost stays measurable.
 - **1M-token context** on both models: the analyzed repositories so far fit in a single pass without chunking; context size and token usage are measured per run.
+- **L3 reproducer as a third model role:** Muse Wonder writes the test, a deterministic runner executes it; the model output is treated as untrusted code (schema validation before execution, forbidden constructs rejected, sandboxed run). A test that cannot be written faithfully (network, DOM, missing external dependency) yields `repro-unavailable`, not a dropped finding.
 
 ## Quick start
 
 ```bash
 make demo        # deterministic end-to-end demo, mock adapter, no network
-make test        # L1/L2 gate, dirty JSON, fault injection, config hash (Node >= 22)
+make test        # L1/L2 gate, L3 runner, dirty JSON, fault injection, config hash (Node >= 22)
 make controlled  # controlled verifier test: injected candidates, real API (needs MODEL_API_KEY)
-make bench       # scored benchmark: bench/seed-repo, MAX_FINDINGS=12, mode bench (needs MODEL_API_KEY)
+make bench       # scored benchmark: bench/seed-repo, MAX_FINDINGS=12, mode bench (needs MODEL_API_KEY); REPRO=0 disables L3
 make score       # score the newest benchmark run; RUN=reports/<id> selects one explicitly
 make replay      # re-run L0/L1 over the committed golden artifacts (no model calls)
 make clean-clone # fresh clone in tmpfs with env -i, make test/demo/score
@@ -112,26 +115,27 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 
 ## Benchmark results
 
-Scored on the **calibration set**: frozen synthetic fixture with 8 injected defects, 4 traps and 2 pre-registered extra defects - 15 files / 229 LOC. Artifacts of the current run are committed verbatim in [reports/golden/](reports/golden/) (`run.json`, `findings.json`, `REPORT.md`, `rejected.md`).
+Scored on the **calibration set**: frozen synthetic fixture with 8 injected defects, 4 traps and 2 pre-registered extra defects - 15 files / 229 LOC. Artifacts of the current run are committed verbatim in [reports/golden/](reports/golden/) (`run.json`, `findings.json`, `REPORT.md`, `rejected.md`, and `repro/<findingId>/` with every generated test and its runner result).
 
-| Metric | Current (strict L1, golden `231fc717`) | Previous gate (`26ab3dd`) | Threshold |
+| Metric | Current (strict L1 + L3, golden `de7a1ccf`) | Previous run (`231fc717`, no L3) | Threshold |
 |---|---|---|---|
-| End-to-end recall (verified) | **7/8 (87.5%)** | 8/8 (100%) | >= 6/8 |
-| Precision (verified-only) | **100%** (7 TP, 0 FP) | 100% (8 TP, 0 FP) | >= 90% |
+| End-to-end recall (verified) | **8/8 (100%)** | 7/8 (87.5%) | >= 6/8 |
+| Precision (verified-only) | **100%** (8 TP, 0 FP) | 100% (7 TP, 0 FP) | >= 90% |
 | Traps published as verified | **0/4** | 0/4 | 0/4 |
 | False refutations | **0** | 0 | <= 1 |
-| Candidates rejected at L1 | **1** | 0 | reported |
-| Cost / duration | **$0.2947** / 98.8 s | $0.2190 / 101.4 s | measured |
-| Prompt cache | 2,000 of 18,974 input tokens | 6,801 of 20,873 | reported |
+| Findings execution-proven (L3) | **9/9 published** | not run | reported |
+| Candidates rejected at L1 | **0** | 1 | reported |
+| Cost / duration | **$0.6204** / 168.8 s | $0.2947 / 98.8 s | measured |
+| Prompt cache | 3,580 of 25,322 input tokens | 2,000 of 18,974 | reported |
 | Verifier context | bounded to 24,000 characters | bounded to 24,000 characters | - |
-| Scanner prompt version | v3 | v3 | - |
-| Verifier prompt | v1, neutral examples | v1, example line taken from trap T-01 | - |
+| Scanner / verifier prompts | v3 / v1 (neutral examples) | v3 / v1 | - |
+| Reproducer model | `muse-wonder-1.0`, 3 runs x 2 s timeout | - | - |
 
-The stricter gate explains the difference: L1 now requires **every** citation to pass and the snippet to have exactly as many lines as the declared range. One candidate (F-008) is rejected at L1 because its snippet length did not match its declared range, so recall drops from 8/8 to 7/8. Precision stays at 100% and no trap was published. The earlier 8/8 is not hidden - both runs are described here and in [reports/golden/README.md](reports/golden/README.md). The bounded verifier context (F4) remains in place.
+Every published finding in this run has an execution proof: the model wrote a test, the test failed 3/3 on the analyzed commit with an assertion error that matches the claim, and the test and its output are committed under [reports/golden/repro/](reports/golden/repro/). The scanner found all nine candidates this time; model output is not bit-identical, so the earlier 7/8 run (one candidate rejected at L1) is kept in the history and in [reports/golden/README.md](reports/golden/README.md).
 
-**Attempts (no cherry-picking):** seven benchmark attempts. (1) invalidated: ingest included `dist/` build artifacts, fixed in `b0e6568`; (2) valid baseline: 7/8; (3) aborted: scanner output truncated at the token limit, tooling fixed in `d0cde39`; (4) valid post-calibration run: 8/8; (5) F4 validation run before the configuration hash fix: 8/8; (6) F4 final run: 8/8 (previous gate); (7) strict-L1 run: 7/8, shown above. Model output is not bit-identical, so the number of attempts is always stated.
+**Attempts (no cherry-picking):** eight benchmark attempts. (1) invalidated: ingest included `dist/` build artifacts, fixed in `b0e6568`; (2) valid baseline: 7/8; (3) aborted: scanner output truncated at the token limit, tooling fixed in `d0cde39`; (4) valid post-calibration run: 8/8; (5) F4 validation run before the configuration hash fix: 8/8; (6) F4 final run: 8/8 (previous gate); (7) strict-L1 run: 7/8; (8) strict-L1 + L3 run: 8/8 with 9/9 execution-proven, shown above. Model output is not bit-identical, so the number of attempts is always stated.
 
-This is a calibration set: prompts are tuned on the same fixture, so the numbers are **post-calibration** and n = 8 is not a statistical claim.
+This is a calibration set: prompts are tuned on the same fixture, so the numbers are **post-calibration** and n = 8 is not a statistical claim. L3 was measured only on this fixture and on the mock demo; it has not been measured on the real repositories below.
 
 ## Real-repository run (qualitative)
 
@@ -179,7 +183,8 @@ This repository is created during the hackathon; the first commit is tagged `hac
 - Only direct correctness defects; omission, security and style findings are out of scope for this milestone.
 - No completeness claim: the report shows what passed the gate, not everything that exists in a repository.
 - L1 proves that every citation exists in the commit and matches the declared line range. Whether the claim matches the code is judged by the verifier model and is presented as such.
-- TypeScript/JavaScript only, static analysis only.
+- TypeScript/JavaScript only. Scan and verify are static; L3 executes only the generated test in a sandboxed Node process.
+- **L3 caveats:** isolation is process-level (Node permission model + network guard + 2 s timeout), not OS-level. TypeScript is executed through Node's built-in type stripping, so a repository that needs its own build step or external dependencies yields `repro-unavailable`. A failing test proves that a concrete input misbehaves on the analyzed commit; combined with the claim it is evidence, not a semantic proof of every consequence. L3 has been measured on the synthetic calibration fixture; on real repositories it may often be unavailable.
 - Hand checks may downgrade the scanner's severity (for example a latent internal defect or an error-path-only issue); such findings are labelled as latent/partial in the corresponding HAND-CHECK.md. Real-repository findings are qualitative anecdotes, never benchmark metrics.
 
 ## License

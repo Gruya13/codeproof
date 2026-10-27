@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'old-token'\n- 'new-token'\n\n    at file:///tmp/codeproof-repro-SJKYH2/snapshot/.codeproof-repro.test.mjs:16:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old-token',\n  expected: 'new-token',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 107,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'old-token'\n- 'new-token'\n\n    at file:///tmp/codeproof-repro-SJKYH2/snapshot/.codeproof-repro.test.mjs:16:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old-token',\n  expected: 'new-token',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 106,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'old-token'\n- 'new-token'\n\n    at file:///tmp/codeproof-repro-SJKYH2/snapshot/.codeproof-repro.test.mjs:16:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old-token',\n  expected: 'new-token',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 103,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "rotateToken awaits store.save before store.get, so it returns the newly saved token rather than the stale previous token",
+  "rationale": "A store whose save completes asynchronously after a delay exposes the race: without await, get runs before the write lands and returns the old token; with await, it returns the new token.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 619,
+    "outputTokens": 1569,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.033856
+}
