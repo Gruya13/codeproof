@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,6 +11,7 @@ import {
   attemptRepro,
   buildReproMessages,
   classifyReproRun,
+  extractReproImports,
   parseReproResponse,
   prepareSnapshot,
   runReproTest,
@@ -18,8 +19,9 @@ import {
 } from "../src/repro/index.mjs";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
-const failingCode = "import assert from 'node:assert/strict';\nassert.equal(1, 2);\n";
-const passingCode = "import assert from 'node:assert/strict';\nassert.equal(1, 1);\n";
+const failingCode = "import assert from 'node:assert/strict';\nimport { value } from './sample.js';\nassert.equal(value, 7);\n";
+const passingCode = "import assert from 'node:assert/strict';\nimport { value } from './sample.js';\nassert.equal(value, 42);\n";
+const selfContainedCode = "import assert from 'node:assert/strict';\nassert.equal(1, 2);\n";
 
 function gitHead() {
   try {
@@ -33,6 +35,7 @@ function gitHead() {
 function tempSnapshot(t) {
   const dir = mkdtempSync(join(tmpdir(), "codeproof-repro-test-"));
   t.after(function () { rmSync(dir, { recursive: true, force: true }); });
+  writeFileSync(join(dir, "sample.js"), "export const value = 42;\n", "utf8");
   return dir;
 }
 
@@ -182,4 +185,53 @@ test("attemptRepro passes budget failures through", async function () {
   error.code = "BUDGET_EXCEEDED";
   const agent = { async complete() { throw error; } };
   await assert.rejects(attemptRepro({ finding: { id: "F-001", evidence: [] }, agent, repoRoot, commit: null }), function (received) { return received === error; });
+});
+
+test("L0 rejects a self-contained test that imports no repository code", function () {
+  const result = validateReproL0(reproResponse(selfContainedCode));
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join(" "), /must import the analyzed repository code/);
+});
+
+test("extractReproImports finds static, side-effect and dynamic relative imports only", function () {
+  const code = [
+    "import assert from 'node:assert/strict';",
+    "import { a } from './src/a.js';",
+    "import './src/side-effect.js';",
+    "const m = await import('../lib/b.mjs');",
+    "import { c } from 'some-package';",
+    "import { d } from 'node:fs';"
+  ].join("\n");
+  assert.deepEqual(extractReproImports(code).sort(), ["../lib/b.mjs", "./src/a.js", "./src/side-effect.js"]);
+});
+
+test("L0 rejects direct stream writes that could fake the failure class", function () {
+  for (const code of [
+    "process.stderr.write('AssertionError [ERR_ASSERTION]');",
+    "process.stdout.write('AssertionError');"
+  ]) {
+    const result = validateReproL0(reproResponse("import assert from 'node:assert/strict';\nimport { value } from './sample.js';\n" + code));
+    assert.equal(result.ok, false, code);
+    assert.match(result.errors.join(" "), /direct stream output/);
+  }
+});
+
+test("attemptRepro refuses a generated test whose import is not in the analyzed snapshot", async function (t) {
+  const workDir = tempSnapshot(t);
+  const commit = gitHead();
+  const code = "import assert from 'node:assert/strict';\nimport { value } from './does-not-exist.js';\nassert.equal(value, 7);\n";
+  const agent = { async complete() { return { text: JSON.stringify(reproResponse(code)), model: "fake-repro", usage: { inputTokens: 10, outputTokens: 20 }, costUsd: 0 }; } };
+  const finding = { id: "F-001", title: "Quota boundary", claim: "The inclusive quota boundary is rejected.", evidence: [] };
+  const result = await attemptRepro({ finding, agent, repoRoot, commit, excerpts: "", config: { reproWorkDir: workDir }, outDir: null });
+  assert.equal(result.status, "inconclusive");
+  assert.match(result.reason, /not in the analyzed snapshot/);
+});
+
+test("attemptRepro rejects a self-contained test before spending a runner", async function (t) {
+  const workDir = tempSnapshot(t);
+  const agent = { async complete() { return { text: JSON.stringify(reproResponse(selfContainedCode)), model: "fake-repro" }; } };
+  const finding = { id: "F-001", title: "Off-by-one", claim: "The slice end is inclusive.", evidence: [] };
+  const result = await attemptRepro({ finding, agent, repoRoot, commit: gitHead(), excerpts: "", config: { reproWorkDir: workDir }, outDir: null });
+  assert.equal(result.status, "inconclusive");
+  assert.match(result.reason, /must import the analyzed repository code/);
 });

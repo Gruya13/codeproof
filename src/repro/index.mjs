@@ -1,12 +1,12 @@
 import { execFile, execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseDirtyJson } from "../run/json.mjs";
 import { gitPrefix, readFileAtCommit } from "../run/index.mjs";
 
 export const REPRO_SYSTEM_PROMPT = [
-  "Write one standalone Node ESM test file for the finding. Import the real exported API from the repository using a path relative to its root, for example import { validate } from './src/validation.ts'. Node can import TypeScript directly.",
+  "Write one standalone Node ESM test file for the finding. It MUST import the real exported API from the repository using a path relative to its root, for example import { validate } from './src/validation.ts'. A test that does not import the analyzed repository code is not a reproducer and will be rejected. Node can import TypeScript directly.",
   "Assert the correct behavior with node:assert/strict so the test fails on the analyzed commit specifically because of the claim. Derive the expected behavior from the claim or a documented function contract; do not invent a new requirement.",
   "The test must be at most 60 lines. Use only node:assert/strict for assertions. Do not call assert.fail(), intercept process.exit, use require, make network calls (fetch, http, https, net), read files outside the repository, set a timeout longer than 1000 ms, or use infinite loops.",
   "If a faithful executable test needs a network, DOM, external file system, unavailable dependency, or environment not included in the repository, return kind unsupported with a specific reason instead of test code.",
@@ -60,11 +60,26 @@ const FORBIDDEN_CODE = [
   [/\bchild_process\b/i, "child process module"],
   [/\b(?:writeFile|writeFileSync|appendFile|appendFileSync|createWriteStream|mkdir|mkdirSync|rm|rmSync|unlink|unlinkSync|rename|renameSync)\s*\(/i, "file write"],
   [/\bsetTimeout\s*\([^,]+,\s*(?:[1-9]\d{3,}|[2-9]\d{2,})\s*\)/i, "long timeout"],
-  [/\bconsole\s*\.\s*(?:error|warn|log|info|debug)\s*\(/i, "console output (it could mask the real failure class)"]
+  [/\bconsole\s*\.\s*(?:error|warn|log|info|debug)\s*\(/i, "console output (it could mask the real failure class)"],
+  [/\bprocess\s*\.\s*(?:stdout|stderr)\s*\.\s*write\s*\(/i, "direct stream output (it could mask the real failure class)"]
 ];
 
 export function parseReproResponse(text) {
   return parseDirtyJson(text);
+}
+
+// A reproducer is only meaningful if it exercises the analyzed repository code.
+// Extract the relative import specifiers (ESM `from`/`import`, and dynamic `import()`).
+export function extractReproImports(testCode) {
+  const source = String(testCode || "");
+  const pattern = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)['\"](\.{1,2}\/[^'\"]+)['\"]/g;
+  const found = [];
+  let match = pattern.exec(source);
+  while (match !== null) {
+    if (found.indexOf(match[1]) === -1) found.push(match[1]);
+    match = pattern.exec(source);
+  }
+  return found;
 }
 
 export function validateReproL0(parsed) {
@@ -93,6 +108,7 @@ export function validateReproL0(parsed) {
       if (parsed.testCode.trim() === "") errors.push("testCode is empty");
       if (parsed.testCode.split("\n").length > 60) errors.push("testCode exceeds 60 lines");
       if (!/node:assert(?:\/strict)?/.test(parsed.testCode)) errors.push("testCode must import node:assert");
+      if (extractReproImports(parsed.testCode).length === 0) errors.push("testCode must import the analyzed repository code with a relative path");
       for (const [pattern, label] of FORBIDDEN_CODE) {
         if (pattern.test(parsed.testCode)) errors.push("forbidden " + label);
       }
@@ -279,14 +295,25 @@ export async function attemptRepro({ finding, agent, repoRoot, commit, excerpts,
         result.status = "unavailable";
         result.reason = snapshot.reason;
       } else {
-        const run = await runReproTest({ testCode: parsed.testCode, snapshotDir: snapshot.snapshotDir,
-          timeoutMs: config.reproTimeoutMs || 2000, attempts: config.reproAttempts || 3 });
-        result.classification = run.classification;
-        result.attempts = run.attempts;
-        result.deterministic = run.deterministic;
-        result.status = run.deterministic && run.classification === "assertion-failure" ? "reproduced"
-          : run.classification === "passed" ? "not-reproduced" : "inconclusive";
-        result.reason = run.reason || (result.status === "reproduced" ? "assertion failed consistently on analyzed commit" : "test did not demonstrate the claim consistently");
+        // The test must exercise code that actually exists in the analyzed snapshot.
+        // A self-contained test (assert.equal(1, 2)) would otherwise be an execution proof of nothing.
+        const imports = extractReproImports(parsed.testCode);
+        const missing = imports.filter(function (specifier) {
+          return !existsSync(join(snapshot.snapshotDir, specifier));
+        });
+        if (missing.length > 0) {
+          result.status = "inconclusive";
+          result.reason = "generated test imports paths that are not in the analyzed snapshot: " + missing.join(", ");
+        } else {
+          const run = await runReproTest({ testCode: parsed.testCode, snapshotDir: snapshot.snapshotDir,
+            timeoutMs: config.reproTimeoutMs || 2000, attempts: config.reproAttempts || 3 });
+          result.classification = run.classification;
+          result.attempts = run.attempts;
+          result.deterministic = run.deterministic;
+          result.status = run.deterministic && run.classification === "assertion-failure" ? "reproduced"
+            : run.classification === "passed" ? "not-reproduced" : "inconclusive";
+          result.reason = run.reason || (result.status === "reproduced" ? "assertion failed consistently on analyzed commit" : "test did not demonstrate the claim consistently");
+        }
       }
     }
   } catch (error) {
