@@ -203,19 +203,23 @@ export function checkCitation(evidence, repo) {
   const source = committed === null ? readFileSync(join(repo.root, file), "utf8") : committed;
   const lines = source.split("\n");
   if (endLine > lines.length) return { passed: false, reason: "line range exceeds file length" };
+  const expectedRange = lines.slice(startLine - 1, endLine);
+  let expectedLeading = 0;
+  while (expectedRange.length > 0 && expectedRange[0].trim() === "") { expectedRange.shift(); expectedLeading += 1; }
+  while (expectedRange.length > 0 && expectedRange[expectedRange.length - 1].trim() === "") expectedRange.pop();
   const rawSnippet = String(evidence.snippet || "").split("\n");
   while (rawSnippet.length > 0 && rawSnippet[0].trim() === "") rawSnippet.shift();
   while (rawSnippet.length > 0 && rawSnippet[rawSnippet.length - 1].trim() === "") rawSnippet.pop();
   if (rawSnippet.length === 0) return { passed: false, reason: "snippet is empty" };
   if (rawSnippet.length > 15) return { passed: false, reason: "citation wider than 15 lines" };
-  const expectedLines = endLine - startLine + 1;
-  if (rawSnippet.length !== expectedLines) {
-    return { passed: false, reason: "citation range expects " + expectedLines + " lines but snippet has " + rawSnippet.length + " lines" };
+  if (expectedRange.length === 0) return { passed: false, reason: "citation range contains only blank lines" };
+  if (rawSnippet.length !== expectedRange.length) {
+    return { passed: false, reason: "citation range expects " + expectedRange.length + " non-blank lines but snippet has " + rawSnippet.length };
   }
   const snippetLines = rawSnippet.map(normalizeLine);
   const fileLines = lines.map(normalizeLine);
   for (const offset of [0, -1, 1]) {
-    const startIndex = startLine - 1 + offset;
+    const startIndex = startLine - 1 + expectedLeading + offset;
     if (startIndex < 0) continue;
     if (startIndex + snippetLines.length > fileLines.length) continue;
     let matches = true;
@@ -350,6 +354,9 @@ export async function verifyOne(input) {
         if (retryVerdict && retryVerdict.verdict === "refute" && retryVerdict.mode === "strong") {
           const secondOutcome = applyVerdict(retryVerdict, retryCall.model, repo, finding, input.excerpts);
           if (secondOutcome.status === "refuted") outcome = secondOutcome;
+        } else if (retryVerdict && retryVerdict.verdict === "uncertain") {
+          // the model explicitly withdrew the weak refutation; record that instead of keeping a stale moderate
+          outcome = applyVerdict(retryVerdict, retryCall.model, repo, finding, input.excerpts);
         }
       }
     } catch (error) {

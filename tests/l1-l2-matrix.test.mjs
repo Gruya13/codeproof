@@ -292,7 +292,7 @@ test("T-B7: 15 lines passes, 16 lines fails, endLine < startLine fails, endLine 
     repo
   );
   assert.equal(res15ShortRange.passed, false);
-  assert.match(res15ShortRange.reason, /expects 1 lines but snippet has 15 lines/);
+  assert.match(res15ShortRange.reason, /expects 1 non-blank lines but snippet has 15/);
 
   const res16ShortRange = checkCitation(
     { path: "len.js", startLine: 1, endLine: 1, snippet: lines.slice(0, 16).join("\n") },
@@ -944,12 +944,26 @@ test("strict L1 requires every citation and exact declared snippet length", asyn
   assert.equal(agent.calls.length, 0);
   const short = checkCitation({ path: "target.js", startLine: 1, endLine: 2, snippet: "const one = 1;" }, repo);
   assert.equal(short.passed, false);
-  assert.match(short.reason, /expects 2 lines but snippet has 1 lines/);
+  assert.match(short.reason, /expects 2 non-blank lines but snippet has 1/);
   const long = checkCitation({ path: "target.js", startLine: 1, endLine: 1, snippet: "const one = 1;\nconst two = 2;" }, repo);
   assert.equal(long.passed, false);
-  assert.match(long.reason, /expects 1 lines but snippet has 2 lines/);
+  assert.match(long.reason, /expects 1 non-blank lines but snippet has 2/);
   const exact = checkCitation({ path: "target.js", startLine: 1, endLine: 2, snippet: "\nconst one = 1;\nconst two = 2;\n" }, repo);
   assert.equal(exact.passed, true);
+});
+
+test("strict L1 accepts a declared range whose edge lines are blank in the file", function (t) {
+  const { dir, cleanup } = createTempRepo();
+  t.after(cleanup);
+  writeFileSync(join(dir, "blank-edge.js"), "const before = 0;\n\nconst a = 1;\nconst b = 2;\n\nconst after = 3;\n");
+  const repo = { root: dir, manifest: new Map([["blank-edge.js", {}]]) };
+  const exact = checkCitation({ path: "blank-edge.js", startLine: 2, endLine: 5, snippet: "\nconst a = 1;\nconst b = 2;\n" }, repo);
+  assert.equal(exact.passed, true, exact.reason);
+  const tolerated = checkCitation({ path: "blank-edge.js", startLine: 3, endLine: 4, snippet: "\nconst a = 1;\nconst b = 2;\n" }, repo);
+  assert.equal(tolerated.passed, true, tolerated.reason);
+  const wrong = checkCitation({ path: "blank-edge.js", startLine: 3, endLine: 4, snippet: "\nconst a = 1;\nconst b = 9;\n" }, repo);
+  assert.equal(wrong.passed, false);
+  assert.match(wrong.reason, /does not match/);
 });
 
 test("retry can remain weak or uncertain but cannot confirm", async function (t) {
@@ -960,15 +974,15 @@ test("retry can remain weak or uncertain but cannot confirm", async function (t)
   const finding = { id: "F-001", evidence: [{ path: "target.js", startLine: 1, endLine: 1, snippet: "const value = input;" }] };
   const first = { verdicts: [{ findingId: "F-001", verdict: "refute", mode: "weak", reason: "The reasoning is insufficient." }] };
   const cases = [
-    { verdicts: [{ findingId: "F-001", verdict: "refute", mode: "weak", reason: "Still a weak reason here." }] },
-    { verdicts: [{ findingId: "F-001", verdict: "uncertain", reason: "The context is insufficient." }] },
-    { verdicts: [{ findingId: "F-001", verdict: "refute", mode: "strong", reason: "The offered line is invalid.", counterEvidence: [{ path: "target.js", startLine: 2, endLine: 2, snippet: "return other;" }] }] },
-    { verdicts: [{ findingId: "F-001", verdict: "confirm", reason: "A retry must not confirm." }] }
+    { retry: { verdicts: [{ findingId: "F-001", verdict: "refute", mode: "weak", reason: "Still a weak reason here." }] }, expected: "moderate" },
+    { retry: { verdicts: [{ findingId: "F-001", verdict: "uncertain", reason: "The context is insufficient." }] }, expected: "uncertain" },
+    { retry: { verdicts: [{ findingId: "F-001", verdict: "refute", mode: "strong", reason: "The offered line is invalid.", counterEvidence: [{ path: "target.js", startLine: 2, endLine: 2, snippet: "return other;" }] }] }, expected: "moderate" },
+    { retry: { verdicts: [{ findingId: "F-001", verdict: "confirm", reason: "A retry must not confirm." }] }, expected: "moderate" }
   ];
-  for (const retry of cases) {
-    const agent = createFakeAgent([first, retry]);
+  for (const item of cases) {
+    const agent = createFakeAgent([first, item.retry]);
     const result = await verifyOne({ finding, repo, agent, excerpts: "   1 | const value = input;\n   2 | return value;" });
-    assert.equal(result.status, "moderate");
+    assert.equal(result.status, item.expected);
     assert.equal(agent.calls.length, 2);
   }
   const schemaItem = STRONG_REFUTE_RESPONSE_FORMAT.json_schema.schema.properties.verdicts.items;
@@ -981,10 +995,36 @@ test("verifier receives no scanner severity or confidence, and prompt example is
   const finding = { id: "F-001", title: "Example defect", claim: "A plausible defect claim with enough words.", evidence: [], severity: "critical", confidence: 0.99 };
   const messages = buildVerifierMessages(finding, "example excerpt");
   assert.equal(/severity|confidence/i.test(JSON.stringify(messages)), false);
-  const exampleLine = JSON.parse(VERIFIER_SYSTEM_PROMPT.split("\n").find(function (line) { return line.startsWith("Strong refute:"); }).slice("Strong refute: ".length)).verdicts[0].counterEvidence[0].snippet.trim();
-  const fixtureLines = ["analytics.ts", "batch.ts", "cache.ts", "ledger.ts", "log.ts", "paging.ts", "quota.ts", "registry.ts", "retry.ts", "scheduler.ts", "scores.ts", "session.ts", "settings.ts", "validation.ts", "index.ts"];
-  for (const file of fixtureLines) {
-    const contents = readFileSync(new URL("../bench/seed-repo/src/" + file, import.meta.url), "utf8");
-    assert.equal(contents.split("\n").some(function (line) { return line.trim() === exampleLine; }), false, file);
+  const promptLines = VERIFIER_SYSTEM_PROMPT.split("\n");
+  const examplePrefixes = [
+    "Strong refute: ",
+    "Weak refute (only when no line in the excerpts contradicts the claim): "
+  ];
+  const examples = [];
+  for (const prefix of examplePrefixes) {
+    const line = promptLines.find(function (item) { return item.startsWith(prefix); });
+    assert.ok(line, "missing prompt example: " + prefix);
+    examples.push(JSON.parse(line.slice(prefix.length)));
+  }
+  const fixtureFiles = ["analytics.ts", "batch.ts", "cache.ts", "ledger.ts", "log.ts", "paging.ts", "quota.ts", "registry.ts", "retry.ts", "scheduler.ts", "scores.ts", "session.ts", "settings.ts", "validation.ts", "index.ts"];
+  const fixtureSources = fixtureFiles.map(function (file) {
+    return readFileSync(new URL("../bench/seed-repo/src/" + file, import.meta.url), "utf8").split("\n").map(function (line) { return line.trim(); });
+  });
+  const snippets = [];
+  const paths = [];
+  for (const example of examples) {
+    for (const verdict of example.verdicts) {
+      for (const counter of (verdict.counterEvidence || [])) {
+        snippets.push(counter.snippet.trim());
+        paths.push(counter.path);
+      }
+    }
+  }
+  assert.ok(snippets.length >= 1, "expected at least one machine-checkable example snippet");
+  for (const snippet of snippets) {
+    for (const source of fixtureSources) assert.equal(source.indexOf(snippet), -1, snippet);
+  }
+  for (const examplePath of paths) {
+    assert.equal(fixtureFiles.indexOf(examplePath.split("/").pop()), -1, examplePath);
   }
 });
