@@ -229,10 +229,17 @@ async function main() {
     scanRaw = primary.raw;
     if (config.dualScan) {
       const secondaryLabel = config.secondaryScannerModel === config.scannerModel ? "secondary" : "wonder";
-      const secondary = await runScanner("scanner-secondary", secondaryLabel);
-      scanRuns.push(secondary);
-      if (secondary.status !== "ok") {
-        console.warn("  WARN secondary scanner (" + config.secondaryScannerModel + ") failed: " + (secondary.error || (secondary.validated ? secondary.validated.errors.join("; ") : "unknown")) + "; continuing with the primary scanner only");
+      if (config.dualScanMaxLoc > 0 && repo.loc > config.dualScanMaxLoc) {
+        const skipped = { role: "scanner-secondary", proposedBy: secondaryLabel, status: "skipped-loc", call: null, durationMs: 0, parsed: null, validated: null,
+          reason: "repository has " + repo.loc + " LOC, above DUAL_SCAN_MAX_LOC=" + config.dualScanMaxLoc }
+        scanRuns.push(skipped);
+        console.warn("  WARN secondary scanner skipped: " + skipped.reason);
+      } else {
+        const secondary = await runScanner("scanner-secondary", secondaryLabel);
+        scanRuns.push(secondary);
+        if (secondary.status !== "ok") {
+          console.warn("  WARN secondary scanner (" + config.secondaryScannerModel + ") failed: " + (secondary.error || (secondary.validated ? secondary.validated.errors.join("; ") : "unknown")) + "; continuing with the primary scanner only");
+        }
       }
     }
     phases.push({ name: "scan", status: "ok", durationMs: Date.now() - scanStarted });
@@ -479,7 +486,8 @@ async function main() {
         candidates: run.validated ? run.validated.findings.length : 0,
         rejectedAtL0: run.validated ? run.validated.rejected.length : 0,
         costUsd: run.call && run.call.costUsd !== undefined ? run.call.costUsd : null,
-        durationMs: run.durationMs
+        durationMs: run.durationMs,
+        reason: run.reason || null
       };
     }),
     dualScan: Boolean(config.dualScan),

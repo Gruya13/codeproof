@@ -1,0 +1,176 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "LRUCache.set deletes an existing key but never re-inserts it, so updating a cached key loses the entry and a subsequent get returns undefined.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 36,
+          "path": "internal/lrucache.js",
+          "snippet": "  set (key, value) {\n    const deleted = this.delete(key)\n\n    if (!deleted && value !== undefined) {\n      // If cache is full, delete the least recently used item\n      if (this.map.size >= this.max) {\n        const firstKey = this.map.keys().next().value\n        this.delete(firstKey)\n      }\n\n      this.map.set(key, value)\n    }",
+          "startLine": 25
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "LRUCache.set drops update for existing key"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 25-36 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at internal/lrucache.js:26 deletes the existing key and the re-insertion at internal/lrucache.js:35 is guarded by !deleted at internal/lrucache.js:28, so updating an existing key removes it without re-inserting and get at internal/lrucache.js:10-12 returns undefined."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nundefined !== 2\n\n    at file:///tmp/codeproof-repro-KXdhsS/snapshot/.codeproof-repro.test.mjs:8:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: 2,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 68,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nundefined !== 2\n\n    at file:///tmp/codeproof-repro-KXdhsS/snapshot/.codeproof-repro.test.mjs:8:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: 2,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 67,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nundefined !== 2\n\n    at file:///tmp/codeproof-repro-KXdhsS/snapshot/.codeproof-repro.test.mjs:8:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: 2,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 64,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict'\nimport LRUCache from './internal/lrucache.js'\n\nconst cache = new LRUCache()\ncache.set('a', 1)\nassert.equal(cache.get('a'), 1)\ncache.set('a', 2)\nassert.equal(cache.get('a'), 2)\ncache.set('b', 10)\ncache.set('b', 20)\nassert.equal(cache.get('b'), 20)\nassert.equal(cache.get('a'), 2)\n",
+      "expectedBehavior": "LRUCache.set on an existing key updates its value, so a subsequent get returns the new value instead of undefined.",
+      "rationale": "The buggy set() deletes an existing key and only re-inserts when delete returned false, so updating a key removes it. Setting 'a' to 1 then to 2 and asserting get('a') === 2 fails on the buggy code (returns undefined) and passes when fixed.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 14123,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1820,
+        "outputTokens": 1696,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.0412
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "When cloning a SemVer instance with different loose/includePrerelease options the code re-parses version.version which excludes build metadata, so build identifiers are silently lost.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 35,
+          "path": "classes/semver.js",
+          "snippet": "    if (version instanceof SemVer) {\n      if (version.loose === !!options.loose &&\n        version.includePrerelease === !!options.includePrerelease) {\n        return version\n      } else {\n        version = version.version\n      }",
+          "startLine": 29
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "SemVer re-parse from SemVer loses build metadata"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 29-35 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The constructor at classes/semver.js:34 reassigns version to version.version when options differ, then re-parses that string at classes/semver.js:53 and derives build only from regex group m[5] at classes/semver.js:93, so a SemVer whose version string excludes build metadata loses its build identifiers."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ []\n- [\n-   'build',\n-   '42'\n- ]\n\n    at file:///tmp/codeproof-repro-0WsT15/snapshot/.codeproof-repro.test.mjs:17:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [],\n  expected: [ 'build', '42' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 70,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ []\n- [\n-   'build',\n-   '42'\n- ]\n\n    at file:///tmp/codeproof-repro-0WsT15/snapshot/.codeproof-repro.test.mjs:17:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [],\n  expected: [ 'build', '42' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 72,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ []\n- [\n-   'build',\n-   '42'\n- ]\n\n    at file:///tmp/codeproof-repro-0WsT15/snapshot/.codeproof-repro.test.mjs:17:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [],\n  expected: [ 'build', '42' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 73,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict'\nimport SemVer from './classes/semver.js'\n\nconst original = new SemVer('1.2.3-alpha.1+build.42')\nassert.deepEqual(original.build, ['build', '42'])\nassert.equal(original.raw, '1.2.3-alpha.1+build.42')\n\nlet clonedLoose = null\nlet errLoose = null\ntry {\n  clonedLoose = new SemVer(original, { loose: true })\n} catch (e) {\n  errLoose = e\n}\nassert.equal(errLoose, null)\nassert.notEqual(clonedLoose, original)\nassert.deepEqual(clonedLoose.build, ['build', '42'])\nassert.equal(clonedLoose.raw, '1.2.3-alpha.1+build.42')\nassert.deepEqual(clonedLoose.prerelease, ['alpha', 1])\n\nlet clonedPre = null\nlet errPre = null\ntry {\n  clonedPre = new SemVer(original, { includePrerelease: true })\n} catch (e) {\n  errPre = e\n}\nassert.equal(errPre, null)\nassert.notEqual(clonedPre, original)\nassert.deepEqual(clonedPre.build, ['build', '42'])\nassert.equal(clonedPre.raw, '1.2.3-alpha.1+build.42')\n",
+      "expectedBehavior": "Cloning a SemVer with different loose/includePrerelease options preserves build metadata (build array and raw string).",
+      "rationale": "Original SemVer('1.2.3-alpha.1+build.42') has build ['build','42'], but re-parsing from version.version (which excludes '+build.42') yields an empty build array on the buggy code.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 16619,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 4803,
+        "outputTokens": 2344,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.066092
+    },
+    "evidenceLevel": "execution-proven"
+  }
+]

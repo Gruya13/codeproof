@@ -1,0 +1,271 @@
+{
+  "runId": "a1f908e71a5d1869",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "db605cb5f92b106406924f899ebe9051ef334a6fd3ce9ea6ecd55da8ded00288",
+  "repo": {
+    "source": "commit",
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/_repo/semver",
+    "commit": "7257c14239476205b4b0bf7e47b07b3e7a517be6",
+    "dirty": false,
+    "loc": 7581,
+    "files": 128
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    },
+    {
+      "role": "repro",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+    }
+  ],
+  "usage": {
+    "inputTokens": 345116,
+    "outputTokens": 66644,
+    "cachedTokens": 0,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 1,
+        "inputTokens": 107702,
+        "outputTokens": 10595,
+        "cachedTokens": 0,
+        "costUsd": 0.17965625
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 4,
+        "inputTokens": 230791,
+        "outputTokens": 52009,
+        "cachedTokens": 0,
+        "costUsd": 1.963344
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "calls": 2,
+        "inputTokens": 6623,
+        "outputTokens": 4040,
+        "cachedTokens": 0,
+        "costUsd": 0.107292
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 107702,
+        "outputTokens": 10595,
+        "cachedTokens": 0,
+        "costUsd": 0.17965625,
+        "durationMs": 49396,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner-secondary",
+        "model": "muse-wonder-1.0",
+        "index": 1,
+        "inputTokens": 107477,
+        "outputTokens": 16000,
+        "cachedTokens": 0,
+        "costUsd": 0.749908,
+        "durationMs": 116415,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner-secondary",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 107477,
+        "outputTokens": 32000,
+        "cachedTokens": 0,
+        "costUsd": 1.069908,
+        "durationMs": 256710,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 3,
+        "inputTokens": 7886,
+        "outputTokens": 1023,
+        "cachedTokens": 0,
+        "costUsd": 0.052004,
+        "durationMs": 9515,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 4,
+        "inputTokens": 1820,
+        "outputTokens": 1696,
+        "cachedTokens": 0,
+        "costUsd": 0.0412,
+        "durationMs": 13898,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 5,
+        "inputTokens": 7951,
+        "outputTokens": 2986,
+        "cachedTokens": 0,
+        "costUsd": 0.091524,
+        "durationMs": 29744,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 6,
+        "inputTokens": 4803,
+        "outputTokens": 2344,
+        "cachedTokens": 0,
+        "costUsd": 0.066092,
+        "durationMs": 16377,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      }
+    ],
+    "costUsd": 2.25029225,
+    "measured": true
+  },
+  "calls": 7,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-27T22:24:43.723Z",
+    "durationMs": 493210
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 619
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 422526
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 70027
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 13
+    }
+  ],
+  "budget": {
+    "limitUsd": 4,
+    "spentUsd": 2.250292,
+    "measured": true,
+    "exceeded": false,
+    "hard": true,
+    "aborted": false,
+    "abortReason": null,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 2,
+    "byScanner": {
+      "spark": 2,
+      "wonder": 0,
+      "both": 0,
+      "controlled": 0
+    },
+    "duplicates": 0,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 0,
+    "verified": 2,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "reproduced": 2
+  },
+  "scanners": [
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 2,
+      "rejectedAtL0": 0,
+      "costUsd": 0.17965625,
+      "durationMs": 49396
+    },
+    {
+      "role": "scanner-secondary",
+      "proposedBy": "wonder",
+      "model": null,
+      "status": "error",
+      "candidates": 0,
+      "rejectedAtL0": 0,
+      "costUsd": null,
+      "durationMs": 373127
+    }
+  ],
+  "dualScan": true,
+  "repro": {
+    "enabled": true,
+    "model": "muse-wonder-1.0",
+    "timeoutMs": 2000,
+    "attempts": 3,
+    "counts": {
+      "reproduced": 2,
+      "notReproduced": 0,
+      "unavailable": 0,
+      "inconclusive": 0
+    }
+  },
+  "outputs": {
+    "report": "reports/real-world/dual-scan/semver/a1f908e71a5d1869/REPORT.md",
+    "findings": "reports/real-world/dual-scan/semver/a1f908e71a5d1869/findings.json",
+    "rejected": "reports/real-world/dual-scan/semver/a1f908e71a5d1869/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.1.0"
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"cachedIndentRegex creates the regex from cacheIndex instead of indent, so indent 1 gets {0,0}, indent 2 gets {0,1}, indent 3 gets {0,2} and any larger indent gets {0,3} instead of {0,indent}.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 14, \"path\": \"rules.ts\", \"snippet\": \"function cachedIndentRegex(createRegex: (indent: number) => RegExp) {\\n  const cache: RegExp[] = [];\\n  return (indent: number) => {\\n    const cacheIndex = Math.max(0, Math.min(3, indent - 1));\\n    let regex = cache[cacheIndex];\\n    if (!regex) {\\n      regex = createRegex(cacheIndex);\\n      cache[cacheIndex] = regex;\\n    }\\n    return regex;\\n  };\\n}\", \"startLine\": 3}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Cached indent regex uses cache index as indent\"}, {\"category\": \"correctness\", \"claim\": \"Lexer.lex reuses this.tokens without clearing it, so a second lex() call on the same Lexer instance appends to the first call's tokens and links instead of returning only the new result.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 35, \"path\": \"Lexer.ts\", \"snippet\": \"  constructor(options?: MarkedOptions<ParserOutput, RendererOutput>) {\\n    // TokenList cannot be created in one go\\n    this.tokens = [] as unknown as TokensList;\\n    this.tokens.links = Object.create(null);\", \"startLine\": 32}, {\"endLine\": 102, \"path\": \"Lexer.ts\", \"snippet\": \"  lex(src: string) {\\n    src = src.replace(other.carriageReturn, '\\\\n');\\n\\n    this.blockTokens(src, this.tokens);\", \"startLine\": 99}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Lexer tokens accumulator never reset on reuse\"}, {\"category\": \"correctness\", \"claim\": \"Parser extension fallback uses `ret !== false || !knownList.includes(type)`, so when an extension renderer exists for an unknown token type and returns false the parser outputs empty string and continues instead of falling through to the unknown-token error.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 57, \"path\": \"Parser.ts\", \"snippet\": \"      if (this.options.extensions?.renderers?.[anyToken.type]) {\\n        const genericToken = anyToken as Tokens.Generic;\\n        const ret = this.options.extensions.renderers[genericToken.type].call({ parser: this }, genericToken);\\n        if (ret !== false || !['space', 'hr', 'heading', 'code', 'table', 'blockquote', 'list', 'checkbox', 'html', 'def', 'paragraph', 'text'].includes(genericToken.type)) {\\n          out += ret || '';\\n          continue;\\n        }\", \"startLine\": 51}, {\"endLine\": 144, \"path\": \"Parser.ts\", \"snippet\": \"      if (this.options.extensions?.renderers?.[anyToken.type]) {\\n        const ret = this.options.extensions.renderers[anyToken.type].call({ parser: this }, anyToken);\\n        if (ret !== false || !['escape', 'html', 'link', 'image', 'checkbox', 'strong', 'em', 'codespan', 'br', 'del', 'text'].includes(anyToken.type)) {\\n          out += ret || '';\\n          continue;\\n        }\\n      }\", \"startLine\": 138}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Extension returning false for unknown token is swallowed\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "cachedIndentRegex creates the regex from cacheIndex instead of indent, so indent 1 gets {0,0}, indent 2 gets {0,1}, indent 3 gets {0,2} and any larger indent gets {0,3} instead of {0,indent}.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 14,
+            "path": "rules.ts",
+            "snippet": "function cachedIndentRegex(createRegex: (indent: number) => RegExp) {\n  const cache: RegExp[] = [];\n  return (indent: number) => {\n    const cacheIndex = Math.max(0, Math.min(3, indent - 1));\n    let regex = cache[cacheIndex];\n    if (!regex) {\n      regex = createRegex(cacheIndex);\n      cache[cacheIndex] = regex;\n    }\n    return regex;\n  };\n}",
+            "startLine": 3
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Cached indent regex uses cache index as indent"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "uncertain",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 3-14 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "uncertain",
+        "reason": "The excerpt at rules.ts:9 shows createRegex(cacheIndex) with cacheIndex derived at rules.ts:6, but no provided excerpt shows any call site of cachedIndentRegex or how its callback converts the argument into a {0,N} quantifier, so the claimed {0,0}/{0,1}/{0,2}/{0,3} mapping cannot be settled without seeing the callback definitions in rules.ts beyond line 74."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Lexer.lex reuses this.tokens without clearing it, so a second lex() call on the same Lexer instance appends to the first call's tokens and links instead of returning only the new result.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 35,
+            "path": "Lexer.ts",
+            "snippet": "  constructor(options?: MarkedOptions<ParserOutput, RendererOutput>) {\n    // TokenList cannot be created in one go\n    this.tokens = [] as unknown as TokensList;\n    this.tokens.links = Object.create(null);",
+            "startLine": 32
+          },
+          {
+            "endLine": 102,
+            "path": "Lexer.ts",
+            "snippet": "  lex(src: string) {\n    src = src.replace(other.carriageReturn, '\\n');\n\n    this.blockTokens(src, this.tokens);",
+            "startLine": 99
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Lexer tokens accumulator never reset on reuse"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 32-35 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The constructor initializes this.tokens and its links once at Lexer.ts:32, and lex() at Lexer.ts:99 passes that same this.tokens to blockTokens without any intervening reset, so reuse appends to the prior array."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Parser extension fallback uses `ret !== false || !knownList.includes(type)`, so when an extension renderer exists for an unknown token type and returns false the parser outputs empty string and continues instead of falling through to the unknown-token error.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 57,
+            "path": "Parser.ts",
+            "snippet": "      if (this.options.extensions?.renderers?.[anyToken.type]) {\n        const genericToken = anyToken as Tokens.Generic;\n        const ret = this.options.extensions.renderers[genericToken.type].call({ parser: this }, genericToken);\n        if (ret !== false || !['space', 'hr', 'heading', 'code', 'table', 'blockquote', 'list', 'checkbox', 'html', 'def', 'paragraph', 'text'].includes(genericToken.type)) {\n          out += ret || '';\n          continue;\n        }",
+            "startLine": 51
+          },
+          {
+            "endLine": 144,
+            "path": "Parser.ts",
+            "snippet": "      if (this.options.extensions?.renderers?.[anyToken.type]) {\n        const ret = this.options.extensions.renderers[anyToken.type].call({ parser: this }, anyToken);\n        if (ret !== false || !['escape', 'html', 'link', 'image', 'checkbox', 'strong', 'em', 'codespan', 'br', 'del', 'text'].includes(anyToken.type)) {\n          out += ret || '';\n          continue;\n        }\n      }",
+            "startLine": 138
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Extension returning false for unknown token is swallowed"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 51-57 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: at Parser.ts:54 the condition is true when ret===false and the type is not in the built-in list, so Parser.ts:55-56 appends '' and continues, bypassing the unknown-token error at Parser.ts:112-119; the same pattern at Parser.ts:140-142 bypasses Parser.ts:193-200."
+      }
+    }
+  ]
+}

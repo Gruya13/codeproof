@@ -43,6 +43,8 @@ test("config-hash: dual-scan mode and its secondary model are part of the run id
   assert.equal(loadConfig({}).dualScan, false);
   assert.equal(loadConfig({ DUAL_SCAN: "1" }).dualScan, true);
   assert.equal(loadConfig({ DUAL_SCAN: "1", SECONDARY_SCANNER_MODEL: "muse-spark-1.2" }).secondaryScannerModel, "muse-spark-1.2");
+  assert.equal(loadConfig({}).dualScanMaxLoc, 0, "the secondary-scan LOC guard is off by default");
+  assert.equal(loadConfig({ DUAL_SCAN_MAX_LOC: "2500" }).dualScanMaxLoc, 2500);
   const off = computeConfigSha256({ ...baseConfig, dualScan: false }, "smoke");
   const on = computeConfigSha256({ ...baseConfig, dualScan: true, secondaryScannerModel: "muse-wonder-1.0" }, "smoke");
   assert.notEqual(off, on);

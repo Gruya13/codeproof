@@ -1,0 +1,226 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "cachedIndentRegex creates the regex from cacheIndex instead of indent, so indent 1 gets {0,0}, indent 2 gets {0,1}, indent 3 gets {0,2} and any larger indent gets {0,3} instead of {0,indent}.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 14,
+          "path": "rules.ts",
+          "snippet": "function cachedIndentRegex(createRegex: (indent: number) => RegExp) {\n  const cache: RegExp[] = [];\n  return (indent: number) => {\n    const cacheIndex = Math.max(0, Math.min(3, indent - 1));\n    let regex = cache[cacheIndex];\n    if (!regex) {\n      regex = createRegex(cacheIndex);\n      cache[cacheIndex] = regex;\n    }\n    return regex;\n  };\n}",
+          "startLine": 3
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Cached indent regex uses cache index as indent"
+    },
+    "status": "uncertain",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 3-14 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "uncertain",
+      "reason": "The excerpt at rules.ts:9 shows createRegex(cacheIndex) with cacheIndex derived at rules.ts:6, but no provided excerpt shows any call site of cachedIndentRegex or how its callback converts the argument into a {0,N} quantifier, so the claimed {0,0}/{0,1}/{0,2}/{0,3} mapping cannot be settled without seeing the callback definitions in rules.ts beyond line 74."
+    },
+    "repro": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Lexer.lex reuses this.tokens without clearing it, so a second lex() call on the same Lexer instance appends to the first call's tokens and links instead of returning only the new result.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 35,
+          "path": "Lexer.ts",
+          "snippet": "  constructor(options?: MarkedOptions<ParserOutput, RendererOutput>) {\n    // TokenList cannot be created in one go\n    this.tokens = [] as unknown as TokensList;\n    this.tokens.links = Object.create(null);",
+          "startLine": 32
+        },
+        {
+          "endLine": 102,
+          "path": "Lexer.ts",
+          "snippet": "  lex(src: string) {\n    src = src.replace(other.carriageReturn, '\\n');\n\n    this.blockTokens(src, this.tokens);",
+          "startLine": 99
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Lexer tokens accumulator never reset on reuse"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 32-35 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The constructor initializes this.tokens and its links once at Lexer.ts:32, and lex() at Lexer.ts:99 passes that same this.tokens to blockTokens without any intervening reset, so reuse appends to the prior array."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n4 !== 1\n\n    at file:///tmp/codeproof-repro-LJhB6A/snapshot/.codeproof-repro.test.mjs:11:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 4,\n  expected: 1,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 168,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n4 !== 1\n\n    at file:///tmp/codeproof-repro-LJhB6A/snapshot/.codeproof-repro.test.mjs:11:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 4,\n  expected: 1,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 168,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n4 !== 1\n\n    at file:///tmp/codeproof-repro-LJhB6A/snapshot/.codeproof-repro.test.mjs:11:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 4,\n  expected: 1,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 164,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport { _Lexer } from './Lexer.ts';\n\nconst lexer = new _Lexer();\nconst first = lexer.lex('# Alpha\\n\\n[a]: /first\\n');\nconst firstTypes = first.map((token) => token.type);\nassert.ok(firstTypes.includes('heading'));\nassert.deepEqual(Object.keys(first.links), ['a']);\n\nconst second = lexer.lex('# Beta\\n');\nassert.equal(second.length, 1);\nassert.equal(second[0].type, 'heading');\nassert.equal(second[0].text, 'Beta');\nassert.deepEqual(Object.keys(second.links), []);\n",
+      "expectedBehavior": "A second lex() call on the same _Lexer instance returns only the tokens and links produced from the second source.",
+      "rationale": "Reusing one _Lexer for two sources shows the second result accumulates the first heading and retains its link definition on the buggy code.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 16144,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 6498,
+        "outputTokens": 1834,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.062672
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Parser extension fallback uses `ret !== false || !knownList.includes(type)`, so when an extension renderer exists for an unknown token type and returns false the parser outputs empty string and continues instead of falling through to the unknown-token error.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 57,
+          "path": "Parser.ts",
+          "snippet": "      if (this.options.extensions?.renderers?.[anyToken.type]) {\n        const genericToken = anyToken as Tokens.Generic;\n        const ret = this.options.extensions.renderers[genericToken.type].call({ parser: this }, genericToken);\n        if (ret !== false || !['space', 'hr', 'heading', 'code', 'table', 'blockquote', 'list', 'checkbox', 'html', 'def', 'paragraph', 'text'].includes(genericToken.type)) {\n          out += ret || '';\n          continue;\n        }",
+          "startLine": 51
+        },
+        {
+          "endLine": 144,
+          "path": "Parser.ts",
+          "snippet": "      if (this.options.extensions?.renderers?.[anyToken.type]) {\n        const ret = this.options.extensions.renderers[anyToken.type].call({ parser: this }, anyToken);\n        if (ret !== false || !['escape', 'html', 'link', 'image', 'checkbox', 'strong', 'em', 'codespan', 'br', 'del', 'text'].includes(anyToken.type)) {\n          out += ret || '';\n          continue;\n        }\n      }",
+          "startLine": 138
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Extension returning false for unknown token is swallowed"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-003"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 51-57 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: at Parser.ts:54 the condition is true when ret===false and the type is not in the built-in list, so Parser.ts:55-56 appends '' and continues, bypassing the unknown-token error at Parser.ts:112-119; the same pattern at Parser.ts:140-142 bypasses Parser.ts:193-200."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown block token returning false should throw, got \"\"\n    at file:///tmp/codeproof-repro-jLknbx/snapshot/.codeproof-repro.test.mjs:22:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 147,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown block token returning false should throw, got \"\"\n    at file:///tmp/codeproof-repro-jLknbx/snapshot/.codeproof-repro.test.mjs:22:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 154,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: unknown block token returning false should throw, got \"\"\n    at file:///tmp/codeproof-repro-jLknbx/snapshot/.codeproof-repro.test.mjs:22:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 137,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport { _Parser } from './Parser.ts';\n\nfunction makeParser() {\n  return new _Parser({\n    extensions: {\n      renderers: {\n        unknownBlock() { return false; },\n        unknownInline() { return false; },\n      },\n    },\n  });\n}\n\nlet blockError = null;\nlet blockResult;\ntry {\n  blockResult = makeParser().parse([{ type: 'unknownBlock', raw: 'x' }]);\n} catch (err) {\n  blockError = err;\n}\nassert.ok(blockError instanceof Error, `unknown block token returning false should throw, got ${JSON.stringify(blockResult)}`);\nassert.match(blockError.message, /Token with \"unknownBlock\" type was not found\\./);\n\nlet inlineError = null;\nlet inlineResult;\ntry {\n  inlineResult = makeParser().parseInline([{ type: 'unknownInline', raw: 'x' }]);\n} catch (err) {\n  inlineError = err;\n}\nassert.ok(inlineError instanceof Error, `unknown inline token returning false should throw, got ${JSON.stringify(inlineResult)}`);\nassert.match(inlineError.message, /Token with \"unknownInline\" type was not found\\./);\n",
+      "expectedBehavior": "An extension renderer returning false for an unknown token type falls through to the default case and throws 'Token with \"<type>\" type was not found.' in both parse and parseInline, instead of outputting an empty string.",
+      "rationale": "On the buggy code the condition `ret !== false || !knownList.includes(type)` is true for unknown types even when ret is false, so parse/parseInline swallow the token and return ''. The test records any thrown error and asserts the unknown-token error was thrown, so it fails by assertion on the buggy commit and passes after the fallback is fixed.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 23976,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2537,
+        "outputTokens": 2870,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.067548
+    },
+    "evidenceLevel": "execution-proven"
+  }
+]

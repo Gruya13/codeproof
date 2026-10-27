@@ -70,7 +70,7 @@ Scan and verify are static: the analyzed code is never executed while the scanne
 
 **Why it exists.** In the model-ablation run on `unjs/ufo`, Wonder alone proposed five real defects that Spark never proposed; the single-scanner pipeline could not publish them because the producer never proposed them, and Spark as a verifier confirmed all seven Wonder findings. Dual-scan closes that recall gap at a known price: the second scan is roughly one extra Wonder pass, so the mode is opt-in and `run.json` records the cost per scanner.
 
-**Limits:** both models are from the same vendor family, so cross-verification is independent by role and model, not by provenance; duplicate detection is heuristic (file + overlapping lines), so two citations of the same defect that do not overlap remain two findings; the hard budget gate can refuse the second scan or later verifications, and `run.json` records the abort reason.
+**Limits:** both models are from the same vendor family, so cross-verification is independent by role and model, not by provenance; duplicate detection is heuristic (file + overlapping lines), so two citations of the same defect that do not overlap remain two findings; the hard budget gate can refuse the second scan or later verifications, and `run.json` records the abort reason. The secondary scanner (Wonder) only finishes on small targets: on 4k and 7.6k LOC it hit the output-token limit even at 48k and the retry failed, so the run degraded to the primary scanner (`scanners[].status = error`). `DUAL_SCAN_MAX_LOC=2500` skips the secondary scan above that size (`status: skipped-loc`) and avoids the wasted spend; it is off by default.
 
 ## Meta AI tooling used
 

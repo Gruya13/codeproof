@@ -1,46 +1,37 @@
-# Dual-scanner mode — first real run (ufo, 27.10.2026)
+# Dual-scanner runs on real repositories (27.10.2026)
 
-`DUAL_SCAN=1` on [unjs/ufo](https://github.com/unjs/ufo) `src/` at commit `f06c800` — the same target and commit as the single-scanner CodeProof run `deb844e0328b6a39` in [../probes-27-10b/ufo/](../probes-27-10b/ufo/), so the two runs are directly comparable.
+`DUAL_SCAN=1` on real repositories, each with the same commit as an earlier single-scanner run. The dual mode runs both Meta models as producers, collapses duplicates, and cross-verifies every finding with the model that did not propose it.
 
-| | Single scanner (existing run) | **Dual scanner** |
-|---|---:|---:|
-| Candidates proposed | 4 (Spark) | **10 unique** (Spark 4, Wonder 8, both 2) |
-| Published (verified) | 4 | **10** |
-| Refuted / moderate / uncertain | 0 / 0 / 0 | 0 / 0 / 0 |
-| Rejected at L1 | 0 | 0 |
-| Execution-proven | 0 (L3 unavailable: extensionless TS imports) | 0 (same) |
-| Cost | $0.6907 | **$2.0685** |
-| Duration | 170 s | 656 s |
+| Repo | LOC | Secondary scanner (Wonder) | Unique proposed | Verified | Reproduced | Cost | Duration |
+|---|---:|---|---:|---:|---:|---:|---:|
+| [unjs/ufo](https://github.com/unjs/ufo) `f06c800` | 1,571 | **ok**, 8 candidates | **10** (Spark 4 / Wonder 8 / both 2) | **10** | 0 (L3 unavailable) | $2.0685 | 656 s |
+| [npm/node-semver](https://github.com/npm/node-semver) `7257c14` | 7,581 | truncated at 32k, `fetch failed` | 2 (Spark 2) | 2 | **2** | $2.2503 | 493 s |
+| [markedjs/marked](https://github.com/markedjs/marked) `4bdd7e0c` | 4,070 | truncated at 48k, `fetch failed` | 3 (Spark 3) | 2 + 1 uncertain | **2** | $1.2403 | 1,905 s |
 
-Per scanner (`run.json.scanners`): Spark 4 candidates, $0.0615, 37 s; Wonder 8 candidates, $0.6412, 353 s (one truncation retry at 32k output tokens, 294 s of it in the second call).
+Baseline single-scanner runs on the same commits: ufo 4 verified, semver 1 verified (LRU cache), marked 1 verified + 2 uncertain (Lexer `state.top`).
 
-## What the second scanner added
+## Result 1 — ufo: the mode works as designed
 
-Six findings that the single-scanner pipeline could not publish, because the Spark producer never proposed them. Each was cross-examined by Spark as the verifier (`muse-spark-1.3`) and confirmed:
+Wonder proposed 8 candidates, Spark 4; two overlapped and collapsed into findings proposed by both models. The merged set is **10 verified findings, 0 false positives**, six of which the single-scanner pipeline could not publish because its producer never proposed them. Each of the six Wonder-only findings was cross-examined by Spark and confirmed. This is the clearest evidence for dual-scan: recall 4 → 10 at unchanged precision.
 
-| # | Proposed by | Finding |
-|---|---|---|
-| F-005 | Wonder | `parseURL` loses opaque-protocol URLs such as `mailto:foo@example.com`: `hasProtocol` accepts a scheme without `//`, but the following match requires `//` |
-| F-006 | Wonder | `joinRelativeURL("../a", "b")` returns `"a/b"` instead of `"../a/b"` (the `..` decrements the depth, the next segment increments it back) |
-| F-007 | Wonder | `stringifyParsedURL(parseURL("data:text/plain,hello"))` produces `data://text/plain,hello` (unconditional `//` after any protocol) |
-| F-008 | Wonder | `new $URL("//example.com/foo").href` returns `/foo` and loses the host (protocol-relative URL, `hasProtocol` false) |
-| F-009 | Wonder | `parseHost("[::1]:8080")` returns hostname `[` and no port (the regex stops at the first colon inside IPv6 brackets) |
-| F-010 | Wonder | `withoutBase("/foo#section", "/foo")` returns the input unchanged instead of `/#section` (`#` is not accepted as a base boundary) |
+## Result 2 — semver and marked: Wonder cannot finish a larger scan, and the run degrades safely
 
-The two findings proposed by both scanners (`withFragment` empty-hash, `parseAuth` colon truncation) collapsed into single findings with `**Proposed by:** Muse Spark + Muse Wonder`.
+On semver (7.6k LOC) and marked (4k LOC) the Wonder scanner hit `finish_reason=length` even with a doubled output budget and the retry failed with `fetch failed`. The pipeline **did not fail the run**: it recorded the secondary scanner as `status: error` in `run.json.scanners`, warned once, and continued with Spark only. Both runs still produced execution-proven findings:
 
-## Reading
+- semver: the known `LRUCache.set` defect plus a **new confirmed finding** — cloning a `SemVer` with different options re-parses `version.version`, which excludes build metadata, so build identifiers are lost; the generated test fails 3/3.
+- marked: two execution-proven findings — `Lexer.lex` reuses `this.tokens` without clearing it (a second `lex()` appends to the first result), and the `Parser` extension fallback returns an empty string instead of throwing for an unknown block token whose extension renderer returns `false`.
 
-- **Recall on this repository went from 4 to 10 published findings at 0 false positives.** All ten were verified by the model that did not propose them, so the trust contract is unchanged: every published finding still carries a machine-checked citation, an adversarial confirmation and (where executable) an execution proof.
-- **The price is the second scan, and it is not cheap:** Wonder spent 10x the Spark scan and about 65% of the whole single-scanner run; dual-scan cost 3x the single run. This is why the mode is opt-in and per-scanner costs are recorded.
-- **Cross-verification is what makes it defensible:** a second producer alone would have added six unverified claims; instead each Wonder-only finding was checked by Spark, which shares no role with the proposer on that finding.
-- The earlier model-ablation run on the same repository had already shown that Spark as a verifier confirms all seven Wonder findings; this run turns that observation into a working publishing path.
+## What we learned
+
+1. **The secondary scan is only practical on small targets.** Wonder spends its output budget on reasoning; it finished a 1.5k-LOC target comfortably, but not 4k or 7.6k LOC even at 48k output tokens. The run does not break — it degrades to the primary scanner — but the money is spent on the failed attempts ($2.25 and $1.24 for runs that end up single-scanner).
+2. **A LOC guard is now available:** `DUAL_SCAN_MAX_LOC=2500` skips the secondary scan above that size, records `status: skipped-loc` with the reason in `run.json`, and saves the wasted spend. Off by default (0).
+3. **Cross-verification worked in every direction it was exercised:** Wonder-only findings were confirmed by Spark (ufo), and Spark-only findings were confirmed by Wonder (all three runs, `verifier: muse-wonder-1.0`).
+4. **Dual-scan is not a free recall boost on every repository.** On targets where the second scanner cannot finish, it is just an expensive single-scanner run - which is why the mode stays opt-in and the per-scanner outcome is recorded.
 
 ## Caveats
 
-- One run, one repository, n = 1. Model output is not bit-deterministic: the single-scanner run proposed 4 candidates, the dual run's Spark pass proposed 4 as well, but earlier runs of the same code produced 3 and 6.
-- Both models are from the same vendor family: cross-verification is independent by role and by model instance, not by provenance.
-- L3 could not run on this target (TypeScript with extensionless internal imports), so none of the ten findings is execution-proven. On a runnable target the execution proof would apply to the cross-verified findings as well.
-- Duplicate detection is heuristic (same file + overlapping cited lines). It collapsed the two overlapping candidates; two citations of the same defect that do not overlap would stay as two findings.
+- One run per repository, n = 3; model output is not bit-deterministic (Spark proposed 4 candidates on ufo in one run and 3 in another marked run; the marked dual run found different defects than the single run).
+- Both models are from the same vendor family: cross-verification is independent by role and model, not by provenance.
+- L3 ran on semver and marked (CommonJS / explicit `.ts` imports) and did not run on ufo (extensionless TypeScript imports).
 
-Artifacts: `ufo/ced2e69aa61578a4/` (`run.json` with per-scanner entries, `findings.json` with `proposedBy`, `REPORT.md` with `**Proposed by:**`, `candidates.json` with the full audit).
+Artifacts: `ufo/ced2e69aa61578a4/`, `semver/a1f908e71a5d1869/`, `marked/2d8a93e9b019f92a/`.

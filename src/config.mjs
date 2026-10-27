@@ -35,7 +35,10 @@ export function loadConfig(env) {
     reproAttempts: Number(env.REPRO_ATTEMPTS || "3"),
     hardBudget: env.HARD_BUDGET !== "0",
     dualScan: env.DUAL_SCAN === "1",
-    secondaryScannerModel: env.SECONDARY_SCANNER_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0"
+    secondaryScannerModel: env.SECONDARY_SCANNER_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0",
+    // The secondary scanner (Wonder) only finishes on small targets; above this LOC the second
+    // scan is skipped. 0 disables the guard (explicit opt-in for experiments).
+    dualScanMaxLoc: Number(env.DUAL_SCAN_MAX_LOC || "0")
   };
 }
 
@@ -57,7 +60,8 @@ export function computeConfigSha256(config, mode) {
     reproAttempts: config.reproAttempts,
     hardBudget: config.hardBudget,
     dualScan: config.dualScan,
-    secondaryScannerModel: config.secondaryScannerModel
+    secondaryScannerModel: config.secondaryScannerModel,
+    dualScanMaxLoc: config.dualScanMaxLoc
   });
   return createHash("sha256").update(payload).digest("hex");
 }

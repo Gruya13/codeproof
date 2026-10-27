@@ -1,0 +1,77 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"LRUCache.set deletes an existing key but never re-inserts it, so updating a cached key loses the entry and a subsequent get returns undefined.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 36, \"path\": \"internal/lrucache.js\", \"snippet\": \"  set (key, value) {\\n    const deleted = this.delete(key)\\n\\n    if (!deleted && value !== undefined) {\\n      // If cache is full, delete the least recently used item\\n      if (this.map.size >= this.max) {\\n        const firstKey = this.map.keys().next().value\\n        this.delete(firstKey)\\n      }\\n\\n      this.map.set(key, value)\\n    }\", \"startLine\": 25}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"LRUCache.set drops update for existing key\"}, {\"category\": \"correctness\", \"claim\": \"When cloning a SemVer instance with different loose/includePrerelease options the code re-parses version.version which excludes build metadata, so build identifiers are silently lost.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 35, \"path\": \"classes/semver.js\", \"snippet\": \"    if (version instanceof SemVer) {\\n      if (version.loose === !!options.loose &&\\n        version.includePrerelease === !!options.includePrerelease) {\\n        return version\\n      } else {\\n        version = version.version\\n      }\", \"startLine\": 29}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"SemVer re-parse from SemVer loses build metadata\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "LRUCache.set deletes an existing key but never re-inserts it, so updating a cached key loses the entry and a subsequent get returns undefined.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 36,
+            "path": "internal/lrucache.js",
+            "snippet": "  set (key, value) {\n    const deleted = this.delete(key)\n\n    if (!deleted && value !== undefined) {\n      // If cache is full, delete the least recently used item\n      if (this.map.size >= this.max) {\n        const firstKey = this.map.keys().next().value\n        this.delete(firstKey)\n      }\n\n      this.map.set(key, value)\n    }",
+            "startLine": 25
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "LRUCache.set drops update for existing key"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 25-36 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at internal/lrucache.js:26 deletes the existing key and the re-insertion at internal/lrucache.js:35 is guarded by !deleted at internal/lrucache.js:28, so updating an existing key removes it without re-inserting and get at internal/lrucache.js:10-12 returns undefined."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "When cloning a SemVer instance with different loose/includePrerelease options the code re-parses version.version which excludes build metadata, so build identifiers are silently lost.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 35,
+            "path": "classes/semver.js",
+            "snippet": "    if (version instanceof SemVer) {\n      if (version.loose === !!options.loose &&\n        version.includePrerelease === !!options.includePrerelease) {\n        return version\n      } else {\n        version = version.version\n      }",
+            "startLine": 29
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "SemVer re-parse from SemVer loses build metadata"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 29-35 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The constructor at classes/semver.js:34 reassigns version to version.version when options differ, then re-parses that string at classes/semver.js:53 and derives build only from regex group m[5] at classes/semver.js:93, so a SemVer whose version string excludes build metadata loses its build identifiers."
+      }
+    }
+  ]
+}
