@@ -1,0 +1,18 @@
+{
+  "repo": "https://github.com/moment/luxon.git",
+  "commit": "f427515a38f6a671f8de663e6bcc040ed81f114e",
+  "scope": "src",
+  "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/luxon-src/_repo/src",
+  "clean": true,
+  "files": 24,
+  "loc": 8582,
+  "importEdges": 97,
+  "cycles": 15,
+  "digestChars": 5069,
+  "promptChars": 332249,
+  "promptFiles": 24,
+  "promptComplete": true,
+  "promptCap": 400000,
+  "estimatedInputTokens": 92291,
+  "dryRun": true
+}
