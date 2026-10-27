@@ -1,0 +1,160 @@
+{
+  "repo": {
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/_repo/ufo/src",
+    "commit": "f06c800d0c59f2a4a1b9ba65eb6cb61a84419be6",
+    "files": 7,
+    "loc": 1571
+  },
+  "codeproofRun": "reports/real-world/probes-27-10b/ufo/deb844e0328b6a39",
+  "codeProof": {
+    "published": 4,
+    "verified": 4,
+    "reproduced": 0,
+    "findings": [
+      {
+        "id": "F-001",
+        "title": "withoutLeadingSlash returns slash for slash input",
+        "where": "utils.ts:235-237"
+      },
+      {
+        "id": "F-002",
+        "title": "withFragment early return makes clearing fragment impossible",
+        "where": "utils.ts:736-743"
+      },
+      {
+        "id": "F-003",
+        "title": "parseAuth truncates password at second colon",
+        "where": "parse.ts:133-139"
+      },
+      {
+        "id": "F-004",
+        "title": "searchParams array values skip JSON stringify",
+        "where": "url.ts:71-83"
+      }
+    ]
+  },
+  "variants": [
+    {
+      "variant": "spark-only",
+      "model": "muse-spark-1.3",
+      "run": 1,
+      "calls": 1,
+      "durationMs": 42541,
+      "costUsd": 0.045685699999999996,
+      "usage": {
+        "inputTokens": 14840,
+        "outputTokens": 10224,
+        "cachedTokens": 14833
+      },
+      "finishReason": "stop",
+      "candidates": 3,
+      "l0Valid": 3,
+      "l1Valid": 3,
+      "overlapWithCodeProof": 3,
+      "newVsCodeProof": 0,
+      "findings": [
+        {
+          "id": "F-001",
+          "title": "withoutLeadingSlash returns \"/\" for empty input",
+          "claim": "withoutLeadingSlash falls back to \"/\" so empty string and already-stripped root become \"/\" instead of \"\". This corrupts callers like append and resolveURL that expect \"\" to stay empty.",
+          "severity": "high",
+          "where": "utils.ts:235-237",
+          "l1": true
+        },
+        {
+          "id": "F-002",
+          "title": "parseAuth truncates password at second colon",
+          "claim": "parseAuth destructures input.split(\":\") so a password containing \":\" is truncated to the segment before the second colon and the remainder is dropped.",
+          "severity": "high",
+          "where": "parse.ts:133-139",
+          "l1": true
+        },
+        {
+          "id": "F-003",
+          "title": "searchParams array values skip JSON stringify",
+          "claim": "searchParams appends array elements raw while the non-array branch JSON.stringifies non-strings, so object/number/boolean values inside arrays are coerced to \"[object Object]\" or wrong strings instead of JSON.",
+          "severity": "medium",
+          "where": "url.ts:71-85",
+          "l1": true
+        }
+      ]
+    },
+    {
+      "variant": "wonder-only",
+      "model": "muse-wonder-1.0",
+      "run": 1,
+      "calls": 1,
+      "durationMs": 293882,
+      "costUsd": 0.86414,
+      "usage": {
+        "inputTokens": 29230,
+        "outputTokens": 37361,
+        "cachedTokens": 0
+      },
+      "finishReason": "stop",
+      "candidates": 7,
+      "l0Valid": 7,
+      "l1Valid": 7,
+      "overlapWithCodeProof": 2,
+      "newVsCodeProof": 5,
+      "findings": [
+        {
+          "id": "F-001",
+          "title": "stringifyParsedURL corrupts special-protocol URLs",
+          "claim": "stringifyParsedURL unconditionally appends '//' after any protocol, corrupting special protocols such as data:, blob:, javascript:, and vbscript: that parseURL returns without slashes; e.g. stringifyParsedURL(parseURL('data:text/plain,hello')) produces 'data://text/plain,hello'.",
+          "severity": "high",
+          "where": "parse.ts:190-194",
+          "l1": true
+        },
+        {
+          "id": "F-002",
+          "title": "$URL href drops host for protocol-relative URLs",
+          "claim": "For a protocol-relative input such as '//example.com/foo', $URL stores host 'example.com' but protocol is empty, so hasProtocol is falsy and href returns only fullpath '/foo', dropping the host from href/toString.",
+          "severity": "high",
+          "where": "url.ts:106-115",
+          "l1": true
+        },
+        {
+          "id": "F-003",
+          "title": "joinRelativeURL loses a leading ../ segment",
+          "claim": "A leading '..' decrements segmentsDepth, but the following normal segment increments it back, so the later prefix logic sees a non-negative depth and emits no '../'; joinRelativeURL('../a') returns 'a' and joinRelativeURL('../a','b') returns 'a/b' instead of preserving the parent reference.",
+          "severity": "medium",
+          "where": "utils.ts:474-488",
+          "l1": true
+        },
+        {
+          "id": "F-004",
+          "title": "parseAuth truncates passwords containing colons",
+          "claim": "Destructuring input.split(':') keeps only the first two parts, so parseAuth('user:pass:word') returns password 'pass' and silently discards ':word'; the first colon is the username/password separator and later colons belong to the password.",
+          "severity": "medium",
+          "where": "parse.ts:133-139",
+          "l1": true
+        },
+        {
+          "id": "F-005",
+          "title": "parseHost breaks IPv6 hosts",
+          "claim": "The host regex stops [^/:]* at the first colon, so parseHost('[::1]:8080') returns hostname '[' with no port instead of the IPv6 hostname and port '8080'; $URL hostname/port getters rely on this parser.",
+          "severity": "medium",
+          "where": "parse.ts:157-163",
+          "l1": true
+        },
+        {
+          "id": "F-006",
+          "title": "withFragment cannot remove an existing fragment",
+          "claim": "The early return for !hash makes the later hash === '' removal branch unreachable, so withFragment('/foo#bar','') returns '/foo#bar' unchanged instead of removing the fragment as its documented example states.",
+          "severity": "medium",
+          "where": "utils.ts:736-743",
+          "l1": true
+        },
+        {
+          "id": "F-007",
+          "title": "withBase duplicates base before a fragment",
+          "claim": "The base-boundary check accepts end, '/', and '?' but not '#', so withBase('/foo#bar','/foo') treats the input as not already under the base and joinURL produces '/foo/foo#bar', duplicating the base path.",
+          "severity": "medium",
+          "where": "utils.ts:294-302",
+          "l1": true
+        }
+      ]
+    }
+  ]
+}

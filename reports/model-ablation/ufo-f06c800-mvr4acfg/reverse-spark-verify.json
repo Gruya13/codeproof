@@ -1,0 +1,67 @@
+{
+  "repo": {
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/_repo/ufo/src",
+    "commit": "f06c800d0c59f2a4a1b9ba65eb6cb61a84419be6"
+  },
+  "sourceVariant": "wonder-only",
+  "verifierModel": "muse-spark-1.3",
+  "totals": {
+    "candidates": 7,
+    "confirmed": 7,
+    "refuted": 0,
+    "moderate": 0,
+    "uncertain": 0
+  },
+  "results": [
+    {
+      "id": "F-001",
+      "where": "parse.ts:190-194",
+      "status": "verified",
+      "verdict": "confirm",
+      "reason": "parse.ts:190-193 builds proto as (parsed.protocol || \"\") + \"//\" whenever parsed.protocol is truthy with no exemption for special protocols, so any input like { protocol: \"data:\", pathname: \"text/plain,hello\" } is stringified with spurious slashes."
+    },
+    {
+      "id": "F-002",
+      "where": "url.ts:106-115",
+      "status": "verified",
+      "verdict": "confirm",
+      "reason": "For '//example.com/foo' parseURL at parse.ts:87,93 yields protocol '' with host preserved and [protocolRelative]=true, so $URL.hasProtocol at url.ts:56-58 is 0 (falsy) and href guard at url.ts:112-114 fails, returning only fullpath '/foo' and dropping the host."
+    },
+    {
+      "id": "F-003",
+      "where": "utils.ts:474-488",
+      "status": "verified",
+      "verdict": "confirm",
+      "reason": "Tracing utils.ts:474-488 shows '../a' first hits s=='..' at utils.ts:478-479 popping empty segments and setting segmentsDepth to -1, then pushes 'a' at utils.ts:487-488 incrementing depth back to 0, so utils.ts:494 takes the >=0 branch and utils.ts:503 never emits '../', confirming joinRelativeURL('../a') returns 'a'."
+    },
+    {
+      "id": "F-004",
+      "where": "parse.ts:133-139",
+      "status": "verified",
+      "verdict": "confirm",
+      "reason": "parse.ts:134 destructures `input.split(\":\")` into only `[username, password]`, so for `user:pass:word` the third segment `word` is discarded and password becomes `pass`, exactly as claimed."
+    },
+    {
+      "id": "F-005",
+      "where": "parse.ts:157-163",
+      "status": "verified",
+      "verdict": "confirm",
+      "reason": "The regex at parse.ts:158 uses ([^/:]*):?(\\d+)? which stops at the first colon, so '[::1]:8080' yields hostname '[' with undefined port, and url.ts:41 and url.ts:45 show $URL hostname/port getters delegate directly to parseHost."
+    },
+    {
+      "id": "F-006",
+      "where": "utils.ts:736-743",
+      "status": "verified",
+      "verdict": "confirm",
+      "reason": "The guard at utils.ts:737 `if (!hash || hash === \"#\")` is true for empty string, so it returns input unchanged and makes the `hash === \"\" ? \"\"` removal branch at utils.ts:741 unreachable, contradicting the documented example at utils.ts:731."
+    },
+    {
+      "id": "F-007",
+      "where": "utils.ts:294-302",
+      "status": "verified",
+      "verdict": "confirm",
+      "reason": "utils.ts:298 only allows end-of-string, '/' and '?' as base boundaries, so for input '/foo#bar' with base '/foo' the nextChar '#' at utils.ts:296 fails the check and falls through to joinURL at utils.ts:302, which joins '/foo' with '/foo#bar' duplicating the base."
+    }
+  ],
+  "durationMs": 35657
+}

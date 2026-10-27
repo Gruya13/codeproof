@@ -1,0 +1,115 @@
+{
+  "repo": {
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/_repo/ufo/src",
+    "commit": "f06c800d0c59f2a4a1b9ba65eb6cb61a84419be6",
+    "files": 7,
+    "loc": 1571
+  },
+  "codeproofRun": "reports/real-world/probes-27-10b/ufo/deb844e0328b6a39",
+  "codeProof": {
+    "published": 4,
+    "verified": 4,
+    "reproduced": 0,
+    "findings": [
+      {
+        "id": "F-001",
+        "title": "withoutLeadingSlash returns slash for slash input",
+        "where": "utils.ts:235-237"
+      },
+      {
+        "id": "F-002",
+        "title": "withFragment early return makes clearing fragment impossible",
+        "where": "utils.ts:736-743"
+      },
+      {
+        "id": "F-003",
+        "title": "parseAuth truncates password at second colon",
+        "where": "parse.ts:133-139"
+      },
+      {
+        "id": "F-004",
+        "title": "searchParams array values skip JSON stringify",
+        "where": "url.ts:71-83"
+      }
+    ]
+  },
+  "variants": [
+    {
+      "variant": "spark-only",
+      "model": "muse-spark-1.3",
+      "run": 1,
+      "calls": 1,
+      "durationMs": 54457,
+      "costUsd": 0.07464575,
+      "usage": {
+        "inputTokens": 14840,
+        "outputTokens": 13199,
+        "cachedTokens": 0
+      },
+      "finishReason": "stop",
+      "candidates": 6,
+      "l0Valid": 6,
+      "l1Valid": 6,
+      "overlapWithCodeProof": 3,
+      "newVsCodeProof": 3,
+      "findings": [
+        {
+          "id": "F-001",
+          "title": "withoutLeadingSlash returns slash for empty/root input",
+          "claim": "withoutLeadingSlash returns \"/\" for \"\" and \"/\" instead of removing the leading slash; the `|| \"/\"` fallback re-adds a slash.",
+          "severity": "high",
+          "where": "utils.ts:235-237",
+          "l1": true
+        },
+        {
+          "id": "F-002",
+          "title": "parseAuth truncates password containing colon",
+          "claim": "parseAuth splits on every \":\" and keeps only the second part, so a password containing \":\" is truncated.",
+          "severity": "high",
+          "where": "parse.ts:133-139",
+          "l1": true
+        },
+        {
+          "id": "F-003",
+          "title": "joinRelativeURL loses leading parent segments",
+          "claim": "joinRelativeURL tracks excess \"..\" with segmentsDepth but rebuilds with \"../\".repeat(-segmentsDepth), which undercounts when a normal segment follows leading \"..\" (e.g. \"..\"+\"a\" becomes \"a\" instead of \"../a\").",
+          "severity": "high",
+          "where": "utils.ts:474-488, utils.ts:501-504",
+          "l1": true
+        },
+        {
+          "id": "F-004",
+          "title": "withBase duplicates base when fragment follows",
+          "claim": "withBase treats \"?\" as a base boundary but not \"#\", so withBase(\"/foo#bar\",\"/foo\") duplicates the base via joinURL instead of returning input.",
+          "severity": "high",
+          "where": "utils.ts:294-302",
+          "l1": true
+        },
+        {
+          "id": "F-005",
+          "title": "withoutBase fails to strip base when fragment follows",
+          "claim": "withoutBase treats \"?\" as a base boundary but not \"#\", so withoutBase(\"/foo#bar\",\"/foo\") returns input unchanged instead of stripping to \"/#bar\".",
+          "severity": "medium",
+          "where": "utils.ts:322-330",
+          "l1": true
+        },
+        {
+          "id": "F-006",
+          "title": "withFragment empty hash does not clear fragment",
+          "claim": "withFragment returns input unchanged for empty hash, contradicting documented withFragment(\"/foo#bar\",\"\") => \"/foo\"; the later `hash === \"\"` branch is unreachable.",
+          "severity": "medium",
+          "where": "utils.ts:736-743",
+          "l1": true
+        }
+      ]
+    },
+    {
+      "variant": "wonder-only",
+      "model": "muse-wonder-1.0",
+      "run": 1,
+      "error": "unparseable output: empty model output",
+      "durationMs": 134129,
+      "costUsd": 0.37846
+    }
+  ]
+}
