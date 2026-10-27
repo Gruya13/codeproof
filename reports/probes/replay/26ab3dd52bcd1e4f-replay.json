@@ -7,9 +7,9 @@
   "commit": "95c324339300d5a7e05b74fe237f385bcf99a28f",
   "scope": "bench/seed-repo",
   "candidateCount": 9,
-  "matched": 9,
-  "mismatches": 0,
-  "passed": true,
+  "matched": 8,
+  "mismatches": 1,
+  "passed": false,
   "results": [
     {
       "id": "F-001",
@@ -123,13 +123,13 @@
         "errors": []
       },
       "l1": {
-        "passed": true,
+        "passed": false,
         "storedPassed": true,
         "lineTolerance": 0,
         "storedLineTolerance": 0,
-        "reason": "citation matches lines 1-7 (+/-1 line tolerance)"
+        "reason": "citation range expects 6 lines but snippet has 7 lines"
       },
-      "match": true
+      "match": false
     },
     {
       "id": "F-009",
@@ -147,5 +147,5 @@
       "match": true
     }
   ],
-  "outputSha256": "eba4e0937fc6b2439d636feaecec7cdbc521687b8f71270c8943138064236175"
+  "outputSha256": "f7e26ee88d13a579404ba12d87dd920d2fae1050daef4253a0e4e0a213365961"
 }

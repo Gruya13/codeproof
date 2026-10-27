@@ -102,7 +102,7 @@ function main() {
     const finding = item.finding;
     const l0 = validateFindingsL0({ findings: [finding] });
     const checks = (finding.evidence || []).map(function (evidence) { return checkCitation(evidence, gateRepo); });
-    const l1Passed = checks.some(function (check) { return check.passed; });
+    const l1Passed = checks.length > 0 && checks.every(function (check) { return check.passed; });
     const stored = item.l1 || {};
     const tolerance = checks.filter(function (check) { return check.passed; })[0];
     const storedTolerance = stored.lineTolerance === undefined ? 0 : stored.lineTolerance;

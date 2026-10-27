@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { resolve, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { loadConfig, computeConfigSha256, VERSION } from "./config.mjs";
 import { ingest, repoDigest, filesWithLineNumbers } from "./ingest/index.mjs";
@@ -50,6 +51,27 @@ function parseArgs(argv) {
     }
   }
   return args;
+}
+
+export function buildRunBanner(options) {
+  const lines = [];
+  if (options.mock) {
+    lines.push("  *************************************************************");
+    lines.push("  *  MOCK MODE - synthetic output, no network, no model calls  *");
+    lines.push("  *************************************************************");
+  }
+  if (options.controlled) {
+    lines.push("  *************************************************************");
+    lines.push("  *  CONTROLLED VERIFIER TEST - candidates injected by hand    *");
+    lines.push("  *  This is NOT scanner output; it is NOT presented as such.  *");
+    lines.push("  *************************************************************");
+  }
+  const title = options.controlled ? "CodeProof controlled verifier test" : options.mock ? "CodeProof demo" : options.mode === "bench" ? "CodeProof benchmark run" : "CodeProof run";
+  lines.push(title + "  target=" + options.target);
+  lines.push("  mode " + (options.mock ? "mock" : options.mode));
+  if (!options.mock) lines.push("  models scanner=" + (options.controlled ? "skipped" : options.scannerModel) + " verifier=" + options.verifierModel);
+  lines.push("  run-id " + options.runId + (options.mock ? "  (mock)" : ""));
+  return lines.join("\n");
 }
 
 async function main() {
@@ -112,20 +134,8 @@ async function main() {
   });
   const budget = new Budget(config.budgetUsd);
   console.log("");
-  if (mock) {
-    console.log("  *************************************************************");
-    console.log("  *  MOCK MODE - synthetic output, no network, no model calls  *");
-    console.log("  *************************************************************");
-  }
-  if (controlled) {
-    console.log("  *************************************************************");
-    console.log("  *  CONTROLLED VERIFIER TEST - candidates injected by hand    *");
-    console.log("  *  This is NOT scanner output; it is presented as such.      *");
-    console.log("  *************************************************************");
-  }
-  const title = controlled ? "CodeProof controlled verifier test" : mock ? "CodeProof demo" : mode === "bench" ? "CodeProof benchmark run" : "CodeProof run";
-  console.log(title + "  target=" + target);
-  console.log("  run-id " + runId + (mock ? "  (mock)" : ""));
+  console.log(buildRunBanner({ mock: mock, controlled: controlled, mode: mode, target: target, runId: runId,
+    scannerModel: config.scannerModel, verifierModel: config.verifierModel }));
 
   const ingestStarted = Date.now();
   const repo = ingest(target);
@@ -369,8 +379,8 @@ async function main() {
     },
     versions: { node: process.version, codeproof: VERSION }
   };
-  writeFileSync(join(outDir, "REPORT.md"), buildReport({ repo: repo, published: published, run: runJson }) + "\n");
-  writeFileSync(join(outDir, "rejected.md"), buildRejected({ published: published, run: runJson }) + "\n");
+  writeFileSync(join(outDir, "REPORT.md"), buildReport({ repo: repo, repoRoot: target, published: published, run: runJson }) + "\n");
+  writeFileSync(join(outDir, "rejected.md"), buildRejected({ published: published, candidates: candidateAudit, run: runJson }) + "\n");
   writeFileSync(join(outDir, "findings.json"), JSON.stringify(published, null, 2) + "\n");
   writeFileSync(join(outDir, "candidates.json"), JSON.stringify({ raw: scanRaw, candidates: candidateAudit }, null, 2) + "\n");
   phases.push({ name: "publish", status: "ok", durationMs: Date.now() - publishStarted });
@@ -394,8 +404,10 @@ async function main() {
   }
 }
 
-main().catch(function (error) {
-  console.error("");
-  console.error("ERROR: " + error.message);
-  process.exitCode = 1;
-});
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch(function (error) {
+    console.error("");
+    console.error("ERROR: " + error.message);
+    process.exitCode = 1;
+  });
+}

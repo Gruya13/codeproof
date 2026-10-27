@@ -9,15 +9,15 @@ export const VERIFIER_SYSTEM_PROMPT = [
   "You receive the finding JSON, the cited snippet, and the file excerpts that the scanner saw.",
   "confirm - only if the cited code really does what the claim says and the claim is not overstated.",
   "refute with mode strong - provide counterEvidence: a verbatim snippet from the given files that shows the premise of the claim is false. The system re-checks it mechanically; if it does not match, the verdict is downgraded to weak.",
-  "refute with mode weak - refute by reasoning when you cannot cite a precise snippet. This downgrades the finding to moderate confidence, it does not veto it.",
+  "refute with mode weak - refute by reasoning when you cannot cite a precise snippet. This moves the finding to moderate status, it does not veto it.",
   "uncertain - when the given context cannot settle it. Say what you would need to see.",
   "Never refute because something might be handled elsewhere without citing that elsewhere.",
   "When the verdict is refute, mode is mandatory. For mode strong the counterEvidence array is mandatory and its snippet must be copied verbatim from the provided excerpts, line for line; a strong refute whose citation does not match is downgraded to weak.",
   "Prefer a strong refute whenever a counter-line exists in the excerpts; do not settle for weak reasoning when you can cite the line.",
-  "If the claim asserts that some behavior is absent (never / does not / cannot / swallows / ignores) and the excerpts contain the corresponding construct (throw, rethrow, await, return, guard, validation), you must return refute with mode strong and cite that construct as counterEvidence.",
+  "If the claim asserts that some behavior is absent (never / does not / cannot / swallows / ignores), check whether a corresponding construct (throw, rethrow, await, return, guard, validation) actually contradicts it. Cite only a relevant counter-line.",
   "The reason field must be at least one sentence and must cite file:line.",
   "Examples (illustrative, not taken from the repository under analysis):",
-  "Strong refute: {\"verdicts\":[{\"findingId\":\"F-004\",\"verdict\":\"refute\",\"mode\":\"strong\",\"reason\":\"The value is null-checked before use at src/session.ts:41, so the fallback already handles the missing value.\",\"counterEvidence\":[{\"path\":\"src/session.ts\",\"startLine\":41,\"endLine\":41,\"snippet\":\"  if (value == null) return fallback;\"}]}]}",
+  "Strong refute: {\"verdicts\":[{\"findingId\":\"F-004\",\"verdict\":\"refute\",\"mode\":\"strong\",\"reason\":\"The handler returns defaults at src/example/handler.ts:12 before reading the payload.\",\"counterEvidence\":[{\"path\":\"src/example/handler.ts\",\"startLine\":12,\"endLine\":12,\"snippet\":\"  if (payload === undefined) return defaults;\"}]}]}",
   "Weak refute (only when no line in the excerpts contradicts the claim): {\"verdicts\":[{\"findingId\":\"F-007\",\"verdict\":\"refute\",\"mode\":\"weak\",\"reason\":\"The loop is reachable only when size >= 1, which the caller guarantees; the off-by-one cannot trigger.\"}]}",
   "A reason that names a refuting line but omits it from counterEvidence is a weak refute; include the line instead.",
   "Do not rewrite the finding and do not invent new findings. Output only JSON matching the verdict schema."
@@ -71,7 +71,7 @@ export const VERIFIER_RESPONSE_FORMAT = {
 export const STRONG_REFUTE_RESPONSE_FORMAT = {
   type: "json_schema",
   json_schema: {
-    name: "codeproof_strong_refute",
+    name: "codeproof_refute_retry",
     schema: {
       type: "object",
       additionalProperties: false,
@@ -83,11 +83,11 @@ export const STRONG_REFUTE_RESPONSE_FORMAT = {
           items: {
             type: "object",
             additionalProperties: false,
-            required: ["findingId", "verdict", "mode", "reason", "counterEvidence"],
+            required: ["findingId", "verdict", "reason"],
             properties: {
               findingId: { type: "string", pattern: "^F-[0-9]{3}$" },
-              verdict: { const: "refute" },
-              mode: { const: "strong" },
+              verdict: { enum: ["refute", "uncertain"] },
+              mode: { enum: ["strong", "weak"] },
               reason: { type: "string" },
               counterEvidence: {
                 type: "array",
@@ -208,6 +208,10 @@ export function checkCitation(evidence, repo) {
   while (rawSnippet.length > 0 && rawSnippet[rawSnippet.length - 1].trim() === "") rawSnippet.pop();
   if (rawSnippet.length === 0) return { passed: false, reason: "snippet is empty" };
   if (rawSnippet.length > 15) return { passed: false, reason: "citation wider than 15 lines" };
+  const expectedLines = endLine - startLine + 1;
+  if (rawSnippet.length !== expectedLines) {
+    return { passed: false, reason: "citation range expects " + expectedLines + " lines but snippet has " + rawSnippet.length + " lines" };
+  }
   const snippetLines = rawSnippet.map(normalizeLine);
   const fileLines = lines.map(normalizeLine);
   for (const offset of [0, -1, 1]) {
@@ -266,9 +270,15 @@ export function validateVerdictsL0(parsed) {
 }
 
 export function buildVerifierMessages(finding, excerpts) {
+  const review = {
+    id: finding.id,
+    title: finding.title,
+    claim: finding.claim,
+    evidence: finding.evidence
+  };
   const user = [
     "Finding under review:",
-    JSON.stringify(finding, null, 2),
+    JSON.stringify(review, null, 2),
     "",
     "Relevant file excerpts:",
     excerpts,
@@ -287,10 +297,9 @@ export async function verifyOne(input) {
   const checks = (finding.evidence || []).map(function (evidence) {
     return checkCitation(evidence, repo);
   });
-  const passing = checks.find(function (check) { return check.passed; });
-  if (!passing) {
-    const first = checks[0] || { reason: "finding has no evidence" };
-    return { finding: finding, status: "l1-rejected", l1: first, verifier: null };
+  const failed = checks.find(function (check) { return !check.passed; });
+  if (checks.length === 0 || failed) {
+    return { finding: finding, status: "l1-rejected", l1: failed || { passed: false, reason: "finding has no evidence" }, verifier: null };
   }
   const maxTokens = input.maxTokens || 4000;
   let call = await input.agent.complete({
@@ -347,7 +356,7 @@ export async function verifyOne(input) {
       console.warn("  WARN strong-refute retry failed for " + finding.id + ": " + error.message);
     }
   }
-  return { finding: finding, status: outcome.status, l1: passing, verifier: outcome.verifier };
+  return { finding: finding, status: outcome.status, l1: checks[0], verifier: outcome.verifier };
 }
 export function applyVerdict(verdict, model, repo, finding = null, excerpts = null) {
   const verifier = { model: model, verdict: verdict.verdict, reason: verdict.reason };
@@ -423,7 +432,7 @@ export function buildStrongRefuteMessages(finding, excerpts, previousOutput) {
     { role: "assistant", content: String(previousOutput || "").slice(0, 2000) },
     {
       role: "user",
-      content: "You refuted the finding without a counter-citation. The excerpts may contain a line that directly contradicts the claim: a guard, sanitizer, awaited call, throw or rethrow, or a correct branch. If such a line exists, return the verdict again with mode strong and counterEvidence copied verbatim from the excerpts (path, startLine, endLine, snippet). If no such line exists, return mode weak again and say why."
+      content: "Reconsider your weak refutation. If a line directly contradicts the claim, return refute/strong with counterEvidence copied verbatim from the excerpts (path, startLine, endLine, snippet). Otherwise you may keep refute/weak or return uncertain. Do not invent a counter-citation."
     }
   ]);
 }

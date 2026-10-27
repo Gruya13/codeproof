@@ -1,23 +1,33 @@
 # CodeProof
 
-**AI review that publishes only what it can prove.**
+**Every finding carries the level of proof it earned: machine-checked citation, adversarial confirmation, or a failing test.**
 
 A finding appears in the main report only if two separate gates pass:
 
 1. **L1 - deterministic citation gate.** The cited file, line range and verbatim snippet exist in the analyzed commit. Checked by code, not by a prompt.
 2. **L2 - adversarial verifier.** A different model (Muse Wonder) tries to refute the finding. A strong refutation must carry its own machine-checked counter-citation.
 
-Everything that fails the gate is still published - in `rejected.md`, with the evidence that refuted it.
+Candidates that fail L0 or L1, receive a weak refutation, remain uncertain, or are skipped for budget are recorded in `rejected.md`. Strong refutations are recorded there with their counter-citations.
 
-L1 is a provenance check, not a semantic judge: it proves that the cited lines exist in the commit (file, range, verbatim snippet). Whether the claim is actually true is judged by L2 (the verifier) and is presented as such everywhere - L1 never proves semantic accuracy. The claim is not "we found everything". It is "we do not publish what we could not prove".
+L1 is a provenance check, not a semantic judge: it checks every cited snippet against the analyzed commit. L2 is a model judgment, not a proof that the claimed defect exists. The current `verified` status means **citation-proven + adversarially-confirmed**, not execution-proven or semantically guaranteed.
+
+## Evidence levels
+
+| Level | Meaning | Availability |
+|---|---|---|
+| `citation-proven` | L1 checks every cited line against the analyzed commit. | Current |
+| `adversarially-confirmed` | L2 did not refute the claim; this is a model judgment. | Current; `verified` combines this with `citation-proven` |
+| `execution-proven` | A generated test fails on the analyzed commit. | Planned L3; not implemented yet |
+| `refuted` | The verifier supplied a counter-citation that passed the current mechanical policy. | Current; semantic relevance is not guaranteed |
+| `unresolved` | Weak refutation, uncertainty, failed citation or budget skip; not verified. | Current; see `rejected.md` |
 
 ## The problem
 
 An AI review tool can produce a convincing but wrong claim even when it cites real lines. The developer then has to check both the provenance of the citation and the interpretation of the code. A tool can also miss an existing bug.
 
-CodeProof statically reviews a TypeScript/JavaScript repository. A deterministic L1 gate checks that the cited snippet literally exists in the analyzed commit - a provenance check, not proof of a bug. Then Muse Wonder, a second Meta model in the critic role, judges the claim: confirmed findings are published as verified, while refuted (including partial refutations) and uncertain ones stay visible separately; a strong refutation must carry a machine-checked counter-citation. The gates do not guarantee completeness or semantic infallibility: the calibration result is 8/8, and on nine known historical fixes the gate found two. Zero false findings were published in the committed runs so far; this is an empirical result, not a guarantee.
+CodeProof statically reviews a TypeScript/JavaScript repository. L1 checks all citations against the analyzed commit; Muse Wonder then judges the claim in an adversarial role. `Verified` means those two checks passed. The gates do not guarantee completeness or semantic accuracy: the historical calibration result is 8/8, and on nine known fixes the earlier gate found two. Zero false findings were recorded among the committed, hand-checked runs; the uncommitted swr-87cf235d run listed in historical results has three verified findings without committed adjudication.
 
-Tagline: Code review where every verified finding has a commit-checked citation and a second-model confirmation.
+Tagline: Every finding carries the level of proof it earned: machine-checked citation, adversarial confirmation, or a failing test.
 
 Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), Indie Developer track.
 
@@ -25,9 +35,9 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), 
 
 The pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`), and the deterministic suite is green on Node 22 and Node 26:
 
-- **89/89 tests** on Node 22 and Node 26 (`make test`): L1/L2 gate cases, dirty-JSON and truncation handling, fault injection (retries, content filter, budget abort with partial artifacts), config-hash determinism, Node-22 compatibility.
-- **Clean clone**: `make clean-clone` (tmpfs + `env -i`, local and public repo) and the Docker variant `make clean-clone-docker` (node:22-alpine) both pass `make test`, `make demo`, `make replay` and `make score RUN=reports/golden` on a fresh clone, and leave `git status` clean.
-- **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts - 9/9 identical verdicts, 0 mismatches, no model calls. The replay artifact is deterministic and path-independent (it keeps relative paths and the source run timestamp), so re-running it in a fresh clone does not dirty the tree; if the checkout is shallow, replay fetches the analyzed commit from origin first (and fails clearly if that is impossible).
+- **Deterministic tests** (`make test`): L1/L2 gate cases, dirty-JSON and truncation handling, fault injection, config-hash determinism and Node-22 compatibility. The exact current count is reported by the test command.
+- **Clean clone (previous gate)**: `make clean-clone` and `make clean-clone-docker` passed before the stricter L1 change. These checks need to be repeated after a new golden run.
+- **Replay**: `make replay` re-runs L0/L1 over committed golden artifacts with no model calls. Those artifacts predate the stricter gate and may no longer match; they remain unchanged until a new golden run.
 - **Calibration benchmark**: 8/8 recall, 100% precision, 0/4 traps, 0 false refutations - golden run committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
 - **Real repositories** (qualitative, each hand-checked and published with both runs): unjs/ofetch, sindresorhus/execa, preactjs/preact, moment/luxon - see [Real-repository run](#real-repository-run-qualitative). The real-API probe round (axios real + injected, fastify, prompt-cache TTL, safety, parallel calls) is under [reports/probes/](reports/probes/).
 - **Controlled verifier test**: two true findings confirmed and one deliberately false claim **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`); the committed run cost **$0.103** and served 3280 of 4065 input tokens from prompt cache. Recorded as `mode: controlled-verifier`, never as scanner output.
@@ -44,7 +54,7 @@ ingest -> scan -> verify -> publish
 | ingest | fixes the file list from the commit (git-tracked files only; walking fallback for non-git targets), LOC and a sha256 manifest; builds a regex import graph and detects cycles |
 | scan | the producer model (Muse Spark) returns findings as schema-constrained JSON: one claim, one verbatim citation, no speculation |
 | verify | deterministic L1 citation check; then Muse Wonder tries to refute inside a bounded, relevant-file context (strong refute needs a machine-checked counter-citation) |
-| publish | `REPORT.md`, `findings.json` (status per finding), `rejected.md`, `run.json` (models, tokens, cache hits, cost, duration, commit) |
+| publish | `REPORT.md` (L1+L2 confirmed), `findings.json` (status per finding), `rejected.md` (all rejected and unresolved candidates), `run.json` (models, tokens, cache hits, cost, duration, commit) |
 
 Static analysis only: the analyzed code is never executed, patched, or sent anywhere except the Meta Model API.
 
@@ -60,7 +70,7 @@ Static analysis only: the analyzed code is never executed, patched, or sent anyw
 
 ```bash
 make demo        # deterministic end-to-end demo, mock adapter, no network
-make test        # 89 tests: L1/L2 gate, dirty JSON, fault injection, config hash (Node >= 22)
+make test        # L1/L2 gate, dirty JSON, fault injection, config hash (Node >= 22)
 make controlled  # controlled verifier test: injected candidates, real API (needs MODEL_API_KEY)
 make bench       # scored benchmark: bench/seed-repo, MAX_FINDINGS=12, mode bench (needs MODEL_API_KEY)
 make score       # score the newest benchmark run; RUN=reports/<id> selects one explicitly

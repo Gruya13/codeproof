@@ -1,3 +1,5 @@
+import { readFileAtCommit } from "../run/index.mjs";
+
 function fence() {
   return "```";
 }
@@ -19,12 +21,21 @@ export function mermaidGraph(repo) {
   return lines.join("\n");
 }
 
-function citationBlock(finding) {
+function citationBlock(finding, source) {
   const lines = [];
   for (const evidence of finding.evidence) {
-    lines.push("**Citation:** " + evidence.path + ":" + evidence.startLine + "-" + evidence.endLine);
+    const committed = source && source.root && source.commit
+      ? readFileAtCommit(source.root, source.commit, evidence.path)
+      : null;
+    const committedLines = committed === null ? null : committed.split("\n");
+    const available = committedLines !== null && evidence.startLine >= 1 && evidence.endLine <= committedLines.length;
+    lines.push(available
+      ? "**Citation (from commit, lines " + evidence.startLine + "-" + evidence.endLine + "):** " + evidence.path
+      : "**Citation (model-provided snippet; file not in commit):** " + evidence.path + ":" + evidence.startLine + "-" + evidence.endLine);
     lines.push(fence() + "text");
-    lines.push(evidence.snippet);
+    lines.push(available
+      ? committedLines.slice(evidence.startLine - 1, evidence.endLine).join("\n")
+      : evidence.snippet);
     lines.push(fence());
   }
   return lines;
@@ -35,7 +46,6 @@ export function buildReport(options) {
   const published = options.published;
   const run = options.run;
   const verified = published.filter(function (item) { return item.status === "verified"; });
-  const moderate = published.filter(function (item) { return item.status === "moderate"; });
   const lines = [];
   lines.push("# CodeProof report");
   lines.push("");
@@ -49,7 +59,7 @@ export function buildReport(options) {
     lines.push("> **CONTROLLED VERIFIER TEST** - the candidates in this report were injected directly into the verifier. They are not scanner output and must not be presented as a scan.");
     lines.push("");
   }
-  lines.push("**Publishing rule:** a finding appears under *Verified findings* only if the deterministic citation gate (L1) passed and the adversarial verifier confirmed it. Refuted, uncertain and moderate findings are kept in separate sections - nothing is hidden, and nothing unproven is presented as verified.");
+  lines.push("**Publishing rule:** a finding appears under *Verified findings* only if every citation passed L1 and the adversarial verifier confirmed it. This checks provenance and model agreement, not semantic proof. Refuted, uncertain and moderate findings are in rejected.md.");
   lines.push("");
   lines.push("## Summary");
   lines.push("");
@@ -80,26 +90,13 @@ export function buildReport(options) {
     lines.push("");
     lines.push("**Claim:** " + finding.claim);
     lines.push("");
-    const citation = citationBlock(finding);
+    lines.push("**Evidence level:** citation-proven + adversarially-confirmed");
+    lines.push("");
+    const citation = citationBlock(finding, { root: options.repoRoot || (run.repo && run.repo.path), commit: run.repo && run.repo.commit });
     lines.push(citation.join("\n"));
     lines.push("");
     lines.push("**Verifier (" + item.verifier.model + "):** " + item.verifier.verdict + " - " + item.verifier.reason);
     lines.push("");
-  }
-  if (moderate.length > 0) {
-    lines.push("## Moderate confidence");
-    lines.push("");
-    lines.push("The verifier tried to refute these with reasoning only, without a mechanically checked counter-citation. They are shown, but they are not counted as verified.");
-    lines.push("");
-    for (const item of moderate) {
-      const finding = item.finding;
-      lines.push("### " + finding.id + " - " + finding.title);
-      lines.push("");
-      lines.push("**Claim:** " + finding.claim);
-      lines.push("");
-      lines.push("**Verifier (" + item.verifier.model + "):** refute/" + item.verifier.mode + " - " + item.verifier.reason);
-      lines.push("");
-    }
   }
   lines.push("## Architecture");
   lines.push("");
@@ -122,6 +119,11 @@ export function buildReport(options) {
 export function buildRejected(options) {
   const published = options.published;
   const run = options.run;
+  const candidates = options.candidates || [];
+  const l0Rejected = candidates.filter(function (item) { return item.status === "l0-rejected"; });
+  const l1Rejected = candidates.filter(function (item) { return item.status === "l1-rejected"; });
+  const skipped = candidates.filter(function (item) { return item.status === "skipped-budget"; });
+  const moderate = published.filter(function (item) { return item.status === "moderate"; });
   const refuted = published.filter(function (item) { return item.status === "refuted"; });
   const uncertain = published.filter(function (item) { return item.status === "uncertain"; });
   const lines = [];
@@ -137,7 +139,50 @@ export function buildRejected(options) {
     lines.push("> **CONTROLLED VERIFIER TEST** - candidates were injected directly into the verifier; they are not scanner output.");
     lines.push("");
   }
-  lines.push("This file exists on purpose: the product is not 'we found everything', it is 'we do not publish what we could not prove'. Rejected findings stay visible with the evidence that refuted them.");
+  lines.push("This file records candidates not confirmed by both gates, including citation failures and budget skips. A counter-citation is checked for presence, not semantic relevance.");
+  lines.push("");
+  lines.push("## Rejected at L0 (candidate format)");
+  lines.push("");
+  if (l0Rejected.length === 0) lines.push("_None this run._");
+  for (const item of l0Rejected) {
+    lines.push("### Candidate " + item.index + (item.candidate && item.candidate.id ? " - " + item.candidate.id : ""));
+    lines.push("");
+    lines.push("**Reason:** " + item.l0.reasons.join("; "));
+    lines.push("");
+  }
+  lines.push("## Rejected at L1 (citation check)");
+  lines.push("");
+  if (l1Rejected.length === 0) lines.push("_None this run._");
+  for (const item of l1Rejected) {
+    const finding = item.candidate;
+    lines.push("### " + finding.id + " - " + finding.title);
+    lines.push("");
+    lines.push("**Claim:** " + finding.claim);
+    lines.push("");
+    lines.push("**Reason:** " + item.l1.reason);
+    lines.push("");
+  }
+  lines.push("## Moderate confidence (weak refutation)");
+  lines.push("");
+  if (moderate.length === 0) lines.push("_None this run._");
+  for (const item of moderate) {
+    const finding = item.finding;
+    lines.push("### " + finding.id + " - " + finding.title);
+    lines.push("");
+    lines.push("**Claim:** " + finding.claim);
+    lines.push("");
+    lines.push("**Verifier (" + item.verifier.model + "):** refute/" + item.verifier.mode + " - " + item.verifier.reason);
+    lines.push("");
+  }
+  lines.push("## Skipped (budget)");
+  lines.push("");
+  if (skipped.length === 0) lines.push("_None this run._");
+  for (const item of skipped) {
+    lines.push("### " + item.candidate.id + " - " + item.candidate.title);
+    lines.push("");
+    lines.push("**Claim:** " + item.candidate.claim);
+    lines.push("");
+  }
   lines.push("");
   lines.push("## Refuted");
   lines.push("");

@@ -5,6 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { checkCitation } from "../src/verify/index.mjs";
+import { buildReport } from "../src/synthesize/index.mjs";
 
 const manifest = new Map([["src/a.ts", { path: "src/a.ts" }]]);
 
@@ -59,4 +60,27 @@ test("L1 falls back to disk when the target is not a git repository", function (
   const repo = { root: dir, manifest: manifest, commit: "0123456789abcdef0123456789abcdef01234567" };
   const result = checkCitation({ path: "src/a.ts", startLine: 2, endLine: 2, snippet: "world" }, repo);
   assert.equal(result.passed, true, result.reason);
+});
+
+test("report prints the committed source lines instead of a model-provided snippet", function () {
+  const { dir, commit } = makeGitRepo();
+  try {
+    const finding = {
+      id: "F-001", severity: "high", title: "Incorrect second line",
+      claim: "The second line produces an incorrect result.",
+      evidence: [{ path: "src/a.ts", startLine: 2, endLine: 2, snippet: "const b = 999;" }]
+    };
+    const report = buildReport({
+      repo: { files: [{ path: "src/a.ts" }], loc: 3, edges: [], cycles: [] },
+      repoRoot: dir,
+      published: [{ finding, status: "verified", verifier: { model: "test", verdict: "confirm", reason: "test" } }],
+      run: { repo: { path: dir, commit }, runId: "test", mode: "smoke", findings: { proposed: 1, l1Rejected: 0, verified: 1, moderate: 0, refuted: 0, uncertain: 0 }, calls: 0, retries: 0, usage: { inputTokens: 0, outputTokens: 0, cachedTokens: 0, measured: false } }
+    });
+    assert.match(report, /Citation \(from commit, lines 2-2\)/);
+    assert.match(report, /const b = 2;/);
+    assert.doesNotMatch(report, /const b = 999;/);
+    assert.match(report, /Evidence level:\*\* citation-proven \+ adversarially-confirmed/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

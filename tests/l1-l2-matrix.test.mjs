@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { execFileSync } from "node:child_process";
@@ -8,6 +8,9 @@ import { execFileSync } from "node:child_process";
 import {
   checkCitation,
   applyVerdict,
+  buildVerifierMessages,
+  STRONG_REFUTE_RESPONSE_FORMAT,
+  VERIFIER_SYSTEM_PROMPT,
   validateVerdictsL0,
   verifyOne
 } from "../src/verify/index.mjs";
@@ -288,7 +291,8 @@ test("T-B7: 15 lines passes, 16 lines fails, endLine < startLine fails, endLine 
     { path: "len.js", startLine: 1, endLine: 1, snippet: lines.slice(0, 15).join("\n") },
     repo
   );
-  assert.equal(res15ShortRange.passed, true, res15ShortRange.reason);
+  assert.equal(res15ShortRange.passed, false);
+  assert.match(res15ShortRange.reason, /expects 1 lines but snippet has 15 lines/);
 
   const res16ShortRange = checkCitation(
     { path: "len.js", startLine: 1, endLine: 1, snippet: lines.slice(0, 16).join("\n") },
@@ -924,4 +928,63 @@ test("T-B19: weak refute triggers strong-refute retry; promotes to 'refuted' on 
 
   assert.equal(agentStillWeak.calls.length, 2);
   assert.equal(resModerate.status, "moderate");
+});
+
+test("strict L1 requires every citation and exact declared snippet length", async function (t) {
+  const { dir, cleanup } = createTempRepo();
+  t.after(cleanup);
+  writeFileSync(join(dir, "target.js"), "const one = 1;\nconst two = 2;\nconst three = 3;\n");
+  const repo = { root: dir, manifest: new Map([["target.js", {}]]) };
+  const first = { path: "target.js", startLine: 1, endLine: 1, snippet: "const one = 1;" };
+  const bad = { path: "target.js", startLine: 2, endLine: 2, snippet: "const two = 9;" };
+  const agent = createFakeAgent([]);
+  const result = await verifyOne({ finding: { id: "F-001", evidence: [first, bad] }, repo, agent, excerpts: "" });
+  assert.equal(result.status, "l1-rejected");
+  assert.match(result.l1.reason, /does not match/);
+  assert.equal(agent.calls.length, 0);
+  const short = checkCitation({ path: "target.js", startLine: 1, endLine: 2, snippet: "const one = 1;" }, repo);
+  assert.equal(short.passed, false);
+  assert.match(short.reason, /expects 2 lines but snippet has 1 lines/);
+  const long = checkCitation({ path: "target.js", startLine: 1, endLine: 1, snippet: "const one = 1;\nconst two = 2;" }, repo);
+  assert.equal(long.passed, false);
+  assert.match(long.reason, /expects 1 lines but snippet has 2 lines/);
+  const exact = checkCitation({ path: "target.js", startLine: 1, endLine: 2, snippet: "\nconst one = 1;\nconst two = 2;\n" }, repo);
+  assert.equal(exact.passed, true);
+});
+
+test("retry can remain weak or uncertain but cannot confirm", async function (t) {
+  const { dir, cleanup } = createTempRepo();
+  t.after(cleanup);
+  writeFileSync(join(dir, "target.js"), "const value = input;\nreturn value;\n");
+  const repo = { root: dir, manifest: new Map([["target.js", {}]]) };
+  const finding = { id: "F-001", evidence: [{ path: "target.js", startLine: 1, endLine: 1, snippet: "const value = input;" }] };
+  const first = { verdicts: [{ findingId: "F-001", verdict: "refute", mode: "weak", reason: "The reasoning is insufficient." }] };
+  const cases = [
+    { verdicts: [{ findingId: "F-001", verdict: "refute", mode: "weak", reason: "Still a weak reason here." }] },
+    { verdicts: [{ findingId: "F-001", verdict: "uncertain", reason: "The context is insufficient." }] },
+    { verdicts: [{ findingId: "F-001", verdict: "refute", mode: "strong", reason: "The offered line is invalid.", counterEvidence: [{ path: "target.js", startLine: 2, endLine: 2, snippet: "return other;" }] }] },
+    { verdicts: [{ findingId: "F-001", verdict: "confirm", reason: "A retry must not confirm." }] }
+  ];
+  for (const retry of cases) {
+    const agent = createFakeAgent([first, retry]);
+    const result = await verifyOne({ finding, repo, agent, excerpts: "   1 | const value = input;\n   2 | return value;" });
+    assert.equal(result.status, "moderate");
+    assert.equal(agent.calls.length, 2);
+  }
+  const schemaItem = STRONG_REFUTE_RESPONSE_FORMAT.json_schema.schema.properties.verdicts.items;
+  assert.deepEqual(schemaItem.properties.verdict.enum, ["refute", "uncertain"]);
+  assert.deepEqual(schemaItem.properties.mode.enum, ["strong", "weak"]);
+  assert.equal(schemaItem.required.includes("counterEvidence"), false);
+});
+
+test("verifier receives no scanner severity or confidence, and prompt example is absent from fixture", function () {
+  const finding = { id: "F-001", title: "Example defect", claim: "A plausible defect claim with enough words.", evidence: [], severity: "critical", confidence: 0.99 };
+  const messages = buildVerifierMessages(finding, "example excerpt");
+  assert.equal(/severity|confidence/i.test(JSON.stringify(messages)), false);
+  const exampleLine = JSON.parse(VERIFIER_SYSTEM_PROMPT.split("\n").find(function (line) { return line.startsWith("Strong refute:"); }).slice("Strong refute: ".length)).verdicts[0].counterEvidence[0].snippet.trim();
+  const fixtureLines = ["analytics.ts", "batch.ts", "cache.ts", "ledger.ts", "log.ts", "paging.ts", "quota.ts", "registry.ts", "retry.ts", "scheduler.ts", "scores.ts", "session.ts", "settings.ts", "validation.ts", "index.ts"];
+  for (const file of fixtureLines) {
+    const contents = readFileSync(new URL("../bench/seed-repo/src/" + file, import.meta.url), "utf8");
+    assert.equal(contents.split("\n").some(function (line) { return line.trim() === exampleLine; }), false, file);
+  }
 });
