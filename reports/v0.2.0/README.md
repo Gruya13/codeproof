@@ -14,6 +14,15 @@ Every artifact below was produced by the v0.2.0 code and is committed verbatim. 
 | [self-analysis/chunked/](self-analysis/chunked/) | chunked scan on the same target (10 chunks): 11 proposed -> **9 verified, 3 execution-proven, 2 patch-proven**, 2 L1 rejects, $2.2573 - the run that found `unifiedDiff` and the `scanner-secondary` fallback defect together with patches | `BUDGET_USD=4 CHUNKED_SCAN=1 node src/cli.mjs analyze src --mode smoke --out reports/v0.2.0/self-analysis/chunked` |
 | fixes | the 7 defects found by the runs above were fixed in commit `52e6606` and covered by `tests/self-analysis-fixes.test.mjs` (8 tests, two-commit lock); the suite is 197/197. Three verified defects remain unfixed (README `Limits`) | `make test`, `make integrity` |
 
+### Real-world runs (v0.2.1, L4 enabled, zero-dependency CommonJS targets)
+
+| Artifact | What it shows | Command |
+|---|---|---|
+| [real-world/commander/2be86e38745c0256/](real-world/commander/2be86e38745c0256/) | [tj/commander](https://github.com/tj/commander.js) `v14.0.0` (`lib/`, 6 files / 4,193 LOC): 1 proposed -> 1 verified, no execution proof. The verified finding (five process signal forwarders registered per `_executeSubCommand` call, never removed, `lib/command.js:1291-1301`) needs `process` signals in its test, which the L3 static gate forbids - fail-closed, not a missing defect. $0.6957 | `BUDGET_USD=4 node src/cli.mjs analyze <commander>/lib --mode smoke --out reports/v0.2.0/real-world/commander` |
+| [real-world/picomatch/62cbababd7a84e9a/](real-world/picomatch/62cbababd7a84e9a/) | [micromatch/picomatch](https://github.com/micromatch/picomatch) `4.0.7` (`lib/`, 5 files / 2,445 LOC), run 1: 1 proposed -> 1 verified -> execution-proven; its L4 patch returned an empty model output. $0.5252 | `BUDGET_USD=4 node src/cli.mjs analyze <picomatch>/lib --mode smoke --out reports/v0.2.0/real-world/picomatch` |
+| [real-world/picomatch/62cbababd7a84e9a-2/](real-world/picomatch/62cbababd7a84e9a-2/) | same command, run 2: 3 proposed -> 3 verified, **all three execution-proven, 2 patch-proven**: unmatched `)` decrements `state.parens` below zero (`parse.js`); `noext:true` clears `isGlob` for every pattern (`scan.js`); last-token update skipped when `prevIndex === 0` (`scan.js`, patch rejected with an empty model output). $0.9407 | same command |
+| replay | `replay` output for the picomatch run 2: anchor verified, 19 artifacts, 0 problems, L1/L3/L4 all match | `node src/cli.mjs replay reports/v0.2.0/real-world/picomatch/62cbababd7a84e9a-2 --anchor <evidence-rev> --out /tmp/replay-picomatch` |
+
 ## How to re-verify offline (no API key)
 
 ```bash

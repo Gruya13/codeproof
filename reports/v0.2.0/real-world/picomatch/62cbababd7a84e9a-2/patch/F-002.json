@@ -1,0 +1,11 @@
+{
+  "status": "rejected",
+  "rationale": null,
+  "warnings": [],
+  "searchBlockSha256": null,
+  "replaceBlockSha256": null,
+  "attempts": null,
+  "reason": "empty model output",
+  "model": "muse-wonder-1.0",
+  "costUsd": 0.1217632
+}

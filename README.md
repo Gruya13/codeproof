@@ -299,6 +299,13 @@ Two runs of the full pipeline **with L3 enabled** on [unjs/ofetch](https://githu
 - A second verified finding (retry/`AbortSignal`) stayed `inconclusive`: a faithful test needs `fetch`, which the sandbox forbids. That is the intended `repro-unavailable` path, not a failed claim.
 - The first run produced a test that triggered the same `TypeError` as an uncaught runtime error and was correctly reported as `inconclusive`; the prompt now asks the model to convert a thrown error into an assertion failure, which made the proof explicit. Both runs are committed. Cost: $0.1634 + $0.4239; n = 2 runs, one repository.
 
+### v0.2.1: picomatch and commander (L4 enabled)
+
+The full L0-L4 chain was also run on two real repositories with **zero runtime dependencies**, so the generated tests can execute inside the snapshot (Node 26.8.2). Evidence: [reports/v0.2.0/real-world/](reports/v0.2.0/real-world/).
+
+- **[micromatch/picomatch](https://github.com/micromatch/picomatch) `4.0.7`** (`lib/`, 5 files / 2,445 LOC, CommonJS, zero dependencies), run 2: 3 proposed -> 3 verified, **all three execution-proven and two `patch-proven`** ($0.9407). (a) `parse.js`: an unmatched `)` still runs `decrement('parens')`, driving the counter to -1 and corrupting later paren tracking; the generated patch only decrements when `state.parens > 0`. (b) `scan.js`: `noext:true` clears `isGlob` for every pattern, so a plain glob such as `*` is reported as non-glob; the patch removes that line. (c) `scan.js`: the last-token update tests `prevIndex` for truthiness, so a leading-slash pattern (index 0) never updates the token value/depth; its patch came back as an empty model output and the finding stayed `execution-proven`. Replay: PASS (19 artifacts, 0 problems). Run 1 of the same command produced 1 finding / 0 patch-proven, run 2 produced 3 / 2 - both are committed, model variance is stated rather than cherry-picked.
+- **[tj/commander](https://github.com/tj/commander.js) `v14.0.0`** (`lib/`, 6 files / 4,193 LOC, CommonJS, zero dependencies): 1 proposed -> 1 verified, no execution proof. `_executeSubCommand` registers five process signal forwarders per call and never removes them (`lib/command.js:1291-1301`, hand-checked), but a faithful test needs process signals, which the L3 static gate forbids - the intended fail-closed path, not a missing defect. Cost: $0.6957.
+
 ## Historical recall test (qualitative)
 
 A different question than precision: can the gate find a **known bug** if we replay history? For 9 known fix commits in two mature libraries (vercel/swr, sindresorhus/ky), the analyzed commit is the **parent of the fix** and the scope is the directory of the file the fix changes. Artifacts and per-test costs: [reports/historical/](reports/historical/).

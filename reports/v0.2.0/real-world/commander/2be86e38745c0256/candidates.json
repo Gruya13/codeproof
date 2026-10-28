@@ -1,0 +1,41 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"_executeSubCommand adds 5 process signal forwarders on every call and never removes them, so a second execution double-counts signals and leaks listeners.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 1301, \"path\": \"command.js\", \"snippet\": \"    if (!proc.killed) {\\n      // testing mainly to avoid leak warnings during unit tests with mocked spawn\\n      const signals = ['SIGUSR1', 'SIGUSR2', 'SIGTERM', 'SIGINT', 'SIGHUP'];\\n      signals.forEach((signal) => {\\n        process.on(signal, () => {\\n          if (proc.killed === false && proc.exitCode === null) {\\n            // @ts-ignore because signals not typed to known strings\\n            proc.kill(signal);\\n          }\\n        });\\n      });\", \"startLine\": 1291}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Signal listeners accumulate on repeated subcommand execution\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "_executeSubCommand adds 5 process signal forwarders on every call and never removes them, so a second execution double-counts signals and leaks listeners.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 1301,
+            "path": "command.js",
+            "snippet": "    if (!proc.killed) {\n      // testing mainly to avoid leak warnings during unit tests with mocked spawn\n      const signals = ['SIGUSR1', 'SIGUSR2', 'SIGTERM', 'SIGINT', 'SIGHUP'];\n      signals.forEach((signal) => {\n        process.on(signal, () => {\n          if (proc.killed === false && proc.exitCode === null) {\n            // @ts-ignore because signals not typed to known strings\n            proc.kill(signal);\n          }\n        });\n      });",
+            "startLine": 1291
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Signal listeners accumulate on repeated subcommand execution"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 1291-1301 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at command.js:1291-1301 registers process.on handlers for five signals on every _executeSubCommand call, and the close/error handlers at command.js:1306-1343 contain no process.removeListener/off cleanup, so repeated executions accumulate listeners."
+      }
+    }
+  ]
+}

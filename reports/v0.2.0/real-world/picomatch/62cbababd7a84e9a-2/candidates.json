@@ -1,0 +1,113 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Unmatched ')' pushes escaped output but still decrements state.parens, driving the counter to -1 and corrupting later paren tracking.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 806, \"path\": \"parse.js\", \"snippet\": \"      push({ type: 'paren', value, output: state.parens ? ')' : '\\\\\\\\)' });\\n      decrement('parens');\", \"startLine\": 805}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Unbalanced closing paren decrements counter below zero\"}, {\"category\": \"correctness\", \"claim\": \"Last-token update uses truthiness of prevIndex, so when the only slash is at index 0 the condition is false and token value/depth/maxDepth are never updated.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 394, \"path\": \"scan.js\", \"snippet\": \"    if (opts.tokens && prevIndex && prevIndex + 1 < input.length) {\\n      tokens[tokens.length - 1].value = value;\\n      depth(tokens[tokens.length - 1]);\\n      state.maxDepth += tokens[tokens.length - 1].depth;\\n    }\", \"startLine\": 390}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Falsy zero index skips last token update\"}, {\"category\": \"correctness\", \"claim\": \"With noext:true scan clears isGlob for all patterns, so plain globs like '*' are incorrectly reported as non-globs.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 304, \"path\": \"scan.js\", \"snippet\": \"  if (opts.noext === true) {\\n    isExtglob = false;\\n    isGlob = false;\\n  }\", \"startLine\": 301}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"noext option incorrectly clears isGlob\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Unmatched ')' pushes escaped output but still decrements state.parens, driving the counter to -1 and corrupting later paren tracking.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 806,
+            "path": "parse.js",
+            "snippet": "      push({ type: 'paren', value, output: state.parens ? ')' : '\\\\)' });\n      decrement('parens');",
+            "startLine": 805
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Unbalanced closing paren decrements counter below zero"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 805-806 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "At parse.js:805 the code pushes escaped '\\)' when state.parens is falsy, yet parse.js:806 unconditionally calls decrement('parens') outside the opt-in strictBrackets guard at parse.js:795, so an unmatched ')' drives the counter below zero and affects later paren truthiness checks at parse.js:805."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Last-token update uses truthiness of prevIndex, so when the only slash is at index 0 the condition is false and token value/depth/maxDepth are never updated.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 394,
+            "path": "scan.js",
+            "snippet": "    if (opts.tokens && prevIndex && prevIndex + 1 < input.length) {\n      tokens[tokens.length - 1].value = value;\n      depth(tokens[tokens.length - 1]);\n      state.maxDepth += tokens[tokens.length - 1].depth;\n    }",
+            "startLine": 390
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Falsy zero index skips last token update"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 390-394 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at scan.js:390 gates the final token assignment on truthy prevIndex, while scan.js:382 sets prevIndex to the slash index i, so a sole slash at index 0 leaves prevIndex falsy and skips scan.js:391-393; the trailing token pushed at scan.js:357-359 is not processed by the slash loop at scan.js:366, and scan.js:386 shows the correct prevIndex !== undefined check was available."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "With noext:true scan clears isGlob for all patterns, so plain globs like '*' are incorrectly reported as non-globs.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 304,
+            "path": "scan.js",
+            "snippet": "  if (opts.noext === true) {\n    isExtglob = false;\n    isGlob = false;\n  }",
+            "startLine": 301
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "noext option incorrectly clears isGlob"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 301-304 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The unconditional block at scan.js:301-304 sets isGlob=false whenever opts.noext is true, and the returned state at scan.js:340-353 reports that cleared value after patterns such as brackets set isGlob at scan.js:242-243, so plain globs are reported as non-globs."
+      }
+    }
+  ]
+}

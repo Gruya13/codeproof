@@ -1,0 +1,5 @@
+--- a/parse.js
++++ b/parse.js
+@@ -806,1 +806,1 @@
+-      decrement('parens');
++      if (state.parens > 0) decrement('parens');

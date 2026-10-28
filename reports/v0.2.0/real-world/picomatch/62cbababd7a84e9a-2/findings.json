@@ -1,0 +1,744 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Unmatched ')' pushes escaped output but still decrements state.parens, driving the counter to -1 and corrupting later paren tracking.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 806,
+          "path": "parse.js",
+          "snippet": "      push({ type: 'paren', value, output: state.parens ? ')' : '\\\\)' });\n      decrement('parens');",
+          "startLine": 805
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Unbalanced closing paren decrements counter below zero"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 805-806 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At parse.js:805 the code pushes escaped '\\)' when state.parens is falsy, yet parse.js:806 unconditionally calls decrement('parens') outside the opt-in strictBrackets guard at parse.js:795, so an unmatched ')' drives the counter below zero and affects later paren truthiness checks at parse.js:805."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n-1 !== 0\n\n    at file:///tmp/codeproof-repro-onyEak/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: -1,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 87,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n-1 !== 0\n\n    at file:///tmp/codeproof-repro-onyEak/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: -1,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 89,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n-1 !== 0\n\n    at file:///tmp/codeproof-repro-onyEak/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: -1,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 87,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport parse from './parse.js';\n\nconst result = parse(')(a)');\nassert.equal(result.parens, 0);\nassert.equal(result.output.slice(-3), '(a)');\n",
+      "expectedBehavior": "A balanced parenthesized group keeps state.parens at 0 and emits an unescaped closing paren; an unmatched ')' is escaped as a literal without driving state.parens below zero, so a later balanced group is still tracked correctly.",
+      "rationale": "Control uses a balanced group and passes. Test prefixes an unmatched ')' before the same balanced group: the unmatched paren should be escaped without decrementing below zero, so the later '(a)' should still close with ')' and end at parens 0. On the buggy code the first ')' decrements to -1, the later '(' only returns to 0, and its ')' is escaped, ending at -1.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from 'node:assert/strict';\nimport parse from './parse.js';\n\nconst result = parse('(a)');\nassert.equal(result.parens, 0);\nassert.equal(result.output, '(a)');\n",
+      "control": {
+        "code": "import assert from 'node:assert/strict';\nimport parse from './parse.js';\n\nconst result = parse('(a)');\nassert.equal(result.parens, 0);\nassert.equal(result.output, '(a)');\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 95,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 81,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 91,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from 'node:assert/strict';\nimport parse from './parse.js';\n\nconst result = parse(')(a)');\nassert.equal(result.parens, 0);\nassert.equal(result.output.slice(-3), '(a)');\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n-1 !== 0\n\n    at file:///tmp/codeproof-repro-onyEak/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: -1,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 87,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n-1 !== 0\n\n    at file:///tmp/codeproof-repro-onyEak/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: -1,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 89,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n-1 !== 0\n\n    at file:///tmp/codeproof-repro-onyEak/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: -1,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 87,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "parse.js",
+        "symbols": [
+          "parse"
+        ],
+        "executed": {
+          "parse": 1,
+          "eos": 5,
+          "state.advance": 4,
+          "remaining": 1,
+          "consume": 4,
+          "append": 4,
+          "increment": 1,
+          "decrement": 2,
+          "push": 4
+        },
+        "detail": null
+      },
+      "durationMs": 36813,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 13307,
+        "outputTokens": 4315,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.139528
+    },
+    "patch": {
+      "status": "patch-proven",
+      "diff": "--- a/parse.js\n+++ b/parse.js\n@@ -806,1 +806,1 @@\n-      decrement('parens');\n+      if (state.parens > 0) decrement('parens');",
+      "targetFile": "parse.js",
+      "searchBlock": "      push({ type: 'paren', value, output: state.parens ? ')' : '\\\\)' });\n      decrement('parens');",
+      "replaceBlock": "      push({ type: 'paren', value, output: state.parens ? ')' : '\\\\)' });\n      if (state.parens > 0) decrement('parens');",
+      "searchBlockSha256": "a05dfd1a8adfd6529f4c15d1780860533766998ddb71cecae9f5f667d592ddb4",
+      "replaceBlockSha256": "2c232d6c32a2f43a04f104837dff987e60c9e8a6fdf558a198f9b47cb32e40a2",
+      "rationale": "Unmatched ')' should not decrement the paren counter below zero; guard the decrement so later '(' tracking remains correct while preserving the escaped output.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 89,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 87,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 86,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 87,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 94,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 83,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        }
+      },
+      "warnings": [
+        "replaceBlock contains literals that also appear in the generated test (possible overfitting): 0"
+      ],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 429,
+        "outputTokens": 3646,
+        "cachedTokens": 116
+      },
+      "costUsd": 0.0741952,
+      "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+      "durationMs": 26256
+    },
+    "evidenceLevel": "patch-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Last-token update uses truthiness of prevIndex, so when the only slash is at index 0 the condition is false and token value/depth/maxDepth are never updated.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 394,
+          "path": "scan.js",
+          "snippet": "    if (opts.tokens && prevIndex && prevIndex + 1 < input.length) {\n      tokens[tokens.length - 1].value = value;\n      depth(tokens[tokens.length - 1]);\n      state.maxDepth += tokens[tokens.length - 1].depth;\n    }",
+          "startLine": 390
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Falsy zero index skips last token update"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 390-394 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at scan.js:390 gates the final token assignment on truthy prevIndex, while scan.js:382 sets prevIndex to the slash index i, so a sole slash at index 0 leaves prevIndex falsy and skips scan.js:391-393; the trailing token pushed at scan.js:357-359 is not processed by the slash loop at scan.js:366, and scan.js:386 shows the correct prevIndex !== undefined check was available."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'' !== 'foo'\n\n    at file:///tmp/codeproof-repro-MIJPWO/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '',\n  expected: 'foo',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 85,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'' !== 'foo'\n\n    at file:///tmp/codeproof-repro-MIJPWO/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '',\n  expected: 'foo',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 88,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'' !== 'foo'\n\n    at file:///tmp/codeproof-repro-MIJPWO/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '',\n  expected: 'foo',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 84,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport scan from './scan.js';\nconst result = scan('/foo', { tokens: true });\nassert.equal(result.tokens[result.tokens.length - 1].value, 'foo');\nassert.equal(result.tokens[result.tokens.length - 1].depth, 1);\nassert.equal(result.maxDepth, 2);\nassert.deepEqual(result.parts, ['', 'foo']);\n",
+      "expectedBehavior": "scan with tokens:true sets the last token's value/depth and includes it in maxDepth, regardless of whether the preceding slash is at index 0.",
+      "rationale": "Control 'foo/bar' has slash at index 3 (truthy prevIndex) so last token is updated and passes. Test '/foo' has its only slash at index 0 (falsy prevIndex) so the update is skipped, leaving last token value '' depth 0 and maxDepth 1 instead of 'foo'/1/2.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from 'node:assert/strict';\nimport scan from './scan.js';\nconst result = scan('foo/bar', { tokens: true });\nassert.equal(result.tokens[result.tokens.length - 1].value, 'bar');\nassert.equal(result.tokens[result.tokens.length - 1].depth, 1);\nassert.equal(result.maxDepth, 2);\nassert.deepEqual(result.parts, ['foo', 'bar']);\n",
+      "control": {
+        "code": "import assert from 'node:assert/strict';\nimport scan from './scan.js';\nconst result = scan('foo/bar', { tokens: true });\nassert.equal(result.tokens[result.tokens.length - 1].value, 'bar');\nassert.equal(result.tokens[result.tokens.length - 1].depth, 1);\nassert.equal(result.maxDepth, 2);\nassert.deepEqual(result.parts, ['foo', 'bar']);\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 83,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 85,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 88,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from 'node:assert/strict';\nimport scan from './scan.js';\nconst result = scan('/foo', { tokens: true });\nassert.equal(result.tokens[result.tokens.length - 1].value, 'foo');\nassert.equal(result.tokens[result.tokens.length - 1].depth, 1);\nassert.equal(result.maxDepth, 2);\nassert.deepEqual(result.parts, ['', 'foo']);\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'' !== 'foo'\n\n    at file:///tmp/codeproof-repro-MIJPWO/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '',\n  expected: 'foo',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 85,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'' !== 'foo'\n\n    at file:///tmp/codeproof-repro-MIJPWO/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '',\n  expected: 'foo',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 88,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'' !== 'foo'\n\n    at file:///tmp/codeproof-repro-MIJPWO/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '',\n  expected: 'foo',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 84,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "scan.js",
+        "symbols": [
+          "scan"
+        ],
+        "executed": {
+          "isPathSeparator": 1,
+          "depth": 1,
+          "scan": 1,
+          "advance": 4
+        },
+        "detail": null
+      },
+      "durationMs": 16559,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 3996,
+        "outputTokens": 2255,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.0596704
+    },
+    "patch": {
+      "status": "rejected",
+      "diff": null,
+      "targetFile": null,
+      "searchBlock": null,
+      "replaceBlock": null,
+      "searchBlockSha256": null,
+      "replaceBlockSha256": null,
+      "rationale": null,
+      "attempts": null,
+      "warnings": [],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 551,
+        "outputTokens": 6000,
+        "cachedTokens": 116
+      },
+      "costUsd": 0.1217632,
+      "reason": "empty model output",
+      "durationMs": 38352
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "With noext:true scan clears isGlob for all patterns, so plain globs like '*' are incorrectly reported as non-globs.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 304,
+          "path": "scan.js",
+          "snippet": "  if (opts.noext === true) {\n    isExtglob = false;\n    isGlob = false;\n  }",
+          "startLine": 301
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "noext option incorrectly clears isGlob"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-003"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 301-304 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The unconditional block at scan.js:301-304 sets isGlob=false whenever opts.noext is true, and the returned state at scan.js:340-353 reports that cleared value after patterns such as brackets set isGlob at scan.js:242-243, so plain globs are reported as non-globs."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-jM7Q9Z/snapshot/.codeproof-repro.test.mjs:6:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 85,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-jM7Q9Z/snapshot/.codeproof-repro.test.mjs:6:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 90,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-jM7Q9Z/snapshot/.codeproof-repro.test.mjs:6:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 86,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport scan from './scan.js';\n\nconst result = scan('*', { noext: true });\nassert.equal(result.isExtglob, false);\nassert.equal(result.isGlob, true);\nassert.equal(result.glob, '*');\n",
+      "expectedBehavior": "scan('*') reports isGlob true, and scan('*', {noext:true}) should also report isGlob true with isExtglob false because noext only disables extglobs, not plain globs.",
+      "rationale": "Control verifies plain glob detection without noext passes; test verifies the same plain glob with noext:true, which the buggy post-loop override incorrectly clears.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from 'node:assert/strict';\nimport scan from './scan.js';\n\nconst result = scan('*');\nassert.equal(result.isGlob, true);\nassert.equal(result.isExtglob, false);\nassert.equal(result.glob, '*');\n",
+      "control": {
+        "code": "import assert from 'node:assert/strict';\nimport scan from './scan.js';\n\nconst result = scan('*');\nassert.equal(result.isGlob, true);\nassert.equal(result.isExtglob, false);\nassert.equal(result.glob, '*');\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 88,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 86,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 89,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from 'node:assert/strict';\nimport scan from './scan.js';\n\nconst result = scan('*', { noext: true });\nassert.equal(result.isExtglob, false);\nassert.equal(result.isGlob, true);\nassert.equal(result.glob, '*');\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-jM7Q9Z/snapshot/.codeproof-repro.test.mjs:6:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 85,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-jM7Q9Z/snapshot/.codeproof-repro.test.mjs:6:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 90,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-jM7Q9Z/snapshot/.codeproof-repro.test.mjs:6:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 86,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "scan.js",
+        "symbols": [
+          "scan"
+        ],
+        "executed": {
+          "scan": 1,
+          "advance": 1
+        },
+        "detail": null
+      },
+      "durationMs": 14553,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 3949,
+        "outputTokens": 1790,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.0501824
+    },
+    "patch": {
+      "status": "patch-proven",
+      "diff": "--- a/scan.js\n+++ b/scan.js\n@@ -303,1 +302,0 @@\n-    isGlob = false;",
+      "targetFile": "scan.js",
+      "searchBlock": "  if (opts.noext === true) {\n    isExtglob = false;\n    isGlob = false;\n  }",
+      "replaceBlock": "  if (opts.noext === true) {\n    isExtglob = false;\n  }",
+      "searchBlockSha256": "b494b311020e0d20e69c61cee2a4389368600714d7825c67708f0ad95c8afe54",
+      "replaceBlockSha256": "25a9ff8698f8c3856ea1195b47295b64a1057a9bd44453aafe303462ad02587e",
+      "rationale": "noext should only disable extglob detection, not clear isGlob for plain globs like '*'.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 78,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 89,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 86,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 83,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 78,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 90,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        }
+      },
+      "warnings": [],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 433,
+        "outputTokens": 1056,
+        "cachedTokens": 116
+      },
+      "costUsd": 0.0224112,
+      "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+      "durationMs": 6960
+    },
+    "evidenceLevel": "patch-proven"
+  }
+]
