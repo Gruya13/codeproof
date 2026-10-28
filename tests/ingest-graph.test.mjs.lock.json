@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "37283e3fe61071c5cef79f941e786f9f3d79473bb559d7f48658e405e01d5347",
+  "gitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116",
+  "gitRel": "tests/ingest-graph.test.mjs",
+  "by": "orchestrator",
+  "at": "2026-10-28T12:11:16.138Z",
+  "relocks": []
+}

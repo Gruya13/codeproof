@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "bcdc26159f683dc2719119754485df225630293bd02bec192eba26ceffb37825",
+  "gitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116",
+  "gitRel": "tests/cli-fault.test.mjs",
+  "by": "orchestrator",
+  "at": "2026-10-28T12:11:16.053Z",
+  "relocks": []
+}

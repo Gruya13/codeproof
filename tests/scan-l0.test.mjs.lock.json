@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "3ed2fdb9bf7372e1b2e3f91c7c19f1befa83b8daec1dd104fc36bd553c31d2bd",
+  "gitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116",
+  "gitRel": "tests/scan-l0.test.mjs",
+  "by": "orchestrator",
+  "at": "2026-10-28T12:11:16.380Z",
+  "relocks": []
+}

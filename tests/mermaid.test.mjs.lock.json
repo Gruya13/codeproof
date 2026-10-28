@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "7dcd9e580661689ac9974234983b5fb56826148af8807eb2075709ff9484924c",
+  "gitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116",
+  "gitRel": "tests/mermaid.test.mjs",
+  "by": "orchestrator",
+  "at": "2026-10-28T12:11:16.248Z",
+  "relocks": []
+}

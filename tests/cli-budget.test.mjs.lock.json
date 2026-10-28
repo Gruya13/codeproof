@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "2d340630003e18015b869caee75363b6e39428a71a8fce4641c12e4a49d0679a",
+  "gitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116",
+  "gitRel": "tests/cli-budget.test.mjs",
+  "by": "orchestrator",
+  "at": "2026-10-28T12:11:16.004Z",
+  "relocks": []
+}

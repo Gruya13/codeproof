@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "d9760f6b811832cbe2feb676c1c165f61f18c5aaa8dc36c8cc626022ed58d32c",
+  "gitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116",
+  "gitRel": "tests/citation.test.mjs",
+  "by": "orchestrator",
+  "at": "2026-10-28T12:11:15.978Z",
+  "relocks": []
+}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "a27bbac3350c49f26ddb5abf81e910395b49c3fcbebdbb4d9beeab943d0f9bb5",
+  "gitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116",
+  "gitRel": "tests/budget-fault.test.mjs",
+  "by": "orchestrator",
+  "at": "2026-10-28T12:11:15.930Z",
+  "relocks": []
+}
