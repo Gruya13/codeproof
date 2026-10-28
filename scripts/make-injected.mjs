@@ -77,6 +77,122 @@ const PATCHES = [
     ].join("\n"),
     marker: "  store.save({ token: 'next' });",
     statement: "store.save is not awaited before store.get, so the read can return the previous token instead of the value that was just saved."
+  },
+  // Extended set (INJ-07..INJ-16): subtle defects in the real axios core and helpers.
+  {
+    id: "INJ-07",
+    file: "lib/helpers/parseHeaders.js",
+    find: "      key = line.substring(0, i).trim().toLowerCase();",
+    replace: "      key = line.substring(0, i).trim();",
+    marker: "key = line.substring(0, i).trim();",
+    statement: "header names are no longer lower-cased during parsing, so Content-Type and content-type become distinct keys and a lookup by the canonical lower-case name returns undefined."
+  },
+  {
+    id: "INJ-08",
+    file: "lib/core/settle.js",
+    find: "  if (!response.status || !validateStatus || validateStatus(response.status)) {",
+    replace: "  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {",
+    marker: "validateStatus(response.status) || response.status < 500",
+    statement: "a response status below 500 is resolved before validateStatus decides, so 4xx client errors are delivered as successful responses and the caller's rejection handler never runs."
+  },
+  {
+    id: "INJ-09",
+    file: "lib/helpers/isAxiosError.js",
+    find: "  return utils.isObject(payload) && payload.isAxiosError === true;",
+    replace: "  return utils.isObject(payload) && payload.isAxiosError !== false;",
+    marker: "payload.isAxiosError !== false",
+    statement: "any object that does not explicitly set isAxiosError to false is classified as an AxiosError, so errors from other libraries are reported as axios errors with undefined response and config."
+  },
+  {
+    id: "INJ-10",
+    file: "lib/helpers/throttle.js",
+    find: "        timer = setTimeout(() => {\n          timer = null;\n          invoke(lastArgs);\n        }, threshold - passed);",
+    replace: "        timer = setTimeout(() => {\n          timer = null;\n          invoke(args);\n        }, threshold - passed);",
+    marker: "          invoke(args);",
+    statement: "the trailing invocation uses the arguments of the call that scheduled the timer instead of the most recent call, so the latest payload is dropped when calls are throttled."
+  },
+  {
+    id: "INJ-11",
+    file: "lib/cancel/CancelToken.js",
+    find: "      if (token.reason) {\n        // Cancellation has already been requested\n        return;\n      }",
+    replace: "      if (!token.reason) {\n        // Cancellation has already been requested\n        return;\n      }",
+    marker: "      if (!token.reason) {",
+    statement: "the cancellation request returns early while no reason exists yet, so the first cancel() call is silently ignored and the request is never cancelled."
+  },
+  {
+    id: "INJ-12",
+    file: "lib/helpers/spread.js",
+    find: "    return callback.apply(null, arr);",
+    replace: "    return callback.apply(null, [arr]);",
+    marker: "callback.apply(null, [arr]);",
+    statement: "spread passes the whole array as a single argument instead of expanding it, so a wrapped callback receives one array where the original call passed N positional arguments."
+  },
+  {
+    id: "INJ-13",
+    file: "lib/helpers/buildURL.js",
+    find: "      : new AxiosURLSearchParams(params, _options).toString(_encode);",
+    replace: "      : new AxiosURLSearchParams(params, _options).toString();",
+    marker: "      : new AxiosURLSearchParams(params, _options).toString();",
+    statement: "buildURL ignores a caller-supplied encode function and always uses the default encoder, so custom parameter encoding passed through options is silently dropped."
+  },
+  {
+    id: "INJ-14",
+    file: "lib/helpers/formDataToJSON.js",
+    find: "    path.push(match[0] === '[]' ? '' : match[1] || match[0]);",
+    replace: "    path.push(match[1] || match[0]);",
+    marker: "    path.push(match[1] || match[0]);",
+    statement: "a FormData field name ending in [] is stored under the literal key [] instead of pushing onto an array, so repeated array fields collapse into one literal property."
+  },
+  {
+    id: "INJ-15",
+    file: "lib/helpers/cookies.js",
+    find: "        const cookies = cookieString.split(';');",
+    replace: "        const cookies = cookieString.split('; ');",
+    marker: "        const cookies = cookieString.split('; ');",
+    statement: "cookies are split on the two-character separator \"; \" only, but browsers may serialize cookie pairs without the space, so a cookie that follows a space-less separator is not found."
+  },
+  {
+    id: "INJ-16",
+    file: "lib/core/transformData.js",
+    find: "    data = fn.call(config, data, headers.normalize(), response ? response.status : undefined);",
+    replace: "    data = fn.call(config, data, headers.normalize());",
+    marker: "    data = fn.call(config, data, headers.normalize());",
+    statement: "transformData stops passing the response status to response transformers, so a transformer that branches on the status (for example parses JSON only for 2xx) can no longer see it."
+  }
+];
+
+// Traps: places in the untouched axios code that look suspicious but are correct. Publishing a
+// finding on a trap is a false positive, exactly as in the main benchmark.
+const TRAPS = [
+  {
+    id: "TRAP-01",
+    file: "lib/core/AxiosError.js",
+    marker: "    if (utils.isBuffer(source)) return source;",
+    reason: "redactConfig passes buffers through without redaction. That looks like a leak, but it is deliberate: binary payloads cannot carry the string keys being redacted, and copying them would be wasteful. It is a redaction guard, not a defect."
+  },
+  {
+    id: "TRAP-02",
+    file: "lib/core/AxiosHeaders.js",
+    marker: "        (_rewrite === undefined && self[key] !== false)",
+    reason: "The rewrite guard looks inverted, but it implements the documented AxiosHeaders.set contract: rewrite=true always overwrites, rewrite=false never overwrites an existing non-false value, and undefined only overwrites when the current value is not the literal false."
+  },
+  {
+    id: "TRAP-03",
+    file: "lib/helpers/throttle.js",
+    marker: "  let threshold = 1000 / freq;",
+    reason: "Dividing by freq looks unsafe, but the throttled wrapper is only constructed with a validated positive frequency and the caller owns that contract. There is no zero-division path from this module."
+  },
+  {
+    id: "TRAP-04",
+    file: "lib/helpers/parseHeaders.js",
+    marker: "ignoreDuplicateOf, key",
+    reason: "Dropping duplicate headers from a fixed list is required by the HTTP spec (node ignores duplicates of these fields), not a bug. Headers outside the list are concatenated with ', '."
+  },
+  {
+    id: "TRAP-05",
+    file: "lib/cancel/CancelToken.js",
+    marker: "      while (i-- > 0) {",
+    reason: "Reverse iteration looks risky, but it is deliberate: listeners may unsubscribe themselves while the list is being notified, and iterating backwards keeps the remaining indexes valid."
   }
 ];
 
@@ -97,7 +213,8 @@ function parseArgs(argv) {
   const options = {
     source: "reports/probes/real/axios-lib/_repo",
     out: "reports/probes/real/axios-injected",
-    repo: "axios/axios"
+    repo: "axios/axios",
+    expectedPath: null
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -105,7 +222,8 @@ function parseArgs(argv) {
     if (arg === "--source") options.source = take();
     else if (arg === "--out") options.out = take();
     else if (arg === "--repo") options.repo = take();
-    else if (arg === "--help" || arg === "-h") { console.log("usage: node scripts/make-injected.mjs [--source <clone>] [--out <dir>] [--repo <name>]"); process.exit(0); }
+    else if (arg === "--expected") options.expectedPath = take();
+    else if (arg === "--help" || arg === "-h") { console.log("usage: node scripts/make-injected.mjs [--source <clone>] [--out <dir>] [--repo <name>] [--expected <expected.json>]"); process.exit(0); }
     else throw new Error("unknown option: " + arg);
   }
   return options;
@@ -141,15 +259,23 @@ function main() {
     if (!location) throw new Error(patch.id + ": marker not found in " + patch.file);
     defects.push({
       id: patch.id,
-      file: patch.file,
+      file: patch.file.replace(/^lib\//, ""),
       startLine: location.startLine,
       endLine: location.endLine,
       statement: patch.statement
     });
   }
 
+  const traps = [];
+  for (const trap of TRAPS) {
+    const trapSource = readFileSync(join(clone, trap.file), "utf8");
+    const location = lineOf(trapSource, trap.marker);
+    if (!location) throw new Error(trap.id + ": marker not found in " + trap.file);
+    traps.push({ id: trap.id, file: trap.file.replace(/^lib\//, ""), startLine: location.startLine, endLine: location.endLine, reason: trap.reason });
+  }
+
   run("git", ["-c", "user.name=codeproof-probe", "-c", "user.email=probe@example.invalid", "add", "-A"], clone);
-  run("git", ["-c", "user.name=codeproof-probe", "-c", "user.email=probe@example.invalid", "commit", "-q", "-m", "probe: inject six known correctness defects"], clone);
+  run("git", ["-c", "user.name=codeproof-probe", "-c", "user.email=probe@example.invalid", "commit", "-q", "-m", "probe: inject " + defects.length + " known correctness defects"], clone);
   const commit = run("git", ["rev-parse", "HEAD"], clone).trim();
   const expected = {
     tool: "make-injected",
@@ -159,17 +285,22 @@ function main() {
     baseCommit: baseCommit,
     commit: commit,
     scope: "lib",
+    pathNote: "paths are relative to the analyzed scope (lib/)",
     toleranceLines: 2,
-    defects: defects
+    defects: defects,
+    traps: traps,
+    extraTrue: []
   };
-  writeFileSync(join(out, "expected.json"), JSON.stringify(expected, null, 2) + "\n");
+  const expectedPath = options.expectedPath ? resolve(options.expectedPath) : join(out, "expected.json");
+  mkdirSync(join(expectedPath, ".."), { recursive: true });
+  writeFileSync(expectedPath, JSON.stringify(expected, null, 2) + "\n");
   console.log("Injected repo written to " + clone);
   console.log("  base commit " + baseCommit);
   console.log("  injected commit " + commit);
   for (const defect of defects) {
     console.log("  " + defect.id + "  " + defect.file + ":" + defect.startLine + "-" + defect.endLine);
   }
-  console.log("  expected  " + join(out, "expected.json"));
+  console.log("  expected  " + expectedPath);
 }
 
 main();

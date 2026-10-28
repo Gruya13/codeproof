@@ -56,6 +56,13 @@ function main() {
     };
   });
 
+  const traps = (expected.traps || []).map(function (trap) {
+    return { id: trap.id, file: trap.file, startLine: trap.startLine, endLine: trap.endLine, hit: false, verified: false, reason: trap.reason };
+  });
+  const extraTrue = (expected.extraTrue || []).map(function (extra) {
+    return { id: extra.id, file: extra.file, startLine: extra.startLine, endLine: extra.endLine, seen: false };
+  });
+
   const falsePositives = [];
   for (const item of published) {
     const finding = item.finding || {};
@@ -70,6 +77,38 @@ function main() {
         if (!matched.includes(defekt)) matched.push(defekt);
         if (!defekt.statuses.includes(item.status)) defekt.statuses.push(item.status);
       }
+    }
+    // A finding can also land on a registered trap (a place that looks wrong but is correct)
+    // or on a pre-registered real defect; neither counts as a false positive.
+    let trapHit = null;
+    for (const trap of traps) {
+      if (evidence.some(function (citation) {
+        return citation.path === trap.file && overlaps(citation.startLine, citation.endLine, trap.startLine - tolerance, trap.endLine + tolerance);
+      })) { trapHit = trap; break; }
+    }
+    let extraHit = null;
+    for (const extra of extraTrue) {
+      if (evidence.some(function (citation) {
+        return citation.path === extra.file && overlaps(citation.startLine, citation.endLine, extra.startLine - tolerance, extra.endLine + tolerance);
+      })) { extraHit = extra; break; }
+    }
+    if (trapHit) {
+      trapHit.hit = true;
+      if (item.status === "verified") trapHit.verified = true;
+      falsePositives.push({
+        id: finding.id,
+        title: finding.title,
+        status: item.status,
+        path: evidence.length ? evidence[0].path : null,
+        startLine: evidence.length ? evidence[0].startLine : null,
+        trap: true,
+        trapId: trapHit.id
+      });
+      continue;
+    }
+    if (extraHit) {
+      extraHit.seen = true;
+      continue;
     }
     if (matched.length === 0) {
       falsePositives.push({
@@ -116,7 +155,13 @@ function main() {
     recallVerified: defects.length > 0 ? verifiedDefects.length / defects.length : null,
     verifiedPublished: verified.length,
     verifiedFalsePositives: verifiedFp.length,
+    trapsTotal: traps.length,
+    trapsVerified: traps.filter(function (trap) { return trap.verified; }).length,
+    trapsHitAny: traps.filter(function (trap) { return trap.hit; }).length,
+    extraTrueSeen: extraTrue.filter(function (extra) { return extra.seen; }).map(function (extra) { return extra.id; }),
     precisionVerified: verified.length > 0 ? (verified.length - verifiedFp.length) / verified.length : null,
+    defects: defects.map(function (defect) { return { id: defect.id, file: defect.file, found: defect.found, statuses: defect.statuses }; }),
+    traps: traps.map(function (trap) { return { id: trap.id, file: trap.file, hit: trap.hit, verified: trap.verified, reason: trap.reason }; }),
     l1Checked: l1Checked,
     l1Passed: l1Passed,
     l1PassRate: l1Checked > 0 ? l1Passed / l1Checked : null,
@@ -145,6 +190,11 @@ function main() {
   console.log("| Verified findings published | " + verified.length + " |");
   console.log("| Verified false positives | " + verifiedFp.length + " |");
   console.log("| Precision (verified-only) | " + pct(metrics.precisionVerified) + " |");
+  if (traps.length > 0) {
+    console.log("| Traps verified (leaked) | " + metrics.trapsVerified + "/" + traps.length + " |");
+    console.log("| Traps cited at any status | " + metrics.trapsHitAny + "/" + traps.length + " |");
+  }
+  if (extraTrue.length > 0) console.log("| Pre-registered real defects seen | " + metrics.extraTrueSeen.join(", ") + " |");
   console.log("| L1 pass rate | " + pct(metrics.l1PassRate) + " (" + l1Passed + "/" + l1Checked + ") |");
   console.log("| L0 rejected candidates | " + l0Rejected + " |");
   console.log("");
