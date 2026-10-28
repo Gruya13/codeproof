@@ -1,9 +1,17 @@
 {
   "schemaVersion": 1,
-  "casesSha256": "80d3ae2b8c5e74dffc1446e4732d532cb598e5a851941bd1f698b6474d78b517",
-  "gitRevision": "b41f2569d73d72ddca235cf4a47d952c7a9a200a",
+  "casesSha256": "f8250cbad46dc4cc631af8528eb732c8c190f5e802223365626c231c912f124a",
+  "gitRevision": "b8c3675a02ddd737935e89ac49bc66716b67513a",
   "gitRel": "tests/hardening-package-c.test.mjs",
   "by": "dsh-orkestrator",
-  "at": "2026-10-28T19:21:41.974Z",
-  "relocks": []
+  "at": "2026-10-28T19:23:06.468Z",
+  "relocks": [
+    {
+      "by": "dsh-orkestrator",
+      "at": "2026-10-28T19:23:06.468Z",
+      "reason": "Node 22 cannot record a LinkCheck proof, so the replay test must not expect a re-execution there; the >=3 attempts assertion stays on both runtimes",
+      "previousSha256": "80d3ae2b8c5e74dffc1446e4732d532cb598e5a851941bd1f698b6474d78b517",
+      "previousGitRevision": "b41f2569d73d72ddca235cf4a47d952c7a9a200a"
+    }
+  ]
 }
