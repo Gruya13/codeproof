@@ -1,0 +1,41 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"For negative numbers argument.toString(16/2/8) includes a leading '-', so '0x'+hex yields '0x-...' (and '0b-...', '0o-...') which is a SyntaxError instead of '-0x...'; fractional and non-finite values also yield invalid literals like '0x1.8' or '0xNAN'.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 226, \"path\": \"jsesc.js\", \"snippet\": \"\\t\\t\\t} else if (useHexNumbers) {\\n\\t\\t\\t\\tlet hexadecimal = argument.toString(16);\\n\\t\\t\\t\\tif (!lowercaseHex) {\\n\\t\\t\\t\\t\\thexadecimal = hexadecimal.toUpperCase();\\n\\t\\t\\t\\t}\\n\\t\\t\\t\\tresult = '0x' + hexadecimal;\\n\\t\\t\\t} else if (useBinNumbers) {\\n\\t\\t\\t\\tresult = '0b' + argument.toString(2);\\n\\t\\t\\t} else if (useOctNumbers) {\\n\\t\\t\\t\\tresult = '0o' + argument.toString(8);\\n\\t\\t\\t}\", \"startLine\": 216}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Hexadecimal/binary/octal formatting produces invalid literals for negative and non-integer numbers\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "For negative numbers argument.toString(16/2/8) includes a leading '-', so '0x'+hex yields '0x-...' (and '0b-...', '0o-...') which is a SyntaxError instead of '-0x...'; fractional and non-finite values also yield invalid literals like '0x1.8' or '0xNAN'.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 226,
+            "path": "jsesc.js",
+            "snippet": "\t\t\t} else if (useHexNumbers) {\n\t\t\t\tlet hexadecimal = argument.toString(16);\n\t\t\t\tif (!lowercaseHex) {\n\t\t\t\t\thexadecimal = hexadecimal.toUpperCase();\n\t\t\t\t}\n\t\t\t\tresult = '0x' + hexadecimal;\n\t\t\t} else if (useBinNumbers) {\n\t\t\t\tresult = '0b' + argument.toString(2);\n\t\t\t} else if (useOctNumbers) {\n\t\t\t\tresult = '0o' + argument.toString(8);\n\t\t\t}",
+            "startLine": 216
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Hexadecimal/binary/octal formatting produces invalid literals for negative and non-integer numbers"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 216-226 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at jsesc.js:216-226 unconditionally builds '0x' + argument.toString(16), '0b' + argument.toString(2), and '0o' + argument.toString(8) with no sign, fractional, or non-finite handling, so negative values produce '0x-ff'-style invalid literals and fractional/non-finite values produce '0x1.8'/'0xNAN'-style invalid literals before returning at jsesc.js:228-231."
+      }
+    }
+  ]
+}

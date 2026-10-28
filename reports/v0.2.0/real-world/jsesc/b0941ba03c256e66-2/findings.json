@@ -1,0 +1,279 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "For negative numbers argument.toString(16/2/8) includes a leading '-', so '0x'+hex yields '0x-...' (and '0b-...', '0o-...') which is a SyntaxError instead of '-0x...'; fractional and non-finite values also yield invalid literals like '0x1.8' or '0xNAN'.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 226,
+          "path": "jsesc.js",
+          "snippet": "\t\t\t} else if (useHexNumbers) {\n\t\t\t\tlet hexadecimal = argument.toString(16);\n\t\t\t\tif (!lowercaseHex) {\n\t\t\t\t\thexadecimal = hexadecimal.toUpperCase();\n\t\t\t\t}\n\t\t\t\tresult = '0x' + hexadecimal;\n\t\t\t} else if (useBinNumbers) {\n\t\t\t\tresult = '0b' + argument.toString(2);\n\t\t\t} else if (useOctNumbers) {\n\t\t\t\tresult = '0o' + argument.toString(8);\n\t\t\t}",
+          "startLine": 216
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Hexadecimal/binary/octal formatting produces invalid literals for negative and non-integer numbers"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 216-226 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at jsesc.js:216-226 unconditionally builds '0x' + argument.toString(16), '0b' + argument.toString(2), and '0o' + argument.toString(8) with no sign, fractional, or non-finite handling, so negative values produce '0x-ff'-style invalid literals and fractional/non-finite values produce '0x1.8'/'0xNAN'-style invalid literals before returning at jsesc.js:228-231."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-FF' !== '-0xFF'\n\n    at file:///tmp/codeproof-repro-sdG9JU/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-FF',\n  expected: '-0xFF',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 81,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-FF' !== '-0xFF'\n\n    at file:///tmp/codeproof-repro-sdG9JU/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-FF',\n  expected: '-0xFF',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 82,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-FF' !== '-0xFF'\n\n    at file:///tmp/codeproof-repro-sdG9JU/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-FF',\n  expected: '-0xFF',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 82,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport jsesc from './jsesc.js';\nconst result = jsesc(-255, { numbers: 'hexadecimal' });\nassert.equal(result, '-0xFF');\n",
+      "expectedBehavior": "Negative hexadecimal numbers are formatted as valid literals with the sign before the prefix, e.g. -255 becomes '-0xFF' rather than '0x-FF'.",
+      "rationale": "Control uses a positive integer whose hex formatting is already correct; the test uses the same jsesc call with a negative integer, where toString(16) includes '-' and the current '0x' prefix produces an invalid literal.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from 'node:assert/strict';\nimport jsesc from './jsesc.js';\nconst result = jsesc(255, { numbers: 'hexadecimal' });\nassert.equal(result, '0xFF');\n",
+      "control": {
+        "code": "import assert from 'node:assert/strict';\nimport jsesc from './jsesc.js';\nconst result = jsesc(255, { numbers: 'hexadecimal' });\nassert.equal(result, '0xFF');\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 84,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 87,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 86,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from 'node:assert/strict';\nimport jsesc from './jsesc.js';\nconst result = jsesc(-255, { numbers: 'hexadecimal' });\nassert.equal(result, '-0xFF');\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-FF' !== '-0xFF'\n\n    at file:///tmp/codeproof-repro-sdG9JU/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-FF',\n  expected: '-0xFF',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 81,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-FF' !== '-0xFF'\n\n    at file:///tmp/codeproof-repro-sdG9JU/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-FF',\n  expected: '-0xFF',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 82,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-FF' !== '-0xFF'\n\n    at file:///tmp/codeproof-repro-sdG9JU/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-FF',\n  expected: '-0xFF',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 82,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "jsesc.js",
+        "symbols": [
+          "jsesc"
+        ],
+        "executed": {
+          "forOwn": 1,
+          "extend": 1,
+          "isBuffer": 1,
+          "isString": 1,
+          "isNumber": 1,
+          "isBigInt": 1,
+          "isMap": 1,
+          "isSet": 1,
+          "jsesc": 1
+        },
+        "detail": null
+      },
+      "durationMs": 16636,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 4111,
+        "outputTokens": 2014,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.056724
+    },
+    "patch": {
+      "status": "patch-proven",
+      "diff": "--- a/jsesc.js\n+++ b/jsesc.js\n@@ -217,9 +217,13 @@\n-\t\t\t\tlet hexadecimal = argument.toString(16);\n-\t\t\t\tif (!lowercaseHex) {\n-\t\t\t\t\thexadecimal = hexadecimal.toUpperCase();\n-\t\t\t\t}\n-\t\t\t\tresult = '0x' + hexadecimal;\n-\t\t\t} else if (useBinNumbers) {\n-\t\t\t\tresult = '0b' + argument.toString(2);\n-\t\t\t} else if (useOctNumbers) {\n-\t\t\t\tresult = '0o' + argument.toString(8);\n+\t\t\t\tif (!Number.isFinite(argument) || !Number.isInteger(argument)) {\n+\t\t\t\t\tresult = String(argument);\n+\t\t\t\t} else {\n+\t\t\t\t\tlet hexadecimal = Math.abs(argument).toString(16);\n+\t\t\t\t\tif (!lowercaseHex) {\n+\t\t\t\t\t\thexadecimal = hexadecimal.toUpperCase();\n+\t\t\t\t\t}\n+\t\t\t\t\tresult = (argument < 0 ? '-0x' : '0x') + hexadecimal;\n+\t\t\t\t}\n+\t\t\t} else if (useBinNumbers) {\n+\t\t\t\tresult = !Number.isFinite(argument) || !Number.isInteger(argument) ? String(argument) : (argument < 0 ? '-0b' : '0b') + Math.abs(argument).toString(2);\n+\t\t\t} else if (useOctNumbers) {\n+\t\t\t\tresult = !Number.isFinite(argument) || !Number.isInteger(argument) ? String(argument) : (argument < 0 ? '-0o' : '0o') + Math.abs(argument).toString(8);",
+      "targetFile": "jsesc.js",
+      "searchBlock": "\t\t\t} else if (useHexNumbers) {\n\t\t\t\tlet hexadecimal = argument.toString(16);\n\t\t\t\tif (!lowercaseHex) {\n\t\t\t\t\thexadecimal = hexadecimal.toUpperCase();\n\t\t\t\t}\n\t\t\t\tresult = '0x' + hexadecimal;\n\t\t\t} else if (useBinNumbers) {\n\t\t\t\tresult = '0b' + argument.toString(2);\n\t\t\t} else if (useOctNumbers) {\n\t\t\t\tresult = '0o' + argument.toString(8);\n\t\t\t}",
+      "replaceBlock": "\t\t\t} else if (useHexNumbers) {\n\t\t\t\tif (!Number.isFinite(argument) || !Number.isInteger(argument)) {\n\t\t\t\t\tresult = String(argument);\n\t\t\t\t} else {\n\t\t\t\t\tlet hexadecimal = Math.abs(argument).toString(16);\n\t\t\t\t\tif (!lowercaseHex) {\n\t\t\t\t\t\thexadecimal = hexadecimal.toUpperCase();\n\t\t\t\t\t}\n\t\t\t\t\tresult = (argument < 0 ? '-0x' : '0x') + hexadecimal;\n\t\t\t\t}\n\t\t\t} else if (useBinNumbers) {\n\t\t\t\tresult = !Number.isFinite(argument) || !Number.isInteger(argument) ? String(argument) : (argument < 0 ? '-0b' : '0b') + Math.abs(argument).toString(2);\n\t\t\t} else if (useOctNumbers) {\n\t\t\t\tresult = !Number.isFinite(argument) || !Number.isInteger(argument) ? String(argument) : (argument < 0 ? '-0o' : '0o') + Math.abs(argument).toString(8);\n\t\t\t}",
+      "searchBlockSha256": "a93edfd3e7b0261df9747c36fef1c51b51ff95fb704a658554b44a3d85e766a2",
+      "replaceBlockSha256": "744d31931f0090773aebbba6578a196dd9b0910f162dcb5087e70de04cd6c8ac",
+      "rationale": "Move sign outside 0x/0b/0o prefix using Math.abs and fall back to decimal String for non-integer/non-finite values which cannot be represented in those radices.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 86,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 81,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 114,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 88,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 88,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 82,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        }
+      },
+      "warnings": [
+        "replaceBlock contains literals that also appear in the generated test (possible overfitting): 0, 0, 2"
+      ],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 599,
+        "outputTokens": 5322,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.108836,
+      "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+      "durationMs": 36614
+    },
+    "evidenceLevel": "patch-proven"
+  }
+]

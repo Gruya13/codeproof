@@ -1,0 +1,25 @@
+--- a/jsesc.js
++++ b/jsesc.js
+@@ -217,9 +217,13 @@
+-				let hexadecimal = argument.toString(16);
+-				if (!lowercaseHex) {
+-					hexadecimal = hexadecimal.toUpperCase();
+-				}
+-				result = '0x' + hexadecimal;
+-			} else if (useBinNumbers) {
+-				result = '0b' + argument.toString(2);
+-			} else if (useOctNumbers) {
+-				result = '0o' + argument.toString(8);
++				if (!Number.isFinite(argument) || !Number.isInteger(argument)) {
++					result = String(argument);
++				} else {
++					let hexadecimal = Math.abs(argument).toString(16);
++					if (!lowercaseHex) {
++						hexadecimal = hexadecimal.toUpperCase();
++					}
++					result = (argument < 0 ? '-0x' : '0x') + hexadecimal;
++				}
++			} else if (useBinNumbers) {
++				result = !Number.isFinite(argument) || !Number.isInteger(argument) ? String(argument) : (argument < 0 ? '-0b' : '0b') + Math.abs(argument).toString(2);
++			} else if (useOctNumbers) {
++				result = !Number.isFinite(argument) || !Number.isInteger(argument) ? String(argument) : (argument < 0 ? '-0o' : '0o') + Math.abs(argument).toString(8);

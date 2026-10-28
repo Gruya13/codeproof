@@ -1,0 +1,306 @@
+{
+  "runId": "b0941ba03c256e66",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "aa497cf3dd6fb62ddf5152b1dbc9f58075d0a87c4eda694f67554dae9770b6ec",
+  "configHashVersion": 2,
+  "config": {
+    "hashVersion": 2,
+    "payload": {
+      "mode": "smoke",
+      "scannerModel": "muse-spark-1.3",
+      "verifierModel": "muse-wonder-1.0",
+      "temperature": 0,
+      "maxFindings": 8,
+      "citationMaxLines": 15,
+      "scannerMaxTokens": 16000,
+      "verifierMaxTokens": 4000,
+      "verifierContextChars": 24000,
+      "reproEnabled": true,
+      "reproModel": "muse-wonder-1.0",
+      "reproMaxTokens": 8000,
+      "reproTimeoutMs": 2000,
+      "reproAttempts": 3,
+      "hardBudget": true,
+      "dualScan": false,
+      "chunkedScan": false,
+      "secondaryScannerModel": "muse-wonder-1.0",
+      "dualScanMaxLoc": 0,
+      "patchEnabled": true,
+      "patchModel": "muse-wonder-1.0",
+      "patchMaxTokens": 6000,
+      "patchMaxCandidates": 3,
+      "verifyEscalate": false,
+      "mockPipeline": false
+    }
+  },
+  "repo": {
+    "source": "commit",
+    "path": "/home/gru/Projects/Meta hakatron/real-world/jsesc/analysis-target",
+    "commit": "e3349b542eaaf55239cb60519991b80097cee24b",
+    "dirty": false,
+    "loc": 337,
+    "files": 1
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    },
+    {
+      "role": "repro",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+    }
+  ],
+  "usage": {
+    "inputTokens": 14998,
+    "outputTokens": 44296,
+    "cachedTokens": 4325,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 2,
+        "inputTokens": 7784,
+        "outputTokens": 34544,
+        "cachedTokens": 3825,
+        "costUsd": 0.15233449999999998
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 1,
+        "inputTokens": 2504,
+        "outputTokens": 2416,
+        "cachedTokens": 500,
+        "costUsd": 0.056436
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "calls": 1,
+        "inputTokens": 4111,
+        "outputTokens": 2014,
+        "cachedTokens": 0,
+        "costUsd": 0.056724
+      },
+      {
+        "role": "patcher",
+        "model": "muse-wonder-1.0",
+        "calls": 1,
+        "inputTokens": 599,
+        "outputTokens": 5322,
+        "cachedTokens": 0,
+        "costUsd": 0.108836
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 3892,
+        "outputTokens": 16000,
+        "cachedTokens": 0,
+        "costUsd": 0.072865,
+        "durationMs": 71821,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 1,
+        "inputTokens": 3892,
+        "outputTokens": 18544,
+        "cachedTokens": 3825,
+        "costUsd": 0.0794695,
+        "durationMs": 84792,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 2504,
+        "outputTokens": 2416,
+        "cachedTokens": 500,
+        "costUsd": 0.056436,
+        "durationMs": 18464,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 3,
+        "inputTokens": 4111,
+        "outputTokens": 2014,
+        "cachedTokens": 0,
+        "costUsd": 0.056724,
+        "durationMs": 16047,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "patcher",
+        "model": "muse-wonder-1.0",
+        "index": 4,
+        "inputTokens": 599,
+        "outputTokens": 5322,
+        "cachedTokens": 0,
+        "costUsd": 0.108836,
+        "durationMs": 36073,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      }
+    ],
+    "costUsd": 0.37433049999999995,
+    "measured": true
+  },
+  "calls": 5,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-28T15:13:42.252Z",
+    "durationMs": 228396
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 17
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 156615
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 71735
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 8
+    }
+  ],
+  "budget": {
+    "limitUsd": 4,
+    "spentUsd": 0.37433,
+    "measured": true,
+    "exceeded": false,
+    "hard": true,
+    "aborted": false,
+    "abortReason": null,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 1,
+    "byScanner": {
+      "spark": 1,
+      "wonder": 0,
+      "both": 0,
+      "controlled": 0
+    },
+    "duplicates": 0,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 0,
+    "verified": 1,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "reproduced": 1,
+    "patched": 1
+  },
+  "scanCoverage": {
+    "filesInPrompt": 1,
+    "filesTotal": 1,
+    "chars": 10847,
+    "cap": 400000,
+    "truncated": false
+  },
+  "scanners": [
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 1,
+      "rejectedAtL0": 0,
+      "costUsd": 0.0794695,
+      "durationMs": 156614,
+      "group": null,
+      "coverage": null,
+      "reason": null
+    }
+  ],
+  "dualScan": false,
+  "chunkedScan": false,
+  "patch": {
+    "enabled": true,
+    "model": "muse-wonder-1.0"
+  },
+  "repro": {
+    "enabled": true,
+    "model": "muse-wonder-1.0",
+    "timeoutMs": 2000,
+    "attempts": 3,
+    "counts": {
+      "reproduced": 1,
+      "notReproduced": 0,
+      "unavailable": 0,
+      "inconclusive": 0
+    }
+  },
+  "outputs": {
+    "report": "reports/v0.2.0/real-world/jsesc/b0941ba03c256e66-2/REPORT.md",
+    "findings": "reports/v0.2.0/real-world/jsesc/b0941ba03c256e66-2/findings.json",
+    "rejected": "reports/v0.2.0/real-world/jsesc/b0941ba03c256e66-2/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.2.1"
+  },
+  "attestation": {
+    "schemaVersion": 2,
+    "findingsSha256": "e2bc6c76dc84241ad87a8a3a57703ccdcf7a258faca74c7937a9c4e69275159c",
+    "artifacts": {
+      "REPORT.md": "2b4b83e41eac2c062ebf0526b34f07854806df5fe1e3d5144be0491b0d3219a5",
+      "candidates.json": "66519a08dbf3abfc9957889c3aa3c37b2da83a2ca4cdd40286c58f24449ee93b",
+      "findings.json": "e2bc6c76dc84241ad87a8a3a57703ccdcf7a258faca74c7937a9c4e69275159c",
+      "patch/F-001.diff": "1282fd456ec5d361fa4bca5974abdd161d68f3a708522102231ffd0ec2a07c82",
+      "patch/F-001.json": "d45f399c1ebf4c0ae50b2467da4ff4d28351b708f430015447496647bae39eb5",
+      "rejected.md": "beb16c99833eb3653dcd81f1f0f28ab977e56d6f889f9edcc46720239a6c91d9",
+      "repro/F-001/control.mjs": "4a117ca21c8fd647f425713a34fa444101beb1e69ef210be2e8f031d2c16bcb3",
+      "repro/F-001/result.json": "0349c8bc351238f2a6de9ff4387fe017e0d90adc5c966eb1eb3044a153139640",
+      "repro/F-001/test.mjs": "1b8eb39c2ef29e6693cccd75e4dd448553a5368323ce6e25927938ff754d2a73"
+    }
+  }
+}

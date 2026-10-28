@@ -1,0 +1,53 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"For negative numbers argument.toString(2/8/16) returns a string with leading '-', so '0x'+hex, '0b'+bin and '0o'+oct produce invalid literals like '0x-A' and '0b-101' instead of '-0xA' and '-0b101'.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 221, \"path\": \"jsesc.js\", \"snippet\": \"result = '0x' + hexadecimal;\", \"startLine\": 221}, {\"endLine\": 223, \"path\": \"jsesc.js\", \"snippet\": \"result = '0b' + argument.toString(2);\", \"startLine\": 223}, {\"endLine\": 225, \"path\": \"jsesc.js\", \"snippet\": \"result = '0o' + argument.toString(8);\", \"startLine\": 225}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Negative numbers with hexadecimal/binary/octal produce invalid literals\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "For negative numbers argument.toString(2/8/16) returns a string with leading '-', so '0x'+hex, '0b'+bin and '0o'+oct produce invalid literals like '0x-A' and '0b-101' instead of '-0xA' and '-0b101'.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 221,
+            "path": "jsesc.js",
+            "snippet": "result = '0x' + hexadecimal;",
+            "startLine": 221
+          },
+          {
+            "endLine": 223,
+            "path": "jsesc.js",
+            "snippet": "result = '0b' + argument.toString(2);",
+            "startLine": 223
+          },
+          {
+            "endLine": 225,
+            "path": "jsesc.js",
+            "snippet": "result = '0o' + argument.toString(8);",
+            "startLine": 225
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Negative numbers with hexadecimal/binary/octal produce invalid literals"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 221-221 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at jsesc.js:217-225 directly prefixes '0x'/'0b'/'0o' to argument.toString(16/2/8) with no sign handling, so a negative value whose toString yields a leading '-' produces invalid literals like '0x-A'."
+      }
+    }
+  ]
+}

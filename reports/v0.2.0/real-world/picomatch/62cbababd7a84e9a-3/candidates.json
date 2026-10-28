@@ -1,0 +1,113 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"When opts.noext is true scan clears isGlob unconditionally, so patterns like \\\"*.js\\\" are reported as non-globs even though only extglobs should be disabled.\", \"confidence\": 0.92, \"evidence\": [{\"endLine\": 304, \"path\": \"scan.js\", \"snippet\": \"  if (opts.noext === true) {\\n    isExtglob = false;\\n    isGlob = false;\\n  }\", \"startLine\": 301}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"scan with noext clears isGlob\"}, {\"category\": \"correctness\", \"claim\": \"Last-token update uses truthiness of prevIndex, so when the last slash is at index 0 (e.g. \\\"/foo\\\") prevIndex 0 is falsy and the final token value/depth is never assigned.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 394, \"path\": \"scan.js\", \"snippet\": \"    if (opts.tokens && prevIndex && prevIndex + 1 < input.length) {\\n      tokens[tokens.length - 1].value = value;\\n      depth(tokens[tokens.length - 1]);\\n      state.maxDepth += tokens[tokens.length - 1].depth;\\n    }\", \"startLine\": 390}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"tokens last-segment check uses falsy index\"}, {\"category\": \"correctness\", \"claim\": \"First slash token is marked as prefix whenever start != 0, so for a negated pattern like \\\"!foo/bar\\\" the \\\"foo\\\" segment is overwritten with prefix \\\"!\\\" instead of only treating slashes before start as prefix.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 376, \"path\": \"scan.js\", \"snippet\": \"      if (opts.tokens) {\\n        if (idx === 0 && start !== 0) {\\n          tokens[idx].isPrefix = true;\\n          tokens[idx].value = prefix;\\n        } else {\\n          tokens[idx].value = value;\\n        }\", \"startLine\": 370}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"first tokens entry overwritten with prefix\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "When opts.noext is true scan clears isGlob unconditionally, so patterns like \"*.js\" are reported as non-globs even though only extglobs should be disabled.",
+        "confidence": 0.92,
+        "evidence": [
+          {
+            "endLine": 304,
+            "path": "scan.js",
+            "snippet": "  if (opts.noext === true) {\n    isExtglob = false;\n    isGlob = false;\n  }",
+            "startLine": 301
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "scan with noext clears isGlob"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 301-304 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The cited code at scan.js:301-304 unconditionally sets isGlob=false whenever opts.noext is true, and the returned state at scan.js:340-353 reports that cleared isGlob value, so a non-extglob pattern such as *.js would be reported as a non-glob."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Last-token update uses truthiness of prevIndex, so when the last slash is at index 0 (e.g. \"/foo\") prevIndex 0 is falsy and the final token value/depth is never assigned.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 394,
+            "path": "scan.js",
+            "snippet": "    if (opts.tokens && prevIndex && prevIndex + 1 < input.length) {\n      tokens[tokens.length - 1].value = value;\n      depth(tokens[tokens.length - 1]);\n      state.maxDepth += tokens[tokens.length - 1].depth;\n    }",
+            "startLine": 390
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "tokens last-segment check uses falsy index"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "uncertain",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 390-394 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "uncertain",
+        "reason": "verifier output was not parseable JSON (empty model output), finish_reason=length"
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "First slash token is marked as prefix whenever start != 0, so for a negated pattern like \"!foo/bar\" the \"foo\" segment is overwritten with prefix \"!\" instead of only treating slashes before start as prefix.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 376,
+            "path": "scan.js",
+            "snippet": "      if (opts.tokens) {\n        if (idx === 0 && start !== 0) {\n          tokens[idx].isPrefix = true;\n          tokens[idx].value = prefix;\n        } else {\n          tokens[idx].value = value;\n        }",
+            "startLine": 370
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "first tokens entry overwritten with prefix"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 370-376 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at scan.js:371-373 unconditionally sets tokens[0].isPrefix and tokens[0].value to prefix whenever start is non-zero, without checking whether the first slash at scan.js:368 precedes start as the parts logic does at scan.js:380."
+      }
+    }
+  ]
+}
