@@ -99,6 +99,7 @@ make probe-repo ARGS="--repo <url> --commit <sha> --scope <dir> --runs 2 --dry-r
 make ablation   # held-out fixture through four gate levels (scanner / +L1 / +L2 / +L3)
 make three-way RUN=reports/<id>  # Spark alone vs Wonder alone vs CodeProof on the same task (bench fixture)
 node scripts/reverse-verify.mjs --repo <dir> --ablation <json> --variant wonder-only  # cross-examine a single model's findings
+node scripts/chunked-scan.mjs --repo <dir> --expected <expected.json>  # scanner-only recall of a chunked scan (evidence: 11/16 for $0.245)
 ```
 
 Budgets: each run has a hard cap (`BUDGET_USD`, default 2 USD). Before every model call the agent layer estimates the worst-case price (input tokens at 3 chars/token, no cache hits, the full `max_tokens` output budget) and **refuses the call if it would not fit**; the default is a hard gate, `HARD_BUDGET=0` restores the old post-hoc behaviour. `run.json` records `budget.hard`.
