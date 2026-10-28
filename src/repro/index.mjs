@@ -129,6 +129,24 @@ export function parseReproResponse(text) {
 
 // A reproducer is only meaningful if it exercises the analyzed repository code.
 // Extract the relative import specifiers (ESM `from`/`import`, and dynamic `import()`).
+const SNAPSHOT_EXTENSIONS = ["", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx"];
+
+// Resolve a generated test's relative import against the snapshot, so LinkCheck can match the file
+// that actually executes (imports without an extension still resolve to the real snapshot file).
+function resolveSnapshotFile(snapshotDir, specifier) {
+  const base = String(specifier || "").replace(/^\.\//, "");
+  if (base === "") return null;
+  for (const extension of SNAPSHOT_EXTENSIONS) {
+    const candidate = base + extension;
+    try {
+      if (existsSync(join(snapshotDir, candidate))) return candidate;
+    } catch (error) {
+      /* fall through to the unresolved specifier */
+    }
+  }
+  return base;
+}
+
 export function extractReproImports(testCode) {
   const source = String(testCode || "");
   const pattern = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)['\"](\.{1,2}\/[^'\"]+)['\"]/g;
@@ -458,8 +476,19 @@ export async function attemptRepro({ finding, agent, repoRoot, commit, excerpts,
               if (result.status === "reproduced") {
                 const imports = extractReproImports(parsed.testCode);
                 const symbols = extractImportedIdentifiers(parsed.testCode);
+                // The linkage proof must cover the cited file (a barrel re-export executes a module
+                // other than the one the test imports) and every repository import of the test.
+                const evidencePath = finding.evidence && finding.evidence[0] && typeof finding.evidence[0].path === "string"
+                  ? finding.evidence[0].path.replace(/^\.\//, "")
+                  : null;
+                const targetFiles = [];
+                if (evidencePath) targetFiles.push(evidencePath);
+                for (const specifier of imports) {
+                  const resolved = resolveSnapshotFile(snapshot.snapshotDir, specifier);
+                  if (resolved && targetFiles.indexOf(resolved) === -1) targetFiles.push(resolved);
+                }
                 result.linkcheck = await runLinkCheck({ testCode: parsed.testCode, snapshotDir: snapshot.snapshotDir,
-                  targetFile: imports[0], symbols: symbols, timeoutMs: 8000 });
+                  targetFiles: targetFiles, symbols: symbols, timeoutMs: 8000 });
                 if (result.linkcheck.status !== "proven") {
                   result.reason += "; linkcheck " + result.linkcheck.status + " (" + (result.linkcheck.detail || "no detail") + ")";
                 }

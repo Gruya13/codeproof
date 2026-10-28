@@ -41,10 +41,14 @@ function listCommittedFiles(target, commit) {
   }
 }
 
+const STATEMENT_STARTERS = new Set(["import", "export", "const", "let", "var", "function", "class", "return", "if", "for", "while", "switch", "try", "throw", "async", "await", "yield"]);
+
 function extractSpecifiers(source) {
   const tokens = [];
+  let line = 1;
   for (let i = 0; i < source.length;) {
     const char = source[i];
+    if (char === "\n") { line += 1; i += 1; continue; }
     if (/\s/.test(char)) { i++; continue; }
     if (char === "/" && source[i + 1] === "/") {
       i = source.indexOf("\n", i + 2);
@@ -53,7 +57,9 @@ function extractSpecifiers(source) {
     }
     if (char === "/" && source[i + 1] === "*") {
       const end = source.indexOf("*/", i + 2);
-      i = end < 0 ? source.length : end + 2;
+      const stop = end < 0 ? source.length : end + 2;
+      line += (source.slice(i, stop).match(/\n/g) || []).length;
+      i = stop;
       continue;
     }
     if (char === '"' || char === "'" || char === "`") {
@@ -63,17 +69,19 @@ function extractSpecifiers(source) {
         if (source[i] === "\\") i++;
         i++;
       }
-      if (quote !== "`") tokens.push({ type: "string", value: source.slice(start, i) });
+      const value = source.slice(start, i);
+      if (quote !== "`") tokens.push({ type: "string", value: value, line: line });
+      line += (value.match(/\n/g) || []).length;
       if (i < source.length) i++;
       continue;
     }
     if (/[A-Za-z_$]/.test(char)) {
       const start = i++;
       while (i < source.length && /[A-Za-z0-9_$]/.test(source[i])) i++;
-      tokens.push({ type: "word", value: source.slice(start, i) });
+      tokens.push({ type: "word", value: source.slice(start, i), line: line });
       continue;
     }
-    tokens.push({ type: "punct", value: char });
+    tokens.push({ type: "punct", value: char, line: line });
     i++;
   }
 
@@ -88,15 +96,22 @@ function extractSpecifiers(source) {
     } else if ((token.value === "import" || token.value === "require") && next?.value === "(" && tokens[i + 2]?.type === "string") {
       out.push(tokens[i + 2].value);
     } else if (token.value !== "require") {
-      for (let j = i + 1; j < tokens.length && tokens[j].value !== ";"; j++) {
-        if (tokens[j].value === "from" && tokens[j + 1]?.type === "string") {
+      // Without semicolons (ASI) the old scan ran past the end of the statement and could attribute
+      // a later statement's specifier to this one. Stop at a semicolon, at a statement starter on a
+      // later line, and after a bounded window.
+      let window = 0;
+      for (let j = i + 1; j < tokens.length && window < 400; j++, window++) {
+        const current = tokens[j];
+        if (current.value === ";") break;
+        if (current.line > token.line && STATEMENT_STARTERS.has(current.value)) break;
+        if (current.value === "from" && tokens[j + 1]?.type === "string") {
           out.push(tokens[j + 1].value);
           break;
         }
       }
     }
   }
-  return out;
+  return [...new Set(out)];
 }
 
 function resolveSpecifier(fromRel, spec, fileSet) {
@@ -220,13 +235,20 @@ export function buildScannerInput(result, maxChars) {
     const source = result.sources && result.sources.has(file.path)
       ? result.sources.get(file.path)
       : readFileSync(join(result.root, file.path), "utf8");
-    const numbered = source.split("\n").map(function (line, index) {
+    // A trailing newline must not produce an extra numbered empty line: file.loc already counts
+    // the file as N lines, so the numbered body must agree with the header.
+    const lines = source.split("\n");
+    if (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
+    const numbered = lines.map(function (line, index) {
       return String(index + 1) + " | " + line;
     }).join("\n");
     const block = "### " + file.path + " (" + file.loc + " lines)\n" + numbered;
-    if (used + block.length > limit) break;
+    // Blocks are joined with a blank line; those two separator bytes are part of the prompt and
+    // must be counted against the cap, otherwise the returned text can exceed the limit.
+    const separator = parts.length > 0 ? 2 : 0;
+    if (used + separator + block.length > limit) break;
     parts.push(block);
-    used += block.length;
+    used += separator + block.length;
     included.push(file.path);
   }
   return {

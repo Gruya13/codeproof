@@ -32,12 +32,19 @@ function stripDotSlash(specifier) {
 export async function runLinkCheck(options) {
   const testCode = options.testCode;
   const snapshotDir = options.snapshotDir;
-  const targetFile = stripDotSlash(options.targetFile || "");
+  // targets[0] is the cited file; the rest are the test's repository imports. Older callers pass a
+  // single targetFile and keep working.
+  const requested = Array.isArray(options.targetFiles) ? options.targetFiles : (options.targetFile ? [options.targetFile] : []);
+  const targetFiles = [];
+  for (const item of requested) {
+    const cleaned = stripDotSlash(String(item == null ? "" : item));
+    if (cleaned !== "" && targetFiles.indexOf(cleaned) === -1) targetFiles.push(cleaned);
+  }
   const symbols = Array.isArray(options.symbols) ? options.symbols : [];
   const timeoutMs = options.timeoutMs || 8000;
-  const result = { status: "unproven", targetFile: targetFile, symbols: symbols, executed: {}, detail: null };
-  if (!testCode || !snapshotDir || !targetFile || symbols.length === 0) {
-    result.detail = "linkcheck needs testCode, snapshotDir, targetFile and at least one symbol";
+  const result = { status: "unproven", targetFile: targetFiles[0] || "", targetFiles: targetFiles, symbols: symbols, method: null, executed: {}, detail: null };
+  if (!testCode || !snapshotDir || targetFiles.length === 0 || symbols.length === 0) {
+    result.detail = "linkcheck needs testCode, snapshotDir, at least one target file and at least one symbol";
     return result;
   }
   const probePath = join(snapshotDir, ".codeproof-linkcheck.probe.mjs");
@@ -65,7 +72,7 @@ export async function runLinkCheck(options) {
       "--allow-fs-read=" + LINKCHECK_HARNESS,
       LINKCHECK_HARNESS,
       probePath,
-      targetFile
+      JSON.stringify(targetFiles)
     ].concat(symbols);
     const run = await spawnNode(args, timeoutMs);
     const combined = run.stderr + "\n" + run.stdout;
@@ -84,8 +91,11 @@ export async function runLinkCheck(options) {
     }
     const parsed = JSON.parse(line);
     result.status = parsed.status === "proven" ? "proven" : parsed.status === "error" ? "error" : "unproven";
+    result.method = parsed.method || null;
+    result.targetFiles = Array.isArray(parsed.targetFiles) ? parsed.targetFiles : targetFiles;
+    result.targetFile = parsed.targetFile || result.targetFile;
     result.executed = parsed.executed || {};
-    result.detail = parsed.status === "unproven" ? "the imported symbol never executed (dead or decorative call)" : (parsed.error || null);
+    result.detail = parsed.status === "unproven" ? "neither the imported symbol nor the cited file executed (dead or decorative call)" : (parsed.error || null);
     return result;
   } catch (error) {
     result.status = "error";

@@ -44,8 +44,9 @@ test("cli-fault: first scanner response invalid, second valid -> exit 0, 2 scann
   const scannerCalls = runJson.usage.callLog.filter((c) => c.role === "scanner");
   assert.equal(scannerCalls.length, 2);
 
-  const rawLogPath = join(tempDir, "reports", "last-scan-raw.json");
-  assert.ok(existsSync(rawLogPath));
+  const rawLogPath = join(outDir, "last-scan-raw.json");
+  assert.ok(existsSync(rawLogPath), "scan diagnostics must go to --out, not the process cwd");
+  assert.equal(existsSync(join(tempDir, "reports", "last-scan-raw.json")), false, "scan diagnostics must not be written to the process cwd");
   const rawLog = JSON.parse(readFileSync(rawLogPath, "utf8"));
   assert.equal(rawLog.raw, "invalid json truncation {");
 });
@@ -91,8 +92,8 @@ test("cli-fault: both scanner responses invalid -> exit 1, no run dir created, l
     assert.equal(runs.length, 0);
   }
 
-  const rawLogPath = join(tempDir, "reports", "last-scan-raw.json");
-  assert.ok(existsSync(rawLogPath));
+  const rawLogPath = join(outDir, "last-scan-raw.json");
+  assert.ok(existsSync(rawLogPath), "scan diagnostics must go to --out, not the process cwd");
   const rawLog = JSON.parse(readFileSync(rawLogPath, "utf8"));
   assert.equal(rawLog.raw, "second invalid output");
   assert.ok(rawLog.error);

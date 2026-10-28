@@ -56,7 +56,7 @@ test("F2/F7: a successful mock run retains raw text and per-candidate decisions"
     assert.match(audit.candidates[1].l0.reasons.join("; "), /confidence/);
     assert.equal(audit.candidates[1].candidate.id, "F-002");
     assert.equal(audit.candidates[2].l1.passed, false);
-    const scanRawPath = join(dir, "reports", "last-scan-raw.json");
+    const scanRawPath = join(dir, "out", "last-scan-raw.json");
     assert.equal(existsSync(scanRawPath), true);
     const scanRaw = JSON.parse(readFileSync(scanRawPath, "utf8"));
     assert.equal(scanRaw.raw, raw);

@@ -10,9 +10,10 @@ import { isAbsolute, join, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
 import { parseDirtyJson } from "../run/json.mjs";
 import { runReproTest } from "../repro/index.mjs";
+import { readFileAtCommit } from "../run/index.mjs";
 
 export const PATCH_SYSTEM_PROMPT = [
-  "Return a minimal patch that makes the failing trigger test pass without breaking the passing control test. You receive one finding, its two generated test files and the full text of the cited file(s).",
+  "Return a minimal patch that makes the failing trigger test pass without breaking the passing control test. You receive one finding, its two generated test files and the bounded verifier context around the cited file(s).",
   "The patch must target exactly one of the cited files. Provide searchBlock (an exact substring of the file, unique in it) and replaceBlock (its replacement). Keep the change surgical: at most 25 lines per block. Do not change the module's public API (export names and signatures), do not touch tests, fixtures, reports, package manifests, lock files or markdown, and do not add dependencies.",
   "If no faithful minimal patch is possible (the defect needs a larger redesign, an unavailable dependency or data you do not have), return kind unsupported with a concrete reason and empty blocks. That is a valid answer and is reported honestly.",
   "Return only JSON matching the response schema."
@@ -232,10 +233,40 @@ export async function runPatchGate(options) {
   }
 }
 
+const PATCH_CONTEXT_CHARS = 24000;
+
+// The patcher needs more than the (at most 15-line) cited snippet: a searchBlock may have to start
+// above or below it and the surrounding variables matter. The bounded verifier context already
+// contains the cited file with line numbers; when it is missing, fall back to the committed file.
+function citedFileContext(finding, repoRoot, commit, excerpts) {
+  if (typeof excerpts === "string" && excerpts.trim() !== "") {
+    return excerpts.length > PATCH_CONTEXT_CHARS ? excerpts.slice(0, PATCH_CONTEXT_CHARS) + "\n... (context truncated)" : excerpts;
+  }
+  const evidence = finding && Array.isArray(finding.evidence) ? finding.evidence[0] : null;
+  if (!evidence || typeof evidence.path !== "string" || !repoRoot) return "";
+  try {
+    const source = readFileAtCommit(repoRoot, commit, evidence.path);
+    if (typeof source !== "string" || source === "") return "";
+    const lines = source.split("\n");
+    let start = 0;
+    let end = lines.length;
+    if (lines.length > 220 && Number.isInteger(evidence.startLine) && Number.isInteger(evidence.endLine)) {
+      start = Math.max(0, evidence.startLine - 31);
+      end = Math.min(lines.length, evidence.endLine + 60);
+    }
+    const body = lines.slice(start, end).map(function (line, index) { return String(start + index + 1) + " | " + line; }).join("\n");
+    return body.length > PATCH_CONTEXT_CHARS ? body.slice(0, PATCH_CONTEXT_CHARS) + "\n... (context truncated)" : body;
+  } catch (error) {
+    return "";
+  }
+}
+
 export function buildPatchMessages({ finding, controlCode, testCode, repoRoot, commit, excerpts }) {
+  const context = citedFileContext(finding, repoRoot, commit, excerpts);
+  const contextSection = context ? "\n\nCited file context (bounded):\n" + context : "";
   return [
     { role: "system", content: PATCH_SYSTEM_PROMPT },
-    { role: "user", content: "Finding:\n" + JSON.stringify({ id: finding.id, title: finding.title, claim: finding.claim, evidence: finding.evidence }, null, 2) + "\n\nCONTROL (must keep passing):\n" + controlCode + "\n\nTRIGGER (must pass after the patch):\n" + testCode + "\n\nReturn the patch JSON." }
+    { role: "user", content: "Finding:\n" + JSON.stringify({ id: finding.id, title: finding.title, claim: finding.claim, evidence: finding.evidence }, null, 2) + contextSection + "\n\nCONTROL (must keep passing):\n" + controlCode + "\n\nTRIGGER (must pass after the patch):\n" + testCode + "\n\nReturn the patch JSON." }
   ];
 }
 

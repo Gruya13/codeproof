@@ -226,6 +226,17 @@ async function main() {
   }
   const scanMessages = controlled ? null : buildScannerMessages({ digest: repoDigest(repo), filesWithLineNumbers: scannerInput.text, maxFindings: config.maxFindings });
   const scanFormat = controlled ? null : buildScannerResponseFormat(config.maxFindings);
+  // Scan diagnostics go to the output directory, never to the process cwd: "--out" must be honoured
+  // for every artifact and "analyze ." must not write into the analyzed repository.
+  const diagnosticsDir = resolve(args.out);
+  function writeScanDiagnostics(payload) {
+    try {
+      mkdirSync(diagnosticsDir, { recursive: true });
+      writeFileSync(join(diagnosticsDir, "last-scan-raw.json"), JSON.stringify(payload, null, 2) + "\n");
+    } catch (error) {
+      console.warn("  WARN could not write scan diagnostics: " + error.message);
+    }
+  }
 
   // One scanner pass: call, parse, tolerate one truncation retry, validate at L0.
   // `messages`/`format` are passed in so the same routine serves the single-pass scan, the
@@ -241,14 +252,13 @@ async function main() {
       try {
         parsed = parseDirtyJson(call.text);
       } catch (parseError) {
-        mkdirSync(join(process.cwd(), "reports"), { recursive: true });
-        writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ scanner: label, error: parseError.message, maxTokens: config.scannerMaxTokens, finishReason: call.finishReason, raw: call.text }, null, 2) + "\n");
+        writeScanDiagnostics({ scanner: label, error: parseError.message, maxTokens: config.scannerMaxTokens, finishReason: call.finishReason, raw: call.text });
         console.warn("  WARN " + label + " scanner output was not valid JSON (" + parseError.message + ", finish_reason=" + String(call.finishReason) + "); retrying once with " + (config.scannerMaxTokens * 2) + " max tokens");
         call = await agents.complete({ role: role, messages: messages, responseFormat: format, temperature: config.temperature, maxTokens: config.scannerMaxTokens * 2 });
         try {
           parsed = parseDirtyJson(call.text);
         } catch (retryParseError) {
-          writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ scanner: label, error: retryParseError.message, maxTokens: config.scannerMaxTokens * 2, finishReason: call.finishReason, raw: call.text }, null, 2) + "\n");
+          writeScanDiagnostics({ scanner: label, error: retryParseError.message, maxTokens: config.scannerMaxTokens * 2, finishReason: call.finishReason, raw: call.text });
           throw retryParseError;
         }
       }
@@ -263,11 +273,9 @@ async function main() {
         validated.findings = inScope;
       }
       if (!validated.ok) {
-        mkdirSync(join(process.cwd(), "reports"), { recursive: true });
-        writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ scanner: label, raw: call.text, errors: validated.errors }, null, 2) + "\n");
+        writeScanDiagnostics({ scanner: label, raw: call.text, errors: validated.errors });
       } else if (validated.rejected.length > 0) {
-        mkdirSync(join(process.cwd(), "reports"), { recursive: true });
-        writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ scanner: label, raw: call.text, rejected: validated.rejected }, null, 2) + "\n");
+        writeScanDiagnostics({ scanner: label, raw: call.text, rejected: validated.rejected });
       }
       return { role: role, proposedBy: label, status: validated.ok ? "ok" : "l0-invalid", raw: call.text, parsed: parsed, validated: validated, call: call, durationMs: Date.now() - started, filteredOutIds: filteredOutIds, group: (options && options.group) || null };
     } catch (error) {

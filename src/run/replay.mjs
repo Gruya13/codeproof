@@ -11,6 +11,7 @@ import { verifyAttestation } from "./attest.mjs";
 import { ingest } from "../ingest/index.mjs";
 import { checkCitation } from "../verify/index.mjs";
 import { prepareSnapshot, runReproTest } from "../repro/index.mjs";
+import { runLinkCheck } from "../repro/linkcheck.mjs";
 import { runPatchGate, validateTargetFile } from "../patch/index.mjs";
 
 export const REPLAY_SCHEMA_VERSION = 2;
@@ -126,9 +127,27 @@ async function replayTrace(options) {
         if (!l1.passed) result.mismatches.push(finding.id + ": L1 citation no longer matches: " + l1.reason);
       }
       if (snapshot && item.repro && item.repro.controlCode && item.repro.testCode) {
-        const control = await runReproTest({ testCode: item.repro.controlCode, snapshotDir: snapshot.snapshotDir, timeoutMs: options.timeoutMs || 2000, attempts: options.attempts || 1, expect: "passed" });
-        const trigger = await runReproTest({ testCode: item.repro.testCode, snapshotDir: snapshot.snapshotDir, timeoutMs: options.timeoutMs || 2000, attempts: options.attempts || 1, expect: "assertion-failure" });
-        entry.l3 = { control: control.classification, trigger: trigger.classification };
+        // Replay repeats the same mechanical gates as the original run: at least three deterministic
+        // runs (the recorded count when it is larger), never a single "best effort" run.
+        const itemAttempts = Math.max(3, Math.min(10, Number.isInteger(options.attempts) ? options.attempts : (Number.isInteger(item.repro.attemptCount) ? item.repro.attemptCount : 3)));
+        const control = await runReproTest({ testCode: item.repro.controlCode, snapshotDir: snapshot.snapshotDir, timeoutMs: options.timeoutMs || 2000, attempts: itemAttempts, expect: "passed" });
+        const trigger = await runReproTest({ testCode: item.repro.testCode, snapshotDir: snapshot.snapshotDir, timeoutMs: options.timeoutMs || 2000, attempts: itemAttempts, expect: "assertion-failure" });
+        entry.l3 = { control: control.classification, trigger: trigger.classification, attempts: control.attempts.length, deterministic: control.deterministic && trigger.deterministic };
+        // The original run awarded execution-proven only when LinkCheck proved the imported symbol
+        // executed. Replay re-runs that gate. Node 22 has no --allow-inspector, which is a documented
+        // limitation, so that case is a note and not a replay failure.
+        const recordedLinkcheck = item.repro.linkcheck;
+        if (recordedLinkcheck && recordedLinkcheck.status === "proven" && recordedLinkcheck.targetFile && Array.isArray(recordedLinkcheck.symbols)) {
+          const recheck = await runLinkCheck({ testCode: item.repro.testCode, snapshotDir: snapshot.snapshotDir, targetFile: recordedLinkcheck.targetFile, targetFiles: recordedLinkcheck.targetFiles, symbols: recordedLinkcheck.symbols, timeoutMs: options.timeoutMs || 8000 });
+          entry.linkcheck = { recorded: recordedLinkcheck.status, replayed: recheck.status, method: recheck.method || null, detail: recheck.detail || null };
+          if (recheck.status === "unproven" && /not available on this Node runtime/.test(String(recheck.detail || ""))) {
+            result.notes.push(finding.id + ": LinkCheck was not re-executed on this Node runtime (" + recheck.detail + ")");
+          } else if (recheck.status !== recordedLinkcheck.status) {
+            result.problems.push(finding.id + ": LinkCheck status changed (" + recordedLinkcheck.status + " -> " + recheck.status + "): " + (recheck.detail || "no detail"));
+          }
+        } else if (recordedLinkcheck && recordedLinkcheck.status === "proven") {
+          result.notes.push(finding.id + ": LinkCheck was not re-executed (the report does not record targetFile/symbols)");
+        }
         const recordedControl = item.repro.control ? item.repro.control.classification : null;
         const recordedTrigger = item.repro.trigger ? item.repro.trigger.classification : null;
         if (recordedControl && recordedControl !== control.classification) result.mismatches.push(finding.id + ": L3 control classification changed (" + recordedControl + " -> " + control.classification + ")");
@@ -147,7 +166,7 @@ async function replayTrace(options) {
               controlCode: item.repro.controlCode,
               testCode: item.repro.testCode,
               workDir: options.workDir,
-              attempts: options.attempts || 1,
+              attempts: itemAttempts,
               timeoutMs: options.timeoutMs || 2000
             });
             entry.l4 = { status: gate.status, reason: gate.reason };
