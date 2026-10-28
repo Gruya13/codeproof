@@ -202,7 +202,7 @@ export async function attemptPatch(options) {
   const finding = options.finding;
   const agent = options.agent;
   const config = options.config || {};
-  const result = { status: "unsupported", diff: null, searchBlockSha256: null, replaceBlockSha256: null, rationale: null, attempts: null, warnings: [], model: null, usage: null, costUsd: null, reason: null, durationMs: 0 };
+  const result = { status: "unsupported", diff: null, targetFile: null, searchBlock: null, replaceBlock: null, searchBlockSha256: null, replaceBlockSha256: null, rationale: null, attempts: null, warnings: [], model: null, usage: null, costUsd: null, reason: null, durationMs: 0 };
   try {
     const request = {
       role: "patcher",
@@ -241,6 +241,9 @@ export async function attemptPatch(options) {
       attempts: config.reproAttempts || 3,
       timeoutMs: config.reproTimeoutMs || 2000
     });
+    result.targetFile = parsed.targetFile;
+    result.searchBlock = parsed.searchBlock;
+    result.replaceBlock = parsed.replaceBlock;
     result.diff = gate.diff;
     result.attempts = { control: gate.control, trigger: gate.trigger };
     result.status = gate.status;

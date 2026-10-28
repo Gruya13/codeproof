@@ -95,6 +95,11 @@ export function computeConfigSha256(config, mode, options) {
   return createHash("sha256").update(JSON.stringify(configPayload(config, mode, options))).digest("hex");
 }
 
+// The hash of a payload that a v2 run stored verbatim in run.json.config.payload.
+export function configPayloadSha256(payload) {
+  return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+}
+
 // Worst-case cost of one call: no cache hits and the full max_tokens output budget.
 // Used by the hard budget gate before a request is sent.
 export function estimateCost(model, inputTokens, outputTokens) {

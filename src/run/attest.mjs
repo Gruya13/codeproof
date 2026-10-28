@@ -14,12 +14,15 @@ export function sha256Hex(data) {
 export function listArtifacts(dir, options) {
   const skip = new Set((options && options.skip) || ["run.json"]);
   const artifacts = [];
+  const skipDirectories = new Set([".git", "node_modules"]);
   function walk(current, prefix) {
     for (const entry of readdirSync(current, { withFileTypes: true })) {
       const full = join(current, entry.name);
       const rel = prefix ? prefix + "/" + entry.name : entry.name;
-      if (entry.isDirectory()) walk(full, rel);
-      else if (!skip.has(rel)) artifacts.push(rel);
+      if (entry.isDirectory()) {
+        if (skipDirectories.has(entry.name)) continue;
+        walk(full, rel);
+      } else if (!skip.has(rel)) artifacts.push(rel);
     }
   }
   walk(dir, "");

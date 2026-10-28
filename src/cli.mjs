@@ -81,7 +81,43 @@ export function buildRunBanner(options) {
   return lines.join("\n");
 }
 
+// F3: offline replay command. No model calls, no API key; exit 0 only when every replayed
+// mechanical check matches the recorded report.
+async function mainReplay(argv) {
+  const options = { reportDir: null, repoPath: null, anchor: null, out: null };
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (token === "--anchor") { options.anchor = argv[index + 1]; index += 1; }
+    else if (token === "--out") { options.out = argv[index + 1]; index += 1; }
+    else if (token === "--repo") { options.repoPath = argv[index + 1]; index += 1; }
+    else if (!options.reportDir) options.reportDir = token;
+    else if (!options.repoPath) options.repoPath = token;
+    else throw new Error("unexpected argument: " + token);
+  }
+  if (!options.reportDir) {
+    console.log("usage: node src/cli.mjs replay <report-dir> [repo-path] [--anchor <rev>] [--out <dir>]");
+    process.exitCode = 2;
+    return;
+  }
+  const replay = await import("./run/replay.mjs");
+  const result = await replay.replayRun(options);
+  const text = replay.formatReplay(result);
+  console.log(text);
+  if (options.out) {
+    const outDir = resolve(options.out);
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(join(outDir, "replay.json"), JSON.stringify(result, null, 2) + "\n");
+    writeFileSync(join(outDir, "REPLAY.md"), text + "\n");
+    console.log("");
+    console.log("  written  " + outDir);
+  }
+  if (!result.matches) process.exitCode = 1;
+}
+
 async function main() {
+  if (process.argv[2] === "replay" || process.argv[2] === "--replay") {
+    return mainReplay(process.argv.slice(3));
+  }
   const args = parseArgs(process.argv.slice(2));
   const controlled = args.candidates !== null;
   if (args.command !== "analyze" && args.command !== "controlled-verifier") {
