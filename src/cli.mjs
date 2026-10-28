@@ -58,6 +58,13 @@ function parseArgs(argv) {
   return args;
 }
 
+export function evidenceLevelFor(status, patch, repro) {
+  if (status !== "verified") return null;
+  if (patch && patch.status === "patch-proven") return "patch-proven";
+  if (repro && repro.status === "reproduced" && repro.linkcheck && repro.linkcheck.status === "proven") return "execution-proven";
+  return "citation+adversarial";
+}
+
 export function buildRunBanner(options) {
   const lines = [];
   if (options.mock) {
@@ -525,7 +532,7 @@ async function main() {
         patch: patch,
         // patch-proven is the strongest level; execution-proven requires the two-phase run AND the
         // LinkCheck linkage proof (F1.10). A test that ran without the symbol executing is not a proof.
-        evidenceLevel: patch && patch.status === "patch-proven" ? "patch-proven" : (repro && repro.status === "reproduced" && repro.linkcheck && repro.linkcheck.status === "proven" ? "execution-proven" : "citation+adversarial")
+        evidenceLevel: evidenceLevelFor(outcome.status, patch, repro)
       });
     }
     if (budget.exceeded) skipFrom(index + 1);

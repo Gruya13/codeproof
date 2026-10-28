@@ -349,28 +349,35 @@ export async function verifyOne(input) {
   }
   let outcome = applyVerdict(verdict, call.model, repo, finding, input.excerpts);
   if (outcome.status === "moderate" && verdict.verdict === "refute") {
-    const retryCall = await input.agent.complete({
-      role: "verifier",
-      messages: buildStrongRefuteMessages(finding, input.excerpts, call.text),
-      responseFormat: STRONG_REFUTE_RESPONSE_FORMAT,
-      temperature: 0,
-      maxTokens: maxTokens
-    });
+    let retryCall;
     try {
-      const retryParsed = parseDirtyJson(retryCall.text);
-      const retryValidated = validateVerdictsL0(retryParsed);
-      if (retryValidated.ok) {
-        const retryVerdict = retryValidated.verdicts.find(function (item) { return item.findingId === finding.id; });
-        if (retryVerdict && retryVerdict.verdict === "refute" && retryVerdict.mode === "strong") {
-          const secondOutcome = applyVerdict(retryVerdict, retryCall.model, repo, finding, input.excerpts);
-          if (secondOutcome.status === "refuted") outcome = secondOutcome;
-        } else if (retryVerdict && retryVerdict.verdict === "uncertain") {
-          // the model explicitly withdrew the weak refutation; record that instead of keeping a stale moderate
-          outcome = applyVerdict(retryVerdict, retryCall.model, repo, finding, input.excerpts);
-        }
-      }
+      retryCall = await input.agent.complete({
+        role: "verifier",
+        messages: buildStrongRefuteMessages(finding, input.excerpts, call.text),
+        responseFormat: STRONG_REFUTE_RESPONSE_FORMAT,
+        temperature: 0,
+        maxTokens: maxTokens
+      });
     } catch (error) {
-      console.warn("  WARN strong-refute retry failed for " + finding.id + ": " + error.message);
+      console.warn("  WARN retry verifier call failed for " + finding.id + ": " + error.message);
+    }
+    if (retryCall) {
+      try {
+        const retryParsed = parseDirtyJson(retryCall.text);
+        const retryValidated = validateVerdictsL0(retryParsed);
+        if (retryValidated.ok) {
+          const retryVerdict = retryValidated.verdicts.find(function (item) { return item.findingId === finding.id; });
+          if (retryVerdict && retryVerdict.verdict === "refute" && retryVerdict.mode === "strong") {
+            const secondOutcome = applyVerdict(retryVerdict, retryCall.model, repo, finding, input.excerpts);
+            if (secondOutcome.status === "refuted") outcome = secondOutcome;
+          } else if (retryVerdict && retryVerdict.verdict === "uncertain") {
+            // the model explicitly withdrew the weak refutation; record that instead of keeping a stale moderate
+            outcome = applyVerdict(retryVerdict, retryCall.model, repo, finding, input.excerpts);
+          }
+        }
+      } catch (error) {
+        console.warn("  WARN strong-refute retry failed for " + finding.id + ": " + error.message);
+      }
     }
   }
   return { finding: finding, status: outcome.status, l1: checks[0], verifier: outcome.verifier };

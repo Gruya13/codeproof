@@ -4,9 +4,9 @@
 // after applying a minimal patch to a COPY of the L3 snapshot, the control still passes 3/3 and
 // the trigger now passes 3/3. The repository's own test suite is never run.
 import { execFile } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { isAbsolute, join, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
 import { parseDirtyJson } from "../run/json.mjs";
 import { runReproTest } from "../repro/index.mjs";
@@ -73,6 +73,34 @@ function countOccurrences(haystack, needle) {
   return count;
 }
 
+// Validate at every write boundary: replay artifacts do not pass through patch L0.
+export function validateTargetFile(targetFile, snapshotDir) {
+  if (typeof targetFile !== "string" || targetFile === "") return { ok: false, reason: "targetFile must be a nonempty relative path" };
+  if (isAbsolute(targetFile) || targetFile.includes("\\") || targetFile.split("/").includes("..")) {
+    return { ok: false, reason: "targetFile must be relative and must not contain .. or backslashes" };
+  }
+  if (typeof snapshotDir !== "string" || snapshotDir === "") return { ok: false, reason: "snapshotDir is required" };
+  const root = resolve(snapshotDir);
+  const path = resolve(root, targetFile);
+  if (!path.startsWith(root + sep)) return { ok: false, reason: "targetFile escapes the snapshot" };
+  try {
+    let current = root;
+    let stat = null;
+    for (const segment of targetFile.split("/")) {
+      if (segment === "" || segment === ".") continue;
+      current = join(current, segment);
+      stat = lstatSync(current);
+      if (stat.isSymbolicLink()) return { ok: false, reason: "targetFile contains a symbolic link" };
+    }
+    if (!stat || !stat.isFile()) return { ok: false, reason: "targetFile is not a regular file" };
+    const realRoot = realpathSync(root);
+    if (!realpathSync(path).startsWith(realRoot + sep)) return { ok: false, reason: "targetFile resolves outside the snapshot" };
+  } catch (error) {
+    return { ok: false, reason: "targetFile cannot be read in the snapshot: " + error.message };
+  }
+  return { ok: true, path: path };
+}
+
 export function validatePatchL0(parsed, options) {
   const limits = Object.assign({}, PATCH_LIMITS, (options && options.limits) || {});
   const finding = options && options.finding;
@@ -106,10 +134,10 @@ export function validatePatchL0(parsed, options) {
     const replaceLines = parsed.replaceBlock.split("\n").length;
     if (Math.max(searchLines, replaceLines) > limits.maxBlockLines) errors.push("patch block exceeds " + limits.maxBlockLines + " lines (search " + searchLines + ", replace " + replaceLines + ")");
     if (snapshotDir) {
-      const path = join(snapshotDir, targetFile);
-      if (!existsSync(path)) errors.push("targetFile does not exist in the analyzed snapshot: " + targetFile);
+      const target = validateTargetFile(targetFile, snapshotDir);
+      if (!target.ok) errors.push(target.reason);
       else {
-        const source = readFileSync(path, "utf8");
+        const source = readFileSync(target.path, "utf8");
         const occurrences = countOccurrences(source, parsed.searchBlock);
         if (occurrences !== 1) errors.push("searchBlock must occur exactly once in the target file (found " + occurrences + ")");
         const before = exportNames(parsed.searchBlock);
@@ -131,12 +159,15 @@ export function validatePatchL0(parsed, options) {
 export function copySnapshot(snapshotDir, workDir) {
   const directory = mkdtempSync(join(workDir || tmpdir(), "codeproof-patch-"));
   const copyDir = join(directory, "snapshot");
-  cpSync(snapshotDir, copyDir, { recursive: true });
+  try { cpSync(snapshotDir, copyDir, { recursive: true }); }
+  catch (error) { rmSync(directory, { recursive: true, force: true }); throw error; }
   return { directory, copyDir, cleanup: function () { rmSync(directory, { recursive: true, force: true }); } };
 }
 
 export function applyPatchToSnapshot(options) {
-  const path = join(options.snapshotDir, options.targetFile);
+  const target = validateTargetFile(options.targetFile, options.snapshotDir);
+  if (!target.ok) throw new Error("invalid targetFile: " + target.reason);
+  const path = target.path;
   const source = readFileSync(path, "utf8");
   const occurrences = countOccurrences(source, options.searchBlock);
   if (occurrences !== 1) throw new Error("searchBlock must occur exactly once in " + options.targetFile + " (found " + occurrences + ")");
@@ -172,6 +203,8 @@ export function unifiedDiff(before, after, options) {
 export async function runPatchGate(options) {
   const attempts = options.attempts || 3;
   const timeoutMs = options.timeoutMs || 2000;
+  const target = validateTargetFile(options.targetFile, options.snapshotDir);
+  if (!target.ok) throw new Error("invalid targetFile: " + target.reason);
   const copy = copySnapshot(options.snapshotDir, options.workDir);
   const result = { status: "inconclusive", diff: null, control: null, trigger: null, reason: null };
   try {

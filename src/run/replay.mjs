@@ -11,7 +11,7 @@ import { verifyAttestation } from "./attest.mjs";
 import { ingest } from "../ingest/index.mjs";
 import { checkCitation } from "../verify/index.mjs";
 import { prepareSnapshot, runReproTest } from "../repro/index.mjs";
-import { runPatchGate } from "../patch/index.mjs";
+import { runPatchGate, validateTargetFile } from "../patch/index.mjs";
 
 export const REPLAY_SCHEMA_VERSION = 2;
 
@@ -91,17 +91,20 @@ async function replayTrace(options) {
       repo = { root: repoPath, commit: run.repo ? run.repo.commit : null, manifest: new Map(ingested.files.map(function (file) { return [file.path, file]; })) };
     } catch (error) {
       result.notes.push("repository checkout could not be read: " + error.message);
+      if (isV2) result.problems.push("repository checkout could not be read: " + error.message);
     }
   } else {
     result.notes.push("repository checkout is not available; L1/L3/L4 executions are skipped");
+    if (isV2) result.problems.push("repository checkout is not available; L1/L3/L4 executions are incomplete");
   }
 
   let snapshot = null;
-  const needExecution = repo && isV2 && findings.some(function (item) { return item.repro && item.repro.controlCode && item.repro.testCode; });
+  const needExecution = repo && isV2 && result.problems.length === 0 && findings.some(function (item) { return item.repro && item.repro.controlCode && item.repro.testCode; });
   if (needExecution) {
     snapshot = prepareSnapshot({ root: repo.root, commit: repo.commit, workDir: options.workDir });
     if (!snapshot.available) {
       result.notes.push("snapshot unavailable: " + snapshot.reason);
+      result.problems.push("snapshot unavailable; L3/L4 executions are incomplete: " + snapshot.reason);
       snapshot = null;
     }
   }
@@ -131,19 +134,25 @@ async function replayTrace(options) {
         if (recordedControl && recordedControl !== control.classification) result.mismatches.push(finding.id + ": L3 control classification changed (" + recordedControl + " -> " + control.classification + ")");
         if (recordedTrigger && recordedTrigger !== trigger.classification) result.mismatches.push(finding.id + ": L3 trigger classification changed (" + recordedTrigger + " -> " + trigger.classification + ")");
         if (item.patch && item.patch.status === "patch-proven" && item.patch.searchBlock && item.patch.replaceBlock) {
-          const gate = await runPatchGate({
-            snapshotDir: snapshot.snapshotDir,
-            targetFile: item.patch.targetFile,
-            searchBlock: item.patch.searchBlock,
-            replaceBlock: item.patch.replaceBlock,
-            controlCode: item.repro.controlCode,
-            testCode: item.repro.testCode,
-            workDir: options.workDir,
-            attempts: options.attempts || 1,
-            timeoutMs: options.timeoutMs || 2000
-          });
-          entry.l4 = { status: gate.status, reason: gate.reason };
-          if (gate.status !== "patch-proven") result.mismatches.push(finding.id + ": L4 patch no longer proves (" + gate.status + ": " + gate.reason + ")");
+          const target = validateTargetFile(item.patch.targetFile, snapshot.snapshotDir);
+          if (!target.ok) {
+            entry.l4 = { status: "invalid-target", reason: target.reason };
+            result.problems.push(finding.id + ": L4 invalid targetFile: " + target.reason);
+          } else {
+            const gate = await runPatchGate({
+              snapshotDir: snapshot.snapshotDir,
+              targetFile: item.patch.targetFile,
+              searchBlock: item.patch.searchBlock,
+              replaceBlock: item.patch.replaceBlock,
+              controlCode: item.repro.controlCode,
+              testCode: item.repro.testCode,
+              workDir: options.workDir,
+              attempts: options.attempts || 1,
+              timeoutMs: options.timeoutMs || 2000
+            });
+            entry.l4 = { status: gate.status, reason: gate.reason };
+            if (gate.status !== "patch-proven") result.mismatches.push(finding.id + ": L4 patch no longer proves (" + gate.status + ": " + gate.reason + ")");
+          }
         } else if (item.patch && item.patch.status && item.patch.status !== "patch-proven") {
           entry.l4 = { status: item.patch.status, note: "unsupported patches are not re-applied" };
         }

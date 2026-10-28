@@ -6,7 +6,7 @@
 // Node 22 does not support --allow-inspector: the spawn fails and LinkCheck is `unproven`
 // (fail-closed). Only Node 26 can award execution-proven and patch-proven.
 import { execFile } from "node:child_process";
-import { rmSync, writeFileSync } from "node:fs";
+import { lstatSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -41,8 +41,23 @@ export async function runLinkCheck(options) {
     return result;
   }
   const probePath = join(snapshotDir, ".codeproof-linkcheck.probe.mjs");
+  let createdProbe = false;
   try {
-    writeFileSync(probePath, testCode);
+    try {
+      lstatSync(probePath);
+      result.detail = "probe path already exists in snapshot; refusing to write (possible symlink attack)";
+      return result;
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+    try {
+      writeFileSync(probePath, testCode, { flag: "wx" });
+      createdProbe = true;
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+      result.detail = "probe path already exists in snapshot; refusing to write (possible symlink attack)";
+      return result;
+    }
     const args = [
       "--permission",
       "--allow-inspector",
@@ -77,6 +92,8 @@ export async function runLinkCheck(options) {
     result.detail = error.message;
     return result;
   } finally {
-    try { rmSync(probePath, { force: true }); } catch (error) { /* probe cleanup is best effort */ }
+    if (createdProbe) {
+      try { rmSync(probePath, { force: true }); } catch (error) { /* probe cleanup is best effort */ }
+    }
   }
 }
