@@ -11,7 +11,7 @@ export const PRICES = {
 
 export const LIMITS = { citationMaxLines: 15, maxFindings: 8 };
 
-export const VERSION = "0.2.1";
+export const VERSION = "0.2.2";
 
 export function loadConfig(env) {
   return {

@@ -213,14 +213,29 @@ export async function attemptPatch(options) {
   const config = options.config || {};
   const result = { status: "unsupported", diff: null, targetFile: null, searchBlock: null, replaceBlock: null, searchBlockSha256: null, replaceBlockSha256: null, rationale: null, attempts: null, warnings: [], model: null, usage: null, costUsd: null, reason: null, durationMs: 0 };
   try {
+    const baseMaxTokens = config.patchMaxTokens || 6000;
     const request = {
       role: "patcher",
       messages: buildPatchMessages({ finding: finding, controlCode: options.controlCode, testCode: options.testCode, repoRoot: options.repoRoot, commit: options.commit, excerpts: options.excerpts }),
       responseFormat: PATCH_RESPONSE_FORMAT,
       temperature: 0,
-      maxTokens: config.patchMaxTokens || 6000
+      maxTokens: baseMaxTokens
     };
-    const call = await agent.complete(request);
+    let call = await agent.complete(request);
+    // An empty or truncated patch response cannot be parsed. Retry once with a doubled output
+    // budget, the same way the scanner/verifier/reproducer do: L4 must not fail for a tooling
+    // reason (the real-world sample lost patch proofs to "empty model output").
+    if (call.finishReason === "length" || String(call.text || "").trim() === "") {
+      const retry = await agent.complete({ ...request, maxTokens: baseMaxTokens * 2 });
+      const sum = function (left, right) {
+        const a = left || { inputTokens: 0, outputTokens: 0, cachedTokens: 0 };
+        const b = right || { inputTokens: 0, outputTokens: 0, cachedTokens: 0 };
+        return { inputTokens: (a.inputTokens || 0) + (b.inputTokens || 0), outputTokens: (a.outputTokens || 0) + (b.outputTokens || 0), cachedTokens: (a.cachedTokens || 0) + (b.cachedTokens || 0) };
+      };
+      retry.usage = sum(call.usage, retry.usage);
+      retry.costUsd = (call.costUsd || 0) + (retry.costUsd || 0);
+      call = retry;
+    }
     result.model = call.model || null;
     result.usage = call.usage || null;
     result.costUsd = call.costUsd === undefined ? null : call.costUsd;
