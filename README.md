@@ -299,12 +299,24 @@ Two runs of the full pipeline **with L3 enabled** on [unjs/ofetch](https://githu
 - A second verified finding (retry/`AbortSignal`) stayed `inconclusive`: a faithful test needs `fetch`, which the sandbox forbids. That is the intended `repro-unavailable` path, not a failed claim.
 - The first run produced a test that triggered the same `TypeError` as an uncaught runtime error and was correctly reported as `inconclusive`; the prompt now asks the model to convert a thrown error into an assertion failure, which made the proof explicit. Both runs are committed. Cost: $0.1634 + $0.4239; n = 2 runs, one repository.
 
-### v0.2.1: picomatch and commander (L4 enabled)
+### v0.2.1: real-world sample (five repositories)
 
-The full L0-L4 chain was also run on two real repositories with **zero runtime dependencies**, so the generated tests can execute inside the snapshot (Node 26.8.2). Evidence: [reports/v0.2.0/real-world/](reports/v0.2.0/real-world/).
+The full L0-L4 chain was run on real repositories with **zero runtime dependencies** (so a generated test can execute inside the snapshot) on Node 26.8.2. This is a small sample, not a benchmark: fixed commits, one run per target unless stated, and every artifact is committed under [reports/v0.2.0/real-world/](reports/v0.2.0/real-world/).
+
+| Repository | Target | Proposed | Verified | execution-proven | patch-proven | Cost |
+|---|---|---:|---:|---:|---:|---:|
+| [tj/commander](https://github.com/tj/commander.js) `v14.0.0` | `lib/` 6 f / 4,193 LOC | 1 | 1 | 0 | 0 | $0.6957 |
+| [micromatch/picomatch](https://github.com/micromatch/picomatch) `4.0.7` run 1 | `lib/` 5 f / 2,445 LOC | 1 | 1 | 1 | 0 | $0.5252 |
+| [micromatch/picomatch](https://github.com/micromatch/picomatch) `4.0.7` run 2 (same command) | `lib/` 5 f / 2,445 LOC | 3 | 3 | **3** | **2** | $0.9407 |
+| [markedjs/marked](https://github.com/markedjs/marked) `v15.0.12` | `src/` 13 f / 3,344 LOC (ESM TypeScript) | 6 | 5 + 1 moderate | 0 | 0 | $2.1797 |
+| [npm/node-semver](https://github.com/npm/node-semver) `v7.8.5` | `ranges/` 11 f / 540 LOC | 0 | 0 | 0 | 0 | $0.0314 |
+| [json5/json5](https://github.com/json5/json5) `v2.2.3` | `lib/` 13 f / 1,708 LOC | 0 | 0 | 0 | 0 | $0.0722 |
 
 - **[micromatch/picomatch](https://github.com/micromatch/picomatch) `4.0.7`** (`lib/`, 5 files / 2,445 LOC, CommonJS, zero dependencies), run 2: 3 proposed -> 3 verified, **all three execution-proven and two `patch-proven`** ($0.9407). (a) `parse.js`: an unmatched `)` still runs `decrement('parens')`, driving the counter to -1 and corrupting later paren tracking; the generated patch only decrements when `state.parens > 0`. (b) `scan.js`: `noext:true` clears `isGlob` for every pattern, so a plain glob such as `*` is reported as non-glob; the patch removes that line. (c) `scan.js`: the last-token update tests `prevIndex` for truthiness, so a leading-slash pattern (index 0) never updates the token value/depth; its patch came back as an empty model output and the finding stayed `execution-proven`. Replay: PASS (19 artifacts, 0 problems). Run 1 of the same command produced 1 finding / 0 patch-proven, run 2 produced 3 / 2 - both are committed, model variance is stated rather than cherry-picked.
-- **[tj/commander](https://github.com/tj/commander.js) `v14.0.0`** (`lib/`, 6 files / 4,193 LOC, CommonJS, zero dependencies): 1 proposed -> 1 verified, no execution proof. `_executeSubCommand` registers five process signal forwarders per call and never removes them (`lib/command.js:1291-1301`, hand-checked), but a faithful test needs process signals, which the L3 static gate forbids - the intended fail-closed path, not a missing defect. Cost: $0.6957.
+- **[tj/commander](https://github.com/tj/commander.js) `v14.0.0`**: 1 proposed -> 1 verified, no execution proof. `_executeSubCommand` registers five process signal forwarders per call and never removes them (`lib/command.js:1291-1301`, hand-checked), but a faithful test needs process signals, which the L3 static gate forbids - the intended fail-closed path, not a missing defect.
+- **[markedjs/marked](https://github.com/markedjs/marked) `v15.0.12`**: 6 proposed -> 5 verified + 1 moderate, **no execution proof**, $2.1797. Every generated reproducer was rejected at L0 (assertions not tied to a call of an imported symbol, identical control/trigger input, or `unsupported` with code); a pre-v0.2.0 marked run did produce one execution proof, so this is model variance on a TypeScript target, not a gate failure.
+- **semver `ranges/`** and **json5 `lib/`** produced **no candidates** (0 proposed, $0.03 and $0.07). Both are small, heavily tested modules; an empty result is reported as such, not hidden.
+- **What the sample shows:** verified findings appeared in the larger, more intricate modules (picomatch parser/scanner, marked lexer/parser/tokenizer, commander subcommand execution), while the two small modules produced nothing. Execution proof was achievable on CommonJS targets (picomatch 3/3) and not on the TypeScript target in this run; L4 `patch-proven` was achieved twice, with replay PASS. The whole sample cost **$4.4449** - every artifact is committed.
 
 ## Historical recall test (qualitative)
 

@@ -1,0 +1,222 @@
+{
+  "runId": "d9e8ddb8b4966031",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "aa497cf3dd6fb62ddf5152b1dbc9f58075d0a87c4eda694f67554dae9770b6ec",
+  "configHashVersion": 2,
+  "config": {
+    "hashVersion": 2,
+    "payload": {
+      "mode": "smoke",
+      "scannerModel": "muse-spark-1.3",
+      "verifierModel": "muse-wonder-1.0",
+      "temperature": 0,
+      "maxFindings": 8,
+      "citationMaxLines": 15,
+      "scannerMaxTokens": 16000,
+      "verifierMaxTokens": 4000,
+      "verifierContextChars": 24000,
+      "reproEnabled": true,
+      "reproModel": "muse-wonder-1.0",
+      "reproMaxTokens": 8000,
+      "reproTimeoutMs": 2000,
+      "reproAttempts": 3,
+      "hardBudget": true,
+      "dualScan": false,
+      "chunkedScan": false,
+      "secondaryScannerModel": "muse-wonder-1.0",
+      "dualScanMaxLoc": 0,
+      "patchEnabled": true,
+      "patchModel": "muse-wonder-1.0",
+      "patchMaxTokens": 6000,
+      "patchMaxCandidates": 3,
+      "verifyEscalate": false,
+      "mockPipeline": false
+    }
+  },
+  "repo": {
+    "source": "commit",
+    "path": "/home/gru/Projects/Meta hakatron/real-world/semver/ranges",
+    "commit": "6e05b7637396ac66522cff8731f07cfe0ef49a29",
+    "dirty": false,
+    "loc": 540,
+    "files": 11
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    },
+    {
+      "role": "repro",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+    }
+  ],
+  "usage": {
+    "inputTokens": 6121,
+    "outputTokens": 5591,
+    "cachedTokens": 0,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 1,
+        "inputTokens": 6121,
+        "outputTokens": 5591,
+        "cachedTokens": 0,
+        "costUsd": 0.031413
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 6121,
+        "outputTokens": 5591,
+        "cachedTokens": 0,
+        "costUsd": 0.031413,
+        "durationMs": 23702,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      }
+    ],
+    "costUsd": 0.031413,
+    "measured": true
+  },
+  "calls": 1,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-28T14:29:07.836Z",
+    "durationMs": 23803
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 71
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 23703
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 0
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 3
+    }
+  ],
+  "budget": {
+    "limitUsd": 4,
+    "spentUsd": 0.031413,
+    "measured": true,
+    "exceeded": false,
+    "hard": true,
+    "aborted": false,
+    "abortReason": null,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 0,
+    "byScanner": {
+      "spark": 0,
+      "wonder": 0,
+      "both": 0,
+      "controlled": 0
+    },
+    "duplicates": 0,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 0,
+    "verified": 0,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "reproduced": 0,
+    "patched": 0
+  },
+  "scanCoverage": {
+    "filesInPrompt": 11,
+    "filesTotal": 11,
+    "chars": 18138,
+    "cap": 400000,
+    "truncated": false
+  },
+  "scanners": [
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 0,
+      "rejectedAtL0": 0,
+      "costUsd": 0.031413,
+      "durationMs": 23702,
+      "group": null,
+      "coverage": null,
+      "reason": null
+    }
+  ],
+  "dualScan": false,
+  "chunkedScan": false,
+  "patch": {
+    "enabled": true,
+    "model": "muse-wonder-1.0"
+  },
+  "repro": {
+    "enabled": true,
+    "model": "muse-wonder-1.0",
+    "timeoutMs": 2000,
+    "attempts": 3,
+    "counts": {
+      "reproduced": 0,
+      "notReproduced": 0,
+      "unavailable": 0,
+      "inconclusive": 0
+    }
+  },
+  "outputs": {
+    "report": "reports/v0.2.0/real-world/semver-ranges/d9e8ddb8b4966031/REPORT.md",
+    "findings": "reports/v0.2.0/real-world/semver-ranges/d9e8ddb8b4966031/findings.json",
+    "rejected": "reports/v0.2.0/real-world/semver-ranges/d9e8ddb8b4966031/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.2.1"
+  },
+  "attestation": {
+    "schemaVersion": 2,
+    "findingsSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "artifacts": {
+      "REPORT.md": "cf9a1f5e6e996b36d0a3b173b10b51106cefa07bc09ffb82cd76b910d77b681e",
+      "candidates.json": "b8b9a2664e6fcc2f5f1c8994634c6478fa71bd9ad4fd2d6766906beea8d3882e",
+      "findings.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "rejected.md": "19f97163d56f9c7963b243a93fa7c8131db5abe62bdd21bf7fd01c98038e1e14"
+    }
+  }
+}

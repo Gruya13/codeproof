@@ -1,0 +1,222 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"listitem prepends checkbox HTML directly onto token text without guard, so rendering the same tokens twice prepends the checkbox twice and re-escapes already-mutated text\", \"confidence\": 0.92, \"evidence\": [{\"endLine\": 84, \"path\": \"Renderer.ts\", \"snippet\": \"        if (item.tokens[0]?.type === 'paragraph') {\\n          item.tokens[0].text = checkbox + ' ' + item.tokens[0].text;\\n          if (item.tokens[0].tokens && item.tokens[0].tokens.length > 0 && item.tokens[0].tokens[0].type === 'text') {\\n            item.tokens[0].tokens[0].text = checkbox + ' ' + escape(item.tokens[0].tokens[0].text);\\n            item.tokens[0].tokens[0].escaped = true;\", \"startLine\": 80}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Task list render mutates tokens causing duplicate checkbox\"}, {\"category\": \"correctness\", \"claim\": \"Lexer constructor reuses options.tokenizer instance and overwrites its options/lexer/rules, so creating a second lexer with shared options corrupts the first lexer's tokenizer\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 30, \"path\": \"Lexer.ts\", \"snippet\": \"    this.options.tokenizer = this.options.tokenizer || new _Tokenizer();\\n    this.tokenizer = this.options.tokenizer;\\n    this.tokenizer.options = this.options;\\n    this.tokenizer.lexer = this;\", \"startLine\": 27}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Shared tokenizer lexer pointer overwritten\"}, {\"category\": \"correctness\", \"claim\": \"Parser constructor reuses options.renderer instance and overwrites its options/parser, so creating a second parser with shared options corrupts the first parser's renderer\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 19, \"path\": \"Parser.ts\", \"snippet\": \"    this.options.renderer = this.options.renderer || new _Renderer();\\n    this.renderer = this.options.renderer;\\n    this.renderer.options = this.options;\\n    this.renderer.parser = this;\", \"startLine\": 16}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Shared renderer parser pointer overwritten\"}, {\"category\": \"correctness\", \"claim\": \"parseMarkdown mutates shared opt.hooks object block/options fields, so a second parse overwrites the hooks state used by the first parse\", \"confidence\": 0.88, \"evidence\": [{\"endLine\": 295, \"path\": \"Instance.ts\", \"snippet\": \"      if (opt.hooks) {\\n        opt.hooks.options = opt;\\n        opt.hooks.block = blockType;\\n      }\", \"startLine\": 292}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Shared hooks object mutated per parse\"}, {\"category\": \"correctness\", \"claim\": \"outputLink unconditionally sets inLink true then false instead of saving/restoring prior value, so nested link tokenization leaves outer link state incorrectly false\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 26, \"path\": \"Tokenizer.ts\", \"snippet\": \"  lexer.state.inLink = true;\\n  const token: Tokens.Link | Tokens.Image = {\\n    type: cap[0].charAt(0) === '!' ? 'image' : 'link',\\n    raw,\\n    href,\\n    title,\\n    text,\\n    tokens: lexer.inlineTokens(text),\\n  };\\n  lexer.state.inLink = false;\", \"startLine\": 17}], \"id\": \"F-005\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Link inLink state not saved and restored\"}, {\"category\": \"correctness\", \"claim\": \"blockquote list-continuation trims text accumulator by raw length and appends raw, inconsistent with blockquote branch which uses text lengths, corrupting text/raw accounting\", \"confidence\": 0.82, \"evidence\": [{\"endLine\": 215, \"path\": \"Tokenizer.ts\", \"snippet\": \"          raw = raw.substring(0, raw.length - lastToken.raw.length) + newToken.raw;\\n          text = text.substring(0, text.length - oldToken.raw.length) + newToken.raw;\", \"startLine\": 214}], \"id\": \"F-006\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Blockquote text accumulator uses raw length\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "listitem prepends checkbox HTML directly onto token text without guard, so rendering the same tokens twice prepends the checkbox twice and re-escapes already-mutated text",
+        "confidence": 0.92,
+        "evidence": [
+          {
+            "endLine": 84,
+            "path": "Renderer.ts",
+            "snippet": "        if (item.tokens[0]?.type === 'paragraph') {\n          item.tokens[0].text = checkbox + ' ' + item.tokens[0].text;\n          if (item.tokens[0].tokens && item.tokens[0].tokens.length > 0 && item.tokens[0].tokens[0].type === 'text') {\n            item.tokens[0].tokens[0].text = checkbox + ' ' + escape(item.tokens[0].tokens[0].text);\n            item.tokens[0].tokens[0].escaped = true;",
+            "startLine": 80
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Task list render mutates tokens causing duplicate checkbox"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 80-84 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Renderer.ts:81-84 unconditionally assigns checkbox-prefixed text back onto item.tokens[0].text and checkbox plus escape() onto its first text child while setting escaped=true, with no guard against already-prefixed or already-escaped text, so a second render of the same tokens reapplies both mutations."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Lexer constructor reuses options.tokenizer instance and overwrites its options/lexer/rules, so creating a second lexer with shared options corrupts the first lexer's tokenizer",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 30,
+            "path": "Lexer.ts",
+            "snippet": "    this.options.tokenizer = this.options.tokenizer || new _Tokenizer();\n    this.tokenizer = this.options.tokenizer;\n    this.tokenizer.options = this.options;\n    this.tokenizer.lexer = this;",
+            "startLine": 27
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Shared tokenizer lexer pointer overwritten"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 27-30 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Lexer.ts:27-30 reuses options.tokenizer without cloning and overwrites tokenizer.options and tokenizer.lexer, and Lexer.ts:55 overwrites tokenizer.rules, so a second _Lexer sharing the same options mutates the first lexer's shared tokenizer."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Parser constructor reuses options.renderer instance and overwrites its options/parser, so creating a second parser with shared options corrupts the first parser's renderer",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 19,
+            "path": "Parser.ts",
+            "snippet": "    this.options.renderer = this.options.renderer || new _Renderer();\n    this.renderer = this.options.renderer;\n    this.renderer.options = this.options;\n    this.renderer.parser = this;",
+            "startLine": 16
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Shared renderer parser pointer overwritten"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 16-19 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The constructor at Parser.ts:16-19 reuses options.renderer without cloning and mutates that shared instance's options and parser fields to the newest parser, so a second _Parser sharing the renderer/options leaves the first parser's renderer pointing at the second parser."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "parseMarkdown mutates shared opt.hooks object block/options fields, so a second parse overwrites the hooks state used by the first parse",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "endLine": 295,
+            "path": "Instance.ts",
+            "snippet": "      if (opt.hooks) {\n        opt.hooks.options = opt;\n        opt.hooks.block = blockType;\n      }",
+            "startLine": 292
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Shared hooks object mutated per parse"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 292-295 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: Instance.ts:273-274 creates only a shallow copy of options so opt.hooks aliases the shared defaults/passed hooks object, Instance.ts:292-295 mutates that object's options and block fields, and the async path at Instance.ts:300-307 defers processAllTokens/postprocess calls, allowing a concurrent second parse to overwrite state the first parse's hooks can read via Hooks.ts:8-9 and Hooks.ts:45-54."
+      }
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "outputLink unconditionally sets inLink true then false instead of saving/restoring prior value, so nested link tokenization leaves outer link state incorrectly false",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 26,
+            "path": "Tokenizer.ts",
+            "snippet": "  lexer.state.inLink = true;\n  const token: Tokens.Link | Tokens.Image = {\n    type: cap[0].charAt(0) === '!' ? 'image' : 'link',\n    raw,\n    href,\n    title,\n    text,\n    tokens: lexer.inlineTokens(text),\n  };\n  lexer.state.inLink = false;",
+            "startLine": 17
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Link inLink state not saved and restored"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 17-26 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Tokenizer.ts:17 unconditionally sets lexer.state.inLink = true before lexer.inlineTokens(text) at Tokenizer.ts:24, and Tokenizer.ts:26 unconditionally sets it to false with no saved prior value, so a re-entrant outputLink call for a nested link/image token will clear the outer link's state."
+      }
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "blockquote list-continuation trims text accumulator by raw length and appends raw, inconsistent with blockquote branch which uses text lengths, corrupting text/raw accounting",
+        "confidence": 0.82,
+        "evidence": [
+          {
+            "endLine": 215,
+            "path": "Tokenizer.ts",
+            "snippet": "          raw = raw.substring(0, raw.length - lastToken.raw.length) + newToken.raw;\n          text = text.substring(0, text.length - oldToken.raw.length) + newToken.raw;",
+            "startLine": 214
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Blockquote text accumulator uses raw length"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "moderate",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 214-215 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "refute",
+        "reason": "Tokens.List has no text property at Tokens.ts:138-145 while Tokens.Blockquote does at Tokens.ts:32-37, so the list branch at Tokenizer.ts:215 cannot use oldToken.text/newToken.text; the list token parsed from currentText at Tokenizer.ts:184 contributes its raw to the stripped text accumulator, making raw-based trimming/appending correct rather than corrupting.",
+        "mode": "weak"
+      }
+    }
+  ]
+}
