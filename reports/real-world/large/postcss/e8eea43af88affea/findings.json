@@ -1,0 +1,275 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "fromJSON cannot rehydrate Document nodes: it handles root/decl/rule/comment/atrule but throws for type document even though Document with type document exists.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 50,
+          "path": "fromJSON.js",
+          "snippet": "  if (defaults.type === 'root') {\n    node = new Root(defaults)\n  } else if (defaults.type === 'decl') {\n    node = new Declaration(defaults)\n  } else if (defaults.type === 'rule') {\n    node = new Rule(defaults)\n  } else if (defaults.type === 'comment') {\n    node = new Comment(defaults)\n  } else if (defaults.type === 'atrule') {\n    node = new AtRule(defaults)\n  } else {\n    throw new Error('Unknown node type: ' + json.type)\n  }",
+          "startLine": 38
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "fromJSON throws for Document type"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 38-50 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "fromJSON.js:38-50 branches only on root/decl/rule/comment/atrule and throws 'Unknown node type' in the else branch, while postcss.js:8 and postcss.js:82-88 require, export, and instantiate a Document class, so a type 'document' payload hits the throw."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/node.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/comment.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/container.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/node.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/comment.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/container.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 62,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/node.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/comment.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/container.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/node.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/comment.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/container.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/node.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/comment.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/container.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/node.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/comment.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/container.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 72,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict'\nimport fromJSON from './fromJSON.js'\nimport Document from './document.js'\n\nconst json = {\n  type: 'document',\n  raws: {},\n  nodes: [\n    {\n      type: 'root',\n      raws: { after: '\\n' },\n      nodes: [\n        {\n          type: 'rule',\n          selector: 'a',\n          raws: { between: ' ' },\n          nodes: [\n            { type: 'decl', prop: 'color', value: 'red', raws: { between: ': ' } }\n          ]\n        }\n      ]\n    }\n  ]\n}\n\nlet result = null\nlet thrown = null\ntry {\n  result = fromJSON(json)\n} catch (error) {\n  thrown = error\n}\n\nassert.equal(thrown, null)\nassert.ok(result instanceof Document)\nassert.equal(result.type, 'document')\nassert.equal(result.nodes.length, 1)\nassert.equal(result.first.type, 'root')\nassert.equal(result.first.parent, result)\nassert.equal(result.first.first.selector, 'a')\nassert.equal(result.first.first.first.prop, 'color')\nassert.equal(result.first.first.first.value, 'red')\n",
+      "expectedBehavior": "fromJSON rehydrates a type:'document' node into a Document instance with its children preserved instead of throwing 'Unknown node type: document'",
+      "rationale": "fromJSON handles root/decl/rule/comment/atrule but has no branch for the existing Document type, so a serialized Document throws on rehydration.",
+      "reason": "test did not demonstrate the claim consistently",
+      "artifacts": null,
+      "durationMs": 22708,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1740,
+        "outputTokens": 3314,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.07324
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Long-line truncation computes subLineEnd with this.endColumn + padding without guarding undefined, producing NaN and an empty snippet when error has no range.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 85,
+          "path": "css-syntax-error.js",
+          "snippet": "          if (line.length > 160) {\n            let padding = 20\n            let subLineStart = Math.max(0, this.column - padding)\n            let subLineEnd = Math.max(\n              this.column + padding,\n              this.endColumn + padding\n            )",
+          "startLine": 79
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "showSourceCode NaN when endColumn undefined"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 79-85 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: css-syntax-error.js:22-25 sets only line/column for numeric arguments leaving endColumn undefined, and css-syntax-error.js:82-86 computes Math.max(this.column+padding, this.endColumn+padding) unguarded, so undefined+padding yields NaN, Math.max yields NaN, and line.slice(subLineStart, NaN) yields an empty truncated line."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [ '/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js' ]\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 65,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [ '/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js' ]\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 62,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [ '/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js' ]\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 68,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict'\nimport CssSyntaxError from './css-syntax-error.js'\n\nconst longLine = 'a'.repeat(200)\nconst error = new CssSyntaxError('Test error', 1, 100, longLine)\nlet output = ''\nlet thrown = null\ntry {\n  output = error.showSourceCode(false)\n} catch (e) {\n  thrown = e\n}\nassert.equal(thrown, null)\nassert.ok(\n  output.includes('a'.repeat(40)),\n  `expected 40-char snippet around column 100, got: ${JSON.stringify(output)}`\n)\nassert.ok(output.includes('^'))\n",
+      "expectedBehavior": "showSourceCode(false) for a numeric line/column error (no endColumn) on a >160-char line returns a non-empty snippet around the column (column ± 20), not an empty snippet caused by NaN.",
+      "rationale": "Constructs CssSyntaxError with numeric line/column so endColumn is undefined, uses a 200-char line to trigger truncation, and asserts the snippet around column 100 is present; on the buggy code Math.max(column+padding, undefined+padding) is NaN and slice yields ''.",
+      "reason": "test did not demonstrate the claim consistently",
+      "artifacts": null,
+      "durationMs": 23374,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1879,
+        "outputTokens": 2837,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.064256
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "NoWorkResult.toString returns raw _css while css getter returns result.css which was stripped/updated via MapGenerator, so string coercion diverges from css.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 16,
+          "path": "no-work-result.js",
+          "snippet": "  get css() {\n    return this.result.css\n  }",
+          "startLine": 14
+        },
+        {
+          "endLine": 92,
+          "path": "no-work-result.js",
+          "snippet": "    } else {\n      map.clearAnnotation()\n      this.result.css = map.css\n    }",
+          "startLine": 89
+        },
+        {
+          "endLine": 129,
+          "path": "no-work-result.js",
+          "snippet": "  toString() {\n    return this._css\n  }",
+          "startLine": 127
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "NoWorkResult toString bypasses processed css"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-003"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 14-16 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: NoWorkResult.css returns this.result.css at no-work-result.js:14, which is overwritten from MapGenerator output at no-work-result.js:80 and no-work-result.js:89, while toString() returns the unmodified this._css at no-work-result.js:127."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/node.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/comment.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/container.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/postcss.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/node.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/comment.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/container.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/postcss.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 71,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/node.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/comment.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/container.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/postcss.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/node.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/comment.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/container.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/postcss.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 69,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/node.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/comment.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/container.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/postcss.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/node.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/comment.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/container.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/postcss.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 66,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict'\nimport postcss from './postcss.js'\n\nconst input = 'a { color: red; }\\n/*# sourceMappingURL=old.css.map */'\nconst result = postcss([]).process(input, { from: 'input.css', map: false })\n\nassert.equal(result.css.includes('sourceMappingURL'), false)\nassert.equal(result.css === input, false)\nassert.equal(result.toString(), result.css)\nassert.equal(String(result), result.css)\n",
+      "expectedBehavior": "NoWorkResult.toString()/String(result) returns the processed css (same as .css) after MapGenerator strips the stale sourceMappingURL annotation when map is disabled, matching Result#toString contract.",
+      "rationale": "With no plugins PostCSS returns NoWorkResult. Passing map:false forces the clearAnnotation branch, so result.css is stripped while _css remains raw; asserting toString equals css exposes the divergence.",
+      "reason": "test did not demonstrate the claim consistently",
+      "artifacts": null,
+      "durationMs": 45720,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1783,
+        "outputTokens": 5259,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.112312
+    },
+    "evidenceLevel": "citation+adversarial"
+  }
+]

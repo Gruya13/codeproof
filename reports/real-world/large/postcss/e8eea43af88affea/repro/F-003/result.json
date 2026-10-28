@@ -1,0 +1,47 @@
+{
+  "status": "inconclusive",
+  "classification": "invalid-test",
+  "deterministic": false,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/node.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/comment.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/container.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/postcss.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/node.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/comment.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/container.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/postcss.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 71,
+      "classification": "invalid-test"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/node.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/comment.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/container.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/postcss.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/node.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/comment.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/container.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/postcss.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 69,
+      "classification": "invalid-test"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/node.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/comment.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/container.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js\n- /tmp/codeproof-repro-XkaRzm/snapshot/postcss.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-XkaRzm/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/node.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/comment.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/container.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-XkaRzm/snapshot/postcss.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 66,
+      "classification": "invalid-test"
+    }
+  ],
+  "expectedBehavior": "NoWorkResult.toString()/String(result) returns the processed css (same as .css) after MapGenerator strips the stale sourceMappingURL annotation when map is disabled, matching Result#toString contract.",
+  "rationale": "With no plugins PostCSS returns NoWorkResult. Passing map:false forces the clearAnnotation branch, so result.css is stripped while _css remains raw; asserting toString equals css exposes the divergence.",
+  "reason": "test did not demonstrate the claim consistently",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1783,
+    "outputTokens": 5259,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.112312
+}

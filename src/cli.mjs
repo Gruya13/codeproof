@@ -3,7 +3,7 @@ import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { loadConfig, computeConfigSha256, VERSION } from "./config.mjs";
-import { ingest, repoDigest, filesWithLineNumbers } from "./ingest/index.mjs";
+import { ingest, repoDigest, buildScannerInput, filesWithLineNumbers } from "./ingest/index.mjs";
 import { buildScannerMessages, buildScannerResponseFormat, scannerSystemPrompt, validateFindingsL0 } from "./scan/index.mjs";
 import { mergeScannerRuns } from "./scan/merge.mjs";
 import { verifyOne, VERIFIER_SYSTEM_PROMPT } from "./verify/index.mjs";
@@ -169,7 +169,11 @@ async function main() {
   let scanRaw = null;
   let rawCandidates = [];
   const scanStarted = Date.now();
-  const scanMessages = controlled ? null : buildScannerMessages({ digest: repoDigest(repo), filesWithLineNumbers: filesWithLineNumbers(repo), maxFindings: config.maxFindings });
+  const scannerInput = controlled ? null : buildScannerInput(repo);
+  if (scannerInput && scannerInput.truncated) {
+    console.warn("  WARN scanner input truncated: " + scannerInput.filesInPrompt + " of " + scannerInput.filesTotal + " files (" + scannerInput.chars + " of " + scannerInput.cap + " chars) fit into the prompt; findings can only come from the included files");
+  }
+  const scanMessages = controlled ? null : buildScannerMessages({ digest: repoDigest(repo), filesWithLineNumbers: scannerInput.text, maxFindings: config.maxFindings });
   const scanFormat = controlled ? null : buildScannerResponseFormat(config.maxFindings);
 
   // One scanner pass: call, parse, tolerate one truncation retry, validate at L0.
@@ -477,6 +481,13 @@ async function main() {
       skippedFindings: skippedFindings
     },
     findings: counts,
+    scanCoverage: scannerInput ? {
+      filesInPrompt: scannerInput.filesInPrompt,
+      filesTotal: scannerInput.filesTotal,
+      chars: scannerInput.chars,
+      cap: scannerInput.cap,
+      truncated: scannerInput.truncated
+    } : null,
     scanners: scanRuns.map(function (run) {
       return {
         role: run.role,

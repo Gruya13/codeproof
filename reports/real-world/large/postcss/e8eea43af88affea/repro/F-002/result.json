@@ -1,0 +1,47 @@
+{
+  "status": "inconclusive",
+  "classification": "invalid-test",
+  "deterministic": false,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [ '/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js' ]\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 65,
+      "classification": "invalid-test"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [ '/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js' ]\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 62,
+      "classification": "invalid-test"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [ '/tmp/codeproof-repro-Xa1zeX/snapshot/css-syntax-error.js' ]\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 68,
+      "classification": "invalid-test"
+    }
+  ],
+  "expectedBehavior": "showSourceCode(false) for a numeric line/column error (no endColumn) on a >160-char line returns a non-empty snippet around the column (column ± 20), not an empty snippet caused by NaN.",
+  "rationale": "Constructs CssSyntaxError with numeric line/column so endColumn is undefined, uses a 200-char line to trigger truncation, and asserts the snippet around column 100 is present; on the buggy code Math.max(column+padding, undefined+padding) is NaN and slice yields ''.",
+  "reason": "test did not demonstrate the claim consistently",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1879,
+    "outputTokens": 2837,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.064256
+}

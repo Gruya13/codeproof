@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { filesWithLineNumbers, ingest } from "../src/ingest/index.mjs";
+import { buildScannerInput, filesWithLineNumbers, ingest } from "../src/ingest/index.mjs";
 
 function write(dir, relativePath, content) {
   const full = join(dir, relativePath);
@@ -60,6 +60,26 @@ test("ingest reads a scoped subdirectory from the commit, not the repository roo
   const scoped = ingest(join(dir, "src"), { commit: commit });
   assert.deepEqual(scoped.files.map(function (file) { return file.path; }), ["a.js"]);
   assert.match(scoped.sources.get("a.js"), /value = 1/);
+});
+
+test("scanner input reports exact coverage and truncates honestly", function () {
+  const dir = mkdtempSync(join(tmpdir(), "codeproof-ingest-coverage-"));
+  write(dir, "src/a.js", "export const alpha = 1;\n".repeat(20));
+  write(dir, "src/b.js", "export const beta = 2;\n".repeat(20));
+  const result = ingest(dir);
+  const full = buildScannerInput(result, 400000);
+  assert.equal(full.truncated, false);
+  assert.equal(full.filesInPrompt, 2);
+  assert.equal(full.filesTotal, 2);
+  assert.equal(full.included.length, 2);
+  const one = buildScannerInput(result, 700);
+  assert.equal(one.filesInPrompt, 1);
+  assert.equal(one.truncated, true);
+  assert.deepEqual(one.included, ["src/a.js"]);
+  const almostNone = buildScannerInput(result, 100);
+  assert.equal(almostNone.filesInPrompt, 0);
+  assert.equal(almostNone.truncated, true);
+  assert.equal(almostNone.text, "");
 });
 
 test("ingest counts an empty file as 0 lines, not 1", function () {

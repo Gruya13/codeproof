@@ -67,6 +67,10 @@ export function buildReport(options) {
   lines.push("|---|---|");
   lines.push("| Files / LOC | " + repo.files.length + " / " + repo.loc + " |");
   lines.push("| Import edges / cycles | " + repo.edges.length + " / " + repo.cycles.length + " |");
+  if (run.scanCoverage) {
+    const coverage = run.scanCoverage;
+    lines.push("| Files in scanner prompt | " + coverage.filesInPrompt + " / " + coverage.filesTotal + (coverage.truncated ? " (truncated at " + coverage.cap + " chars)" : "") + " |");
+  }
   lines.push("| Findings proposed | " + run.findings.proposed + " |");
   lines.push("| Rejected at L1 (bad citation) | " + run.findings.l1Rejected + " |");
   lines.push("| Verified | " + run.findings.verified + " |");

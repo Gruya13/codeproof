@@ -1,0 +1,47 @@
+{
+  "status": "inconclusive",
+  "classification": "invalid-test",
+  "deterministic": false,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/node.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/comment.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/container.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/node.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/comment.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/container.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 62,
+      "classification": "invalid-test"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/node.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/comment.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/container.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/node.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/comment.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/container.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 63,
+      "classification": "invalid-test"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1569\n  const err = new Error(message);\n              ^\n\nError: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/node.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/comment.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/container.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js\n- /tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1569:15)\n    at wrapResolveFilename (node:internal/modules/cjs/loader:1123:27)\n    at defaultResolveImplForCJSLoading (node:internal/modules/cjs/loader:1147:10)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1174:12)\n    at Module._load (node:internal/modules/cjs/loader:1346:5)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.require (node:internal/modules/cjs/loader:1679:12)\n    at require (node:internal/modules/helpers:196:16)\n    at Object.<anonymous> (/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js:3:12)\n    at Module._compile (node:internal/modules/cjs/loader:1934:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/tmp/codeproof-repro-1dKsMR/snapshot/css-syntax-error.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/node.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/comment.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/container.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/at-rule.js',\n    '/tmp/codeproof-repro-1dKsMR/snapshot/fromJSON.js'\n  ]\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 72,
+      "classification": "invalid-test"
+    }
+  ],
+  "expectedBehavior": "fromJSON rehydrates a type:'document' node into a Document instance with its children preserved instead of throwing 'Unknown node type: document'",
+  "rationale": "fromJSON handles root/decl/rule/comment/atrule but has no branch for the existing Document type, so a serialized Document throws on rehydration.",
+  "reason": "test did not demonstrate the claim consistently",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1740,
+    "outputTokens": 3314,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.07324
+}

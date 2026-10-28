@@ -1,0 +1,263 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "ALB multi-value headers are joined with '; ' for all headers, corrupting list-based headers like x-forwarded-for which require ', ' joining.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 551,
+          "path": "adapter/aws-lambda/handler.ts",
+          "snippet": "    if (event.multiValueHeaders) {\n      for (const [key, values] of Object.entries(event.multiValueHeaders)) {\n        if (values && Array.isArray(values)) {\n          // https://www.rfc-editor.org/rfc/rfc9110.html#name-common-rules-for-defining-f\n          const sanitizedValue = sanitizeHeaderValue(values.join('; '))\n          headers.set(key, sanitizedValue)",
+          "startLine": 546
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "ALB headers joined with wrong delimiter"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 546-551 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The ALBProcessor.getHeaders at adapter/aws-lambda/handler.ts:546-551 iterates every multiValueHeaders entry and unconditionally joins values with '; ' via values.join('; ') and headers.set, with no per-header delimiter distinction, so list-based headers such as x-forwarded-for are not comma-joined."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-cFyd7M/snapshot/utils/encode' imported from /tmp/codeproof-repro-cFyd7M/snapshot/adapter/aws-lambda/handler.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-cFyd7M/snapshot/utils/encode'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 136,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-cFyd7M/snapshot/utils/encode' imported from /tmp/codeproof-repro-cFyd7M/snapshot/adapter/aws-lambda/handler.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-cFyd7M/snapshot/utils/encode'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 131,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-cFyd7M/snapshot/utils/encode' imported from /tmp/codeproof-repro-cFyd7M/snapshot/adapter/aws-lambda/handler.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-cFyd7M/snapshot/utils/encode'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 135,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict'\nimport { getProcessor } from './adapter/aws-lambda/handler.ts'\n\nconst event = {\n  httpMethod: 'GET',\n  path: '/',\n  body: null,\n  isBase64Encoded: false,\n  queryStringParameters: {},\n  multiValueHeaders: {\n    host: ['example.com'],\n    'x-forwarded-for': ['203.0.113.1', '198.51.100.2'],\n  },\n  requestContext: {\n    elb: {\n      targetGroupArn:\n        'arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test/abc',\n    },\n  },\n}\n\nlet request\nlet caught = null\ntry {\n  request = getProcessor(event).createRequest(event)\n} catch (error) {\n  caught = error\n}\n\nassert.equal(caught, null)\nassert.equal(request?.headers.get('x-forwarded-for'), '203.0.113.1, 198.51.100.2')\n",
+      "expectedBehavior": "ALB multi-value list headers such as x-forwarded-for are joined with ', ' (comma-space) per RFC 9110 list rules, not '; '.",
+      "rationale": "Uses the real getProcessor/ALBProcessor path from adapter/aws-lambda/handler.ts to build a Request from an ALB multiValueHeaders event and asserts the forwarded-for header value. On the buggy code values.join('; ') produces '203.0.113.1; 198.51.100.2', so the equality assertion fails.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 46379,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 9685,
+        "outputTokens": 7114,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.18102
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "ALB query-string builder interpolates raw keys and values without encodeURIComponent, producing invalid URLs for spaces, &, =, and non-ASCII unlike the V1 processor.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 595,
+          "path": "adapter/aws-lambda/handler.ts",
+          "snippet": "    if (event.multiValueQueryStringParameters) {\n      return Object.entries(event.multiValueQueryStringParameters || {})\n        .filter(([, value]) => value)\n        .map(([key, value]) => `${key}=${value.join(`&${key}=`)}`)\n        .join('&')\n    } else {\n      return Object.entries(event.queryStringParameters || {})\n        .filter(([, value]) => value !== undefined)\n        .map(([key, value]) => `${key}=${value}`)\n        .join('&')\n    }",
+          "startLine": 585
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "ALB query string not URL-encoded"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 585-595 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The ALB getQueryString at adapter/aws-lambda/handler.ts:585-595 interpolates raw keys and values via `${key}=${value.join(`&${key}=`)}` and `${key}=${value}` with no encodeURIComponent, so characters such as & and = in values would be parsed as delimiters."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-uLDBpm/snapshot/utils/encode' imported from /tmp/codeproof-repro-uLDBpm/snapshot/adapter/aws-lambda/handler.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-uLDBpm/snapshot/utils/encode'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 144,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-uLDBpm/snapshot/utils/encode' imported from /tmp/codeproof-repro-uLDBpm/snapshot/adapter/aws-lambda/handler.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-uLDBpm/snapshot/utils/encode'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 182,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-uLDBpm/snapshot/utils/encode' imported from /tmp/codeproof-repro-uLDBpm/snapshot/adapter/aws-lambda/handler.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-uLDBpm/snapshot/utils/encode'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 147,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict'\nimport { ALBProcessor } from './adapter/aws-lambda/handler.ts'\n\nconst processor = new ALBProcessor()\nconst base = {\n  httpMethod: 'GET',\n  path: '/search',\n  headers: { host: 'example.com' },\n  body: null,\n  isBase64Encoded: false,\n  requestContext: { elb: { targetGroupArn: 'arn:aws:elasticloadbalancing:test' } },\n}\n\nlet error1 = null\nlet request1\ntry {\n  request1 = processor.createRequest({\n    ...base,\n    queryStringParameters: { 'a&b': 'x y', q: 'a&b=c', lang: '日本語' },\n  })\n} catch (e) {\n  error1 = e\n}\nassert.equal(error1, null)\nconst params1 = new URL(request1.url).searchParams\nassert.equal(params1.get('a&b'), 'x y')\nassert.equal(params1.get('q'), 'a&b=c')\nassert.equal(params1.get('lang'), '日本語')\nassert.equal(params1.get('b'), null)\n\nlet error2 = null\nlet request2\ntry {\n  request2 = processor.createRequest({\n    ...base,\n    multiValueQueryStringParameters: { tag: ['a&b', 'c d', '日本語'], 'k&': ['v=1'] },\n  })\n} catch (e) {\n  error2 = e\n}\nassert.equal(error2, null)\nconst params2 = new URL(request2.url).searchParams\nassert.deepEqual(params2.getAll('tag'), ['a&b', 'c d', '日本語'])\nassert.equal(params2.get('k&'), 'v=1')\nassert.equal(params2.get('b'), null)\n",
+      "expectedBehavior": "ALB query strings are URL-encoded like the V1 processor: keys/values containing spaces, &, =, and non-ASCII round-trip through Request URL searchParams for both queryStringParameters and multiValueQueryStringParameters.",
+      "rationale": "Instantiates the real ALBProcessor, builds Requests from ALB events with reserved and non-ASCII characters, and asserts the parsed query parameters match the original values. On the buggy code raw interpolation splits values on & and =, so these assertions fail.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 48490,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 9726,
+        "outputTokens": 5154,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.14105679999999998
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Lattice V2 processor ignores queryStringParameters entirely by returning empty string, dropping query parameters when path does not already contain them.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 636,
+          "path": "adapter/aws-lambda/handler.ts",
+          "snippet": "  protected getQueryString(): string {\n    return ''\n  }",
+          "startLine": 634
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Lattice query string always empty"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-003"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 634-636 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "LatticeV2Processor.getPath returns only event.path at adapter/aws-lambda/handler.ts:626-628 and getQueryString takes no event argument and unconditionally returns '' at adapter/aws-lambda/handler.ts:634-636, so queryStringParameters are never incorporated into the request URL."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-s0GPrl/snapshot/utils/encode' imported from /tmp/codeproof-repro-s0GPrl/snapshot/adapter/aws-lambda/handler.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-s0GPrl/snapshot/utils/encode'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 129,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-s0GPrl/snapshot/utils/encode' imported from /tmp/codeproof-repro-s0GPrl/snapshot/adapter/aws-lambda/handler.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-s0GPrl/snapshot/utils/encode'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 136,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/esm/resolve:272\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/codeproof-repro-s0GPrl/snapshot/utils/encode' imported from /tmp/codeproof-repro-s0GPrl/snapshot/adapter/aws-lambda/handler.ts\n    at finalizeResolution (node:internal/modules/esm/resolve:272:11)\n    at moduleResolve (node:internal/modules/esm/resolve:879:10)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)\n    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///tmp/codeproof-repro-s0GPrl/snapshot/utils/encode'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 132,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict'\nimport { LatticeV2Processor } from './adapter/aws-lambda/handler.ts'\n\nconst processor = new LatticeV2Processor()\nconst event = {\n  version: '2.0',\n  path: '/search',\n  method: 'GET',\n  headers: { host: ['example.com'] },\n  queryStringParameters: { q: ['hono'], tag: ['a', 'b'], page: ['2'] },\n  body: null,\n  isBase64Encoded: false,\n  requestContext: {\n    serviceArn: 'arn:aws:vpc-lattice:us-east-1:123456789012:service/svc-123',\n  },\n}\nlet request\nlet thrown = null\ntry {\n  request = processor.createRequest(event)\n} catch (error) {\n  thrown = error\n}\nassert.equal(thrown, null)\nassert.ok(request instanceof Request)\nconst url = new URL(request.url)\nassert.equal(url.pathname, '/search')\nassert.equal(url.searchParams.get('q'), 'hono')\nassert.deepEqual(url.searchParams.getAll('tag'), ['a', 'b'])\nassert.equal(url.searchParams.get('page'), '2')\n",
+      "expectedBehavior": "Lattice V2 createRequest preserves queryStringParameters (including multi-value parameters) in the constructed Request URL.",
+      "rationale": "LatticeV2Processor.getQueryString returns '' so queryStringParameters are dropped; the test constructs a Lattice event whose path has no query string and asserts the parameters appear in the Request URL.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)",
+      "artifacts": null,
+      "durationMs": 47346,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 9607,
+        "outputTokens": 4746,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.13242079999999998
+    },
+    "evidenceLevel": "citation+adversarial"
+  }
+]

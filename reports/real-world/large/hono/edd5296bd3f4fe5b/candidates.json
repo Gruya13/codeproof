@@ -1,0 +1,113 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"ALB multi-value headers are joined with '; ' for all headers, corrupting list-based headers like x-forwarded-for which require ', ' joining.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 551, \"path\": \"adapter/aws-lambda/handler.ts\", \"snippet\": \"    if (event.multiValueHeaders) {\\n      for (const [key, values] of Object.entries(event.multiValueHeaders)) {\\n        if (values && Array.isArray(values)) {\\n          // https://www.rfc-editor.org/rfc/rfc9110.html#name-common-rules-for-defining-f\\n          const sanitizedValue = sanitizeHeaderValue(values.join('; '))\\n          headers.set(key, sanitizedValue)\", \"startLine\": 546}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"ALB headers joined with wrong delimiter\"}, {\"category\": \"correctness\", \"claim\": \"ALB query-string builder interpolates raw keys and values without encodeURIComponent, producing invalid URLs for spaces, &, =, and non-ASCII unlike the V1 processor.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 595, \"path\": \"adapter/aws-lambda/handler.ts\", \"snippet\": \"    if (event.multiValueQueryStringParameters) {\\n      return Object.entries(event.multiValueQueryStringParameters || {})\\n        .filter(([, value]) => value)\\n        .map(([key, value]) => `${key}=${value.join(`&${key}=`)}`)\\n        .join('&')\\n    } else {\\n      return Object.entries(event.queryStringParameters || {})\\n        .filter(([, value]) => value !== undefined)\\n        .map(([key, value]) => `${key}=${value}`)\\n        .join('&')\\n    }\", \"startLine\": 585}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"ALB query string not URL-encoded\"}, {\"category\": \"correctness\", \"claim\": \"Lattice V2 processor ignores queryStringParameters entirely by returning empty string, dropping query parameters when path does not already contain them.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 636, \"path\": \"adapter/aws-lambda/handler.ts\", \"snippet\": \"  protected getQueryString(): string {\\n    return ''\\n  }\", \"startLine\": 634}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Lattice query string always empty\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "ALB multi-value headers are joined with '; ' for all headers, corrupting list-based headers like x-forwarded-for which require ', ' joining.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 551,
+            "path": "adapter/aws-lambda/handler.ts",
+            "snippet": "    if (event.multiValueHeaders) {\n      for (const [key, values] of Object.entries(event.multiValueHeaders)) {\n        if (values && Array.isArray(values)) {\n          // https://www.rfc-editor.org/rfc/rfc9110.html#name-common-rules-for-defining-f\n          const sanitizedValue = sanitizeHeaderValue(values.join('; '))\n          headers.set(key, sanitizedValue)",
+            "startLine": 546
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "ALB headers joined with wrong delimiter"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 546-551 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The ALBProcessor.getHeaders at adapter/aws-lambda/handler.ts:546-551 iterates every multiValueHeaders entry and unconditionally joins values with '; ' via values.join('; ') and headers.set, with no per-header delimiter distinction, so list-based headers such as x-forwarded-for are not comma-joined."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "ALB query-string builder interpolates raw keys and values without encodeURIComponent, producing invalid URLs for spaces, &, =, and non-ASCII unlike the V1 processor.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 595,
+            "path": "adapter/aws-lambda/handler.ts",
+            "snippet": "    if (event.multiValueQueryStringParameters) {\n      return Object.entries(event.multiValueQueryStringParameters || {})\n        .filter(([, value]) => value)\n        .map(([key, value]) => `${key}=${value.join(`&${key}=`)}`)\n        .join('&')\n    } else {\n      return Object.entries(event.queryStringParameters || {})\n        .filter(([, value]) => value !== undefined)\n        .map(([key, value]) => `${key}=${value}`)\n        .join('&')\n    }",
+            "startLine": 585
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "ALB query string not URL-encoded"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 585-595 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The ALB getQueryString at adapter/aws-lambda/handler.ts:585-595 interpolates raw keys and values via `${key}=${value.join(`&${key}=`)}` and `${key}=${value}` with no encodeURIComponent, so characters such as & and = in values would be parsed as delimiters."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Lattice V2 processor ignores queryStringParameters entirely by returning empty string, dropping query parameters when path does not already contain them.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 636,
+            "path": "adapter/aws-lambda/handler.ts",
+            "snippet": "  protected getQueryString(): string {\n    return ''\n  }",
+            "startLine": 634
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Lattice query string always empty"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 634-636 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "LatticeV2Processor.getPath returns only event.path at adapter/aws-lambda/handler.ts:626-628 and getQueryString takes no event argument and unconditionally returns '' at adapter/aws-lambda/handler.ts:634-636, so queryStringParameters are never incorporated into the request URL."
+      }
+    }
+  ]
+}

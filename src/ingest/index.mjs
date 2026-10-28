@@ -208,10 +208,14 @@ export function repoDigest(result) {
   return lines.join("\n");
 }
 
-export function filesWithLineNumbers(result, maxChars) {
+// Scanner input from the ingested sources, bounded by maxChars (the repository digest is sent
+// separately). It returns exact coverage so that a truncated prompt for a large repository is
+// reported honestly instead of silently scanning only the alphabetical prefix of the files.
+export function buildScannerInput(result, maxChars) {
   const limit = maxChars || 400000;
   const parts = [];
   let used = 0;
+  const included = [];
   for (const file of result.files) {
     const source = result.sources && result.sources.has(file.path)
       ? result.sources.get(file.path)
@@ -223,6 +227,19 @@ export function filesWithLineNumbers(result, maxChars) {
     if (used + block.length > limit) break;
     parts.push(block);
     used += block.length;
+    included.push(file.path);
   }
-  return parts.join("\n\n");
+  return {
+    text: parts.join("\n\n"),
+    included: included,
+    filesInPrompt: included.length,
+    filesTotal: result.files.length,
+    chars: used,
+    cap: limit,
+    truncated: included.length < result.files.length
+  };
+}
+
+export function filesWithLineNumbers(result, maxChars) {
+  return buildScannerInput(result, maxChars).text;
 }

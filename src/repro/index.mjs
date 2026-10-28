@@ -263,6 +263,19 @@ function executeNode(args, options) {
   });
 }
 
+// A test can fail to run because the repository's own modules are not directly executable by
+// Node: extensionless ESM specifiers (ERR_MODULE_NOT_FOUND) or a CommonJS require of a package
+// that is not installed (Cannot find module 'picocolors'). Both are environment limits, not a
+// failed reproducer. (Discovered on postcss, whose css-syntax-error.js requires picocolors.)
+export function isInternalImportFailure(run) {
+  if (!run || run.classification !== "invalid-test" || !Array.isArray(run.attempts)) return false;
+  return run.attempts.some(function (attempt) {
+    const stderr = String(attempt && attempt.stderr ? attempt.stderr : "");
+    if (stderr.indexOf(".codeproof-repro.test.mjs") !== -1) return false;
+    return /ERR_MODULE_NOT_FOUND|Cannot find module/.test(stderr);
+  });
+}
+
 export async function runReproTest({ testCode, snapshotDir, timeoutMs = 2000, attempts = 3 }) {
   const testPath = join(snapshotDir, ".codeproof-repro.test.mjs");
   const guardPath = join(snapshotDir, ".codeproof-repro-guard.mjs");
@@ -385,15 +398,12 @@ export async function attemptRepro({ finding, agent, repoRoot, commit, excerpts,
           // A test that cannot run because the repository's own imports are not directly
           // executable by Node (extensionless specifiers, missing build output) is not a
           // failed reproducer: it is an unavailable environment. Report it honestly.
-          const internalImportFailure = run.classification === "invalid-test" && run.attempts.some(function (attempt) {
-            const stderr = String(attempt.stderr || "");
-            return /ERR_MODULE_NOT_FOUND/.test(stderr) && stderr.indexOf(".codeproof-repro.test.mjs") === -1;
-          });
+          const internalImportFailure = isInternalImportFailure(run);
           if (internalImportFailure) {
             result.status = "unavailable";
             result.classification = run.classification;
             result.attempts = run.attempts;
-            result.reason = "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers)";
+            result.reason = "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers or missing packages)";
           } else {
             result.status = run.deterministic && run.classification === "assertion-failure" ? "reproduced"
               : run.classification === "passed" ? "not-reproduced" : "inconclusive";

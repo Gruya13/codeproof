@@ -13,6 +13,7 @@ import {
   classifyReproRun,
   extractImportedIdentifiers,
   extractReproImports,
+  isInternalImportFailure,
   parseReproResponse,
   prepareSnapshot,
   runReproTest,
@@ -108,6 +109,17 @@ test("L0 rejects trivial assertions that would pass or fail without the code", f
     const result = validateReproL0(reproResponse(base + line));
     assert.equal(result.ok, false, line);
   }
+});
+
+test("internal import failures are detected for ESM and CommonJS repositories", function () {
+  const esm = { classification: "invalid-test", attempts: [{ stderr: "Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/snapshot/_utils'" }] };
+  assert.equal(isInternalImportFailure(esm), true);
+  const cjs = { classification: "invalid-test", attempts: [{ stderr: "Error: Cannot find module 'picocolors'\nRequire stack:\n- /tmp/snapshot/css-syntax-error.js" }] };
+  assert.equal(isInternalImportFailure(cjs), true);
+  const testImport = { classification: "invalid-test", attempts: [{ stderr: "Cannot find module 'x' imported from .codeproof-repro.test.mjs" }] };
+  assert.equal(isInternalImportFailure(testImport), false);
+  assert.equal(isInternalImportFailure({ classification: "assertion-failure", attempts: [{ stderr: "Cannot find module" }] }), false);
+  assert.equal(isInternalImportFailure(null), false);
 });
 
 test("unsupported response needs a reason and no code", function () {

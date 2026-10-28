@@ -1,0 +1,125 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"fromJSON cannot rehydrate Document nodes: it handles root/decl/rule/comment/atrule but throws for type document even though Document with type document exists.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 50, \"path\": \"fromJSON.js\", \"snippet\": \"  if (defaults.type === 'root') {\\n    node = new Root(defaults)\\n  } else if (defaults.type === 'decl') {\\n    node = new Declaration(defaults)\\n  } else if (defaults.type === 'rule') {\\n    node = new Rule(defaults)\\n  } else if (defaults.type === 'comment') {\\n    node = new Comment(defaults)\\n  } else if (defaults.type === 'atrule') {\\n    node = new AtRule(defaults)\\n  } else {\\n    throw new Error('Unknown node type: ' + json.type)\\n  }\", \"startLine\": 38}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"fromJSON throws for Document type\"}, {\"category\": \"correctness\", \"claim\": \"Long-line truncation computes subLineEnd with this.endColumn + padding without guarding undefined, producing NaN and an empty snippet when error has no range.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 85, \"path\": \"css-syntax-error.js\", \"snippet\": \"          if (line.length > 160) {\\n            let padding = 20\\n            let subLineStart = Math.max(0, this.column - padding)\\n            let subLineEnd = Math.max(\\n              this.column + padding,\\n              this.endColumn + padding\\n            )\", \"startLine\": 79}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"showSourceCode NaN when endColumn undefined\"}, {\"category\": \"correctness\", \"claim\": \"NoWorkResult.toString returns raw _css while css getter returns result.css which was stripped/updated via MapGenerator, so string coercion diverges from css.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 16, \"path\": \"no-work-result.js\", \"snippet\": \"  get css() {\\n    return this.result.css\\n  }\", \"startLine\": 14}, {\"endLine\": 92, \"path\": \"no-work-result.js\", \"snippet\": \"    } else {\\n      map.clearAnnotation()\\n      this.result.css = map.css\\n    }\", \"startLine\": 89}, {\"endLine\": 129, \"path\": \"no-work-result.js\", \"snippet\": \"  toString() {\\n    return this._css\\n  }\", \"startLine\": 127}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"NoWorkResult toString bypasses processed css\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "fromJSON cannot rehydrate Document nodes: it handles root/decl/rule/comment/atrule but throws for type document even though Document with type document exists.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 50,
+            "path": "fromJSON.js",
+            "snippet": "  if (defaults.type === 'root') {\n    node = new Root(defaults)\n  } else if (defaults.type === 'decl') {\n    node = new Declaration(defaults)\n  } else if (defaults.type === 'rule') {\n    node = new Rule(defaults)\n  } else if (defaults.type === 'comment') {\n    node = new Comment(defaults)\n  } else if (defaults.type === 'atrule') {\n    node = new AtRule(defaults)\n  } else {\n    throw new Error('Unknown node type: ' + json.type)\n  }",
+            "startLine": 38
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "fromJSON throws for Document type"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 38-50 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "fromJSON.js:38-50 branches only on root/decl/rule/comment/atrule and throws 'Unknown node type' in the else branch, while postcss.js:8 and postcss.js:82-88 require, export, and instantiate a Document class, so a type 'document' payload hits the throw."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Long-line truncation computes subLineEnd with this.endColumn + padding without guarding undefined, producing NaN and an empty snippet when error has no range.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 85,
+            "path": "css-syntax-error.js",
+            "snippet": "          if (line.length > 160) {\n            let padding = 20\n            let subLineStart = Math.max(0, this.column - padding)\n            let subLineEnd = Math.max(\n              this.column + padding,\n              this.endColumn + padding\n            )",
+            "startLine": 79
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "showSourceCode NaN when endColumn undefined"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 79-85 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: css-syntax-error.js:22-25 sets only line/column for numeric arguments leaving endColumn undefined, and css-syntax-error.js:82-86 computes Math.max(this.column+padding, this.endColumn+padding) unguarded, so undefined+padding yields NaN, Math.max yields NaN, and line.slice(subLineStart, NaN) yields an empty truncated line."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "NoWorkResult.toString returns raw _css while css getter returns result.css which was stripped/updated via MapGenerator, so string coercion diverges from css.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 16,
+            "path": "no-work-result.js",
+            "snippet": "  get css() {\n    return this.result.css\n  }",
+            "startLine": 14
+          },
+          {
+            "endLine": 92,
+            "path": "no-work-result.js",
+            "snippet": "    } else {\n      map.clearAnnotation()\n      this.result.css = map.css\n    }",
+            "startLine": 89
+          },
+          {
+            "endLine": 129,
+            "path": "no-work-result.js",
+            "snippet": "  toString() {\n    return this._css\n  }",
+            "startLine": 127
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "NoWorkResult toString bypasses processed css"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 14-16 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: NoWorkResult.css returns this.result.css at no-work-result.js:14, which is overwritten from MapGenerator output at no-work-result.js:80 and no-work-result.js:89, while toString() returns the unmodified this._css at no-work-result.js:127."
+      }
+    }
+  ]
+}
