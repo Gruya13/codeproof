@@ -1,0 +1,551 @@
+{
+  "repo": "/home/gru/Projects/Meta hakatron/codeproof/bench/seed-repo",
+  "commit": "a528b830e439c0cff331321c76e660a8d6c30efb",
+  "files": 15,
+  "loc": 229,
+  "spark": {
+    "name": "spark-alone",
+    "model": "muse-spark-1.3",
+    "runs": [
+      {
+        "run": 1,
+        "error": "MODEL_API_KEY is required for a real (non-mock) run",
+        "durationMs": 0
+      }
+    ],
+    "aggregate": {
+      "validRuns": 0,
+      "costUsd": null,
+      "durationMs": null,
+      "candidates": null,
+      "scannerRecall": null,
+      "problemsHit": null,
+      "claimsUnmatched": null,
+      "claimsOnTraps": null,
+      "precisionAtCandidateLevel": null
+    }
+  },
+  "wonder": {
+    "name": "wonder-alone",
+    "model": "muse-wonder-1.0",
+    "runs": [
+      {
+        "run": 1,
+        "error": "MODEL_API_KEY is required for a real (non-mock) run",
+        "durationMs": 1
+      }
+    ],
+    "aggregate": {
+      "validRuns": 0,
+      "costUsd": null,
+      "durationMs": null,
+      "candidates": null,
+      "scannerRecall": null,
+      "problemsHit": null,
+      "claimsUnmatched": null,
+      "claimsOnTraps": null,
+      "precisionAtCandidateLevel": null
+    }
+  },
+  "codeproof": {
+    "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/c3dc44820c70d7bc",
+    "run": {
+      "runId": "c3dc44820c70d7bc",
+      "mode": "bench",
+      "mock": false,
+      "configSha256": "b48db7c9af48234ab682967e48e99de91aab1834af1e5fbd4dde5ab0b80ad103",
+      "repo": {
+        "source": "commit",
+        "path": "/home/gru/Projects/Meta hakatron/codeproof/bench/seed-repo",
+        "commit": "a528b830e439c0cff331321c76e660a8d6c30efb",
+        "dirty": false,
+        "loc": 229,
+        "files": 15
+      },
+      "models": [
+        {
+          "role": "scanner-correctness",
+          "id": "muse-spark-1.3"
+        },
+        {
+          "role": "verifier",
+          "id": "muse-wonder-1.0"
+        },
+        {
+          "role": "repro",
+          "id": "muse-wonder-1.0"
+        }
+      ],
+      "prompts": [
+        {
+          "role": "scanner-correctness",
+          "version": "v3",
+          "sha256": "8d3020ec5a187d2662cbf0df703ab9a725de622b8aa9b45dadb28102515587d3"
+        },
+        {
+          "role": "verifier",
+          "version": "v1",
+          "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+        }
+      ],
+      "usage": {
+        "inputTokens": 30146,
+        "outputTokens": 38047,
+        "cachedTokens": 9009,
+        "byRole": [
+          {
+            "role": "scanner-correctness",
+            "model": "muse-spark-1.3",
+            "calls": 1,
+            "inputTokens": 2870,
+            "outputTokens": 5489,
+            "cachedTokens": 2801,
+            "costUsd": 0.023834650000000002
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "calls": 10,
+            "inputTokens": 20354,
+            "outputTokens": 14578,
+            "cachedTokens": 4500,
+            "costUsd": 0.3558760000000001
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "calls": 9,
+            "inputTokens": 6922,
+            "outputTokens": 17980,
+            "cachedTokens": 1708,
+            "costUsd": 0.38079759999999996
+          }
+        ],
+        "callLog": [
+          {
+            "role": "scanner",
+            "model": "muse-spark-1.3",
+            "index": 0,
+            "inputTokens": 2870,
+            "outputTokens": 5489,
+            "cachedTokens": 2801,
+            "costUsd": 0.023834650000000002,
+            "durationMs": 20531,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "scanner-secondary",
+            "model": "muse-wonder-1.0",
+            "index": 1,
+            "inputTokens": 2645,
+            "outputTokens": 7097,
+            "cachedTokens": 0,
+            "costUsd": 0.15252,
+            "durationMs": 58458,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "index": 2,
+            "inputTokens": 2243,
+            "outputTokens": 563,
+            "cachedTokens": 500,
+            "costUsd": 0.018332,
+            "durationMs": 3960,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "index": 3,
+            "inputTokens": 780,
+            "outputTokens": 1510,
+            "cachedTokens": 244,
+            "costUsd": 0.0323928,
+            "durationMs": 9753,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "index": 4,
+            "inputTokens": 2564,
+            "outputTokens": 1621,
+            "cachedTokens": 500,
+            "costUsd": 0.040776,
+            "durationMs": 14168,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "index": 5,
+            "inputTokens": 879,
+            "outputTokens": 1875,
+            "cachedTokens": 0,
+            "costUsd": 0.041016,
+            "durationMs": 13252,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "index": 6,
+            "inputTokens": 1894,
+            "outputTokens": 1343,
+            "cachedTokens": 500,
+            "costUsd": 0.032536,
+            "durationMs": 11914,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "index": 7,
+            "inputTokens": 801,
+            "outputTokens": 2916,
+            "cachedTokens": 244,
+            "costUsd": 0.060596800000000006,
+            "durationMs": 25536,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "index": 8,
+            "inputTokens": 2318,
+            "outputTokens": 549,
+            "cachedTokens": 500,
+            "costUsd": 0.018352,
+            "durationMs": 4547,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "index": 9,
+            "inputTokens": 745,
+            "outputTokens": 2002,
+            "cachedTokens": 244,
+            "costUsd": 0.0420928,
+            "durationMs": 11623,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "index": 10,
+            "inputTokens": 2131,
+            "outputTokens": 481,
+            "cachedTokens": 500,
+            "costUsd": 0.016244,
+            "durationMs": 3639,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "index": 11,
+            "inputTokens": 775,
+            "outputTokens": 1396,
+            "cachedTokens": 0,
+            "costUsd": 0.03102,
+            "durationMs": 7449,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "index": 12,
+            "inputTokens": 1401,
+            "outputTokens": 554,
+            "cachedTokens": 500,
+            "costUsd": 0.014784,
+            "durationMs": 3685,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "index": 13,
+            "inputTokens": 654,
+            "outputTokens": 1435,
+            "cachedTokens": 244,
+            "costUsd": 0.0303888,
+            "durationMs": 7659,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "index": 14,
+            "inputTokens": 1482,
+            "outputTokens": 554,
+            "cachedTokens": 500,
+            "costUsd": 0.015108,
+            "durationMs": 3897,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "index": 15,
+            "inputTokens": 687,
+            "outputTokens": 1643,
+            "cachedTokens": 244,
+            "costUsd": 0.034680800000000005,
+            "durationMs": 10081,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "index": 16,
+            "inputTokens": 2019,
+            "outputTokens": 1030,
+            "cachedTokens": 500,
+            "costUsd": 0.026776,
+            "durationMs": 8180,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "index": 17,
+            "inputTokens": 830,
+            "outputTokens": 1419,
+            "cachedTokens": 244,
+            "costUsd": 0.0307728,
+            "durationMs": 8318,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "index": 18,
+            "inputTokens": 1657,
+            "outputTokens": 786,
+            "cachedTokens": 500,
+            "costUsd": 0.020448,
+            "durationMs": 5429,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "index": 19,
+            "inputTokens": 771,
+            "outputTokens": 3784,
+            "cachedTokens": 244,
+            "costUsd": 0.0778368,
+            "durationMs": 30853,
+            "retries": 0,
+            "finishReason": "stop",
+            "httpStatus": 200
+          }
+        ],
+        "costUsd": 0.7605082500000001,
+        "measured": true
+      },
+      "calls": 20,
+      "retries": 0,
+      "timings": {
+        "startedAt": "2026-10-28T06:37:05.777Z",
+        "durationMs": 265862
+      },
+      "phases": [
+        {
+          "name": "ingest",
+          "status": "ok",
+          "durationMs": 64
+        },
+        {
+          "name": "scan",
+          "status": "ok",
+          "durationMs": 78991
+        },
+        {
+          "name": "verify",
+          "status": "ok",
+          "durationMs": 186743
+        },
+        {
+          "name": "publish",
+          "status": "ok",
+          "durationMs": 44
+        }
+      ],
+      "budget": {
+        "limitUsd": 4,
+        "spentUsd": 0.760508,
+        "measured": true,
+        "exceeded": false,
+        "hard": true,
+        "aborted": false,
+        "abortReason": null,
+        "skippedFindings": []
+      },
+      "findings": {
+        "proposed": 9,
+        "byScanner": {
+          "spark": 9,
+          "wonder": 9,
+          "both": 9,
+          "controlled": 0
+        },
+        "duplicates": 9,
+        "l0Rejected": {
+          "count": 0,
+          "items": []
+        },
+        "l1Rejected": 0,
+        "verified": 9,
+        "moderate": 0,
+        "refuted": 0,
+        "uncertain": 0,
+        "reproduced": 8
+      },
+      "scanCoverage": {
+        "filesInPrompt": 15,
+        "filesTotal": 15,
+        "chars": 7675,
+        "cap": 400000,
+        "truncated": false
+      },
+      "scanners": [
+        {
+          "role": "scanner",
+          "proposedBy": "spark",
+          "model": "muse-spark-1.3",
+          "status": "ok",
+          "candidates": 9,
+          "rejectedAtL0": 0,
+          "costUsd": 0.023834650000000002,
+          "durationMs": 20532,
+          "reason": null
+        },
+        {
+          "role": "scanner-secondary",
+          "proposedBy": "wonder",
+          "model": "muse-wonder-1.0",
+          "status": "ok",
+          "candidates": 9,
+          "rejectedAtL0": 0,
+          "costUsd": 0.15252,
+          "durationMs": 58458,
+          "reason": null
+        }
+      ],
+      "dualScan": true,
+      "repro": {
+        "enabled": true,
+        "model": "muse-wonder-1.0",
+        "timeoutMs": 2000,
+        "attempts": 3,
+        "counts": {
+          "reproduced": 8,
+          "notReproduced": 0,
+          "unavailable": 0,
+          "inconclusive": 1
+        }
+      },
+      "outputs": {
+        "report": "reports/c3dc44820c70d7bc/REPORT.md",
+        "findings": "reports/c3dc44820c70d7bc/findings.json",
+        "rejected": "reports/c3dc44820c70d7bc/rejected.md"
+      },
+      "versions": {
+        "node": "v26.8.2",
+        "codeproof": "0.1.0"
+      }
+    },
+    "verified": {
+      "problems": 8,
+      "trapsTotal": 4,
+      "verifiedTp": 8,
+      "verifiedFp": 0,
+      "precision": 1,
+      "e2eRecall": 1,
+      "trapsVerified": 0,
+      "trapsModerate": 0,
+      "falseRefutations": 0,
+      "duplicateVerified": 0,
+      "extraTrueSeen": [
+        "X-02"
+      ],
+      "falsePositives": [],
+      "checks": [
+        {
+          "name": "e2e recall >= 6/8",
+          "pass": true
+        },
+        {
+          "name": "precision >= 90%",
+          "pass": true
+        },
+        {
+          "name": "traps verified = 0/4",
+          "pass": true
+        },
+        {
+          "name": "false refutations <= 1",
+          "pass": true
+        }
+      ],
+      "pass": true
+    },
+    "scanner": {
+      "candidates": 18,
+      "problemsHit": 8,
+      "problemsTotal": 8,
+      "scannerRecall": 1,
+      "claimsOnProblems": 16,
+      "claimsOnTraps": 0,
+      "claimsOnExtraTrue": 2,
+      "claimsUnmatched": 0,
+      "trapsHit": 0,
+      "extrasHit": 1,
+      "precisionAtCandidateLevel": 1
+    }
+  },
+  "generatedAt": "2026-10-28T06:42:18.466Z"
+}

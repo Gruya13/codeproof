@@ -20,6 +20,8 @@ reports/*
 !reports/model-ablation/**
 !reports/self-analysis/
 !reports/self-analysis/**
+!reports/three-way/
+!reports/three-way/**
 reports/probes/**/_repo/
 reports/probes/agy-batch3.md
 *.log
