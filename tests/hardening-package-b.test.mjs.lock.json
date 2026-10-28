@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "000abbf33c59fb4712739f65497d0645efcc2a697d5db46123564c6e2ebdf821",
+  "gitRevision": "6c5e70ae945f5e5bb3c2150baa538d4aad13da8e",
+  "gitRel": "tests/hardening-package-b.test.mjs",
+  "by": "codex",
+  "at": "2026-10-28T18:59:22.187Z",
+  "relocks": []
+}

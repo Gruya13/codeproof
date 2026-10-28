@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "casesSha256": "ff5efd99b68a04d9b680a39f62a91ed11bdb29a3bf15201691d5b5d2e4860633",
-  "gitRevision": "1d94c8baf9bd2045375582a3be328b340c991c71",
+  "casesSha256": "cae67001de1d1ad9e04012adb319f4906c23c03afaebda6a25581e96977ef8f2",
+  "gitRevision": "6c5e70ae945f5e5bb3c2150baa538d4aad13da8e",
   "gitRel": "tests/repro.test.mjs",
-  "by": "orchestrator",
-  "at": "2026-10-28T12:24:48.466Z",
+  "by": "codex",
+  "at": "2026-10-28T18:59:22.098Z",
   "relocks": [
     {
       "by": "orchestrator",
@@ -26,6 +26,13 @@
       "reason": "F3 replay imports repro helpers",
       "previousSha256": "ff5efd99b68a04d9b680a39f62a91ed11bdb29a3bf15201691d5b5d2e4860633",
       "previousGitRevision": "4ea8ca9627acf49bfa596277dc7cc24dac3b05dd"
+    },
+    {
+      "by": "codex",
+      "at": "2026-10-28T18:59:22.098Z",
+      "reason": "hardening B: L2 counter-citation is bound to the declared file/line range; long-file context includes the first 30 lines; assertion classification follows the real Node 26 marker",
+      "previousSha256": "ff5efd99b68a04d9b680a39f62a91ed11bdb29a3bf15201691d5b5d2e4860633",
+      "previousGitRevision": "1d94c8baf9bd2045375582a3be328b340c991c71"
     }
   ]
 }

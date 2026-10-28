@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "casesSha256": "d77d1ca78ac2ab655d958c62060a146e00a251169261519ead4fe2e6c7fdbcb2",
-  "gitRevision": "573c93fd98bb30c0f19c0bb67299351ee62f3a99",
+  "casesSha256": "7c5bb6d048694fc00ad482f93692c54eb6b28ef8cb711cab2cd27384a23ca51a",
+  "gitRevision": "6c5e70ae945f5e5bb3c2150baa538d4aad13da8e",
   "gitRel": "tests/repro-integration.test.mjs",
-  "by": "orchestrator",
-  "at": "2026-10-28T12:20:16.220Z",
+  "by": "codex",
+  "at": "2026-10-28T18:59:22.119Z",
   "relocks": [
     {
       "by": "orchestrator",
@@ -12,6 +12,13 @@
       "reason": "F1 two-phase L3 (controlCode) changes the reproducer contract; tests updated per plan F1.8",
       "previousSha256": "4aebdb2f31febddf1be6178e6269da3d12b0509b762b1251efdc422af1b1da66",
       "previousGitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116"
+    },
+    {
+      "by": "codex",
+      "at": "2026-10-28T18:59:22.119Z",
+      "reason": "hardening B: L2 counter-citation is bound to the declared file/line range; long-file context includes the first 30 lines; assertion classification follows the real Node 26 marker",
+      "previousSha256": "d77d1ca78ac2ab655d958c62060a146e00a251169261519ead4fe2e6c7fdbcb2",
+      "previousGitRevision": "573c93fd98bb30c0f19c0bb67299351ee62f3a99"
     }
   ]
 }

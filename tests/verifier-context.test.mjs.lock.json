@@ -1,9 +1,17 @@
 {
   "schemaVersion": 1,
-  "casesSha256": "83aac7e3a334d3a4bd5d752d39f6ccf298db9aa285abada4a092eea09ee44839",
-  "gitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116",
+  "casesSha256": "2f2ea78f065bc4ab8a19d3d031cc2f0fa440c1b8de1f26e060fb69b11cef35c5",
+  "gitRevision": "6c5e70ae945f5e5bb3c2150baa538d4aad13da8e",
   "gitRel": "tests/verifier-context.test.mjs",
-  "by": "orchestrator",
-  "at": "2026-10-28T12:11:16.442Z",
-  "relocks": []
+  "by": "codex",
+  "at": "2026-10-28T18:59:22.077Z",
+  "relocks": [
+    {
+      "by": "codex",
+      "at": "2026-10-28T18:59:22.077Z",
+      "reason": "hardening B: L2 counter-citation is bound to the declared file/line range; long-file context includes the first 30 lines; assertion classification follows the real Node 26 marker",
+      "previousSha256": "83aac7e3a334d3a4bd5d752d39f6ccf298db9aa285abada4a092eea09ee44839",
+      "previousGitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116"
+    }
+  ]
 }
