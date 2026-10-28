@@ -1,0 +1,455 @@
+{
+  "raw": "{\n  \"chunked\": true,\n  \"groups\": [\n    {\n      \"group\": \"(root)\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"matchAll loops on regExp.exec without advancing lastIndex on empty matches, so a global regex that can match an empty string (e.g. /a*/g) returns the same empty match forever and never terminates; a non-global regex also never terminates.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 888, \\\"path\\\": \\\"utils.js\\\", \\\"snippet\\\": \\\"const matchAll = (regExp, str) => {\\\\n  let matches;\\\\n  const arr = [];\\\\n\\\\n  while ((matches = regExp.exec(str)) !== null) {\\\\n    arr.push(matches);\\\\n  }\\\\n\\\\n  return arr;\\\\n};\\\", \\\"startLine\\\": 879}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"critical\\\", \\\"title\\\": \\\"matchAll infinite loop on zero-length match\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"toFlatObject uses a plain {} as the seen-set and tests !merged[prop]. Inherited Object.prototype members like 'constructor', 'toString', 'hasOwnProperty' are therefore truthy before any copy, so own source properties with those names are never copied to destObj.\\\", \\\"confidence\\\": 0.92, \\\"evidence\\\": [{\\\"endLine\\\": 758, \\\"path\\\": \\\"utils.js\\\", \\\"snippet\\\": \\\"  const merged = {};\\\\n\\\\n  destObj = destObj || {};\\\\n  // eslint-disable-next-line no-eq-null,eqeqeq\\\\n  if (sourceObj == null) return destObj;\\\\n\\\\ndo {\\\\n    props = Object.getOwnPropertyNames(sourceObj);\\\\n    i = props.length;\\\\n    while (i-- > 0) {\\\\n      prop = props[i];\\\\n      if ((!propFilter || propFilter(prop, sourceObj, destObj)) && !merged[prop]) {\\\\n        destObj[prop] = sourceObj[prop];\\\\n        merged[prop] = true;\\\\n      }\\\", \\\"startLine\\\": 744}], \\\"id\\\": \\\"F-002\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"toFlatObject skips own constructor/prototype-chain names\\\"}]}\"\n    },\n    {\n      \"group\": \"adapters\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"cancel\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"The cancel function returns early when token.reason is falsy, so the first cancel request never sets reason or resolves the promise and cancellation never happens.\\\", \\\"confidence\\\": 1, \\\"evidence\\\": [{\\\"endLine\\\": 62, \\\"path\\\": \\\"cancel/CancelToken.js\\\", \\\"snippet\\\": \\\"    executor(function cancel(message, config, request) {\\\\n      if (!token.reason) {\\\\n        // Cancellation has already been requested\\\\n        return;\\\\n      }\\\\n\\\\n      token.reason = new CanceledError(message, config, request);\\\\n      resolvePromise(token.reason);\\\\n    });\\\", \\\"startLine\\\": 54}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"critical\\\", \\\"title\\\": \\\"Inverted cancel guard prevents cancellation\\\"}]}\"\n    },\n    {\n      \"group\": \"core\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"Extra `|| response.status < 500` makes any 4xx resolve even when custom validateStatus returns false.\\\", \\\"confidence\\\": 0.95, \\\"evidence\\\": [{\\\"endLine\\\": 17, \\\"path\\\": \\\"core/settle.js\\\", \\\"snippet\\\": \\\"export default function settle(resolve, reject, response) {\\\\n  const validateStatus = response.config.validateStatus;\\\\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\\\\n    resolve(response);\\\", \\\"startLine\\\": 14}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"critical\\\", \\\"title\\\": \\\"settle ignores validateStatus for status < 500\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"When a duplicate header has the same spelling as the stored key, it assigns self[key] then deletes self[header] which is the same property, deleting the header.\\\", \\\"confidence\\\": 0.85, \\\"evidence\\\": [{\\\"endLine\\\": 372, \\\"path\\\": \\\"core/AxiosHeaders.js\\\", \\\"snippet\\\": \\\"  normalize(format) {\\\\n    const self = this;\\\\n    const headers = Object.create(null);\\\\n\\\\n    utils.forEach(this, (value, header) => {\\\\n      const key = utils.findKey(headers, header);\\\\n\\\\n      if (key) {\\\\n        self[key] = normalizeValue(value);\\\\n        delete self[header];\\\\n        return;\\\\n      }\\\", \\\"startLine\\\": 361}], \\\"id\\\": \\\"F-002\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"normalize deletes duplicate header when spellings match\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"Every call unconditionally replaces this[$internals] with a fresh {accessors:{}} instead of reusing existing map, discarding previously registered accessors.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 445, \\\"path\\\": \\\"core/AxiosHeaders.js\\\", \\\"snippet\\\": \\\"  static accessor(header) {\\\\n    const internals =\\\\n      (this[$internals] =\\\\n      this[$internals] =\\\\n        {\\\\n          accessors: {},\\\\n        });\\\", \\\"startLine\\\": 439}], \\\"id\\\": \\\"F-003\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"accessor resets internals on every call\\\"}]}\"\n    },\n    {\n      \"group\": \"defaults\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"env\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"helpers\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"combineURLs concatenates base and relative without inserting '/' so 'http://a'+'/foo' becomes 'http://afoo'.\\\", \\\"confidence\\\": 0.95, \\\"evidence\\\": [{\\\"endLine\\\": 22, \\\"path\\\": \\\"helpers/combineURLs.js\\\", \\\"snippet\\\": \\\"  return baseURL.slice(0, end) + relativeURL.replace(/^\\\\\\\\/+/, '');\\\", \\\"startLine\\\": 22}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"critical\\\", \\\"title\\\": \\\"combineURLs missing separator slash\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"isAxiosError uses !== false so any object without isAxiosError (undefined !== false) returns true.\\\", \\\"confidence\\\": 0.95, \\\"evidence\\\": [{\\\"endLine\\\": 14, \\\"path\\\": \\\"helpers/isAxiosError.js\\\", \\\"snippet\\\": \\\"export default function isAxiosError(payload) {\\\\n  return utils.isObject(payload) && payload.isAxiosError !== false;\\\\n}\\\", \\\"startLine\\\": 12}], \\\"id\\\": \\\"F-002\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"critical\\\", \\\"title\\\": \\\"isAxiosError true for any object\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"buildURL keeps '#' when stripping fragment (slice to hashmarkIndex+1) so serialized params are appended after '#' into the fragment instead of the query.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 65, \\\"path\\\": \\\"helpers/buildURL.js\\\", \\\"snippet\\\": \\\"    const hashmarkIndex = url.indexOf('#');\\\\n\\\\n    if (hashmarkIndex !== -1) {\\\\n      url = url.slice(0, hashmarkIndex + 1);\\\\n    }\\\\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;\\\", \\\"startLine\\\": 60}], \\\"id\\\": \\\"F-003\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"buildURL retains hash when appending params\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"spread passes the array as a single argument ([arr]) instead of spreading it, so f(x,y,z) receives [1,2,3] as x.\\\", \\\"confidence\\\": 0.95, \\\"evidence\\\": [{\\\"endLine\\\": 27, \\\"path\\\": \\\"helpers/spread.js\\\", \\\"snippet\\\": \\\"export default function spread(callback) {\\\\n  return function wrap(arr) {\\\\n    return callback.apply(null, [arr]);\\\\n  };\\\", \\\"startLine\\\": 24}], \\\"id\\\": \\\"F-004\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"spread does not expand array arguments\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"parseHeaders never lowercases header names so duplicate detection and set-cookie handling are case-sensitive, splitting case-variant duplicates into separate keys.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 52, \\\"path\\\": \\\"helpers/parseHeaders.js\\\", \\\"snippet\\\": \\\"      i = line.indexOf(':');\\\\n      key = line.substring(0, i).trim();\\\\n      val = line.substring(i + 1).trim();\\\", \\\"startLine\\\": 50}, {\\\"endLine\\\": 60, \\\"path\\\": \\\"helpers/parseHeaders.js\\\", \\\"snippet\\\": \\\"      if (key === 'set-cookie') {\\\", \\\"startLine\\\": 60}], \\\"id\\\": \\\"F-005\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"parseHeaders case-sensitive header names\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"rotateAndRead does not await store.save before store.get, so the read can race the write and return the old token.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 5, \\\"path\\\": \\\"helpers/session.js\\\", \\\"snippet\\\": \\\"export async function rotateAndRead(store) {\\\\n  store.save({ token: 'next' });\\\\n  return store.get('token');\\\", \\\"startLine\\\": 3}], \\\"id\\\": \\\"F-006\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"rotateAndRead missing await on save\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"throttle timer callback invokes stale captured args instead of lastArgs, so updates made while throttled are lost.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 34, \\\"path\\\": \\\"helpers/throttle.js\\\", \\\"snippet\\\": \\\"    } else {\\\\n      lastArgs = args;\\\\n      if (!timer) {\\\\n        timer = setTimeout(() => {\\\\n          timer = null;\\\\n          invoke(args);\\\\n        }, threshold - passed);\\\", \\\"startLine\\\": 28}], \\\"id\\\": \\\"F-007\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"throttle replays stale args\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"createScheduler.start overwrites this.timer with a new setInterval without clearing an existing interval, leaking the prior handle.\\\", \\\"confidence\\\": 0.95, \\\"evidence\\\": [{\\\"endLine\\\": 8, \\\"path\\\": \\\"helpers/scheduler.js\\\", \\\"snippet\\\": \\\"    start(callback, intervalMs) {\\\\n      this.timer = setInterval(callback, intervalMs);\\\\n    },\\\", \\\"startLine\\\": 6}], \\\"id\\\": \\\"F-008\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"scheduler start replaces timer without clear\\\"}]}\"\n    },\n    {\n      \"group\": \"platform\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    }\n  ]\n}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "matchAll loops on regExp.exec without advancing lastIndex on empty matches, so a global regex that can match an empty string (e.g. /a*/g) returns the same empty match forever and never terminates; a non-global regex also never terminates.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 888,
+            "path": "utils.js",
+            "snippet": "const matchAll = (regExp, str) => {\n  let matches;\n  const arr = [];\n\n  while ((matches = regExp.exec(str)) !== null) {\n    arr.push(matches);\n  }\n\n  return arr;\n};",
+            "startLine": 879
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "matchAll infinite loop on zero-length match"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 22-22 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "At helpers/combineURLs.js:22 the return concatenates baseURL.slice(0, end) directly with relativeURL.replace(/^\\/+/, '') and inserts no '/' separator, while helpers/combineURLs.js:18-20 also strips trailing slashes from the base, so 'http://a' + '/foo' yields 'http://afoo'."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "toFlatObject uses a plain {} as the seen-set and tests !merged[prop]. Inherited Object.prototype members like 'constructor', 'toString', 'hasOwnProperty' are therefore truthy before any copy, so own source properties with those names are never copied to destObj.",
+        "confidence": 0.92,
+        "evidence": [
+          {
+            "endLine": 758,
+            "path": "utils.js",
+            "snippet": "  const merged = {};\n\n  destObj = destObj || {};\n  // eslint-disable-next-line no-eq-null,eqeqeq\n  if (sourceObj == null) return destObj;\n\ndo {\n    props = Object.getOwnPropertyNames(sourceObj);\n    i = props.length;\n    while (i-- > 0) {\n      prop = props[i];\n      if ((!propFilter || propFilter(prop, sourceObj, destObj)) && !merged[prop]) {\n        destObj[prop] = sourceObj[prop];\n        merged[prop] = true;\n      }",
+            "startLine": 744
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "toFlatObject skips own constructor/prototype-chain names"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 12-14 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/isAxiosError.js:13 returns utils.isObject(payload) && payload.isAxiosError !== false, so an object lacking the property yields undefined !== false and therefore returns true."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "The cancel function returns early when token.reason is falsy, so the first cancel request never sets reason or resolves the promise and cancellation never happens.",
+        "confidence": 1,
+        "evidence": [
+          {
+            "endLine": 62,
+            "path": "cancel/CancelToken.js",
+            "snippet": "    executor(function cancel(message, config, request) {\n      if (!token.reason) {\n        // Cancellation has already been requested\n        return;\n      }\n\n      token.reason = new CanceledError(message, config, request);\n      resolvePromise(token.reason);\n    });",
+            "startLine": 54
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "Inverted cancel guard prevents cancellation"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Extra `|| response.status < 500` makes any 4xx resolve even when custom validateStatus returns false.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 17,
+            "path": "core/settle.js",
+            "snippet": "export default function settle(resolve, reject, response) {\n  const validateStatus = response.config.validateStatus;\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\n    resolve(response);",
+            "startLine": 14
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "settle ignores validateStatus for status < 500"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "When a duplicate header has the same spelling as the stored key, it assigns self[key] then deletes self[header] which is the same property, deleting the header.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 372,
+            "path": "core/AxiosHeaders.js",
+            "snippet": "  normalize(format) {\n    const self = this;\n    const headers = Object.create(null);\n\n    utils.forEach(this, (value, header) => {\n      const key = utils.findKey(headers, header);\n\n      if (key) {\n        self[key] = normalizeValue(value);\n        delete self[header];\n        return;\n      }",
+            "startLine": 361
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "normalize deletes duplicate header when spellings match"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Every call unconditionally replaces this[$internals] with a fresh {accessors:{}} instead of reusing existing map, discarding previously registered accessors.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 445,
+            "path": "core/AxiosHeaders.js",
+            "snippet": "  static accessor(header) {\n    const internals =\n      (this[$internals] =\n      this[$internals] =\n        {\n          accessors: {},\n        });",
+            "startLine": 439
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "accessor resets internals on every call"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 60-65 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/buildURL.js:63 slices to hashmarkIndex+1, retaining the '#', and helpers/buildURL.js:65 then appends '?/&' plus serializedParams, so params are placed after '#' in the fragment."
+      }
+    },
+    {
+      "index": 6,
+      "candidate": {
+        "category": "correctness",
+        "claim": "combineURLs concatenates base and relative without inserting '/' so 'http://a'+'/foo' becomes 'http://afoo'.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 22,
+            "path": "helpers/combineURLs.js",
+            "snippet": "  return baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '');",
+            "startLine": 22
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "combineURLs missing separator slash"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 7,
+      "candidate": {
+        "category": "correctness",
+        "claim": "isAxiosError uses !== false so any object without isAxiosError (undefined !== false) returns true.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 14,
+            "path": "helpers/isAxiosError.js",
+            "snippet": "export default function isAxiosError(payload) {\n  return utils.isObject(payload) && payload.isAxiosError !== false;\n}",
+            "startLine": 12
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "isAxiosError true for any object"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 8,
+      "candidate": {
+        "category": "correctness",
+        "claim": "buildURL keeps '#' when stripping fragment (slice to hashmarkIndex+1) so serialized params are appended after '#' into the fragment instead of the query.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 65,
+            "path": "helpers/buildURL.js",
+            "snippet": "    const hashmarkIndex = url.indexOf('#');\n\n    if (hashmarkIndex !== -1) {\n      url = url.slice(0, hashmarkIndex + 1);\n    }\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;",
+            "startLine": 60
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "high",
+        "title": "buildURL retains hash when appending params"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 9,
+      "candidate": {
+        "category": "correctness",
+        "claim": "spread passes the array as a single argument ([arr]) instead of spreading it, so f(x,y,z) receives [1,2,3] as x.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 27,
+            "path": "helpers/spread.js",
+            "snippet": "export default function spread(callback) {\n  return function wrap(arr) {\n    return callback.apply(null, [arr]);\n  };",
+            "startLine": 24
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "high",
+        "title": "spread does not expand array arguments"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 24-27 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/spread.js:26 uses callback.apply(null, [arr]), wrapping the input array in another array so the callback receives [1,2,3] as its single first argument instead of 1, 2, 3 as separate arguments."
+      }
+    },
+    {
+      "index": 10,
+      "candidate": {
+        "category": "correctness",
+        "claim": "parseHeaders never lowercases header names so duplicate detection and set-cookie handling are case-sensitive, splitting case-variant duplicates into separate keys.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 52,
+            "path": "helpers/parseHeaders.js",
+            "snippet": "      i = line.indexOf(':');\n      key = line.substring(0, i).trim();\n      val = line.substring(i + 1).trim();",
+            "startLine": 50
+          },
+          {
+            "endLine": 60,
+            "path": "helpers/parseHeaders.js",
+            "snippet": "      if (key === 'set-cookie') {",
+            "startLine": 60
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "high",
+        "title": "parseHeaders case-sensitive header names"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 50-52 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: helpers/parseHeaders.js:51 assigns key via trim() only with no lowercasing, and helpers/parseHeaders.js:54-60 uses that raw key for hasOwnProp duplicate checks, ignoreDuplicateOf lookup, and the strict 'set-cookie' comparison, so case-variant names become distinct object keys."
+      }
+    },
+    {
+      "index": 11,
+      "candidate": {
+        "category": "correctness",
+        "claim": "rotateAndRead does not await store.save before store.get, so the read can race the write and return the old token.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 5,
+            "path": "helpers/session.js",
+            "snippet": "export async function rotateAndRead(store) {\n  store.save({ token: 'next' });\n  return store.get('token');",
+            "startLine": 3
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "high",
+        "title": "rotateAndRead missing await on save"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 3-5 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/session.js:4 calls store.save without await and immediately returns store.get('token') at helpers/session.js:5, so an asynchronous save can still be pending when the read occurs."
+      }
+    },
+    {
+      "index": 12,
+      "candidate": {
+        "category": "correctness",
+        "claim": "throttle timer callback invokes stale captured args instead of lastArgs, so updates made while throttled are lost.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 34,
+            "path": "helpers/throttle.js",
+            "snippet": "    } else {\n      lastArgs = args;\n      if (!timer) {\n        timer = setTimeout(() => {\n          timer = null;\n          invoke(args);\n        }, threshold - passed);",
+            "startLine": 28
+          }
+        ],
+        "id": "F-007",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "throttle replays stale args"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 28-34 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed at helpers/throttle.js:29-33: each throttled call overwrites lastArgs, but the timer closure captures the first call's args and calls invoke(args), so later args are never delivered by the timer and are cleared by invoke at helpers/throttle.js:13-15."
+      }
+    },
+    {
+      "index": 13,
+      "candidate": {
+        "category": "correctness",
+        "claim": "createScheduler.start overwrites this.timer with a new setInterval without clearing an existing interval, leaking the prior handle.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 8,
+            "path": "helpers/scheduler.js",
+            "snippet": "    start(callback, intervalMs) {\n      this.timer = setInterval(callback, intervalMs);\n    },",
+            "startLine": 6
+          }
+        ],
+        "id": "F-008",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "scheduler start replaces timer without clear"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 6-8 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/scheduler.js:6-7 assigns this.timer = setInterval(callback, intervalMs) with no preceding clearInterval, and stop at helpers/scheduler.js:9-11 only clears the current handle, so a second start loses the prior interval handle."
+      }
+    }
+  ]
+}

@@ -1,0 +1,802 @@
+{
+  "runId": "33bb4da404e0a3aa",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "7c8fea218d6af7a902c61b120f706b197ad202e58aed1bac6281f02d60174ab2",
+  "repo": {
+    "source": "commit",
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/axios-extended/_repo/lib",
+    "commit": "b2c8f4c90801b6c2260a43ce7550c22868a0fb82",
+    "dirty": false,
+    "loc": 9564,
+    "files": 74
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    },
+    {
+      "role": "repro",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "1125704a78865224507f61f112b87b2da83e9e2b5da13f3c4161ee2cc4fdc5f2"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+    }
+  ],
+  "usage": {
+    "inputTokens": 256866,
+    "outputTokens": 118188,
+    "cachedTokens": 8833,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 8,
+        "inputTokens": 95226,
+        "outputTokens": 50129,
+        "cachedTokens": 1649,
+        "costUsd": 0.33026685
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 15,
+        "inputTokens": 113716,
+        "outputTokens": 27000,
+        "cachedTokens": 4500,
+        "costUsd": 0.977764
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "calls": 14,
+        "inputTokens": 47924,
+        "outputTokens": 41059,
+        "cachedTokens": 2684,
+        "costUsd": 1.0026768
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 12646,
+        "outputTokens": 11123,
+        "cachedTokens": 0,
+        "costUsd": 0.06308025,
+        "durationMs": 40950,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 1,
+        "inputTokens": 28093,
+        "outputTokens": 13542,
+        "cachedTokens": 0,
+        "costUsd": 0.09266975,
+        "durationMs": 52789,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 2,
+        "inputTokens": 1753,
+        "outputTokens": 2595,
+        "cachedTokens": 1649,
+        "costUsd": 0.0114061,
+        "durationMs": 11676,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 3,
+        "inputTokens": 18453,
+        "outputTokens": 11420,
+        "cachedTokens": 0,
+        "costUsd": 0.07160125,
+        "durationMs": 47738,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 4,
+        "inputTokens": 2206,
+        "outputTokens": 2171,
+        "cachedTokens": 0,
+        "costUsd": 0.01198425,
+        "durationMs": 9211,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 5,
+        "inputTokens": 582,
+        "outputTokens": 408,
+        "cachedTokens": 0,
+        "costUsd": 0.0024615,
+        "durationMs": 2961,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 6,
+        "inputTokens": 29494,
+        "outputTokens": 6819,
+        "cachedTokens": 0,
+        "costUsd": 0.06584825,
+        "durationMs": 29856,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 7,
+        "inputTokens": 1999,
+        "outputTokens": 2051,
+        "cachedTokens": 0,
+        "costUsd": 0.0112155,
+        "durationMs": 8304,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 8,
+        "inputTokens": 7810,
+        "outputTokens": 3596,
+        "cachedTokens": 500,
+        "costUsd": 0.10126,
+        "durationMs": 22269,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 9,
+        "inputTokens": 12331,
+        "outputTokens": 4882,
+        "cachedTokens": 244,
+        "costUsd": 0.1460368,
+        "durationMs": 35924,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 10,
+        "inputTokens": 7538,
+        "outputTokens": 1253,
+        "cachedTokens": 0,
+        "costUsd": 0.055212,
+        "durationMs": 7494,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 11,
+        "inputTokens": 12413,
+        "outputTokens": 2257,
+        "cachedTokens": 0,
+        "costUsd": 0.094792,
+        "durationMs": 15107,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 12,
+        "inputTokens": 7730,
+        "outputTokens": 772,
+        "cachedTokens": 500,
+        "costUsd": 0.04446,
+        "durationMs": 5730,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 13,
+        "inputTokens": 1940,
+        "outputTokens": 3104,
+        "cachedTokens": 244,
+        "costUsd": 0.0689128,
+        "durationMs": 17988,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 14,
+        "inputTokens": 7473,
+        "outputTokens": 1031,
+        "cachedTokens": 0,
+        "costUsd": 0.050512,
+        "durationMs": 5654,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 15,
+        "inputTokens": 1244,
+        "outputTokens": 2380,
+        "cachedTokens": 244,
+        "costUsd": 0.0516488,
+        "durationMs": 14781,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 16,
+        "inputTokens": 7555,
+        "outputTokens": 4000,
+        "cachedTokens": 0,
+        "costUsd": 0.11022,
+        "durationMs": 28289,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 17,
+        "inputTokens": 7555,
+        "outputTokens": 4692,
+        "cachedTokens": 0,
+        "costUsd": 0.12406,
+        "durationMs": 39233,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 18,
+        "inputTokens": 4971,
+        "outputTokens": 6164,
+        "cachedTokens": 244,
+        "costUsd": 0.1422368,
+        "durationMs": 41779,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 19,
+        "inputTokens": 7498,
+        "outputTokens": 1186,
+        "cachedTokens": 0,
+        "costUsd": 0.053712,
+        "durationMs": 11431,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 20,
+        "inputTokens": 4930,
+        "outputTokens": 5044,
+        "cachedTokens": 244,
+        "costUsd": 0.11967280000000001,
+        "durationMs": 36229,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 21,
+        "inputTokens": 7605,
+        "outputTokens": 992,
+        "cachedTokens": 500,
+        "costUsd": 0.04836,
+        "durationMs": 6146,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 22,
+        "inputTokens": 1154,
+        "outputTokens": 1635,
+        "cachedTokens": 244,
+        "costUsd": 0.036388800000000006,
+        "durationMs": 6455,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 23,
+        "inputTokens": 7677,
+        "outputTokens": 1296,
+        "cachedTokens": 500,
+        "costUsd": 0.054728,
+        "durationMs": 11465,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 24,
+        "inputTokens": 1082,
+        "outputTokens": 3054,
+        "cachedTokens": 244,
+        "costUsd": 0.0644808,
+        "durationMs": 16335,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 25,
+        "inputTokens": 7514,
+        "outputTokens": 936,
+        "cachedTokens": 500,
+        "costUsd": 0.046876,
+        "durationMs": 7437,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 26,
+        "inputTokens": 1653,
+        "outputTokens": 1776,
+        "cachedTokens": 0,
+        "costUsd": 0.042132,
+        "durationMs": 8304,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 27,
+        "inputTokens": 7487,
+        "outputTokens": 682,
+        "cachedTokens": 500,
+        "costUsd": 0.041688,
+        "durationMs": 4294,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 28,
+        "inputTokens": 1216,
+        "outputTokens": 1822,
+        "cachedTokens": 244,
+        "costUsd": 0.040376800000000004,
+        "durationMs": 8929,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 29,
+        "inputTokens": 7893,
+        "outputTokens": 1234,
+        "cachedTokens": 0,
+        "costUsd": 0.056252,
+        "durationMs": 7648,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 30,
+        "inputTokens": 1607,
+        "outputTokens": 2242,
+        "cachedTokens": 244,
+        "costUsd": 0.050340800000000005,
+        "durationMs": 11545,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 31,
+        "inputTokens": 7445,
+        "outputTokens": 2525,
+        "cachedTokens": 500,
+        "costUsd": 0.07838,
+        "durationMs": 18556,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 32,
+        "inputTokens": 1011,
+        "outputTokens": 2001,
+        "cachedTokens": 244,
+        "costUsd": 0.0431368,
+        "durationMs": 10736,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 33,
+        "inputTokens": 7545,
+        "outputTokens": 1736,
+        "cachedTokens": 500,
+        "costUsd": 0.063,
+        "durationMs": 9359,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 34,
+        "inputTokens": 1323,
+        "outputTokens": 1742,
+        "cachedTokens": 244,
+        "costUsd": 0.039204800000000005,
+        "durationMs": 8451,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 35,
+        "inputTokens": 7391,
+        "outputTokens": 1069,
+        "cachedTokens": 500,
+        "costUsd": 0.049044,
+        "durationMs": 5785,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 36,
+        "inputTokens": 1049,
+        "outputTokens": 2956,
+        "cachedTokens": 0,
+        "costUsd": 0.063316,
+        "durationMs": 15779,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      }
+    ],
+    "costUsd": 2.3107076500000003,
+    "measured": true
+  },
+  "calls": 37,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-28T07:33:41.345Z",
+    "durationMs": 646639
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 361
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 203491
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 442696
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 69
+    }
+  ],
+  "budget": {
+    "limitUsd": 6,
+    "spentUsd": 2.310708,
+    "measured": true,
+    "exceeded": false,
+    "hard": true,
+    "aborted": false,
+    "abortReason": null,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 14,
+    "byScanner": {
+      "spark": 14,
+      "wonder": 0,
+      "both": 0,
+      "controlled": 0
+    },
+    "duplicates": 0,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 0,
+    "verified": 14,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "reproduced": 13
+  },
+  "scanCoverage": {
+    "chunked": true,
+    "groups": 8,
+    "filesInPrompt": 74,
+    "filesTotal": 74,
+    "chars": 338620,
+    "truncated": false
+  },
+  "scanners": [
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 2,
+      "rejectedAtL0": 0,
+      "costUsd": 0.06308025,
+      "durationMs": 40951,
+      "group": "(root)",
+      "coverage": {
+        "filesInPrompt": 2,
+        "filesTotal": 2,
+        "chars": 43443,
+        "cap": 400000,
+        "truncated": false
+      },
+      "reason": null
+    },
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 0,
+      "rejectedAtL0": 0,
+      "costUsd": 0.09266975,
+      "durationMs": 52789,
+      "group": "adapters",
+      "coverage": {
+        "filesInPrompt": 4,
+        "filesTotal": 4,
+        "chars": 114725,
+        "cap": 400000,
+        "truncated": false
+      },
+      "reason": null
+    },
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 1,
+      "rejectedAtL0": 0,
+      "costUsd": 0.0114061,
+      "durationMs": 11676,
+      "group": "cancel",
+      "coverage": {
+        "filesInPrompt": 3,
+        "filesTotal": 3,
+        "chars": 4462,
+        "cap": 400000,
+        "truncated": false
+      },
+      "reason": null
+    },
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 3,
+      "rejectedAtL0": 0,
+      "costUsd": 0.07160125,
+      "durationMs": 47738,
+      "group": "core",
+      "coverage": {
+        "filesInPrompt": 13,
+        "filesTotal": 13,
+        "chars": 67445,
+        "cap": 400000,
+        "truncated": false
+      },
+      "reason": null
+    },
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 0,
+      "rejectedAtL0": 0,
+      "costUsd": 0.01198425,
+      "durationMs": 9211,
+      "group": "defaults",
+      "coverage": {
+        "filesInPrompt": 2,
+        "filesTotal": 2,
+        "chars": 6341,
+        "cap": 400000,
+        "truncated": false
+      },
+      "reason": null
+    },
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 0,
+      "rejectedAtL0": 0,
+      "costUsd": 0.0024615,
+      "durationMs": 2961,
+      "group": "env",
+      "coverage": {
+        "filesInPrompt": 2,
+        "filesTotal": 2,
+        "chars": 218,
+        "cap": 400000,
+        "truncated": false
+      },
+      "reason": null
+    },
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 8,
+      "rejectedAtL0": 0,
+      "costUsd": 0.06584825,
+      "durationMs": 29856,
+      "group": "helpers",
+      "coverage": {
+        "filesInPrompt": 38,
+        "filesTotal": 38,
+        "chars": 97344,
+        "cap": 400000,
+        "truncated": false
+      },
+      "reason": null
+    },
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 0,
+      "rejectedAtL0": 0,
+      "costUsd": 0.0112155,
+      "durationMs": 8304,
+      "group": "platform",
+      "coverage": {
+        "filesInPrompt": 10,
+        "filesTotal": 10,
+        "chars": 4642,
+        "cap": 400000,
+        "truncated": false
+      },
+      "reason": null
+    }
+  ],
+  "dualScan": false,
+  "chunkedScan": true,
+  "repro": {
+    "enabled": true,
+    "model": "muse-wonder-1.0",
+    "timeoutMs": 2000,
+    "attempts": 3,
+    "counts": {
+      "reproduced": 13,
+      "notReproduced": 0,
+      "unavailable": 1,
+      "inconclusive": 0
+    }
+  },
+  "outputs": {
+    "report": "reports/probes/real/axios-extended/run-6-chunked/33bb4da404e0a3aa/REPORT.md",
+    "findings": "reports/probes/real/axios-extended/run-6-chunked/33bb4da404e0a3aa/findings.json",
+    "rejected": "reports/probes/real/axios-extended/run-6-chunked/33bb4da404e0a3aa/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.1.0"
+  }
+}

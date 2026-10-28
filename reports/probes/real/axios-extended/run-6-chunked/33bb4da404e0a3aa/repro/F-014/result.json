@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: first timer 1 should be cleared when start() replaces it, cleared=[]\n    at file:///tmp/codeproof-repro-PFAuF0/snapshot/.codeproof-repro.test.mjs:41:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 65,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: first timer 1 should be cleared when start() replaces it, cleared=[]\n    at file:///tmp/codeproof-repro-PFAuF0/snapshot/.codeproof-repro.test.mjs:41:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 61,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: first timer 1 should be cleared when start() replaces it, cleared=[]\n    at file:///tmp/codeproof-repro-PFAuF0/snapshot/.codeproof-repro.test.mjs:41:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 61,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "Calling start() a second time clears the previous interval so only the new timer remains active and no handle is leaked.",
+  "rationale": "Mocking global setInterval/clearInterval deterministically records handles: after a second start(), the first handle must appear in cleared list and only the second handle must remain active. Buggy code overwrites this.timer without clearing, so cleared stays empty.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1049,
+    "outputTokens": 2956,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.063316
+}

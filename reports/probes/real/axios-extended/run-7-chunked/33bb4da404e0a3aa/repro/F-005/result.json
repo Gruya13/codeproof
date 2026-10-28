@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: cancel() should set token.reason on first call\n    at file:///tmp/codeproof-repro-DG3C2M/snapshot/.codeproof-repro.test.mjs:7:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 71,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: cancel() should set token.reason on first call\n    at file:///tmp/codeproof-repro-DG3C2M/snapshot/.codeproof-repro.test.mjs:7:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 72,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: cancel() should set token.reason on first call\n    at file:///tmp/codeproof-repro-DG3C2M/snapshot/.codeproof-repro.test.mjs:7:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 77,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "Calling cancel() from CancelToken.source() sets token.reason to a CanceledError with the given message, throwIfRequested() throws that reason, subscribers are notified, and token.promise resolves with it.",
+  "rationale": "The guard `if (!token.reason) return;` returns on the first cancellation when reason is still falsy, so reason is never set. The test exercises the public CancelToken.source()/cancel contract synchronously before any await, so it fails by assertion on the buggy code without hanging.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1952,
+    "outputTokens": 2015,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.0471808
+}

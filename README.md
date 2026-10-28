@@ -89,6 +89,7 @@ make test        # L1/L2 gate, L3 runner, dirty JSON, fault injection, config ha
 make controlled  # controlled verifier test: injected candidates, real API (needs MODEL_API_KEY)
 make bench       # scored benchmark: bench/seed-repo, MAX_FINDINGS=12, mode bench (needs MODEL_API_KEY); REPRO=0 disables L3
 DUAL_SCAN=1 make bench  # both models scan; each candidate is verified by the other model
+CHUNKED_SCAN=1 make bench  # one focused scanner call per top-level directory (higher recall, see below)
 make score       # score the newest benchmark run; RUN=reports/<id> selects one explicitly
 make replay      # re-run L0/L1 over the committed golden artifacts (no model calls)
 make clean-clone # fresh clone in tmpfs with env -i, make test/demo/score
@@ -172,6 +173,8 @@ The calibration fixture is deliberately small and synthetic. To measure the same
 | 4 | 8 | **7/16 (43.8%)** | 100% | 0/5 | 5 | $0.8640 |
 
 Mean verified recall **6.0/16 (37.5%)** at $0.76 per run; **no trap was published in any run**, and three of four runs had perfect verified precision. Reading: on real code of this size the scanner misses many subtle defects - the calibration 8/8 does not transfer - but what the pipeline publishes is verifiable and almost always correct. Both sets are reported, neither replaces the other.
+
+**Recall levers, measured on the same frozen ground truth:** the effective one is **chunked scanning** (`CHUNKED_SCAN=1`, one focused scanner call per top-level directory): scanner recall before verification goes from 8/16 (50%) to **11/16 (68.8%)** at $0.245, and the full pipeline verifies **9-10/16 (mean 59.4%)** with 0/5 traps. The dual scanner does **not** help here (7/16, 3.5x cost, one trap leaked): a second model does not fix a context that is too broad. Details and all runs: [bench/extended/README.md](bench/extended/README.md).
 
 ## Held-out generalization (qualitative)
 

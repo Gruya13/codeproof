@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'old' !== 'next'\n\n    at file:///tmp/codeproof-repro-rQhTcz/snapshot/.codeproof-repro.test.mjs:23:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old',\n  expected: 'next',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 64,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'old' !== 'next'\n\n    at file:///tmp/codeproof-repro-rQhTcz/snapshot/.codeproof-repro.test.mjs:23:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old',\n  expected: 'next',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 62,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'old' !== 'next'\n\n    at file:///tmp/codeproof-repro-rQhTcz/snapshot/.codeproof-repro.test.mjs:23:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old',\n  expected: 'next',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 68,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "rotateAndRead awaits store.save({token:'next'}) before store.get('token'), so it returns 'next' rather than the previous token.",
+  "rationale": "An async store whose save only updates the token after a delay exposes the race: without await, get runs immediately and returns 'old'; with await, it returns 'next'.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1011,
+    "outputTokens": 2001,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.0431368
+}

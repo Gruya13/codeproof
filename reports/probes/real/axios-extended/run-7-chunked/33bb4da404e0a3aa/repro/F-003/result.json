@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    headers: {\n+     'Content-Type': 'a',\n-     'Content-Type': 'b',\n      'X-Test': '1',\n+     'content-type': 'b'\n    }\n  }\n\n    at file:///tmp/codeproof-repro-ZlKg1M/snapshot/.codeproof-repro.test.mjs:11:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: {\n    headers: { 'Content-Type': 'a', 'X-Test': '1', 'content-type': 'b' }\n  },\n  expected: { headers: { 'Content-Type': 'b', 'X-Test': '1' } },\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 72,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    headers: {\n+     'Content-Type': 'a',\n-     'Content-Type': 'b',\n      'X-Test': '1',\n+     'content-type': 'b'\n    }\n  }\n\n    at file:///tmp/codeproof-repro-ZlKg1M/snapshot/.codeproof-repro.test.mjs:11:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: {\n    headers: { 'Content-Type': 'a', 'X-Test': '1', 'content-type': 'b' }\n  },\n  expected: { headers: { 'Content-Type': 'b', 'X-Test': '1' } },\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 66,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    headers: {\n+     'Content-Type': 'a',\n-     'Content-Type': 'b',\n      'X-Test': '1',\n+     'content-type': 'b'\n    }\n  }\n\n    at file:///tmp/codeproof-repro-ZlKg1M/snapshot/.codeproof-repro.test.mjs:11:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: {\n    headers: { 'Content-Type': 'a', 'X-Test': '1', 'content-type': 'b' }\n  },\n  expected: { headers: { 'Content-Type': 'b', 'X-Test': '1' } },\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 71,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "merge.call({caseless:true, skipUndefined:true}, ...) applies caseless key deduplication and skipUndefined recursively to nested plain objects, both when merging two nested objects and when copying a new nested object.",
+  "rationale": "The recursive merge(existing, val) and merge({}, val) calls lose the this context, so nested caseless keys duplicate and nested undefined values overwrite/ appear. The test exercises both recursive branches.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 12373,
+    "outputTokens": 2055,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.0896648
+}

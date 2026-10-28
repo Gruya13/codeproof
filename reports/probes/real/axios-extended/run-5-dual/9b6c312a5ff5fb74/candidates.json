@@ -1,0 +1,587 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"CancelToken executor guard is inverted: it returns when no cancellation has been requested, so token.reason is never set and cancellation never fires.\", \"confidence\": 1.0, \"evidence\": [{\"endLine\": 62, \"path\": \"cancel/CancelToken.js\", \"snippet\": \"    executor(function cancel(message, config, request) {\\n      if (!token.reason) {\\n        // Cancellation has already been requested\\n        return;\\n      }\\n\\n      token.reason = new CanceledError(message, config, request);\\n      resolvePromise(token.reason);\\n    });\", \"startLine\": 54}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"CancelToken cancel guard inverted\"}, {\"category\": \"correctness\", \"claim\": \"settle resolves any response with status < 500 regardless of validateStatus result, so custom validateStatus rejecting 4xx never rejects.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 17, \"path\": \"core/settle.js\", \"snippet\": \"export default function settle(resolve, reject, response) {\\n  const validateStatus = response.config.validateStatus;\\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\\n    resolve(response);\", \"startLine\": 14}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"settle bypasses validateStatus for status < 500\"}, {\"category\": \"correctness\", \"claim\": \"spread passes the array as a single argument instead of spreading it, so callback receives [arr] rather than ...arr.\", \"confidence\": 1.0, \"evidence\": [{\"endLine\": 28, \"path\": \"helpers/spread.js\", \"snippet\": \"export default function spread(callback) {\\n  return function wrap(arr) {\\n    return callback.apply(null, [arr]);\\n  };\\n}\", \"startLine\": 24}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"spread does not spread array arguments\"}, {\"category\": \"correctness\", \"claim\": \"combineURLs strips trailing slashes from baseURL and leading slashes from relativeURL then concatenates without inserting '/', producing '...foobar' instead of '...foo/bar'.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 22, \"path\": \"helpers/combineURLs.js\", \"snippet\": \"  let end = baseURL.length;\\n\\n  while (end > 0 && baseURL.charCodeAt(end - 1) === 47) {\\n    end--;\\n  }\\n\\n  return baseURL.slice(0, end) + relativeURL.replace(/^\\\\/+/, '');\", \"startLine\": 16}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"combineURLs missing separator slash\"}, {\"category\": \"correctness\", \"claim\": \"buildURL keeps the '#' when stripping the fragment (slice to hashmarkIndex+1) and then appends query after '#', placing query inside the fragment.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 66, \"path\": \"helpers/buildURL.js\", \"snippet\": \"  if (serializedParams) {\\n    const hashmarkIndex = url.indexOf('#');\\n\\n    if (hashmarkIndex !== -1) {\\n      url = url.slice(0, hashmarkIndex + 1);\\n    }\\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;\\n  }\", \"startLine\": 59}], \"id\": \"F-005\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"buildURL appends query after hash fragment\"}, {\"category\": \"correctness\", \"claim\": \"isAxiosError returns true for any object whose isAxiosError is undefined because it checks !== false instead of truthiness.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 14, \"path\": \"helpers/isAxiosError.js\", \"snippet\": \"export default function isAxiosError(payload) {\\n  return utils.isObject(payload) && payload.isAxiosError !== false;\\n}\", \"startLine\": 12}], \"id\": \"F-006\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"isAxiosError true for plain objects\"}, {\"category\": \"correctness\", \"claim\": \"createScheduler.start overwrites this.timer with a new interval without clearing an existing interval, leaking the prior handle on repeated start.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 12, \"path\": \"helpers/scheduler.js\", \"snippet\": \"export function createScheduler() {\\n  return {\\n    timer: null,\\n    start(callback, intervalMs) {\\n      this.timer = setInterval(callback, intervalMs);\\n    },\\n    stop() {\\n      clearInterval(this.timer);\\n      this.timer = null;\", \"startLine\": 3}], \"id\": \"F-007\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"scheduler start replaces timer without clear\"}, {\"category\": \"correctness\", \"claim\": \"parseHeaders keeps original header case but checks duplicates against lowercase ignore list, so duplicate headers with different casing are not ignored.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 58, \"path\": \"helpers/parseHeaders.js\", \"snippet\": \"      i = line.indexOf(':');\\n      key = line.substring(0, i).trim();\\n      val = line.substring(i + 1).trim();\\n\\n      const hasKey = utils.hasOwnProp(parsed, key);\\n\\n      if (!key || (hasKey && utils.hasOwnProp(ignoreDuplicateOf, key))) {\\n        return;\\n      }\", \"startLine\": 50}], \"id\": \"F-008\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"parseHeaders duplicate check is case-sensitive\"}, {\"category\": \"correctness\", \"claim\": \"throttle timer callback invokes the first call's args instead of the latest lastArgs, so coalesced calls report stale arguments.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 36, \"path\": \"helpers/throttle.js\", \"snippet\": \"    } else {\\n      lastArgs = args;\\n      if (!timer) {\\n        timer = setTimeout(() => {\\n          timer = null;\\n          invoke(args);\\n        }, threshold - passed);\\n      }\", \"startLine\": 28}], \"id\": \"F-009\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"throttle replays stale args\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "CancelToken executor guard is inverted: it returns when no cancellation has been requested, so token.reason is never set and cancellation never fires.",
+        "confidence": 1,
+        "evidence": [
+          {
+            "endLine": 62,
+            "path": "cancel/CancelToken.js",
+            "snippet": "    executor(function cancel(message, config, request) {\n      if (!token.reason) {\n        // Cancellation has already been requested\n        return;\n      }\n\n      token.reason = new CanceledError(message, config, request);\n      resolvePromise(token.reason);\n    });",
+            "startLine": 54
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "CancelToken cancel guard inverted"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 54-62 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The guard at cancel/CancelToken.js:55 returns when token.reason is falsy (its initial state), so the assignment at cancel/CancelToken.js:60 and resolvePromise at cancel/CancelToken.js:61 are unreachable and cancellation never fires."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "settle resolves any response with status < 500 regardless of validateStatus result, so custom validateStatus rejecting 4xx never rejects.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 17,
+            "path": "core/settle.js",
+            "snippet": "export default function settle(resolve, reject, response) {\n  const validateStatus = response.config.validateStatus;\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\n    resolve(response);",
+            "startLine": 14
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "settle bypasses validateStatus for status < 500"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 14-17 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The condition at core/settle.js:16 includes '|| response.status < 500' as an independent disjunct, so any status below 500 resolves at core/settle.js:17 even when validateStatus(status) returns false, and reject at core/settle.js:19 is only reachable for status >= 500."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "spread passes the array as a single argument instead of spreading it, so callback receives [arr] rather than ...arr.",
+        "confidence": 1,
+        "evidence": [
+          {
+            "endLine": 28,
+            "path": "helpers/spread.js",
+            "snippet": "export default function spread(callback) {\n  return function wrap(arr) {\n    return callback.apply(null, [arr]);\n  };\n}",
+            "startLine": 24
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "spread does not spread array arguments"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 24-28 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/spread.js:26 wraps the input array in another array for apply, so callback.apply(null, [arr]) passes arr as a single argument instead of spreading its elements as callback.apply(null, arr) would."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "combineURLs strips trailing slashes from baseURL and leading slashes from relativeURL then concatenates without inserting '/', producing '...foobar' instead of '...foo/bar'.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 22,
+            "path": "helpers/combineURLs.js",
+            "snippet": "  let end = baseURL.length;\n\n  while (end > 0 && baseURL.charCodeAt(end - 1) === 47) {\n    end--;\n  }\n\n  return baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '');",
+            "startLine": 16
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "high",
+        "title": "combineURLs missing separator slash"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 16-22 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/combineURLs.js:22 returns baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '') with no '/' separator after stripping trailing slashes at helpers/combineURLs.js:18-20, so combining 'foo' and '/bar' yields 'foobar'."
+      }
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "buildURL keeps the '#' when stripping the fragment (slice to hashmarkIndex+1) and then appends query after '#', placing query inside the fragment.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 66,
+            "path": "helpers/buildURL.js",
+            "snippet": "  if (serializedParams) {\n    const hashmarkIndex = url.indexOf('#');\n\n    if (hashmarkIndex !== -1) {\n      url = url.slice(0, hashmarkIndex + 1);\n    }\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;\n  }",
+            "startLine": 59
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "high",
+        "title": "buildURL appends query after hash fragment"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 59-66 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/buildURL.js:63 slices to hashmarkIndex+1 retaining the '#', and helpers/buildURL.js:65 then appends the serialized params after it, so a URL like 'http://x/#frag' becomes 'http://x/#?a=1' with the query inside the fragment."
+      }
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "isAxiosError returns true for any object whose isAxiosError is undefined because it checks !== false instead of truthiness.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 14,
+            "path": "helpers/isAxiosError.js",
+            "snippet": "export default function isAxiosError(payload) {\n  return utils.isObject(payload) && payload.isAxiosError !== false;\n}",
+            "startLine": 12
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "high",
+        "title": "isAxiosError true for plain objects"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 12-14 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "At helpers/isAxiosError.js:13 the function returns utils.isObject(payload) && payload.isAxiosError !== false, so a plain object with no isAxiosError property (undefined !== false) passes both conditions and returns true."
+      }
+    },
+    {
+      "index": 6,
+      "candidate": {
+        "category": "correctness",
+        "claim": "createScheduler.start overwrites this.timer with a new interval without clearing an existing interval, leaking the prior handle on repeated start.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 12,
+            "path": "helpers/scheduler.js",
+            "snippet": "export function createScheduler() {\n  return {\n    timer: null,\n    start(callback, intervalMs) {\n      this.timer = setInterval(callback, intervalMs);\n    },\n    stop() {\n      clearInterval(this.timer);\n      this.timer = null;",
+            "startLine": 3
+          }
+        ],
+        "id": "F-007",
+        "kind": "direct",
+        "severity": "high",
+        "title": "scheduler start replaces timer without clear"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 10 non-blank lines but snippet has 9"
+      }
+    },
+    {
+      "index": 7,
+      "candidate": {
+        "category": "correctness",
+        "claim": "parseHeaders keeps original header case but checks duplicates against lowercase ignore list, so duplicate headers with different casing are not ignored.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 58,
+            "path": "helpers/parseHeaders.js",
+            "snippet": "      i = line.indexOf(':');\n      key = line.substring(0, i).trim();\n      val = line.substring(i + 1).trim();\n\n      const hasKey = utils.hasOwnProp(parsed, key);\n\n      if (!key || (hasKey && utils.hasOwnProp(ignoreDuplicateOf, key))) {\n        return;\n      }",
+            "startLine": 50
+          }
+        ],
+        "id": "F-008",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "parseHeaders duplicate check is case-sensitive"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 50-58 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: helpers/parseHeaders.js:51 extracts key without lowercasing, helpers/parseHeaders.js:54-56 checks it case-sensitively against parsed and ignoreDuplicateOf, while helpers/parseHeaders.js:7-25 defines ignoreDuplicateOf only with lowercase names, so capitalized duplicates are combined instead of ignored."
+      }
+    },
+    {
+      "index": 8,
+      "candidate": {
+        "category": "correctness",
+        "claim": "throttle timer callback invokes the first call's args instead of the latest lastArgs, so coalesced calls report stale arguments.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 36,
+            "path": "helpers/throttle.js",
+            "snippet": "    } else {\n      lastArgs = args;\n      if (!timer) {\n        timer = setTimeout(() => {\n          timer = null;\n          invoke(args);\n        }, threshold - passed);\n      }",
+            "startLine": 28
+          }
+        ],
+        "id": "F-009",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "throttle replays stale args"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 9 non-blank lines but snippet has 8"
+      }
+    },
+    {
+      "index": 9,
+      "candidate": {
+        "category": "correctness",
+        "claim": "CancelToken's cancel function returns when token.reason is not set, so the first cancellation never creates a reason or notifies subscribers.",
+        "confidence": 0.99,
+        "evidence": [
+          {
+            "endLine": 62,
+            "path": "cancel/CancelToken.js",
+            "snippet": "    executor(function cancel(message, config, request) {\n      if (!token.reason) {\n        // Cancellation has already been requested\n        return;\n      }\n\n      token.reason = new CanceledError(message, config, request);\n      resolvePromise(token.reason);\n    });",
+            "startLine": 54
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "CancelToken cancellation is inverted and never takes effect"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "duplicate-of F-001"
+    },
+    {
+      "index": 10,
+      "candidate": {
+        "category": "correctness",
+        "claim": "settle resolves every response below status 500 even when validateStatus rejects that status, so 3xx/4xx failures are treated as success.",
+        "confidence": 0.99,
+        "evidence": [
+          {
+            "endLine": 18,
+            "path": "core/settle.js",
+            "snippet": "export default function settle(resolve, reject, response) {\n  const validateStatus = response.config.validateStatus;\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\n    resolve(response);\n  } else {",
+            "startLine": 14
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "settle resolves 4xx responses despite validateStatus"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "duplicate-of F-002"
+    },
+    {
+      "index": 11,
+      "candidate": {
+        "category": "correctness",
+        "claim": "combineURLs strips trailing slashes from baseURL and leading slashes from relativeURL but never inserts a separator, producing paths such as /v1users.",
+        "confidence": 0.99,
+        "evidence": [
+          {
+            "endLine": 22,
+            "path": "helpers/combineURLs.js",
+            "snippet": "  let end = baseURL.length;\n\n  while (end > 0 && baseURL.charCodeAt(end - 1) === 47) {\n    end--;\n  }\n\n  return baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '');",
+            "startLine": 16
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "high",
+        "title": "combineURLs omits the slash between URL parts"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "duplicate-of F-004"
+    },
+    {
+      "index": 12,
+      "candidate": {
+        "category": "correctness",
+        "claim": "buildURL keeps the '#' character and appends serialized parameters after it, placing query parameters in the fragment instead of the query string.",
+        "confidence": 0.99,
+        "evidence": [
+          {
+            "endLine": 65,
+            "path": "helpers/buildURL.js",
+            "snippet": "  if (serializedParams) {\n    const hashmarkIndex = url.indexOf('#');\n\n    if (hashmarkIndex !== -1) {\n      url = url.slice(0, hashmarkIndex + 1);\n    }\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;",
+            "startLine": 59
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "high",
+        "title": "buildURL appends parameters after the URL hash"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "duplicate-of F-005"
+    },
+    {
+      "index": 13,
+      "candidate": {
+        "category": "correctness",
+        "claim": "InterceptorManager.forEach passes every handlers entry to the callback, including null entries left by eject, causing request dispatch to dereference a null interceptor.",
+        "confidence": 0.97,
+        "evidence": [
+          {
+            "endLine": 169,
+            "path": "core/InterceptorManager.js",
+            "snippet": "  forEach(fn) {\n    const internals = this[$internals];\n\n    syncHandlerEntries(this, internals);\n\n    internals.iterationDepth++;\n\n    try {\n      utils.forEach(this.handlers, function forEachHandler(h) {\n        fn(h);\n      });",
+            "startLine": 159
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "high",
+        "title": "InterceptorManager.forEach does not skip ejected null handlers"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 159-169 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-spark-1.3",
+        "verdict": "confirm",
+        "reason": "core/InterceptorManager.js:167-169 calls fn(h) unconditionally with no null check, while core/InterceptorManager.js:127 leaves null entries via eject and core/InterceptorManager.js:152-153 documents that forEach should skip nulls, confirming the claim."
+      }
+    },
+    {
+      "index": 14,
+      "candidate": {
+        "category": "correctness",
+        "claim": "spread wraps the argument array in another array before apply, so the callback receives the whole array as its first argument instead of the array elements as separate arguments.",
+        "confidence": 0.99,
+        "evidence": [
+          {
+            "endLine": 28,
+            "path": "helpers/spread.js",
+            "snippet": "export default function spread(callback) {\n  return function wrap(arr) {\n    return callback.apply(null, [arr]);\n  };\n}",
+            "startLine": 24
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "high",
+        "title": "spread passes an array instead of spreading its elements"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "duplicate-of F-003"
+    },
+    {
+      "index": 15,
+      "candidate": {
+        "category": "correctness",
+        "claim": "isAxiosError returns true for any object whose isAxiosError property is not exactly false, including plain objects with no such property.",
+        "confidence": 0.99,
+        "evidence": [
+          {
+            "endLine": 14,
+            "path": "helpers/isAxiosError.js",
+            "snippet": "export default function isAxiosError(payload) {\n  return utils.isObject(payload) && payload.isAxiosError !== false;\n}",
+            "startLine": 12
+          }
+        ],
+        "id": "F-007",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "isAxiosError classifies every object as an AxiosError"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "duplicate-of F-006"
+    },
+    {
+      "index": 16,
+      "candidate": {
+        "category": "correctness",
+        "claim": "The throttle timer invokes the arguments captured when the timer was created rather than lastArgs, so later coalesced calls update lastArgs but their arguments are not delivered by the timer.",
+        "confidence": 0.96,
+        "evidence": [
+          {
+            "endLine": 37,
+            "path": "helpers/throttle.js",
+            "snippet": "  const throttled = (...args) => {\n    const now = Date.now();\n    const passed = now - timestamp;\n    if (passed >= threshold) {\n      invoke(args, now);\n    } else {\n      lastArgs = args;\n      if (!timer) {\n        timer = setTimeout(() => {\n          timer = null;\n          invoke(args);\n        }, threshold - passed);\n      }\n    }\n  };",
+            "startLine": 23
+          }
+        ],
+        "id": "F-008",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "throttle timer delivers stale arguments"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "duplicate-of F-009"
+    },
+    {
+      "index": 17,
+      "candidate": {
+        "category": "correctness",
+        "claim": "createScheduler.start replaces this.timer with a new interval without clearing the previous interval; stop can then clear only the most recent interval.",
+        "confidence": 0.98,
+        "evidence": [
+          {
+            "endLine": 14,
+            "path": "helpers/scheduler.js",
+            "snippet": "export function createScheduler() {\n  return {\n    timer: null,\n    start(callback, intervalMs) {\n      this.timer = setInterval(callback, intervalMs);\n    },\n    stop() {\n      clearInterval(this.timer);\n      this.timer = null;\n    }\n  };\n}",
+            "startLine": 3
+          }
+        ],
+        "id": "F-009",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Scheduler start leaks the previous interval"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "duplicate-of F-007"
+    },
+    {
+      "index": 18,
+      "candidate": {
+        "category": "correctness",
+        "claim": "parseHeaders does not lowercase header names before comparing them with the lowercase ignoreDuplicateOf set or 'set-cookie', so capitalized Set-Cookie and duplicate headers bypass their intended special handling.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 62,
+            "path": "helpers/parseHeaders.js",
+            "snippet": "  rawHeaders &&\n    rawHeaders.split('\\n').forEach(function parser(line) {\n      i = line.indexOf(':');\n      key = line.substring(0, i).trim();\n      val = line.substring(i + 1).trim();\n\n      const hasKey = utils.hasOwnProp(parsed, key);\n\n      if (!key || (hasKey && utils.hasOwnProp(ignoreDuplicateOf, key))) {\n        return;\n      }\n\n      if (key === 'set-cookie') {\n        if (hasKey) {\n          parsed[key].push(val);",
+            "startLine": 48
+          }
+        ],
+        "id": "F-010",
+        "kind": "direct",
+        "severity": "low",
+        "title": "parseHeaders special cases fail for capitalized header names"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "duplicate-of F-008"
+    }
+  ]
+}

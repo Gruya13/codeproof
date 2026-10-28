@@ -1,0 +1,455 @@
+{
+  "raw": "{\n  \"chunked\": true,\n  \"groups\": [\n    {\n      \"group\": \"(root)\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"matchAll loops on regExp.exec without requiring a global flag or advancing past empty matches, so a non-global regex or a zero-length global match makes exec return the same match forever and the while loop never terminates.\\\", \\\"confidence\\\": 0.95, \\\"evidence\\\": [{\\\"endLine\\\": 888, \\\"path\\\": \\\"utils.js\\\", \\\"snippet\\\": \\\"const matchAll = (regExp, str) => {\\\\n  let matches;\\\\n  const arr = [];\\\\n\\\\n  while ((matches = regExp.exec(str)) !== null) {\\\\n    arr.push(matches);\\\\n  }\\\\n\\\\n  return arr;\\\\n};\\\", \\\"startLine\\\": 879}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"critical\\\", \\\"title\\\": \\\"matchAll infinite loop on non-global or empty match\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"toFlatObject tracks already-copied keys in a plain {} and tests !merged[prop], so own properties whose names exist on Object.prototype (e.g. constructor, hasOwnProperty, toString) look already-merged and are never copied to destObj.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 758, \\\"path\\\": \\\"utils.js\\\", \\\"snippet\\\": \\\"  const merged = {};\\\\n\\\\n  destObj = destObj || {};\\\\n  // eslint-disable-next-line no-eq-null,eqeqeq\\\\n  if (sourceObj == null) return destObj;\\\\n\\\\n  do {\\\\n    props = Object.getOwnPropertyNames(sourceObj);\\\\n    i = props.length;\\\\n    while (i-- > 0) {\\\\n      prop = props[i];\\\\n      if ((!propFilter || propFilter(prop, sourceObj, destObj)) && !merged[prop]) {\\\\n        destObj[prop] = sourceObj[prop];\\\\n        merged[prop] = true;\\\", \\\"startLine\\\": 744}], \\\"id\\\": \\\"F-002\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"toFlatObject skips keys colliding with Object.prototype\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"merge reads caseless/skipUndefined from this but its recursive calls for nested plain objects invoke merge(...) without preserving this, so nested merges lose those options.\\\", \\\"confidence\\\": 0.88, \\\"evidence\\\": [{\\\"endLine\\\": 589, \\\"path\\\": \\\"utils.js\\\", \\\"snippet\\\": \\\"function merge(...objs) {\\\\n  const { caseless, skipUndefined } = (isContextDefined(this) && this) || {};\\\\n  const result = {};\\\", \\\"startLine\\\": 587}, {\\\"endLine\\\": 621, \\\"path\\\": \\\"utils.js\\\", \\\"snippet\\\": \\\"    if (isPlainObject(existing) && isPlainObject(val)) {\\\\n      result[targetKey] = merge(existing, val);\\\\n    } else if (isPlainObject(val)) {\\\\n      result[targetKey] = merge({}, val);\\\", \\\"startLine\\\": 618}], \\\"id\\\": \\\"F-003\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"merge recursion drops caseless/skipUndefined context\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"toObjectSet builds the membership set in a plain {} via obj[value]=true, so uninherited prototype keys read truthy without being added and __proto__ assignment does not create an own entry, corrupting membership tests.\\\", \\\"confidence\\\": 0.85, \\\"evidence\\\": [{\\\"endLine\\\": 970, \\\"path\\\": \\\"utils.js\\\", \\\"snippet\\\": \\\"const toObjectSet = (arrayOrString, delimiter) => {\\\\n  const obj = {};\\\\n\\\\n  const define = (arr) => {\\\\n    arr.forEach((value) => {\\\\n      obj[value] = true;\\\\n    });\\\\n  };\\\", \\\"startLine\\\": 963}], \\\"id\\\": \\\"F-004\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"toObjectSet uses prototype-inheriting object as set\\\"}]}\"\n    },\n    {\n      \"group\": \"adapters\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"cancel\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"The cancel function returns early when `token.reason` is falsy, so the first (and normally only) cancellation request is ignored and `token.reason` is never set; cancellation can never occur.\\\", \\\"confidence\\\": 1.0, \\\"evidence\\\": [{\\\"endLine\\\": 62, \\\"path\\\": \\\"cancel/CancelToken.js\\\", \\\"snippet\\\": \\\"    executor(function cancel(message, config, request) {\\\\n      if (!token.reason) {\\\\n        // Cancellation has already been requested\\\\n        return;\\\\n      }\\\\n\\\\n      token.reason = new CanceledError(message, config, request);\\\\n      resolvePromise(token.reason);\\\\n    });\\\", \\\"startLine\\\": 54}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"critical\\\", \\\"title\\\": \\\"Inverted guard prevents CancelToken cancellation\\\"}]}\"\n    },\n    {\n      \"group\": \"core\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"settle resolves any status <500 even when validateStatus returns false, so 4xx rejections never occur and ERR_BAD_REQUEST is unreachable.\\\", \\\"confidence\\\": 0.98, \\\"evidence\\\": [{\\\"endLine\\\": 17, \\\"path\\\": \\\"core/settle.js\\\", \\\"snippet\\\": \\\"export default function settle(resolve, reject, response) {\\\\n  const validateStatus = response.config.validateStatus;\\\\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\\\\n    resolve(response);\\\", \\\"startLine\\\": 14}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"critical\\\", \\\"title\\\": \\\"settle bypasses validateStatus for status <500\\\"}]}\"\n    },\n    {\n      \"group\": \"defaults\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"env\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"helpers\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"combineURLs strips trailing slashes from baseURL then concatenates relativeURL without inserting '/', producing 'http://a/bc' instead of 'http://a/b/c'.\\\", \\\"confidence\\\": 0.98, \\\"evidence\\\": [{\\\"endLine\\\": 22, \\\"path\\\": \\\"helpers/combineURLs.js\\\", \\\"snippet\\\": \\\"  return baseURL.slice(0, end) + relativeURL.replace(/^\\\\\\\\/+/, '');\\\", \\\"startLine\\\": 22}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"critical\\\", \\\"title\\\": \\\"combineURLs missing '/' separator\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"isAxiosError uses !== false so any plain object without isAxiosError (undefined !== false) returns true instead of only true AxiosErrors.\\\", \\\"confidence\\\": 0.97, \\\"evidence\\\": [{\\\"endLine\\\": 14, \\\"path\\\": \\\"helpers/isAxiosError.js\\\", \\\"snippet\\\": \\\"export default function isAxiosError(payload) {\\\\n  return utils.isObject(payload) && payload.isAxiosError !== false;\\\\n}\\\", \\\"startLine\\\": 12}], \\\"id\\\": \\\"F-002\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"critical\\\", \\\"title\\\": \\\"isAxiosError true for any object\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"buildURL keeps the '#' when stripping the fragment (slice to hashmarkIndex+1), so serialized params are appended after '#' into the fragment instead of the query string.\\\", \\\"confidence\\\": 0.95, \\\"evidence\\\": [{\\\"endLine\\\": 65, \\\"path\\\": \\\"helpers/buildURL.js\\\", \\\"snippet\\\": \\\"    const hashmarkIndex = url.indexOf('#');\\\\n\\\\n    if (hashmarkIndex !== -1) {\\\\n      url = url.slice(0, hashmarkIndex + 1);\\\\n    }\\\\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;\\\", \\\"startLine\\\": 60}], \\\"id\\\": \\\"F-003\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"buildURL retains '#' when stripping fragment\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"parseHeaders does not lowercase header names, so case variants are stored as distinct keys and duplicate-ignore and set-cookie array logic fail.\\\", \\\"confidence\\\": 0.93, \\\"evidence\\\": [{\\\"endLine\\\": 52, \\\"path\\\": \\\"helpers/parseHeaders.js\\\", \\\"snippet\\\": \\\"      i = line.indexOf(':');\\\\n      key = line.substring(0, i).trim();\\\\n      val = line.substring(i + 1).trim();\\\", \\\"startLine\\\": 50}, {\\\"endLine\\\": 65, \\\"path\\\": \\\"helpers/parseHeaders.js\\\", \\\"snippet\\\": \\\"      if (key === 'set-cookie') {\\\\n        if (hasKey) {\\\\n          parsed[key].push(val);\\\\n        } else {\\\\n          parsed[key] = [val];\\\\n        }\\\", \\\"startLine\\\": 60}], \\\"id\\\": \\\"F-004\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"parseHeaders case-sensitive header names\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"spread wraps the array in another array ([arr]) so callback receives a single array argument instead of spread arguments.\\\", \\\"confidence\\\": 0.98, \\\"evidence\\\": [{\\\"endLine\\\": 28, \\\"path\\\": \\\"helpers/spread.js\\\", \\\"snippet\\\": \\\"export default function spread(callback) {\\\\n  return function wrap(arr) {\\\\n    return callback.apply(null, [arr]);\\\\n  };\\\\n}\\\", \\\"startLine\\\": 24}], \\\"id\\\": \\\"F-005\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"spread does not spread arguments\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"throttled trailing timeout invokes stale captured args instead of latest lastArgs, so rapid calls report the first suppressed args not the last.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 34, \\\"path\\\": \\\"helpers/throttle.js\\\", \\\"snippet\\\": \\\"      lastArgs = args;\\\\n      if (!timer) {\\\\n        timer = setTimeout(() => {\\\\n          timer = null;\\\\n          invoke(args);\\\", \\\"startLine\\\": 29}], \\\"id\\\": \\\"F-006\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"throttle trailing call uses stale args\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"createScheduler.start replaces this.timer with a new setInterval without clearing an existing interval, leaking the previous handle.\\\", \\\"confidence\\\": 0.95, \\\"evidence\\\": [{\\\"endLine\\\": 8, \\\"path\\\": \\\"helpers/scheduler.js\\\", \\\"snippet\\\": \\\"    start(callback, intervalMs) {\\\\n      this.timer = setInterval(callback, intervalMs);\\\\n    },\\\", \\\"startLine\\\": 6}], \\\"id\\\": \\\"F-007\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"scheduler.start leaks prior interval\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"cookies.read splits only on '; ' so a cookie string serialized with ';' and no space is not split and later cookies are never matched.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 50, \\\"path\\\": \\\"helpers/cookies.js\\\", \\\"snippet\\\": \\\"        const cookies = cookieString.split('; ');\\\\n        for (let i = 0; i < cookies.length; i++) {\\\\n          const cookie = cookies[i].replace(/^\\\\\\\\s+/, '');\\\", \\\"startLine\\\": 48}], \\\"id\\\": \\\"F-008\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"cookie split misses ';' without space\\\"}]}\"\n    },\n    {\n      \"group\": \"platform\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    }\n  ]\n}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "matchAll loops on regExp.exec without requiring a global flag or advancing past empty matches, so a non-global regex or a zero-length global match makes exec return the same match forever and the while loop never terminates.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 888,
+            "path": "utils.js",
+            "snippet": "const matchAll = (regExp, str) => {\n  let matches;\n  const arr = [];\n\n  while ((matches = regExp.exec(str)) !== null) {\n    arr.push(matches);\n  }\n\n  return arr;\n};",
+            "startLine": 879
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "matchAll infinite loop on non-global or empty match"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 22-22 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/combineURLs.js:22 concatenates baseURL.slice(0, end) directly with relativeURL stripped of leading slashes and no '/' inserted, after helpers/combineURLs.js:18-20 strips trailing slashes from baseURL, so 'http://a/b' combined with '/c' yields 'http://a/bc'."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "toFlatObject tracks already-copied keys in a plain {} and tests !merged[prop], so own properties whose names exist on Object.prototype (e.g. constructor, hasOwnProperty, toString) look already-merged and are never copied to destObj.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 758,
+            "path": "utils.js",
+            "snippet": "  const merged = {};\n\n  destObj = destObj || {};\n  // eslint-disable-next-line no-eq-null,eqeqeq\n  if (sourceObj == null) return destObj;\n\n  do {\n    props = Object.getOwnPropertyNames(sourceObj);\n    i = props.length;\n    while (i-- > 0) {\n      prop = props[i];\n      if ((!propFilter || propFilter(prop, sourceObj, destObj)) && !merged[prop]) {\n        destObj[prop] = sourceObj[prop];\n        merged[prop] = true;",
+            "startLine": 744
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "toFlatObject skips keys colliding with Object.prototype"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 12-14 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/isAxiosError.js:13 returns utils.isObject(payload) && payload.isAxiosError !== false, so a plain object lacking the property yields undefined !== false and returns true."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "merge reads caseless/skipUndefined from this but its recursive calls for nested plain objects invoke merge(...) without preserving this, so nested merges lose those options.",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "endLine": 589,
+            "path": "utils.js",
+            "snippet": "function merge(...objs) {\n  const { caseless, skipUndefined } = (isContextDefined(this) && this) || {};\n  const result = {};",
+            "startLine": 587
+          },
+          {
+            "endLine": 621,
+            "path": "utils.js",
+            "snippet": "    if (isPlainObject(existing) && isPlainObject(val)) {\n      result[targetKey] = merge(existing, val);\n    } else if (isPlainObject(val)) {\n      result[targetKey] = merge({}, val);",
+            "startLine": 618
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "high",
+        "title": "merge recursion drops caseless/skipUndefined context"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 60-65 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/buildURL.js:63 uses url.slice(0, hashmarkIndex + 1), which retains the '#' character, and helpers/buildURL.js:65 then appends '?'+serializedParams after it, so params are placed in the fragment rather than the query string."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "toObjectSet builds the membership set in a plain {} via obj[value]=true, so uninherited prototype keys read truthy without being added and __proto__ assignment does not create an own entry, corrupting membership tests.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 970,
+            "path": "utils.js",
+            "snippet": "const toObjectSet = (arrayOrString, delimiter) => {\n  const obj = {};\n\n  const define = (arr) => {\n    arr.forEach((value) => {\n      obj[value] = true;\n    });\n  };",
+            "startLine": 963
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "toObjectSet uses prototype-inheriting object as set"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 50-52 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "parseHeaders extracts the key with only trim() at helpers/parseHeaders.js:51, checks it case-sensitively against the lowercase ignoreDuplicateOf set at helpers/parseHeaders.js:56, and requires exact 'set-cookie' at helpers/parseHeaders.js:60, so case variants are stored distinctly and bypass both duplicate-ignore and set-cookie array handling."
+      }
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "The cancel function returns early when `token.reason` is falsy, so the first (and normally only) cancellation request is ignored and `token.reason` is never set; cancellation can never occur.",
+        "confidence": 1,
+        "evidence": [
+          {
+            "endLine": 62,
+            "path": "cancel/CancelToken.js",
+            "snippet": "    executor(function cancel(message, config, request) {\n      if (!token.reason) {\n        // Cancellation has already been requested\n        return;\n      }\n\n      token.reason = new CanceledError(message, config, request);\n      resolvePromise(token.reason);\n    });",
+            "startLine": 54
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "Inverted guard prevents CancelToken cancellation"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "settle resolves any status <500 even when validateStatus returns false, so 4xx rejections never occur and ERR_BAD_REQUEST is unreachable.",
+        "confidence": 0.98,
+        "evidence": [
+          {
+            "endLine": 17,
+            "path": "core/settle.js",
+            "snippet": "export default function settle(resolve, reject, response) {\n  const validateStatus = response.config.validateStatus;\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\n    resolve(response);",
+            "startLine": 14
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "settle bypasses validateStatus for status <500"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 6,
+      "candidate": {
+        "category": "correctness",
+        "claim": "combineURLs strips trailing slashes from baseURL then concatenates relativeURL without inserting '/', producing 'http://a/bc' instead of 'http://a/b/c'.",
+        "confidence": 0.98,
+        "evidence": [
+          {
+            "endLine": 22,
+            "path": "helpers/combineURLs.js",
+            "snippet": "  return baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '');",
+            "startLine": 22
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "combineURLs missing '/' separator"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 7,
+      "candidate": {
+        "category": "correctness",
+        "claim": "isAxiosError uses !== false so any plain object without isAxiosError (undefined !== false) returns true instead of only true AxiosErrors.",
+        "confidence": 0.97,
+        "evidence": [
+          {
+            "endLine": 14,
+            "path": "helpers/isAxiosError.js",
+            "snippet": "export default function isAxiosError(payload) {\n  return utils.isObject(payload) && payload.isAxiosError !== false;\n}",
+            "startLine": 12
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "isAxiosError true for any object"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 8,
+      "candidate": {
+        "category": "correctness",
+        "claim": "buildURL keeps the '#' when stripping the fragment (slice to hashmarkIndex+1), so serialized params are appended after '#' into the fragment instead of the query string.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 65,
+            "path": "helpers/buildURL.js",
+            "snippet": "    const hashmarkIndex = url.indexOf('#');\n\n    if (hashmarkIndex !== -1) {\n      url = url.slice(0, hashmarkIndex + 1);\n    }\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;",
+            "startLine": 60
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "high",
+        "title": "buildURL retains '#' when stripping fragment"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 9,
+      "candidate": {
+        "category": "correctness",
+        "claim": "parseHeaders does not lowercase header names, so case variants are stored as distinct keys and duplicate-ignore and set-cookie array logic fail.",
+        "confidence": 0.93,
+        "evidence": [
+          {
+            "endLine": 52,
+            "path": "helpers/parseHeaders.js",
+            "snippet": "      i = line.indexOf(':');\n      key = line.substring(0, i).trim();\n      val = line.substring(i + 1).trim();",
+            "startLine": 50
+          },
+          {
+            "endLine": 65,
+            "path": "helpers/parseHeaders.js",
+            "snippet": "      if (key === 'set-cookie') {\n        if (hasKey) {\n          parsed[key].push(val);\n        } else {\n          parsed[key] = [val];\n        }",
+            "startLine": 60
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "high",
+        "title": "parseHeaders case-sensitive header names"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 10,
+      "candidate": {
+        "category": "correctness",
+        "claim": "spread wraps the array in another array ([arr]) so callback receives a single array argument instead of spread arguments.",
+        "confidence": 0.98,
+        "evidence": [
+          {
+            "endLine": 28,
+            "path": "helpers/spread.js",
+            "snippet": "export default function spread(callback) {\n  return function wrap(arr) {\n    return callback.apply(null, [arr]);\n  };\n}",
+            "startLine": 24
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "high",
+        "title": "spread does not spread arguments"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 24-28 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/spread.js:26 uses callback.apply(null, [arr]), which passes arr itself as a single argument instead of spreading its elements as callback.apply(null, arr) would."
+      }
+    },
+    {
+      "index": 11,
+      "candidate": {
+        "category": "correctness",
+        "claim": "throttled trailing timeout invokes stale captured args instead of latest lastArgs, so rapid calls report the first suppressed args not the last.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 34,
+            "path": "helpers/throttle.js",
+            "snippet": "      lastArgs = args;\n      if (!timer) {\n        timer = setTimeout(() => {\n          timer = null;\n          invoke(args);",
+            "startLine": 29
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "throttle trailing call uses stale args"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 6 non-blank lines but snippet has 5"
+      }
+    },
+    {
+      "index": 12,
+      "candidate": {
+        "category": "correctness",
+        "claim": "createScheduler.start replaces this.timer with a new setInterval without clearing an existing interval, leaking the previous handle.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 8,
+            "path": "helpers/scheduler.js",
+            "snippet": "    start(callback, intervalMs) {\n      this.timer = setInterval(callback, intervalMs);\n    },",
+            "startLine": 6
+          }
+        ],
+        "id": "F-007",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "scheduler.start leaks prior interval"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 6-8 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The cited code at helpers/scheduler.js:6-7 assigns this.timer = setInterval(callback, intervalMs) with no prior clearInterval, while stop at helpers/scheduler.js:9-11 can only clear the currently stored handle, so a second start without stop loses and leaks the previous interval."
+      }
+    },
+    {
+      "index": 13,
+      "candidate": {
+        "category": "correctness",
+        "claim": "cookies.read splits only on '; ' so a cookie string serialized with ';' and no space is not split and later cookies are never matched.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 50,
+            "path": "helpers/cookies.js",
+            "snippet": "        const cookies = cookieString.split('; ');\n        for (let i = 0; i < cookies.length; i++) {\n          const cookie = cookies[i].replace(/^\\s+/, '');",
+            "startLine": 48
+          }
+        ],
+        "id": "F-008",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "cookie split misses ';' without space"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 48-50 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/cookies.js:48 splits only on '; ' and at helpers/cookies.js:52 compares only the substring before the first '=' in each chunk, so a ';'-only serialized string remains a single chunk and later cookie names are never matched."
+      }
+    }
+  ]
+}

@@ -60,6 +60,23 @@ Mean verified recall **6.0/16 (37.5%)**, mean cost **$0.755**, mean duration 136
 - **The model proposes roughly the same number of candidates regardless of the cap**, so the low recall is a scanner limitation, not a `MAX_FINDINGS` artifact. A larger `MAX_FINDINGS` did not help (`run-3`/`run-4`).
 - **L1 still earns its place:** in `run-1`, four of eight candidates cited the wrong lines and were rejected deterministically before any model verification.
 
+## Recall experiments (post-freeze, same ground truth)
+
+After the set was published, the recall levers were measured against the same frozen ground truth. No ground truth, prompt or threshold was changed; these are pipeline variants.
+
+| Variant | Defects verified | Precision vs ground truth | Traps leaked | Cost |
+|---|---:|---:|---:|---:|
+| single-pass scanner (4 runs) | 4, 7, 6, 7 / 16 - **mean 37.5%** | 85.7-100% | 0/5 | $0.53-0.86 |
+| **dual-scanner** (both models scan) | 7/16 (43.8%) | 87.5% (1 FP) | **1/5** | $2.52 |
+| **chunked scan** (one call per directory) | 10/16, 9/16 - **mean 59.4%** | 71.4%, 75.0% | 0/5 | $2.31, $1.85 |
+
+Reading:
+
+- **Chunked scanning is the effective recall lever.** The scanner recall measured before verification went from 8/16 (50%) to **11/16 (68.8%)** in one chunked scan at $0.245, and the full chunked pipeline verified 9-10/16 versus 4-7/16 for single-pass. The reason is context focus: each call sees one directory instead of all 74 files.
+- **The dual scanner does not help on this set.** It produced one extra candidate but the same verified recall, cost 3.5x, and leaked one trap (a finding the verifier confirmed on a place that is actually correct). Cross-model verification does not compensate for a context that is too broad.
+- **The two chunked runs published 4 and 3 findings that are not among the injected defects** (in `utils.js` and `AxiosHeaders.js`); the scorer counts them as precision errors against the frozen set. One of them is a real bug: `utils.matchAll` can loop forever on a regex that matches an empty string (`while ((matches = regExp.exec(str)) !== null)` never advances `lastIndex` for a zero-length match). It is published as a genuine extra finding, exactly like the calibration set's pre-registered extras - the scorer simply has no ground-truth entry for it.
+- **`MAX_FINDINGS` is not the limiter** (the model proposed 8-14 candidates either way), and the candidate cap change from 8 to 20 moved recall only through the chunked variant.
+
 ## Limits
 
 - Injected defects are authored, not naturally occurring: the set measures detection of known single-line/small-block regressions, not the discovery rate of organic bugs.

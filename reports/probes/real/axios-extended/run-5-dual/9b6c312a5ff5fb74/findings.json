@@ -1,0 +1,712 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "CancelToken executor guard is inverted: it returns when no cancellation has been requested, so token.reason is never set and cancellation never fires.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "endLine": 62,
+          "path": "cancel/CancelToken.js",
+          "snippet": "    executor(function cancel(message, config, request) {\n      if (!token.reason) {\n        // Cancellation has already been requested\n        return;\n      }\n\n      token.reason = new CanceledError(message, config, request);\n      resolvePromise(token.reason);\n    });",
+          "startLine": 54
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "CancelToken cancel guard inverted"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark",
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-001",
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 54-62 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The guard at cancel/CancelToken.js:55 returns when token.reason is falsy (its initial state), so the assignment at cancel/CancelToken.js:60 and resolvePromise at cancel/CancelToken.js:61 are unreachable and cancellation never fires."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(token.reason)\n\n    at file:///tmp/codeproof-repro-j1gXLs/snapshot/.codeproof-repro.test.mjs:9:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 77,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(token.reason)\n\n    at file:///tmp/codeproof-repro-j1gXLs/snapshot/.codeproof-repro.test.mjs:9:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 75,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(token.reason)\n\n    at file:///tmp/codeproof-repro-j1gXLs/snapshot/.codeproof-repro.test.mjs:9:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 71,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport CancelToken from './cancel/CancelToken.js';\n\nconst { token, cancel } = CancelToken.source();\nassert.equal(token.reason, undefined);\n\ncancel('Operation canceled by test');\n\nassert.ok(token.reason);\nassert.equal(token.reason.message, 'Operation canceled by test');\n\nlet thrown = null;\ntry {\n  token.throwIfRequested();\n} catch (err) {\n  thrown = err;\n}\nassert.equal(thrown, token.reason);\n\nlet notified = null;\ntoken.subscribe((reason) => {\n  notified = reason;\n});\nassert.equal(notified, token.reason);\n\nconst firstReason = token.reason;\ncancel('second cancel');\nassert.equal(token.reason, firstReason);\nassert.equal(token.reason.message, 'Operation canceled by test');\n",
+      "expectedBehavior": "Calling the cancel function from CancelToken.source() sets token.reason to a CanceledError with the given message, makes throwIfRequested() throw that reason, notifies subscribers with it, and ignores subsequent cancels.",
+      "rationale": "The executor guard `if (!token.reason) return;` returns on the first cancel when no reason exists, so reason is never set. The test exercises source()/cancel synchronously and asserts reason, throwIfRequested, and subscribe behavior, failing on the buggy guard.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 10096,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1937,
+        "outputTokens": 1834,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.0430144
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "settle resolves any response with status < 500 regardless of validateStatus result, so custom validateStatus rejecting 4xx never rejects.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 17,
+          "path": "core/settle.js",
+          "snippet": "export default function settle(resolve, reject, response) {\n  const validateStatus = response.config.validateStatus;\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\n    resolve(response);",
+          "startLine": 14
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "settle bypasses validateStatus for status < 500"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark",
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-002",
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 14-17 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The condition at core/settle.js:16 includes '|| response.status < 500' as an independent disjunct, so any status below 500 resolves at core/settle.js:17 even when validateStatus(status) returns false, and reject at core/settle.js:19 is only reachable for status >= 500."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'resolved'\n- 'rejected'\n     ^\n\n    at file:///tmp/codeproof-repro-YhaE04/snapshot/.codeproof-repro.test.mjs:23:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'resolved',\n  expected: 'rejected',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 64,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'resolved'\n- 'rejected'\n     ^\n\n    at file:///tmp/codeproof-repro-YhaE04/snapshot/.codeproof-repro.test.mjs:23:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'resolved',\n  expected: 'rejected',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 66,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'resolved'\n- 'rejected'\n     ^\n\n    at file:///tmp/codeproof-repro-YhaE04/snapshot/.codeproof-repro.test.mjs:23:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'resolved',\n  expected: 'rejected',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 64,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport settle from './core/settle.js';\n\nfunction run(status, validateStatus) {\n  let outcome = null;\n  let error = null;\n  let value = null;\n  try {\n    settle(\n      (res) => { outcome = 'resolved'; value = res; },\n      (err) => { outcome = 'rejected'; error = err; },\n      { status, config: { validateStatus }, request: {} }\n    );\n  } catch (e) {\n    outcome = 'threw';\n    error = e;\n  }\n  return { outcome, error, value };\n}\n\n// Custom validateStatus accepts only 2xx, so 404 must reject (not resolve).\nconst r404 = run(404, (s) => s >= 200 && s < 300);\nassert.equal(r404.outcome, 'rejected');\nassert.equal(r404.error && r404.error.response && r404.error.response.status, 404);\n\n// A validateStatus accepting only 200 must reject 403.\nconst r403 = run(403, (s) => s === 200);\nassert.equal(r403.outcome, 'rejected');\n\n// Sanity: a status accepted by validateStatus resolves.\nconst ok = run(200, (s) => s >= 200 && s < 300);\nassert.equal(ok.outcome, 'resolved');\n",
+      "expectedBehavior": "settle must reject when validateStatus returns false for a 4xx status (e.g. 404 with validateStatus accepting only 2xx), instead of resolving because status < 500.",
+      "rationale": "Directly calls the real settle() with a custom validateStatus that rejects 404/403; buggy code resolves due to `|| response.status < 500`, fixed code rejects with an AxiosError carrying the response.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 12153,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1249,
+        "outputTokens": 2873,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.062456
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "spread passes the array as a single argument instead of spreading it, so callback receives [arr] rather than ...arr.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "endLine": 28,
+          "path": "helpers/spread.js",
+          "snippet": "export default function spread(callback) {\n  return function wrap(arr) {\n    return callback.apply(null, [arr]);\n  };\n}",
+          "startLine": 24
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "spread does not spread array arguments"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark",
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-003",
+      "F-006"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 24-28 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at helpers/spread.js:26 wraps the input array in another array for apply, so callback.apply(null, [arr]) passes arr as a single argument instead of spreading its elements as callback.apply(null, arr) would."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   [\n+     1,\n+     2,\n+     3\n+   ]\n-   1,\n-   2,\n-   3\n  ]\n\n    at file:///tmp/codeproof-repro-68KRCK/snapshot/.codeproof-repro.test.mjs:16:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ [ 1, 2, 3 ] ],\n  expected: [ 1, 2, 3 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 66,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   [\n+     1,\n+     2,\n+     3\n+   ]\n-   1,\n-   2,\n-   3\n  ]\n\n    at file:///tmp/codeproof-repro-68KRCK/snapshot/.codeproof-repro.test.mjs:16:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ [ 1, 2, 3 ] ],\n  expected: [ 1, 2, 3 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   [\n+     1,\n+     2,\n+     3\n+   ]\n-   1,\n-   2,\n-   3\n  ]\n\n    at file:///tmp/codeproof-repro-68KRCK/snapshot/.codeproof-repro.test.mjs:16:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ [ 1, 2, 3 ] ],\n  expected: [ 1, 2, 3 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 61,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport spread from './helpers/spread.js';\n\nlet received = null;\nlet returned = null;\nlet error = null;\ntry {\n  returned = spread(function (...args) {\n    received = args;\n    return args;\n  })([1, 2, 3]);\n} catch (e) {\n  error = e;\n}\nassert.equal(error, null);\nassert.deepEqual(received, [1, 2, 3]);\nassert.deepEqual(returned, [1, 2, 3]);\n\nlet xyz = null;\nlet error2 = null;\ntry {\n  xyz = spread(function (x, y, z) { return [x, y, z]; })(['a', 'b', 'c']);\n} catch (e) {\n  error2 = e;\n}\nassert.equal(error2, null);\nassert.deepEqual(xyz, ['a', 'b', 'c']);\n",
+      "expectedBehavior": "spread(fn)([1,2,3]) invokes fn with 1, 2, 3 as separate arguments (fn.apply(null, arr)), per the documented example in helpers/spread.js.",
+      "rationale": "The wrapper uses callback.apply(null, [arr]), passing the whole array as one argument. Capturing the callback's arguments and asserting they equal the array elements exposes this.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 13378,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1209,
+        "outputTokens": 1636,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.037556
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "combineURLs strips trailing slashes from baseURL and leading slashes from relativeURL then concatenates without inserting '/', producing '...foobar' instead of '...foo/bar'.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 22,
+          "path": "helpers/combineURLs.js",
+          "snippet": "  let end = baseURL.length;\n\n  while (end > 0 && baseURL.charCodeAt(end - 1) === 47) {\n    end--;\n  }\n\n  return baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '');",
+          "startLine": 16
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "high",
+      "title": "combineURLs missing separator slash"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark",
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-004",
+      "F-003"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 16-22 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at helpers/combineURLs.js:22 returns baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '') with no '/' separator after stripping trailing slashes at helpers/combineURLs.js:18-20, so combining 'foo' and '/bar' yields 'foobar'."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'https://example.com/foobar'\n- 'https://example.com/foo/bar'\n                          ^\n\n    at file:///tmp/codeproof-repro-RquqU8/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'https://example.com/foobar',\n  expected: 'https://example.com/foo/bar',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 76,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'https://example.com/foobar'\n- 'https://example.com/foo/bar'\n                          ^\n\n    at file:///tmp/codeproof-repro-RquqU8/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'https://example.com/foobar',\n  expected: 'https://example.com/foo/bar',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 76,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'https://example.com/foobar'\n- 'https://example.com/foo/bar'\n                          ^\n\n    at file:///tmp/codeproof-repro-RquqU8/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'https://example.com/foobar',\n  expected: 'https://example.com/foo/bar',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 83,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport combineURLs from './helpers/combineURLs.js';\n\nassert.equal(combineURLs('https://example.com/foo', 'bar'), 'https://example.com/foo/bar');\nassert.equal(combineURLs('https://example.com/foo/', 'bar'), 'https://example.com/foo/bar');\nassert.equal(combineURLs('https://example.com/foo', '/bar'), 'https://example.com/foo/bar');\nassert.equal(combineURLs('https://example.com/foo/', '/bar'), 'https://example.com/foo/bar');\nassert.equal(combineURLs('https://example.com/foo///', '///bar'), 'https://example.com/foo/bar');\nassert.equal(combineURLs('https://example.com/foo', ''), 'https://example.com/foo');\n",
+      "expectedBehavior": "combineURLs joins base and relative URLs with exactly one '/' separator, e.g. combineURLs('https://example.com/foo', 'bar') === 'https://example.com/foo/bar' regardless of trailing/leading slashes.",
+      "rationale": "The implementation strips trailing slashes from baseURL and leading slashes from relativeURL but concatenates without '/', so 'foo'+'bar' becomes 'foobar'. The test asserts the documented combining behavior for several slash combinations.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 4781,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1205,
+        "outputTokens": 1402,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.03286
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "buildURL keeps the '#' when stripping the fragment (slice to hashmarkIndex+1) and then appends query after '#', placing query inside the fragment.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 66,
+          "path": "helpers/buildURL.js",
+          "snippet": "  if (serializedParams) {\n    const hashmarkIndex = url.indexOf('#');\n\n    if (hashmarkIndex !== -1) {\n      url = url.slice(0, hashmarkIndex + 1);\n    }\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;\n  }",
+          "startLine": 59
+        }
+      ],
+      "id": "F-005",
+      "kind": "direct",
+      "severity": "high",
+      "title": "buildURL appends query after hash fragment"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark",
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-005",
+      "F-004"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 59-66 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at helpers/buildURL.js:63 slices to hashmarkIndex+1 retaining the '#', and helpers/buildURL.js:65 then appends the serialized params after it, so a URL like 'http://x/#frag' becomes 'http://x/#?a=1' with the query inside the fragment."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'form-data' imported from /tmp/codeproof-repro-Xf3TSs/snapshot/platform/node/classes/FormData.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 65,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'form-data' imported from /tmp/codeproof-repro-Xf3TSs/snapshot/platform/node/classes/FormData.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 67,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'form-data' imported from /tmp/codeproof-repro-Xf3TSs/snapshot/platform/node/classes/FormData.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 72,
+          "classification": "invalid-test"
+        }
+      ],
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport buildURL from './helpers/buildURL.js';\n\nassert.equal(\n  buildURL('https://example.com/path#section', { a: 1 }),\n  'https://example.com/path?a=1'\n);\nassert.equal(\n  buildURL('https://example.com/path?x=1#section', { a: 1 }),\n  'https://example.com/path?x=1&a=1'\n);\nassert.equal(\n  buildURL('https://example.com/path#', { q: 'hello world' }),\n  'https://example.com/path?q=hello+world'\n);\nconst parsed = new URL(buildURL('https://example.com/path#frag', { a: 1 }));\nassert.equal(parsed.searchParams.get('a'), '1');\nassert.equal(parsed.hash, '');\n",
+      "expectedBehavior": "buildURL strips the '#' fragment before appending serialized params, so the query string is in the URL search part (e.g. buildURL('https://example.com/path#section', {a:1}) === 'https://example.com/path?a=1'), not inside the fragment.",
+      "rationale": "The buggy code uses url.slice(0, hashmarkIndex + 1), keeping '#', then appends '?params' after it. Asserting the fragment-stripped result and URL-parsed search params fails on that code ('...#?a=1') and passes when the fragment is correctly removed.",
+      "reason": "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers or missing packages)",
+      "artifacts": null,
+      "durationMs": 11168,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1667,
+        "outputTokens": 2349,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.052720800000000005
+    },
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "isAxiosError returns true for any object whose isAxiosError is undefined because it checks !== false instead of truthiness.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 14,
+          "path": "helpers/isAxiosError.js",
+          "snippet": "export default function isAxiosError(payload) {\n  return utils.isObject(payload) && payload.isAxiosError !== false;\n}",
+          "startLine": 12
+        }
+      ],
+      "id": "F-006",
+      "kind": "direct",
+      "severity": "high",
+      "title": "isAxiosError true for plain objects"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark",
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-006",
+      "F-007"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 12-14 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At helpers/isAxiosError.js:13 the function returns utils.isObject(payload) && payload.isAxiosError !== false, so a plain object with no isAxiosError property (undefined !== false) passes both conditions and returns true."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-mJ6u0l/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 60,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-mJ6u0l/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 61,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-mJ6u0l/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 60,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport isAxiosError from './helpers/isAxiosError.js';\n\n// Plain objects are not Axios errors and must return false\nassert.equal(isAxiosError({}), false);\nassert.equal(isAxiosError({ foo: 'bar' }), false);\nassert.equal(isAxiosError({ isAxiosError: undefined }), false);\nassert.equal(isAxiosError({ message: 'boom', name: 'Error' }), false);\n\n// Positive and explicit-negative controls\nassert.equal(isAxiosError({ isAxiosError: true }), true);\nassert.equal(isAxiosError({ isAxiosError: false }), false);\nassert.equal(isAxiosError(null), false);\nassert.equal(isAxiosError('error'), false);\nassert.equal(isAxiosError(42), false);\n",
+      "expectedBehavior": "isAxiosError returns false for plain objects without a truthy isAxiosError flag, and true only for payloads marked as Axios errors",
+      "rationale": "The helper checks payload.isAxiosError !== false, so undefined passes for any plain object, contradicting its documented contract to return true only for Axios errors.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 9305,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1085,
+        "outputTokens": 1769,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0387928
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "parseHeaders keeps original header case but checks duplicates against lowercase ignore list, so duplicate headers with different casing are not ignored.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 58,
+          "path": "helpers/parseHeaders.js",
+          "snippet": "      i = line.indexOf(':');\n      key = line.substring(0, i).trim();\n      val = line.substring(i + 1).trim();\n\n      const hasKey = utils.hasOwnProp(parsed, key);\n\n      if (!key || (hasKey && utils.hasOwnProp(ignoreDuplicateOf, key))) {\n        return;\n      }",
+          "startLine": 50
+        }
+      ],
+      "id": "F-008",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "parseHeaders duplicate check is case-sensitive"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark",
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-008",
+      "F-010"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 50-58 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: helpers/parseHeaders.js:51 extracts key without lowercasing, helpers/parseHeaders.js:54-56 checks it case-sensitively against parsed and ignoreDuplicateOf, while helpers/parseHeaders.js:7-25 defines ignoreDuplicateOf only with lowercase names, so capitalized duplicates are combined instead of ignored."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   'text/html, application/json'\n-   'text/html'\n  ]\n\n    at file:///tmp/codeproof-repro-eF7lT5/snapshot/.codeproof-repro.test.mjs:15:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'text/html, application/json' ],\n  expected: [ 'text/html' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 70,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   'text/html, application/json'\n-   'text/html'\n  ]\n\n    at file:///tmp/codeproof-repro-eF7lT5/snapshot/.codeproof-repro.test.mjs:15:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'text/html, application/json' ],\n  expected: [ 'text/html' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 72,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   'text/html, application/json'\n-   'text/html'\n  ]\n\n    at file:///tmp/codeproof-repro-eF7lT5/snapshot/.codeproof-repro.test.mjs:15:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'text/html, application/json' ],\n  expected: [ 'text/html' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 70,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport parseHeaders from './helpers/parseHeaders.js';\n\nfunction valuesFor(parsed, lowerName) {\n  return Object.keys(parsed)\n    .filter((key) => key.toLowerCase() === lowerName)\n    .map((key) => parsed[key]);\n}\n\n// ignoreDuplicateOf entries are lowercase, but raw headers commonly use\n// capitalized names. Duplicates must be ignored (first value wins).\nconst contentType = parseHeaders(\n  'Content-Type: text/html\\nContent-Type: application/json'\n);\nassert.deepEqual(valuesFor(contentType, 'content-type'), ['text/html']);\n\nconst authorization = parseHeaders(\n  'Authorization: Bearer first\\nAuthorization: Bearer second'\n);\nassert.deepEqual(valuesFor(authorization, 'authorization'), ['Bearer first']);\n",
+      "expectedBehavior": "parseHeaders should ignore duplicates of headers in the lowercase ignoreDuplicateOf list (e.g. Content-Type, Authorization) even when the raw header names are capitalized, keeping only the first value.",
+      "rationale": "The test imports the real parseHeaders helper and checks capitalized duplicate Content-Type and Authorization headers. On the buggy code the lowercase ignore check fails for capitalized keys, so duplicates are combined into 'first, second' instead of being ignored, causing the deepEqual assertions to fail.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 29947,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1604,
+        "outputTokens": 4935,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.1041888
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "InterceptorManager.forEach passes every handlers entry to the callback, including null entries left by eject, causing request dispatch to dereference a null interceptor.",
+      "confidence": 0.97,
+      "evidence": [
+        {
+          "endLine": 169,
+          "path": "core/InterceptorManager.js",
+          "snippet": "  forEach(fn) {\n    const internals = this[$internals];\n\n    syncHandlerEntries(this, internals);\n\n    internals.iterationDepth++;\n\n    try {\n      utils.forEach(this.handlers, function forEachHandler(h) {\n        fn(h);\n      });",
+          "startLine": 159
+        }
+      ],
+      "id": "F-010",
+      "kind": "direct",
+      "severity": "high",
+      "title": "InterceptorManager.forEach does not skip ejected null handlers"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "wonder"
+    ],
+    "scannerIds": [
+      "F-005"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 159-169 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-spark-1.3",
+      "verdict": "confirm",
+      "reason": "core/InterceptorManager.js:167-169 calls fn(h) unconditionally with no null check, while core/InterceptorManager.js:127 leaves null entries via eject and core/InterceptorManager.js:152-153 documents that forEach should skip nulls, confirming the claim."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n3 !== 2\n\n    at file:///tmp/codeproof-repro-c2HXpc/snapshot/.codeproof-repro.test.mjs:25:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 3,\n  expected: 2,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 71,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n3 !== 2\n\n    at file:///tmp/codeproof-repro-c2HXpc/snapshot/.codeproof-repro.test.mjs:25:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 3,\n  expected: 2,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 72,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n3 !== 2\n\n    at file:///tmp/codeproof-repro-c2HXpc/snapshot/.codeproof-repro.test.mjs:25:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 3,\n  expected: 2,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 76,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport InterceptorManager from './core/InterceptorManager.js';\n\nconst manager = new InterceptorManager();\nfunction fulfilledA() {}\nfunction fulfilledB() {}\nfunction fulfilledC() {}\nconst idA = manager.use(fulfilledA);\nconst idB = manager.use(fulfilledB);\nconst idC = manager.use(fulfilledC);\nassert.equal(typeof idA, 'number');\nassert.equal(typeof idC, 'number');\nmanager.eject(idB);\n\nconst seen = [];\nlet caught = null;\ntry {\n  manager.forEach((h) => {\n    seen.push(h);\n  });\n} catch (err) {\n  caught = err;\n}\nassert.equal(caught, null);\nassert.equal(seen.length, 2);\nassert.equal(seen.includes(null), false);\nassert.deepEqual(seen.map((h) => h && h.fulfilled), [fulfilledA, fulfilledC]);\n",
+      "expectedBehavior": "InterceptorManager.forEach skips null entries left by eject (as documented), invoking the callback only for remaining interceptors.",
+      "rationale": "Ejecting the middle of three interceptors leaves a null hole (trailing trim does not remove it). Collecting forEach callbacks should yield only the two live handlers; buggy code yields three entries including null, which dispatch would dereference.",
+      "reason": "assertion failed consistently on analyzed commit",
+      "artifacts": null,
+      "durationMs": 9142,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2461,
+        "outputTokens": 1620,
+        "cachedTokens": 244
+      },
+      "costUsd": 0.0413168
+    },
+    "evidenceLevel": "execution-proven"
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   'text/html, application/json'\n-   'text/html'\n  ]\n\n    at file:///tmp/codeproof-repro-eF7lT5/snapshot/.codeproof-repro.test.mjs:15:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'text/html, application/json' ],\n  expected: [ 'text/html' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 70,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   'text/html, application/json'\n-   'text/html'\n  ]\n\n    at file:///tmp/codeproof-repro-eF7lT5/snapshot/.codeproof-repro.test.mjs:15:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'text/html, application/json' ],\n  expected: [ 'text/html' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 72,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   'text/html, application/json'\n-   'text/html'\n  ]\n\n    at file:///tmp/codeproof-repro-eF7lT5/snapshot/.codeproof-repro.test.mjs:15:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'text/html, application/json' ],\n  expected: [ 'text/html' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 70,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "parseHeaders should ignore duplicates of headers in the lowercase ignoreDuplicateOf list (e.g. Content-Type, Authorization) even when the raw header names are capitalized, keeping only the first value.",
+  "rationale": "The test imports the real parseHeaders helper and checks capitalized duplicate Content-Type and Authorization headers. On the buggy code the lowercase ignore check fails for capitalized keys, so duplicates are combined into 'first, second' instead of being ignored, causing the deepEqual assertions to fail.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1604,
+    "outputTokens": 4935,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.1041888
+}
