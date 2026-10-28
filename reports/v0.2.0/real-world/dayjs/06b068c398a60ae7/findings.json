@@ -1,0 +1,179 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "dayjs(date, null) throws TypeError because typeof null is 'object', so cfg becomes null and the next line assigns cfg.date.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 42,
+          "path": "index.js",
+          "snippet": "  const cfg = typeof c === 'object' ? c : {}\n  cfg.date = date",
+          "startLine": 41
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "Null options object crashes factory"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 41-42 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: index.js:41 assigns cfg = c when typeof c === 'object', which is true for null, and index.js:42 then assigns cfg.date on null, throwing a TypeError."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol",
+      "artifacts": null,
+      "durationMs": 11704,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 5044,
+        "outputTokens": 1688,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.053936
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Fallback for hyphenated locale drops isLocal, so instance locale() with e.g. 'en-US' falling back to 'en' executes parseLocale('en') with isLocal falsy and overwrites global L.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 12,
+          "path": "index.js",
+          "snippet": "const parseLocale = (preset, object, isLocal) => {\n  let l",
+          "startLine": 11
+        },
+        {
+          "endLine": 26,
+          "path": "index.js",
+          "snippet": "    const presetSplit = preset.split('-')\n    if (!l && presetSplit.length > 1) {\n      return parseLocale(presetSplit[0])\n    }",
+          "startLine": 23
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Locale fallback loses isLocal and mutates global"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 11-12 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The recursive fallback at index.js:25 calls parseLocale(presetSplit[0]) without passing object or isLocal, so a local call reaches index.js:32 where !isLocal is true and assigns the fallback locale to global L."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 42190,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 5135,
+        "outputTokens": 4727,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.11508
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Fractional seconds with 1-2 digits are not scaled to milliseconds: '.1' becomes 1ms instead of 100ms and '.12' becomes 12ms instead of 120ms because ms is truncated but never padded.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 72,
+          "path": "index.js",
+          "snippet": "      const ms = (d[7] || '0').substring(0, 3)\n      if (utc) {\n        return new Date(Date.UTC(d[1], m, d[3]\n          || 1, d[4] || 0, d[5] || 0, d[6] || 0, ms))",
+          "startLine": 69
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Millisecond fraction not padded to 3 digits"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-003"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 69-72 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: at index.js:69 ms is only truncated via substring(0,3) with no right-padding, and the resulting string is passed directly as the milliseconds argument at index.js:72 and index.js:75, so the fractional group captured by constant.js:29 as '1' or '12' becomes 1ms or 12ms instead of 100ms or 120ms."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode must bind at least one symbol from the repository import; controlCode assertion is not tied to a call of an imported symbol; testCode must bind at least one symbol from the repository import; testCode assertion is not tied to a call of an imported symbol",
+      "artifacts": null,
+      "durationMs": 54858,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 5125,
+        "outputTokens": 6521,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.14950639999999998
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

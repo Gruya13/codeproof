@@ -1,0 +1,334 @@
+{
+  "runId": "06b068c398a60ae7",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "aa497cf3dd6fb62ddf5152b1dbc9f58075d0a87c4eda694f67554dae9770b6ec",
+  "configHashVersion": 2,
+  "config": {
+    "hashVersion": 2,
+    "payload": {
+      "mode": "smoke",
+      "scannerModel": "muse-spark-1.3",
+      "verifierModel": "muse-wonder-1.0",
+      "temperature": 0,
+      "maxFindings": 8,
+      "citationMaxLines": 15,
+      "scannerMaxTokens": 16000,
+      "verifierMaxTokens": 4000,
+      "verifierContextChars": 24000,
+      "reproEnabled": true,
+      "reproModel": "muse-wonder-1.0",
+      "reproMaxTokens": 8000,
+      "reproTimeoutMs": 2000,
+      "reproAttempts": 3,
+      "hardBudget": true,
+      "dualScan": false,
+      "chunkedScan": false,
+      "secondaryScannerModel": "muse-wonder-1.0",
+      "dualScanMaxLoc": 0,
+      "patchEnabled": true,
+      "patchModel": "muse-wonder-1.0",
+      "patchMaxTokens": 6000,
+      "patchMaxCandidates": 3,
+      "verifyEscalate": false,
+      "mockPipeline": false
+    }
+  },
+  "repo": {
+    "source": "commit",
+    "path": "/home/gru/Projects/Meta hakatron/real-world/dayjs/analysis-target",
+    "commit": "912f55da6d17347993dbdf0f3dbc0d3ae3f3949b",
+    "dirty": false,
+    "loc": 548,
+    "files": 3
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    },
+    {
+      "role": "repro",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+    }
+  ],
+  "usage": {
+    "inputTokens": 37648,
+    "outputTokens": 53518,
+    "cachedTokens": 1872,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 2,
+        "inputTokens": 12268,
+        "outputTokens": 35603,
+        "cachedTokens": 0,
+        "costUsd": 0.16664774999999998
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 3,
+        "inputTokens": 10076,
+        "outputTokens": 4979,
+        "cachedTokens": 1500,
+        "costUsd": 0.134184
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "calls": 3,
+        "inputTokens": 15304,
+        "outputTokens": 12936,
+        "cachedTokens": 372,
+        "costUsd": 0.3185224
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 6134,
+        "outputTokens": 16000,
+        "cachedTokens": 0,
+        "costUsd": 0.0756675,
+        "durationMs": 64587,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 1,
+        "inputTokens": 6134,
+        "outputTokens": 19603,
+        "cachedTokens": 0,
+        "costUsd": 0.09098025,
+        "durationMs": 75547,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 3349,
+        "outputTokens": 688,
+        "cachedTokens": 500,
+        "costUsd": 0.025256,
+        "durationMs": 4458,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 3,
+        "inputTokens": 5044,
+        "outputTokens": 1688,
+        "cachedTokens": 0,
+        "costUsd": 0.053936,
+        "durationMs": 11690,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 4,
+        "inputTokens": 3110,
+        "outputTokens": 3147,
+        "cachedTokens": 500,
+        "costUsd": 0.07348,
+        "durationMs": 24785,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 5,
+        "inputTokens": 5135,
+        "outputTokens": 4727,
+        "cachedTokens": 0,
+        "costUsd": 0.11508,
+        "durationMs": 42178,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 6,
+        "inputTokens": 3617,
+        "outputTokens": 1144,
+        "cachedTokens": 500,
+        "costUsd": 0.035448,
+        "durationMs": 9718,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 7,
+        "inputTokens": 5125,
+        "outputTokens": 6521,
+        "cachedTokens": 372,
+        "costUsd": 0.14950639999999998,
+        "durationMs": 54847,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      }
+    ],
+    "costUsd": 0.6193541499999999,
+    "measured": true
+  },
+  "calls": 8,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-28T14:40:08.991Z",
+    "durationMs": 287966
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 30
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 140137
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 147748
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 27
+    }
+  ],
+  "budget": {
+    "limitUsd": 4,
+    "spentUsd": 0.619354,
+    "measured": true,
+    "exceeded": false,
+    "hard": true,
+    "aborted": false,
+    "abortReason": null,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 3,
+    "byScanner": {
+      "spark": 3,
+      "wonder": 0,
+      "both": 0,
+      "controlled": 0
+    },
+    "duplicates": 0,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 0,
+    "verified": 3,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "reproduced": 0,
+    "patched": 0
+  },
+  "scanCoverage": {
+    "filesInPrompt": 3,
+    "filesTotal": 3,
+    "chars": 17471,
+    "cap": 400000,
+    "truncated": false
+  },
+  "scanners": [
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 3,
+      "rejectedAtL0": 0,
+      "costUsd": 0.09098025,
+      "durationMs": 140136,
+      "group": null,
+      "coverage": null,
+      "reason": null
+    }
+  ],
+  "dualScan": false,
+  "chunkedScan": false,
+  "patch": {
+    "enabled": true,
+    "model": "muse-wonder-1.0"
+  },
+  "repro": {
+    "enabled": true,
+    "model": "muse-wonder-1.0",
+    "timeoutMs": 2000,
+    "attempts": 3,
+    "counts": {
+      "reproduced": 0,
+      "notReproduced": 0,
+      "unavailable": 0,
+      "inconclusive": 3
+    }
+  },
+  "outputs": {
+    "report": "reports/v0.2.0/real-world/dayjs/06b068c398a60ae7/REPORT.md",
+    "findings": "reports/v0.2.0/real-world/dayjs/06b068c398a60ae7/findings.json",
+    "rejected": "reports/v0.2.0/real-world/dayjs/06b068c398a60ae7/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.2.1"
+  },
+  "attestation": {
+    "schemaVersion": 2,
+    "findingsSha256": "ef1c37896a1af10d350e182a0cf63905878bfb7d663a2fcb1faf803873a72e76",
+    "artifacts": {
+      "REPORT.md": "d346b790e19bb9069bd87b6b47527b58c822f40486d39d02dfbb17af05968a3b",
+      "candidates.json": "dbff957daa6f31ac3823e713af6721b729bd7ec573cb29dc9279a0e2b494cdde",
+      "findings.json": "ef1c37896a1af10d350e182a0cf63905878bfb7d663a2fcb1faf803873a72e76",
+      "rejected.md": "fc633705d3c1b9c03157e63a4f7151ffb012c6dbe7f711d5fd9979c4e94245e4",
+      "repro/F-001/result.json": "b77733e9da608e0cb27512518b08e394805927724a508698b861455a9e9cbb38",
+      "repro/F-002/result.json": "b3346f6edbfc0f20f7827380251a195fd33e4fd9bcdb37ff0018397da577a8de",
+      "repro/F-003/result.json": "64fe78b8955d3a6f4251c0f086a36d86d9d69ef8b7183df23cd3ad527d302e99"
+    }
+  }
+}
