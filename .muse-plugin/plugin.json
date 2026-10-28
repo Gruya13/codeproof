@@ -1,0 +1,14 @@
+{
+  "name": "codeproof",
+  "version": "0.2.0",
+  "description": "CodeProof: evidence-grade code analysis. Every published finding carries machine-checked citation, adversarial confirmation and execution/patch proof.",
+  "transport": "stdio",
+  "command": "node",
+  "args": [
+    "src/mcp/index.mjs"
+  ],
+  "tools": [
+    "codeproof_scan",
+    "codeproof_replay"
+  ]
+}

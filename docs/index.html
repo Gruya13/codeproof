@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeProof - Proof Explorer</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#c9d1d9; --muted:#8b949e; --green:#3fb950; --yellow:#d29922; --red:#f85149; --blue:#58a6ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background:var(--bg); color:var(--text); }
+  header { padding:20px 24px; border-bottom:1px solid var(--border); }
+  h1 { margin:0 0 4px; font-size:20px; }
+  .muted { color:var(--muted); font-size:12px; }
+  main { padding:20px 24px; max-width:1100px; margin:0 auto; }
+  .panel { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px; }
+  .funnel { display:flex; gap:8px; flex-wrap:wrap; }
+  .step { flex:1; min-width:140px; border:1px solid var(--border); border-radius:6px; padding:10px; text-align:center; }
+  .step .n { font-size:24px; font-weight:700; }
+  .step .label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+  .green { color:var(--green); } .yellow { color:var(--yellow); } .red { color:var(--red); } .blue { color:var(--blue); }
+  .finding { border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:12px; }
+  .finding h3 { margin:0 0 6px; font-size:15px; }
+  .badge { display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid var(--border); margin-right:6px; }
+  .badge.ok { color:var(--green); border-color:var(--green); }
+  .badge.warn { color:var(--yellow); border-color:var(--yellow); }
+  .badge.bad { color:var(--red); border-color:var(--red); }
+  pre { background:#010409; border:1px solid var(--border); border-radius:6px; padding:10px; overflow:auto; font-size:12px; }
+  details { margin-top:8px; }
+  summary { cursor:pointer; color:var(--blue); font-size:13px; }
+  .claim { font-size:14px; line-height:1.45; margin:6px 0; }
+  .cite { color:var(--muted); font-size:12px; }
+  input[type=file] { color:var(--text); }
+  #status { font-size:12px; color:var(--muted); margin-top:8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CodeProof - Proof Explorer</h1>
+  <div class="muted">Every finding carries the level of proof it earned. Load a report directory (run.json + findings.json). No network, no dependencies.</div>
+</header>
+<main>
+  <div class="panel">
+    <label>run.json <input type="file" id="runFile" accept="application/json"></label>
+    <label style="margin-left:12px">findings.json <input type="file" id="findingsFile" accept="application/json"></label>
+    <div id="status">no report loaded</div>
+  </div>
+  <div id="content"></div>
+</main>
+<script>
+  var run = null;
+  var findings = [];
+  function $(id) { return document.getElementById(id); }
+  function esc(text) { return String(text == null ? '' : text).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  function readJson(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { try { resolve(JSON.parse(String(reader.result))); } catch (error) { reject(error); } };
+      reader.onerror = function () { reject(reader.error); };
+      reader.readAsText(file);
+    });
+  }
+  function levels() {
+    var out = { proposed: 0, l1Rejected: 0, verified: 0, executionProven: 0, patchProven: 0 };
+    if (run && run.findings) { out.proposed = run.findings.proposed || 0; out.l1Rejected = run.findings.l1Rejected || 0; }
+    findings.forEach(function (item) {
+      if (item.status === 'verified') out.verified += 1;
+      if (item.evidenceLevel === 'execution-proven') out.executionProven += 1;
+      if (item.evidenceLevel === 'patch-proven') out.patchProven += 1;
+    });
+    return out;
+  }
+  function renderFunnel() {
+    var l = levels();
+    var steps = [
+      ['proposed', l.proposed, ''],
+      ['L1 rejected', l.l1Rejected, 'yellow'],
+      ['verified', l.verified, 'blue'],
+      ['execution-proven', l.executionProven, 'green'],
+      ['patch-proven', l.patchProven, 'green']
+    ];
+    var html = '<div class="panel"><div class="funnel">';
+    steps.forEach(function (step) {
+      html += '<div class="step"><div class="n ' + step[2] + '">' + step[1] + '</div><div class="label">' + esc(step[0]) + '</div></div>';
+    });
+    html += '</div>';
+    var coverage = run && run.scanCoverage;
+    if (coverage) html += '<div class="muted" style="margin-top:10px">scanner prompt: ' + coverage.filesInPrompt + ' / ' + coverage.filesTotal + ' files' + (coverage.truncated ? ' (truncated)' : '') + '</div>';
+    if (run && run.patch) html += '<div class="muted">patch stage: ' + (run.patch.enabled ? 'enabled (' + esc(run.patch.model) + ')' : 'disabled') + '</div>';
+    html += '</div>';
+    return html;
+  }
+  function controlBadge(item) {
+    var repro = item.repro;
+    if (!repro) return '';
+    if (!repro.controlCode) return '<span class="badge warn">control not recorded (v1)</span>';
+    var control = repro.control ? repro.control.classification : '?';
+    var trigger = repro.trigger ? repro.trigger.classification : '?';
+    var link = repro.linkcheck ? repro.linkcheck.status : 'not run';
+    var cls = (control === 'passed' && trigger === 'assertion-failure' && link === 'proven') ? 'ok' : 'warn';
+    return '<span class="badge ' + cls + '">control ' + esc(control) + ' 3/3 / trigger ' + esc(trigger) + ' 3/3</span>' +
+      '<span class="badge ' + (link === 'proven' ? 'ok' : 'warn') + '">linkcheck ' + esc(link) + '</span>';
+  }
+  function codeBlock(title, code) {
+    if (!code) return '';
+    return '<details><summary>' + esc(title) + '</summary><pre>' + esc(code) + '</pre></details>';
+  }
+  function renderFindings() {
+    if (findings.length === 0) return '';
+    var html = '<div class="panel"><h2 style="font-size:16px">Findings</h2>';
+    findings.forEach(function (item) {
+      var finding = item.finding || {};
+      var statusClass = item.status === 'verified' ? 'ok' : item.status === 'refuted' ? 'bad' : 'warn';
+      var evidence = Array.isArray(finding.evidence) ? finding.evidence : [];
+      html += '<div class="finding">';
+      html += '<h3>' + esc(finding.id) + ' - ' + esc(finding.title) + '</h3>';
+      html += '<span class="badge ' + statusClass + '">' + esc(item.status) + '</span>';
+      if (item.evidenceLevel) html += '<span class="badge ' + (item.evidenceLevel === 'citation+adversarial' ? 'warn' : 'ok') + '">' + esc(item.evidenceLevel) + '</span>';
+      if (item.proposedBy) html += '<span class="badge">by ' + esc(item.proposedBy.join(' + ')) + '</span>';
+      html += controlBadge(item);
+      if (item.patch) html += '<span class="badge ' + (item.patch.status === 'patch-proven' ? 'ok' : 'warn') + '">patch ' + esc(item.patch.status) + '</span>';
+      html += '<div class="claim">' + esc(finding.claim) + '</div>';
+      html += '<div class="cite">' + evidence.map(function (ev) { return esc(ev.path) + ':' + ev.startLine + '-' + ev.endLine; }).join(', ') + '</div>';
+      if (item.verifier) html += '<div class="cite">verifier ' + esc(item.verifier.model) + ': ' + esc(item.verifier.verdict) + ' - ' + esc(item.verifier.reason) + '</div>';
+      if (item.verifier && item.verifier.counterEvidence) html += '<div class="red">counter-citation: ' + esc(JSON.stringify(item.verifier.counterEvidence)) + '</div>';
+      if (item.repro) {
+        html += codeBlock('[CONTROL] code', item.repro.controlCode);
+        html += codeBlock('[TRIGGER] code', item.repro.testCode);
+        if (item.repro.reason) html += '<div class="cite">repro: ' + esc(item.repro.reason) + '</div>';
+      }
+      if (item.patch && item.patch.diff) html += codeBlock('patch diff', item.patch.diff);
+      html += '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+  function render() {
+    var html = '';
+    if (run) {
+      html += '<div class="panel"><div class="muted">run ' + esc(run.runId) + ' | mode ' + esc(run.mode) + ' | commit ' + esc(run.repo && run.repo.commit ? run.repo.commit.slice(0, 7) : '?') + ' | config v' + esc(run.configHashVersion || 1) + ' | attestation ' + (run.attestation ? 'present (' + Object.keys(run.attestation.artifacts || {}).length + ' artifacts)' : 'absent (v1)') + '</div></div>';
+    }
+    html += renderFunnel();
+    html += renderFindings();
+    $('content').innerHTML = html;
+  }
+  $('runFile').addEventListener('change', function (event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    readJson(file).then(function (parsed) { run = parsed; $('status').textContent = 'run.json loaded'; render(); }).catch(function (error) { $('status').textContent = 'run.json: ' + error.message; });
+  });
+  $('findingsFile').addEventListener('change', function (event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    readJson(file).then(function (parsed) { findings = Array.isArray(parsed) ? parsed : []; $('status').textContent = 'findings.json loaded (' + findings.length + ')'; render(); }).catch(function (error) { $('status').textContent = 'findings.json: ' + error.message; });
+  });
+</script>
+</body>
+</html>
