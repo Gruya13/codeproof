@@ -5,7 +5,7 @@
 | Repository | [axios/axios](https://github.com/axios/axios), scope `lib/` |
 | Base commit | `790b5ba1d95a95e93d59b76995595c37f2b90a66` |
 | Injected commit | `8c79f45314efa433ef8a62bfc4c49b1668cfe9fa` |
-| Size | **74 files / 9,563 LOC** of real, production JavaScript |
+| Size | **74 files / 9,564 LOC** (as ingested) of real, production JavaScript |
 | Defects | **16 injected correctness defects** (`INJ-01`..`INJ-16`) |
 | Traps | **5 places that look wrong but are correct** (`TRAP-01`..`TRAP-05`) |
 | Matching | reported citation must point at the expected file and overlap the defect range +/- 2 lines |
@@ -72,7 +72,7 @@ After the set was published, the recall levers were measured against the same fr
 
 Reading:
 
-- **Chunked scanning is the effective recall lever.** The scanner recall measured before verification went from 8/16 (50%) to **11/16 (68.8%)** in one chunked scan at $0.245, and the full chunked pipeline verified 9-10/16 versus 4-7/16 for single-pass. The reason is context focus: each call sees one directory instead of all 74 files.
+- **Chunked scanning is the effective recall lever.** The scanner recall measured before verification went from 8/16 (50%) to **11/16 (68.8%)** in one chunked scan at $0.245, and the full chunked pipeline verified 9-10/16 versus 4-7/16 for single-pass. The reason is context focus: each call sees one directory instead of all 74 files. The scanner-only measurement is committed as [reports/chunked-scan/lib-b2c8f4c-mvrsqyl6/chunked-scan.json](../../reports/chunked-scan/lib-b2c8f4c-mvrsqyl6/chunked-scan.json).
 - **The dual scanner does not help on this set.** It produced one extra candidate but the same verified recall, cost 3.5x, and leaked one trap (a finding the verifier confirmed on a place that is actually correct). Cross-model verification does not compensate for a context that is too broad.
 - **The two chunked runs published 4 and 3 findings that are not among the injected defects** (in `utils.js` and `AxiosHeaders.js`); the scorer counts them as precision errors against the frozen set. One of them is a real bug: `utils.matchAll` can loop forever on a regex that matches an empty string (`while ((matches = regExp.exec(str)) !== null)` never advances `lastIndex` for a zero-length match). It is published as a genuine extra finding, exactly like the calibration set's pre-registered extras - the scorer simply has no ground-truth entry for it.
 - **`MAX_FINDINGS` is not the limiter** (the model proposed 8-14 candidates either way), and the candidate cap change from 8 to 20 moved recall only through the chunked variant.

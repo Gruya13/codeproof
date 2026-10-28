@@ -3,6 +3,8 @@
 > Synthetic benchmark repository authored during the Meta Global AI Developer Hackathon. **Not a product.**
 > **Frozen before the first scored benchmark run on 26.10.2026.** After that, changes only by commit with a reason.
 > **Calibration set:** the same fixture is used to calibrate prompts and to report final metrics, so every published number is labelled "on the calibration set" and always carries **n = 8**.
+>
+> **Second, real-code set:** [extended/](extended/) - 16 injected defects + 5 traps in axios `lib/` (9,564 LOC), frozen before its first run. It is reported separately and never replaces the calibration numbers; see also the recall experiments there (chunked scanning raises scanner recall from 50% to 68.8%).
 
 ## Purpose
 

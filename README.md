@@ -36,10 +36,11 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026). 
 
 The pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`), and the deterministic suite is green on Node 22 and Node 26:
 
-- **Deterministic tests** (`make test`): **160/160** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), commit-based ingestion (dirty working tree cannot change the analysis), L3 cases (reproducer must import and call repository code that exists in the snapshot, no non-determinism, no trivial assertions, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), agent layer (role/label/cost recording, mock and meta adapters, soft and hard budget gates), dirty-JSON and truncation handling, fault injection, config-hash determinism.
+- **Deterministic tests** (`make test`): **161/161** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), commit-based ingestion (dirty working tree cannot change the analysis), L3 cases (reproducer must import and call repository code that exists in the snapshot, no non-determinism, no trivial assertions, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), agent layer (role/label/cost recording, mock and meta adapters, soft and hard budget gates), dirty-JSON and truncation handling, fault injection, config-hash determinism.
 - **Clean clone**: `make clean-clone` (tmpfs + `env -i`) and the Docker variant `make clean-clone-docker` (node:22-alpine) pass `make test`, `make demo`, `make replay` and `make score RUN=reports/golden` on a fresh clone.
 - **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts with no model calls - **9/9 identical, 0 mismatches**.
 - **Calibration benchmark with L3**: **8/8** recall (100%), 100% precision, 0/4 traps, 0 false refutations, **9/9 published findings execution-proven** - golden run and its generated reproducers are committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
+- **Extended evaluation on real code**: a second set frozen before its first run - 16 injected defects + 5 traps in axios `lib/` (74 files / 9,564 LOC): 4-7/16 verified per single-pass run, **9-10/16 with chunked scanning** (`CHUNKED_SCAN=1`), 0/5 traps published in seven runs; see [bench/extended/](bench/extended/).
 - **Real repositories** (qualitative, each hand-checked and published with both runs): unjs/ofetch, sindresorhus/execa, preactjs/preact, moment/luxon - see [Real-repository run](#real-repository-run-qualitative). The real-API probe round (axios real + injected, fastify, prompt-cache TTL, safety, parallel calls) is under [reports/probes/](reports/probes/).
 - **Controlled verifier test**: two true findings confirmed and one deliberately false claim **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`); the committed run cost **$0.103** and served 3280 of 4065 input tokens from prompt cache. Recorded as `mode: controlled-verifier`, never as scanner output.
 - **Historical recall**: 2/9 known fixes found (both verified); one of the organic refutations is published in the record.
@@ -96,7 +97,7 @@ make clean-clone # fresh clone in tmpfs with env -i, make test/demo/score
 make clean-clone-docker # same inside node:22-alpine (needs Docker)
 make probe-repo ARGS="--repo <url> --commit <sha> --scope <dir> --runs 2 --dry-run"
 make ablation   # held-out fixture through four gate levels (scanner / +L1 / +L2 / +L3)
-node scripts/model-ablation.mjs --repo <dir> --codeproof-run <run>  # Spark alone vs Wonder alone vs CodeProof
+make three-way RUN=reports/<id>  # Spark alone vs Wonder alone vs CodeProof on the same task (bench fixture)
 node scripts/reverse-verify.mjs --repo <dir> --ablation <json> --variant wonder-only  # cross-examine a single model's findings
 ```
 
@@ -126,6 +127,8 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 | Real-repository probe round II with L3 (5 repos) | [reports/real-world/probes-27-10b/](reports/real-world/probes-27-10b/) | semver, dotenv, json5, ufo, validator.js: 11 candidates, 10 published (4 hand-confirmed), 1 L1 reject, **1 execution-proven** (`LRUCache.set` loses the entry on update) | not a benchmark; one run per repository, n = 5 |
 | Dual-scanner run (ufo) | [reports/real-world/dual-scan/](reports/real-world/dual-scan/) | same commit as the single-scanner run: **4 → 10 published findings** (6 proposed only by Wonder, each cross-verified by Spark), 0 false positives, 3x cost | one run, n = 1; same vendor family |
 | Three architectures on one task | [reports/three-way/](reports/three-way/) | Spark-alone 8/8 candidates ($0.026), Wonder-alone 7/8 ($0.135), CodeProof 8/8 **verified** + 8 execution proofs ($0.76); on ufo: 4 vs 7 unverified vs **10 verified**. Verification is what costs; scanning with the cheap model keeps it affordable | n = 1 per variant, calibration fixture + one real repo |
+| Extended evaluation: real code, frozen | [bench/extended/](bench/extended/) | 16 injected defects + 5 traps in axios `lib/` (74 files / 9,564 LOC): 4-7/16 verified per single-pass run, **9-10/16 with chunked scanning**, 0/5 traps published, mean $0.76/run (single) or $2.08/run (chunked); four runs with `MAX_FINDINGS` 8 and 20 all reported | an organic-bug discovery rate - the defects are injected; n = 16 is larger but still small |
+| Recall levers on the extended set | [bench/extended/README.md](bench/extended/README.md) | chunked scanning raises scanner recall 8/16 (50%) -> **11/16 (68.8%)** for $0.245; the dual scanner does not help here (7/16, one trap leaked) | n = 2 chunked runs; one set, one repository |
 | Real repository (sindresorhus/execa) | [reports/real-world/execa-lib/](reports/real-world/execa-lib/) | 1 verified finding in run 2 (0 in run 1): Windows shebang parser drops interpreter arguments; hand-checked | a hit-rate claim; 2 runs, public commit, the Windows path was not executed |
 | Real repository (preactjs/preact) | [reports/real-world/preact-src/](reports/real-world/preact-src/) | 1 verified (refQueue not rolled back on a diff error) + 2 uncertain in run 2; 0 in run 1 | a hit-rate claim; static adjudication, error-boundary path only |
 | Real repository (moment/luxon) | [reports/real-world/luxon-src/](reports/real-world/luxon-src/) | 1 verified in both runs (latent internal `uncomputeOrdinal` defect; public dates correct) + 1 organic refuted claim in run 2 | a hit-rate claim; the verified finding is latent, static + public-API adjudication |
@@ -163,7 +166,7 @@ This is a calibration set: prompts are tuned on the same fixture, so the numbers
 
 ### Extended evaluation — injected defects in real code
 
-The calibration fixture is deliberately small and synthetic. To measure the same pipeline on **real production code**, a second set was frozen before its first run: **axios `lib/` at `790b5ba`, 74 files / 9,563 LOC, 16 injected correctness defects + 5 traps** ([bench/extended/](bench/extended/), generated by [scripts/make-injected.mjs](scripts/make-injected.mjs), scorer [scripts/score-injected.mjs](scripts/score-injected.mjs)). Its prompt was never tuned on this set.
+The calibration fixture is deliberately small and synthetic. To measure the same pipeline on **real production code**, a second set was frozen before its first run: **axios `lib/` at `790b5ba`, 74 files / 9,564 LOC (as ingested), 16 injected correctness defects + 5 traps** ([bench/extended/](bench/extended/), generated by [scripts/make-injected.mjs](scripts/make-injected.mjs), scorer [scripts/score-injected.mjs](scripts/score-injected.mjs)). Its prompt was never tuned on this set.
 
 | Run | Candidates | Defects verified | Precision | Traps leaked | Execution proofs | Cost |
 |---|---:|---:|---:|---:|---:|---:|
@@ -243,11 +246,13 @@ A different question than precision: can the gate find a **known bug** if we rep
 
 This repository is created during the hackathon; the first commit is tagged `hackathon-start`. All code, prompts and fixtures in this repository were authored during the event, and the git history is the evidence: every commit after the tag is event-time work, and no code or fixture from outside this repository was imported.
 
+Capabilities built after the initial pipeline, each with its own evidence: commit-based ingestion (dirty working trees cannot change the analysis), a hard pre-flight budget gate, stricter L3 admission (the generated test must import **and call** repository code, no non-determinism), the **dual-scanner** mode with cross-model verification, the **chunked** scanning mode for recall on real code, the frozen **extended evaluation set**, and the three-way / model-ablation / reverse-verification experiments under `scripts/`.
+
 ## Limits
 
 - Only direct correctness defects; omission, security and style findings are out of scope for this milestone.
 - **Budget is enforced up front, but with an estimate:** the hard gate uses a conservative upper bound (3 chars/token, no cache, full output budget). It can therefore refuse a call that would in reality have fit; the estimate is never allowed to understate the cost. `HARD_BUDGET=0` disables the pre-flight gate and keeps only the post-hoc limit.
-- **Real-code recall is lower than the calibration numbers.** On the extended set (16 injected defects in axios `lib/`, 9,563 LOC) the scanner verified 4-7 of 16 across four runs (~37% mean), while publishing no trap and almost no false positive. The calibration fixture is easier than production code; both numbers are published and labelled.
+- **Real-code recall is lower than the calibration numbers.** On the extended set (16 injected defects in axios `lib/`, 9,564 LOC) the scanner verified 4-7 of 16 across four single-pass runs (~37% mean; **9-10/16 with chunked scanning**), while publishing no trap and almost no false positive. The calibration fixture is easier than production code; both numbers are published and labelled.
 - **Large repositories are analysed partially.** The scanner prompt is capped at 400,000 characters; above roughly 15-20k LOC only an alphabetical prefix of the files reaches the model. The run reports this honestly (console warning, `run.json.scanCoverage`, a line in the report summary), but the selection is not relevance-aware: for a large repository, run the pipeline per directory (`analyze <repo>/src/router`) or raise the cap deliberately.
 - No completeness claim: the report shows what passed the gate, not everything that exists in a repository.
 - L1 proves that every citation exists in the commit and matches the declared line range. Whether the claim matches the code is judged by the verifier model and is presented as such.

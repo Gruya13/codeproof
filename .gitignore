@@ -22,6 +22,8 @@ reports/*
 !reports/self-analysis/**
 !reports/three-way/
 !reports/three-way/**
+!reports/chunked-scan/
+!reports/chunked-scan/**
 reports/probes/**/_repo/
 reports/probes/agy-batch3.md
 *.log

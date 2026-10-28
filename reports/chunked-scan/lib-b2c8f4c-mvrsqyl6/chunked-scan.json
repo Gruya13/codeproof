@@ -1,0 +1,90 @@
+{
+  "repo": "/home/gru/Projects/Meta hakatron/codeproof/reports/probes/real/axios-extended/_repo/lib",
+  "commit": "b2c8f4c90801b6c2260a43ce7550c22868a0fb82",
+  "model": "muse-spark-1.3",
+  "groups": [
+    {
+      "group": "(root)",
+      "files": 2,
+      "loc": 1290,
+      "candidates": 3,
+      "costUsd": 0.042247599999999996,
+      "durationMs": 38992,
+      "finishReason": "stop"
+    },
+    {
+      "group": "adapters",
+      "files": 4,
+      "loc": 2874,
+      "candidates": 0,
+      "costUsd": 0.0584955,
+      "durationMs": 24126,
+      "finishReason": "stop"
+    },
+    {
+      "group": "cancel",
+      "files": 3,
+      "loc": 162,
+      "candidates": 1,
+      "costUsd": 0.00984975,
+      "durationMs": 8487,
+      "finishReason": "stop"
+    },
+    {
+      "group": "core",
+      "files": 13,
+      "loc": 1919,
+      "candidates": 1,
+      "costUsd": 0.052796050000000004,
+      "durationMs": 54721,
+      "finishReason": "stop"
+    },
+    {
+      "group": "defaults",
+      "files": 2,
+      "loc": 189,
+      "candidates": 0,
+      "costUsd": 0.00996415,
+      "durationMs": 9101,
+      "finishReason": "stop"
+    },
+    {
+      "group": "env",
+      "files": 2,
+      "loc": 3,
+      "candidates": 0,
+      "costUsd": 0.0017108,
+      "durationMs": 2615,
+      "finishReason": "stop"
+    },
+    {
+      "group": "helpers",
+      "files": 38,
+      "loc": 2990,
+      "candidates": 9,
+      "costUsd": 0.06413975,
+      "durationMs": 24770,
+      "finishReason": "stop"
+    },
+    {
+      "group": "platform",
+      "files": 10,
+      "loc": 137,
+      "candidates": 0,
+      "costUsd": 0.00618325,
+      "durationMs": 6550,
+      "finishReason": "stop"
+    }
+  ],
+  "candidatesTotal": 14,
+  "costUsd": 0.24538685000000002,
+  "scannerMetrics": {
+    "candidates": 14,
+    "problemsHit": 11,
+    "problemsTotal": 16,
+    "scannerRecall": 0.6875,
+    "claimsOnProblems": 11,
+    "claimsOnTraps": 0,
+    "claimsUnmatched": 3
+  }
+}
