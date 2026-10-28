@@ -1,9 +1,17 @@
 {
   "schemaVersion": 1,
-  "casesSha256": "25813af628b6bf0987713c55071549485b97e3e180db440556520cb61e909ecc",
-  "gitRevision": "1d94c8baf9bd2045375582a3be328b340c991c71",
+  "casesSha256": "dbd8961e3b8d6e89bec94597829ba39159624476e9700acd503f13168923c134",
+  "gitRevision": "314d27d4ac8dc1acbb7d65094da591b4312add0b",
   "gitRel": "tests/replay.test.mjs",
   "by": "orchestrator",
-  "at": "2026-10-28T12:24:48.388Z",
-  "relocks": []
+  "at": "2026-10-28T12:27:37.047Z",
+  "relocks": [
+    {
+      "by": "orchestrator",
+      "at": "2026-10-28T12:27:37.046Z",
+      "reason": "F6: L4 replay expectation must follow the Node 22/26 runtime split",
+      "previousSha256": "25813af628b6bf0987713c55071549485b97e3e180db440556520cb61e909ecc",
+      "previousGitRevision": "1d94c8baf9bd2045375582a3be328b340c991c71"
+    }
+  ]
 }
