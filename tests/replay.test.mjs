@@ -39,6 +39,7 @@ function cloneDir(source, target) {
 }
 
 test("replay of a fresh v2 run matches: attestation, config hash, L1, L3 and L4", async function (t) {
+  const nodeMajor = Number(process.versions.node.split(".")[0]);
   const runDir = makeMockRun(t);
   const result = await replayRun({ reportDir: runDir, attempts: 1 });
   assert.equal(result.mode, "v2");
@@ -51,7 +52,9 @@ test("replay of a fresh v2 run matches: attestation, config hash, L1, L3 and L4"
   assert.equal(entry.l1.passed, true);
   assert.equal(entry.l3.control, "passed");
   assert.equal(entry.l3.trigger, "assertion-failure");
-  assert.equal(entry.l4.status, "patch-proven");
+  // L4 needs the LinkCheck linkage proof, which only Node 26 can award (fail-closed on Node 22).
+  if (nodeMajor >= 26) assert.equal(entry.l4.status, "patch-proven");
+  else assert.equal(entry.l4, null, "Node 22 must not replay a patch proof it could not have awarded");
   assert.match(result.resultHash, /^[0-9a-f]{64}$/);
 });
 
