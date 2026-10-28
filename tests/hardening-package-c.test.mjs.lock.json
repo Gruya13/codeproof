@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "80d3ae2b8c5e74dffc1446e4732d532cb598e5a851941bd1f698b6474d78b517",
+  "gitRevision": "b41f2569d73d72ddca235cf4a47d952c7a9a200a",
+  "gitRel": "tests/hardening-package-c.test.mjs",
+  "by": "dsh-orkestrator",
+  "at": "2026-10-28T19:21:41.974Z",
+  "relocks": []
+}
