@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "77f9cef26ebf99bd9341922acd339af2cfc73bb6adf69fd450f538ed96783c21",
+  "gitRevision": "573c93fd98bb30c0f19c0bb67299351ee62f3a99",
+  "gitRel": "tests/repro-control.test.mjs",
+  "by": "orchestrator",
+  "at": "2026-10-28T12:20:16.314Z",
+  "relocks": []
+}

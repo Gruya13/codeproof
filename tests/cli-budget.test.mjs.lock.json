@@ -1,9 +1,17 @@
 {
   "schemaVersion": 1,
-  "casesSha256": "2d340630003e18015b869caee75363b6e39428a71a8fce4641c12e4a49d0679a",
-  "gitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116",
+  "casesSha256": "49dac8fc35b446642a54e68e522f0c4e1efd6435b5b47777a288ac9c4a82e69c",
+  "gitRevision": "573c93fd98bb30c0f19c0bb67299351ee62f3a99",
   "gitRel": "tests/cli-budget.test.mjs",
   "by": "orchestrator",
-  "at": "2026-10-28T12:11:16.004Z",
-  "relocks": []
+  "at": "2026-10-28T12:20:16.195Z",
+  "relocks": [
+    {
+      "by": "orchestrator",
+      "at": "2026-10-28T12:20:16.194Z",
+      "reason": "F1 two-phase L3 (controlCode) changes the reproducer contract; tests updated per plan F1.8",
+      "previousSha256": "2d340630003e18015b869caee75363b6e39428a71a8fce4641c12e4a49d0679a",
+      "previousGitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116"
+    }
+  ]
 }

@@ -1,9 +1,17 @@
 {
   "schemaVersion": 1,
-  "casesSha256": "4aebdb2f31febddf1be6178e6269da3d12b0509b762b1251efdc422af1b1da66",
-  "gitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116",
+  "casesSha256": "d77d1ca78ac2ab655d958c62060a146e00a251169261519ead4fe2e6c7fdbcb2",
+  "gitRevision": "573c93fd98bb30c0f19c0bb67299351ee62f3a99",
   "gitRel": "tests/repro-integration.test.mjs",
   "by": "orchestrator",
-  "at": "2026-10-28T12:11:16.315Z",
-  "relocks": []
+  "at": "2026-10-28T12:20:16.220Z",
+  "relocks": [
+    {
+      "by": "orchestrator",
+      "at": "2026-10-28T12:20:16.220Z",
+      "reason": "F1 two-phase L3 (controlCode) changes the reproducer contract; tests updated per plan F1.8",
+      "previousSha256": "4aebdb2f31febddf1be6178e6269da3d12b0509b762b1251efdc422af1b1da66",
+      "previousGitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116"
+    }
+  ]
 }
