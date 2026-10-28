@@ -59,3 +59,24 @@ test("cli runs a mock dual-scanner run: both scanners propose, duplicates collap
   const report = readFileSync(join(runDir, "REPORT.md"), "utf8");
   assert.match(report, /\*\*Proposed by:\*\* Muse Spark \+ Muse Wonder/);
 });
+
+test("cli runs a mock chunked scan: one scanner call per directory, coverage aggregated", function (t) {
+  const outDir = mkdtempSync(join(tmpdir(), "codeproof-cli-chunked-"));
+  t.after(function () { rmSync(outDir, { recursive: true, force: true }); });
+  execFileSync(process.execPath, ["src/cli.mjs", "analyze", "fixtures/mini-repo", "--mock", "--mode", "demo", "--out", outDir], {
+    cwd: repoRoot,
+    timeout: 60000,
+    stdio: "pipe",
+    env: Object.assign({}, process.env, { CHUNKED_SCAN: "1" })
+  });
+  const runs = readdirSync(outDir, { withFileTypes: true }).filter(function (entry) { return entry.isDirectory(); });
+  assert.equal(runs.length, 1);
+  const run = JSON.parse(readFileSync(join(outDir, runs[0].name, "run.json"), "utf8"));
+  assert.equal(run.chunkedScan, true);
+  // fixtures/mini-repo has one .js directory (src/), so exactly one chunk is scanned
+  assert.equal(run.scanners.length, 1);
+  assert.equal(run.scanners[0].group, "src");
+  assert.equal(run.scanCoverage.chunked, true);
+  assert.equal(run.scanCoverage.filesInPrompt, run.scanCoverage.filesTotal);
+  assert.equal(run.findings.proposed, 4);
+});

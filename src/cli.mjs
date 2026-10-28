@@ -73,6 +73,7 @@ export function buildRunBanner(options) {
   lines.push("  mode " + (options.mock ? "mock" : options.mode));
   if (!options.mock) lines.push("  models scanner=" + (options.controlled ? "skipped" : options.scannerModel) + " verifier=" + options.verifierModel + " repro=" + (options.reproEnabled ? options.reproModel : "off"));
   if (options.dualScan) lines.push("  dual-scan secondary scanner=" + options.secondaryScannerModel + " (cross-verification: each finding is checked by the other model)");
+  if (options.chunkedScan) lines.push("  chunked scan: one focused scanner call per top-level directory, candidates limited to their slice");
   lines.push("  run-id " + options.runId + (options.mock ? "  (mock)" : ""));
   return lines.join("\n");
 }
@@ -140,7 +141,8 @@ async function main() {
   console.log(buildRunBanner({ mock: mock, controlled: controlled, mode: mode, target: target, runId: runId,
     scannerModel: config.scannerModel, verifierModel: config.verifierModel,
     reproModel: config.reproModel, reproEnabled: config.reproEnabled && !controlled,
-    dualScan: config.dualScan && !controlled, secondaryScannerModel: config.secondaryScannerModel }));
+    dualScan: config.dualScan && !controlled, secondaryScannerModel: config.secondaryScannerModel,
+    chunkedScan: config.chunkedScan && !controlled }));
 
   const ingestStarted = Date.now();
   const repo = ingest(target, { commit: commit });
@@ -177,10 +179,15 @@ async function main() {
   const scanFormat = controlled ? null : buildScannerResponseFormat(config.maxFindings);
 
   // One scanner pass: call, parse, tolerate one truncation retry, validate at L0.
-  async function runScanner(role, label) {
+  // `messages`/`format` are passed in so the same routine serves the single-pass scan, the
+  // secondary scanner and every chunk of a chunked scan. `pathFilter` drops candidates that cite
+  // files outside the scanned slice (the model cannot see them, so they are out of scope).
+  async function runScanner(role, label, messages, format, options) {
     const started = Date.now();
+    const pathFilter = options && options.pathFilter ? options.pathFilter : null;
+    const filteredOutIds = new Set();
     try {
-      let call = await agents.complete({ role: role, messages: scanMessages, responseFormat: scanFormat, temperature: config.temperature, maxTokens: config.scannerMaxTokens });
+      let call = await agents.complete({ role: role, messages: messages, responseFormat: format, temperature: config.temperature, maxTokens: config.scannerMaxTokens });
       let parsed;
       try {
         parsed = parseDirtyJson(call.text);
@@ -188,7 +195,7 @@ async function main() {
         mkdirSync(join(process.cwd(), "reports"), { recursive: true });
         writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ scanner: label, error: parseError.message, maxTokens: config.scannerMaxTokens, finishReason: call.finishReason, raw: call.text }, null, 2) + "\n");
         console.warn("  WARN " + label + " scanner output was not valid JSON (" + parseError.message + ", finish_reason=" + String(call.finishReason) + "); retrying once with " + (config.scannerMaxTokens * 2) + " max tokens");
-        call = await agents.complete({ role: role, messages: scanMessages, responseFormat: scanFormat, temperature: config.temperature, maxTokens: config.scannerMaxTokens * 2 });
+        call = await agents.complete({ role: role, messages: messages, responseFormat: format, temperature: config.temperature, maxTokens: config.scannerMaxTokens * 2 });
         try {
           parsed = parseDirtyJson(call.text);
         } catch (retryParseError) {
@@ -197,6 +204,15 @@ async function main() {
         }
       }
       const validated = validateFindingsL0(parsed);
+      if (validated.ok && pathFilter) {
+        const inScope = validated.findings.filter(function (finding) {
+          return finding.evidence.every(function (evidence) { return pathFilter.has(evidence.path); });
+        });
+        for (const finding of validated.findings) {
+          if (inScope.indexOf(finding) === -1) filteredOutIds.add(finding.id);
+        }
+        validated.findings = inScope;
+      }
       if (!validated.ok) {
         mkdirSync(join(process.cwd(), "reports"), { recursive: true });
         writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ scanner: label, raw: call.text, errors: validated.errors }, null, 2) + "\n");
@@ -204,9 +220,9 @@ async function main() {
         mkdirSync(join(process.cwd(), "reports"), { recursive: true });
         writeFileSync(join(process.cwd(), "reports", "last-scan-raw.json"), JSON.stringify({ scanner: label, raw: call.text, rejected: validated.rejected }, null, 2) + "\n");
       }
-      return { role: role, proposedBy: label, status: validated.ok ? "ok" : "l0-invalid", raw: call.text, parsed: parsed, validated: validated, call: call, durationMs: Date.now() - started };
+      return { role: role, proposedBy: label, status: validated.ok ? "ok" : "l0-invalid", raw: call.text, parsed: parsed, validated: validated, call: call, durationMs: Date.now() - started, filteredOutIds: filteredOutIds, group: (options && options.group) || null };
     } catch (error) {
-      return { role: role, proposedBy: label, status: "error", code: error.code || null, error: error.message, durationMs: Date.now() - started };
+      return { role: role, proposedBy: label, status: "error", code: error.code || null, error: error.message, durationMs: Date.now() - started, filteredOutIds: filteredOutIds, group: (options && options.group) || null };
     }
   }
 
@@ -218,8 +234,44 @@ async function main() {
     scanRuns = [{ role: "controlled", proposedBy: "controlled", status: "ok", raw: scanRaw, parsed: candidateDoc, validated: controlledValidated, call: null, durationMs: 0 }];
     phases.push({ name: "scan", status: "skipped", durationMs: 0 });
     console.log("  scan     skip  controlled verifier: " + controlledValidated.findings.length + " injected candidates");
+  } else if (config.chunkedScan) {
+    // Chunked scan: one focused scanner call per top-level directory. The same model and prompt
+    // are used for every slice; a candidate that cites a file outside its slice is out of scope.
+    const groups = new Map();
+    for (const file of repo.files) {
+      const parts = file.path.split("/");
+      const key = parts.length > 1 ? parts[0] : "(root)";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(file);
+    }
+    const groupNames = Array.from(groups.keys()).sort();
+    let chunkFiles = 0;
+    let chunkLoc = 0;
+    for (const name of groupNames) {
+      const files = groups.get(name);
+      const fileSet = new Set(files.map(function (file) { return file.path; }));
+      const chunkRepo = {
+        root: repo.root, sources: repo.sources, commit: repo.commit, files: files,
+        loc: files.reduce(function (sum, file) { return sum + file.loc; }, 0),
+        edges: repo.edges.filter(function (edge) { return fileSet.has(edge.from) && fileSet.has(edge.to); }),
+        cycles: repo.cycles.filter(function (cycle) { return cycle.every(function (path) { return fileSet.has(path); }); })
+      };
+      const chunkInput = buildScannerInput(chunkRepo);
+      chunkFiles += chunkInput.filesInPrompt;
+      chunkLoc += chunkRepo.loc;
+      const chunkMessages = buildScannerMessages({ digest: repoDigest(chunkRepo), filesWithLineNumbers: chunkInput.text, maxFindings: config.maxFindings });
+      const chunkFormat = buildScannerResponseFormat(config.maxFindings);
+      const chunkRun = await runScanner("scanner", "spark", chunkMessages, chunkFormat, { pathFilter: fileSet, group: name });
+      chunkRun.coverage = { filesInPrompt: chunkInput.filesInPrompt, filesTotal: chunkInput.filesTotal, chars: chunkInput.chars, cap: chunkInput.cap, truncated: chunkInput.truncated };
+      scanRuns.push(chunkRun);
+      if (chunkRun.status !== "ok") {
+        console.warn("  WARN chunk " + name + " failed: " + (chunkRun.error || (chunkRun.validated ? chunkRun.validated.errors.join("; ") : "unknown")) + "; continuing with the other chunks");
+      }
+    }
+    scanRaw = JSON.stringify({ chunked: true, groups: scanRuns.map(function (run) { return { group: run.group, raw: run.raw }; }) }, null, 2);
+    phases.push({ name: "scan", status: "ok", durationMs: Date.now() - scanStarted });
   } else {
-    const primary = await runScanner("scanner", "spark");
+    const primary = await runScanner("scanner", "spark", scanMessages, scanFormat);
     if (primary.status !== "ok") {
       if (primary.code === "CONTENT_FILTERED") {
         console.error("");
@@ -239,7 +291,7 @@ async function main() {
         scanRuns.push(skipped);
         console.warn("  WARN secondary scanner skipped: " + skipped.reason);
       } else {
-        const secondary = await runScanner("scanner-secondary", secondaryLabel);
+        const secondary = await runScanner("scanner-secondary", secondaryLabel, scanMessages, scanFormat);
         scanRuns.push(secondary);
         if (secondary.status !== "ok") {
           console.warn("  WARN secondary scanner (" + config.secondaryScannerModel + ") failed: " + (secondary.error || (secondary.validated ? secondary.validated.errors.join("; ") : "unknown")) + "; continuing with the primary scanner only");
@@ -266,12 +318,13 @@ async function main() {
     run.auditStart = candidateAudit.length;
     rawFindings.forEach(function (candidate, index) {
       const rejection = rejectedByIndex.get(index);
+      const outOfScope = run.filteredOutIds && run.filteredOutIds.has(candidate.id);
       candidateAudit.push({
         index: candidateAudit.length,
         candidate: candidate,
         proposedBy: run.proposedBy,
         l0: { ok: !rejection, reasons: rejection ? rejection.reasons : [] },
-        status: rejection ? "l0-rejected" : "pending"
+        status: rejection ? "l0-rejected" : outOfScope ? "out-of-scope" : "pending"
       });
     });
   }
@@ -298,6 +351,7 @@ async function main() {
     console.log("  scan     " + String(Date.now() - scanStarted).padStart(4) + " ms  " +
       proposed.length + " unique proposed" +
       (config.dualScan ? " (spark " + byScanner.spark + " / wonder " + byScanner.wonder + " / both " + byScanner.both + ")" : "") +
+      (config.chunkedScan ? " in " + scanRuns.length + " chunks" : "") +
       " (input " + String(scanRuns.reduce(function (sum, run) { return sum + (run.call ? run.call.usage.inputTokens : 0); }, 0)) + " tok)");
   }
   const manifest = new Map(repo.files.map(function (file) { return [file.path, file]; }));
@@ -481,7 +535,17 @@ async function main() {
       skippedFindings: skippedFindings
     },
     findings: counts,
-    scanCoverage: scannerInput ? {
+    scanCoverage: config.chunkedScan && !controlled ? (function () {
+      const covered = scanRuns.filter(function (run) { return run.coverage; });
+      return {
+        chunked: true,
+        groups: scanRuns.length,
+        filesInPrompt: covered.reduce(function (sum, run) { return sum + run.coverage.filesInPrompt; }, 0),
+        filesTotal: repo.files.length,
+        chars: covered.reduce(function (sum, run) { return sum + run.coverage.chars; }, 0),
+        truncated: covered.some(function (run) { return run.coverage.truncated; })
+      };
+    })() : scannerInput ? {
       filesInPrompt: scannerInput.filesInPrompt,
       filesTotal: scannerInput.filesTotal,
       chars: scannerInput.chars,
@@ -498,10 +562,13 @@ async function main() {
         rejectedAtL0: run.validated ? run.validated.rejected.length : 0,
         costUsd: run.call && run.call.costUsd !== undefined ? run.call.costUsd : null,
         durationMs: run.durationMs,
+        group: run.group || null,
+        coverage: run.coverage || null,
         reason: run.reason || null
       };
     }),
     dualScan: Boolean(config.dualScan),
+    chunkedScan: Boolean(config.chunkedScan),
     repro: {
       enabled: Boolean(config.reproEnabled && !controlled && !mock),
       model: config.reproModel,
