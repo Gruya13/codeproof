@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    'first',\n+   'second'\n-   'third'\n  ]\n\n    at file:///tmp/codeproof-repro-lVVyKm/snapshot/.codeproof-repro.test.mjs:10:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'first', 'second' ],\n  expected: [ 'first', 'third' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 212,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    'first',\n+   'second'\n-   'third'\n  ]\n\n    at file:///tmp/codeproof-repro-lVVyKm/snapshot/.codeproof-repro.test.mjs:10:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'first', 'second' ],\n  expected: [ 'first', 'third' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 219,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    'first',\n+   'second'\n-   'third'\n  ]\n\n    at file:///tmp/codeproof-repro-lVVyKm/snapshot/.codeproof-repro.test.mjs:10:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 'first', 'second' ],\n  expected: [ 'first', 'third' ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 212,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "After an immediate call, multiple calls coalesced during the throttle window should result in one trailing invocation using the latest arguments ('third'), not the first throttled arguments ('second').",
+  "rationale": "The timer closure captures the args from when it was scheduled; subsequent calls only update lastArgs, so the trailing call replays stale args. The test coalesces 'second' then 'third' and expects the trailing call to use 'third'.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1382,
+    "outputTokens": 1860,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.041800800000000006
+}

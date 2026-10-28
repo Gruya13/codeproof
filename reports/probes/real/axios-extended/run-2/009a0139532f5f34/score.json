@@ -1,0 +1,401 @@
+{
+  "defectsTotal": 16,
+  "defectsFoundAny": 7,
+  "defectsVerified": 7,
+  "recallAny": 0.4375,
+  "recallVerified": 0.4375,
+  "verifiedPublished": 7,
+  "verifiedFalsePositives": 0,
+  "trapsTotal": 5,
+  "trapsVerified": 0,
+  "trapsHitAny": 0,
+  "extraTrueSeen": [],
+  "precisionVerified": 1,
+  "defects": [
+    {
+      "id": "INJ-01",
+      "file": "helpers/isAbsoluteURL.js",
+      "found": false,
+      "statuses": []
+    },
+    {
+      "id": "INJ-02",
+      "file": "helpers/combineURLs.js",
+      "found": true,
+      "statuses": [
+        "verified"
+      ]
+    },
+    {
+      "id": "INJ-03",
+      "file": "helpers/buildURL.js",
+      "found": true,
+      "statuses": [
+        "verified"
+      ]
+    },
+    {
+      "id": "INJ-04",
+      "file": "core/InterceptorManager.js",
+      "found": false,
+      "statuses": []
+    },
+    {
+      "id": "INJ-05",
+      "file": "helpers/scheduler.js",
+      "found": false,
+      "statuses": []
+    },
+    {
+      "id": "INJ-06",
+      "file": "helpers/session.js",
+      "found": false,
+      "statuses": []
+    },
+    {
+      "id": "INJ-07",
+      "file": "helpers/parseHeaders.js",
+      "found": false,
+      "statuses": []
+    },
+    {
+      "id": "INJ-08",
+      "file": "core/settle.js",
+      "found": true,
+      "statuses": [
+        "verified"
+      ]
+    },
+    {
+      "id": "INJ-09",
+      "file": "helpers/isAxiosError.js",
+      "found": true,
+      "statuses": [
+        "verified"
+      ]
+    },
+    {
+      "id": "INJ-10",
+      "file": "helpers/throttle.js",
+      "found": true,
+      "statuses": [
+        "verified"
+      ]
+    },
+    {
+      "id": "INJ-11",
+      "file": "cancel/CancelToken.js",
+      "found": true,
+      "statuses": [
+        "verified"
+      ]
+    },
+    {
+      "id": "INJ-12",
+      "file": "helpers/spread.js",
+      "found": true,
+      "statuses": [
+        "verified"
+      ]
+    },
+    {
+      "id": "INJ-13",
+      "file": "helpers/buildURL.js",
+      "found": false,
+      "statuses": []
+    },
+    {
+      "id": "INJ-14",
+      "file": "helpers/formDataToJSON.js",
+      "found": false,
+      "statuses": []
+    },
+    {
+      "id": "INJ-15",
+      "file": "helpers/cookies.js",
+      "found": false,
+      "statuses": []
+    },
+    {
+      "id": "INJ-16",
+      "file": "core/transformData.js",
+      "found": false,
+      "statuses": []
+    }
+  ],
+  "traps": [
+    {
+      "id": "TRAP-01",
+      "file": "core/AxiosError.js",
+      "hit": false,
+      "verified": false,
+      "reason": "redactConfig passes buffers through without redaction. That looks like a leak, but it is deliberate: binary payloads cannot carry the string keys being redacted, and copying them would be wasteful. It is a redaction guard, not a defect."
+    },
+    {
+      "id": "TRAP-02",
+      "file": "core/AxiosHeaders.js",
+      "hit": false,
+      "verified": false,
+      "reason": "The rewrite guard looks inverted, but it implements the documented AxiosHeaders.set contract: rewrite=true always overwrites, rewrite=false never overwrites an existing non-false value, and undefined only overwrites when the current value is not the literal false."
+    },
+    {
+      "id": "TRAP-03",
+      "file": "helpers/throttle.js",
+      "hit": false,
+      "verified": false,
+      "reason": "Dividing by freq looks unsafe, but the throttled wrapper is only constructed with a validated positive frequency and the caller owns that contract. There is no zero-division path from this module."
+    },
+    {
+      "id": "TRAP-04",
+      "file": "helpers/parseHeaders.js",
+      "hit": false,
+      "verified": false,
+      "reason": "Dropping duplicate headers from a fixed list is required by the HTTP spec (node ignores duplicates of these fields), not a bug. Headers outside the list are concatenated with ', '."
+    },
+    {
+      "id": "TRAP-05",
+      "file": "cancel/CancelToken.js",
+      "hit": false,
+      "verified": false,
+      "reason": "Reverse iteration looks risky, but it is deliberate: listeners may unsubscribe themselves while the list is being notified, and iterating backwards keeps the remaining indexes valid."
+    }
+  ],
+  "l1Checked": 8,
+  "l1Passed": 7,
+  "l1PassRate": 0.875,
+  "l0Rejected": 0,
+  "toleranceLines": 2,
+  "expected": [
+    {
+      "id": "INJ-01",
+      "file": "helpers/isAbsoluteURL.js",
+      "startLine": 15,
+      "endLine": 18,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "isAbsoluteURL treats any non-string input as an absolute URL: a missing or non-string url bypasses the scheme check and is returned as absolute instead of false."
+    },
+    {
+      "id": "INJ-02",
+      "file": "helpers/combineURLs.js",
+      "startLine": 22,
+      "endLine": 22,
+      "found": true,
+      "statuses": [
+        "verified"
+      ],
+      "matches": [
+        {
+          "findingId": "F-004",
+          "status": "verified",
+          "path": "helpers/combineURLs.js",
+          "startLine": 11,
+          "lineDelta": 11
+        }
+      ],
+      "statement": "combineURLs concatenates the base and the relative URL without the separator, so a relative path is glued to the last path segment of the base URL."
+    },
+    {
+      "id": "INJ-03",
+      "file": "helpers/buildURL.js",
+      "startLine": 63,
+      "endLine": 63,
+      "found": true,
+      "statuses": [
+        "verified"
+      ],
+      "matches": [
+        {
+          "findingId": "F-006",
+          "status": "verified",
+          "path": "helpers/buildURL.js",
+          "startLine": 59,
+          "lineDelta": 4
+        }
+      ],
+      "statement": "buildURL keeps the hash mark when stripping the fragment, so serialized params are appended after the fragment and never reach the server."
+    },
+    {
+      "id": "INJ-04",
+      "file": "core/InterceptorManager.js",
+      "startLine": 167,
+      "endLine": 169,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "InterceptorManager.forEach no longer skips null slots, so it calls the iteration callback with null for every ejected interceptor."
+    },
+    {
+      "id": "INJ-05",
+      "file": "helpers/scheduler.js",
+      "startLine": 7,
+      "endLine": 7,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "start() assigns a new interval without clearing the existing timer, so calling start() twice leaks the first interval and it keeps firing."
+    },
+    {
+      "id": "INJ-06",
+      "file": "helpers/session.js",
+      "startLine": 4,
+      "endLine": 4,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "store.save is not awaited before store.get, so the read can return the previous token instead of the value that was just saved."
+    },
+    {
+      "id": "INJ-07",
+      "file": "helpers/parseHeaders.js",
+      "startLine": 51,
+      "endLine": 51,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "header names are no longer lower-cased during parsing, so Content-Type and content-type become distinct keys and a lookup by the canonical lower-case name returns undefined."
+    },
+    {
+      "id": "INJ-08",
+      "file": "core/settle.js",
+      "startLine": 16,
+      "endLine": 16,
+      "found": true,
+      "statuses": [
+        "verified"
+      ],
+      "matches": [
+        {
+          "findingId": "F-002",
+          "status": "verified",
+          "path": "core/settle.js",
+          "startLine": 14,
+          "lineDelta": 2
+        }
+      ],
+      "statement": "a response status below 500 is resolved before validateStatus decides, so 4xx client errors are delivered as successful responses and the caller's rejection handler never runs."
+    },
+    {
+      "id": "INJ-09",
+      "file": "helpers/isAxiosError.js",
+      "startLine": 13,
+      "endLine": 13,
+      "found": true,
+      "statuses": [
+        "verified"
+      ],
+      "matches": [
+        {
+          "findingId": "F-005",
+          "status": "verified",
+          "path": "helpers/isAxiosError.js",
+          "startLine": 12,
+          "lineDelta": 1
+        }
+      ],
+      "statement": "any object that does not explicitly set isAxiosError to false is classified as an AxiosError, so errors from other libraries are reported as axios errors with undefined response and config."
+    },
+    {
+      "id": "INJ-10",
+      "file": "helpers/throttle.js",
+      "startLine": 33,
+      "endLine": 33,
+      "found": true,
+      "statuses": [
+        "verified"
+      ],
+      "matches": [
+        {
+          "findingId": "F-008",
+          "status": "verified",
+          "path": "helpers/throttle.js",
+          "startLine": 23,
+          "lineDelta": 10
+        }
+      ],
+      "statement": "the trailing invocation uses the arguments of the call that scheduled the timer instead of the most recent call, so the latest payload is dropped when calls are throttled."
+    },
+    {
+      "id": "INJ-11",
+      "file": "cancel/CancelToken.js",
+      "startLine": 55,
+      "endLine": 55,
+      "found": true,
+      "statuses": [
+        "verified"
+      ],
+      "matches": [
+        {
+          "findingId": "F-001",
+          "status": "verified",
+          "path": "cancel/CancelToken.js",
+          "startLine": 54,
+          "lineDelta": 1
+        }
+      ],
+      "statement": "the cancellation request returns early while no reason exists yet, so the first cancel() call is silently ignored and the request is never cancelled."
+    },
+    {
+      "id": "INJ-12",
+      "file": "helpers/spread.js",
+      "startLine": 26,
+      "endLine": 26,
+      "found": true,
+      "statuses": [
+        "verified"
+      ],
+      "matches": [
+        {
+          "findingId": "F-003",
+          "status": "verified",
+          "path": "helpers/spread.js",
+          "startLine": 24,
+          "lineDelta": 2
+        }
+      ],
+      "statement": "spread passes the whole array as a single argument instead of expanding it, so a wrapped callback receives one array where the original call passed N positional arguments."
+    },
+    {
+      "id": "INJ-13",
+      "file": "helpers/buildURL.js",
+      "startLine": 56,
+      "endLine": 56,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "buildURL ignores a caller-supplied encode function and always uses the default encoder, so custom parameter encoding passed through options is silently dropped."
+    },
+    {
+      "id": "INJ-14",
+      "file": "helpers/formDataToJSON.js",
+      "startLine": 42,
+      "endLine": 42,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "a FormData field name ending in [] is stored under the literal key [] instead of pushing onto an array, so repeated array fields collapse into one literal property."
+    },
+    {
+      "id": "INJ-15",
+      "file": "helpers/cookies.js",
+      "startLine": 48,
+      "endLine": 48,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "cookies are split on the two-character separator \"; \" only, but browsers may serialize cookie pairs without the space, so a cookie that follows a space-less separator is not found."
+    },
+    {
+      "id": "INJ-16",
+      "file": "core/transformData.js",
+      "startLine": 22,
+      "endLine": 22,
+      "found": false,
+      "statuses": [],
+      "matches": [],
+      "statement": "transformData stops passing the response status to response transformers, so a transformer that branches on the status (for example parses JSON only for 2xx) can no longer see it."
+    }
+  ],
+  "falsePositives": []
+}

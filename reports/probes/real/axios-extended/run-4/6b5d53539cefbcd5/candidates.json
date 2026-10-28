@@ -1,0 +1,287 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Cancel guard is inverted: first cancel() returns early so token.reason is never set and cancellation never fires.\", \"confidence\": 1.0, \"evidence\": [{\"endLine\": 62, \"path\": \"cancel/CancelToken.js\", \"snippet\": \"    executor(function cancel(message, config, request) {\\n      if (!token.reason) {\\n        // Cancellation has already been requested\\n        return;\\n      }\\n\\n      token.reason = new CanceledError(message, config, request);\\n      resolvePromise(token.reason);\\n    });\", \"startLine\": 54}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"CancelToken cancel never sets reason\"}, {\"category\": \"correctness\", \"claim\": \"Extra `|| response.status < 500` resolves all 4xx responses even when validateStatus rejects them.\", \"confidence\": 0.98, \"evidence\": [{\"endLine\": 16, \"path\": \"core/settle.js\", \"snippet\": \"export default function settle(resolve, reject, response) {\\n  const validateStatus = response.config.validateStatus;\\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\", \"startLine\": 14}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"settle resolves rejected 4xx statuses\"}, {\"category\": \"correctness\", \"claim\": \"Check `!== false` is true for undefined, so any plain object is reported as an AxiosError.\", \"confidence\": 0.99, \"evidence\": [{\"endLine\": 14, \"path\": \"helpers/isAxiosError.js\", \"snippet\": \"export default function isAxiosError(payload) {\\n  return utils.isObject(payload) && payload.isAxiosError !== false;\\n}\", \"startLine\": 12}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"isAxiosError returns true for any object\"}, {\"category\": \"correctness\", \"claim\": \"spread wraps args as single element `[arr]` instead of spreading, so f(x,y,z) receives the array as x.\", \"confidence\": 0.99, \"evidence\": [{\"endLine\": 28, \"path\": \"helpers/spread.js\", \"snippet\": \"export default function spread(callback) {\\n  return function wrap(arr) {\\n    return callback.apply(null, [arr]);\\n  };\\n}\", \"startLine\": 24}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"spread does not expand array arguments\"}, {\"category\": \"correctness\", \"claim\": \"Trailing slashes stripped from base and leading slashes stripped from relative are concatenated with no '/' separator, producing e.g. `http://apiusers`.\", \"confidence\": 0.98, \"evidence\": [{\"endLine\": 23, \"path\": \"helpers/combineURLs.js\", \"snippet\": \"export default function combineURLs(baseURL, relativeURL) {\\n  if (!relativeURL) {\\n    return baseURL;\\n  }\\n\\n  let end = baseURL.length;\\n\\n  while (end > 0 && baseURL.charCodeAt(end - 1) === 47) {\\n    end--;\\n  }\\n\\n  return baseURL.slice(0, end) + relativeURL.replace(/^\\\\/+/, '');\\n}\", \"startLine\": 11}], \"id\": \"F-005\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"combineURLs missing slash separator\"}, {\"category\": \"correctness\", \"claim\": \"Keeping `hashmarkIndex + 1` retains '#' and appends `?params` after the fragment instead of before it, so params become fragment data.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 66, \"path\": \"helpers/buildURL.js\", \"snippet\": \"  if (serializedParams) {\\n    const hashmarkIndex = url.indexOf('#');\\n\\n    if (hashmarkIndex !== -1) {\\n      url = url.slice(0, hashmarkIndex + 1);\\n    }\\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;\\n  }\", \"startLine\": 59}], \"id\": \"F-006\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"buildURL appends query after hash\"}, {\"category\": \"correctness\", \"claim\": \"Deferred timer invokes captured `args` from first call in window instead of latest `lastArgs`, dropping the newest throttled arguments.\", \"confidence\": 0.92, \"evidence\": [{\"endLine\": 37, \"path\": \"helpers/throttle.js\", \"snippet\": \"  const throttled = (...args) => {\\n    const now = Date.now();\\n    const passed = now - timestamp;\\n    if (passed >= threshold) {\\n      invoke(args, now);\\n    } else {\\n      lastArgs = args;\\n      if (!timer) {\\n        timer = setTimeout(() => {\\n          timer = null;\\n          invoke(args);\\n        }, threshold - passed);\\n      }\\n    }\\n  };\", \"startLine\": 23}], \"id\": \"F-007\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"throttle timer uses stale args\"}, {\"category\": \"correctness\", \"claim\": \"start() overwrites this.timer with a new setInterval without clearing the existing handle, leaking the prior interval on repeated start.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 13, \"path\": \"helpers/scheduler.js\", \"snippet\": \"export function createScheduler() {\\n  return {\\n    timer: null,\\n    start(callback, intervalMs) {\\n      this.timer = setInterval(callback, intervalMs);\\n    },\\n    stop() {\\n      clearInterval(this.timer);\\n      this.timer = null;\\n    }\\n  };\\n}\", \"startLine\": 3}], \"id\": \"F-008\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"scheduler start leaks prior interval\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Cancel guard is inverted: first cancel() returns early so token.reason is never set and cancellation never fires.",
+        "confidence": 1,
+        "evidence": [
+          {
+            "endLine": 62,
+            "path": "cancel/CancelToken.js",
+            "snippet": "    executor(function cancel(message, config, request) {\n      if (!token.reason) {\n        // Cancellation has already been requested\n        return;\n      }\n\n      token.reason = new CanceledError(message, config, request);\n      resolvePromise(token.reason);\n    });",
+            "startLine": 54
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "CancelToken cancel never sets reason"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 54-62 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The guard at cancel/CancelToken.js:55 returns when token.reason is falsy, which is the initial state, so the assignments at cancel/CancelToken.js:60-61 are unreachable on first and subsequent cancel() calls."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Extra `|| response.status < 500` resolves all 4xx responses even when validateStatus rejects them.",
+        "confidence": 0.98,
+        "evidence": [
+          {
+            "endLine": 16,
+            "path": "core/settle.js",
+            "snippet": "export default function settle(resolve, reject, response) {\n  const validateStatus = response.config.validateStatus;\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {",
+            "startLine": 14
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "settle resolves rejected 4xx statuses"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 14-16 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The condition at core/settle.js:16 includes `|| response.status < 500`, so any 4xx status (400-499) satisfies the condition and calls resolve at core/settle.js:17 regardless of validateStatus(response.status)."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Check `!== false` is true for undefined, so any plain object is reported as an AxiosError.",
+        "confidence": 0.99,
+        "evidence": [
+          {
+            "endLine": 14,
+            "path": "helpers/isAxiosError.js",
+            "snippet": "export default function isAxiosError(payload) {\n  return utils.isObject(payload) && payload.isAxiosError !== false;\n}",
+            "startLine": 12
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "isAxiosError returns true for any object"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 12-14 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/isAxiosError.js:13 returns utils.isObject(payload) && payload.isAxiosError !== false, so a plain object lacking the property yields undefined !== false and is reported as an AxiosError."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "spread wraps args as single element `[arr]` instead of spreading, so f(x,y,z) receives the array as x.",
+        "confidence": 0.99,
+        "evidence": [
+          {
+            "endLine": 28,
+            "path": "helpers/spread.js",
+            "snippet": "export default function spread(callback) {\n  return function wrap(arr) {\n    return callback.apply(null, [arr]);\n  };\n}",
+            "startLine": 24
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "high",
+        "title": "spread does not expand array arguments"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 24-28 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "helpers/spread.js:26 uses callback.apply(null, [arr]), so the array is passed as a single first argument rather than expanded as intended at helpers/spread.js:17."
+      }
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Trailing slashes stripped from base and leading slashes stripped from relative are concatenated with no '/' separator, producing e.g. `http://apiusers`.",
+        "confidence": 0.98,
+        "evidence": [
+          {
+            "endLine": 23,
+            "path": "helpers/combineURLs.js",
+            "snippet": "export default function combineURLs(baseURL, relativeURL) {\n  if (!relativeURL) {\n    return baseURL;\n  }\n\n  let end = baseURL.length;\n\n  while (end > 0 && baseURL.charCodeAt(end - 1) === 47) {\n    end--;\n  }\n\n  return baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '');\n}",
+            "startLine": 11
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "high",
+        "title": "combineURLs missing slash separator"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 11-23 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The return at helpers/combineURLs.js:22 concatenates baseURL.slice(0, end) after stripping trailing slashes at helpers/combineURLs.js:18-20 directly with relativeURL stripped of leading slashes, with no '/' separator, producing e.g. http://apiusers."
+      }
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Keeping `hashmarkIndex + 1` retains '#' and appends `?params` after the fragment instead of before it, so params become fragment data.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 66,
+            "path": "helpers/buildURL.js",
+            "snippet": "  if (serializedParams) {\n    const hashmarkIndex = url.indexOf('#');\n\n    if (hashmarkIndex !== -1) {\n      url = url.slice(0, hashmarkIndex + 1);\n    }\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;\n  }",
+            "startLine": 59
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "high",
+        "title": "buildURL appends query after hash"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 59-66 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at helpers/buildURL.js:63 slices to hashmarkIndex + 1, retaining '#', and helpers/buildURL.js:65 then appends '?' or '&' plus serializedParams, so params for a URL containing a fragment are placed after '#' and become fragment data rather than query string."
+      }
+    },
+    {
+      "index": 6,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Deferred timer invokes captured `args` from first call in window instead of latest `lastArgs`, dropping the newest throttled arguments.",
+        "confidence": 0.92,
+        "evidence": [
+          {
+            "endLine": 37,
+            "path": "helpers/throttle.js",
+            "snippet": "  const throttled = (...args) => {\n    const now = Date.now();\n    const passed = now - timestamp;\n    if (passed >= threshold) {\n      invoke(args, now);\n    } else {\n      lastArgs = args;\n      if (!timer) {\n        timer = setTimeout(() => {\n          timer = null;\n          invoke(args);\n        }, threshold - passed);\n      }\n    }\n  };",
+            "startLine": 23
+          }
+        ],
+        "id": "F-007",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "throttle timer uses stale args"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 23-37 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The timer at helpers/throttle.js:31-33 closes over the creating call's `args`, while subsequent throttled calls only update `lastArgs` at helpers/throttle.js:29 and do not create or update the pending timer, so the deferred invoke uses the first window args and `invoke` clears `lastArgs`, dropping the newest."
+      }
+    },
+    {
+      "index": 7,
+      "candidate": {
+        "category": "correctness",
+        "claim": "start() overwrites this.timer with a new setInterval without clearing the existing handle, leaking the prior interval on repeated start.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 13,
+            "path": "helpers/scheduler.js",
+            "snippet": "export function createScheduler() {\n  return {\n    timer: null,\n    start(callback, intervalMs) {\n      this.timer = setInterval(callback, intervalMs);\n    },\n    stop() {\n      clearInterval(this.timer);\n      this.timer = null;\n    }\n  };\n}",
+            "startLine": 3
+          }
+        ],
+        "id": "F-008",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "scheduler start leaks prior interval"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 11 non-blank lines but snippet has 12"
+      }
+    }
+  ]
+}

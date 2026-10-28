@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   [\n+     1,\n+     2,\n+     3\n+   ],\n+   undefined,\n+   undefined\n-   1,\n-   2,\n-   3\n  ]\n\n    at file:///tmp/codeproof-repro-EHNRNu/snapshot/.codeproof-repro.test.mjs:16:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ [ 1, 2, 3 ], undefined, undefined ],\n  expected: [ 1, 2, 3 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 61,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   [\n+     1,\n+     2,\n+     3\n+   ],\n+   undefined,\n+   undefined\n-   1,\n-   2,\n-   3\n  ]\n\n    at file:///tmp/codeproof-repro-EHNRNu/snapshot/.codeproof-repro.test.mjs:16:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ [ 1, 2, 3 ], undefined, undefined ],\n  expected: [ 1, 2, 3 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 63,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   [\n+     1,\n+     2,\n+     3\n+   ],\n+   undefined,\n+   undefined\n-   1,\n-   2,\n-   3\n  ]\n\n    at file:///tmp/codeproof-repro-EHNRNu/snapshot/.codeproof-repro.test.mjs:16:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ [ 1, 2, 3 ], undefined, undefined ],\n  expected: [ 1, 2, 3 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 63,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "spread(f)([1,2,3]) invokes f with arguments 1, 2, 3 (as documented: spread(function(x,y,z){})([1,2,3])), not with the array as a single argument.",
+  "rationale": "Imports the real default export from helpers/spread.js and asserts the documented spreading behavior; on the buggy code callback.apply(null,[arr]) passes [1,2,3] as the sole argument, so the assertions fail.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1212,
+    "outputTokens": 1607,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.036988
+}

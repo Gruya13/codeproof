@@ -1,0 +1,47 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    [\n      'first'\n    ],\n    [\n+     'second'\n-     'third'\n    ]\n  ]\n\n    at file:///tmp/codeproof-repro-tcGWCA/snapshot/.codeproof-repro.test.mjs:10:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ [ 'first' ], [ 'second' ] ],\n  expected: [ [ 'first' ], [ 'third' ] ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 183,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    [\n      'first'\n    ],\n    [\n+     'second'\n-     'third'\n    ]\n  ]\n\n    at file:///tmp/codeproof-repro-tcGWCA/snapshot/.codeproof-repro.test.mjs:10:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ [ 'first' ], [ 'second' ] ],\n  expected: [ [ 'first' ], [ 'third' ] ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 182,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    [\n      'first'\n    ],\n    [\n+     'second'\n-     'third'\n    ]\n  ]\n\n    at file:///tmp/codeproof-repro-tcGWCA/snapshot/.codeproof-repro.test.mjs:10:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ [ 'first' ], [ 'second' ] ],\n  expected: [ [ 'first' ], [ 'third' ] ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 183,
+      "classification": "assertion-failure"
+    }
+  ],
+  "expectedBehavior": "Deferred throttled invocation uses the latest arguments ('third'), not the first deferred arguments ('second').",
+  "rationale": "First call invokes immediately, next two are throttled in same window; timer should fire with latest lastArgs.",
+  "reason": "assertion failed consistently on analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1382,
+    "outputTokens": 1709,
+    "cachedTokens": 244
+  },
+  "costUsd": 0.038780800000000004
+}

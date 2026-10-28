@@ -42,12 +42,23 @@ The scorer reports recall (defects found / 16, verified only), precision (verifi
 
 ## Results
 
-_To be filled from the frozen runs below. This file was committed before the first run; results are appended, never used to rewrite the ground truth._
+Four runs on the frozen fixture, all of them reported (no run was discarded). `run-1`/`run-2` used the default `MAX_FINDINGS=8`; `run-3`/`run-4` used `MAX_FINDINGS=20` to check whether the candidate cap, not the model, was limiting recall - it was not (the model produced 8-9 candidates either way).
 
-| Run | Defects verified | Precision | Traps leaked | Cost |
-|---|---:|---:|---:|---:|
-| run-1 | _pending_ | _pending_ | _pending_ | _pending_ |
-| run-2 | _pending_ | _pending_ | _pending_ | _pending_ |
+| Run | Candidates | Defects verified | Precision (verified) | Traps leaked | L1 pass | Execution proofs | Cost | Duration |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| run-1 (`MAX_FINDINGS=8`) | 8 | **4/16 (25%)** | 100% | 0/5 | 4/8 | 3 | $0.5291 | 97 s |
+| run-2 (`MAX_FINDINGS=8`) | 8 | **7/16 (43.8%)** | 100% | 0/5 | 7/8 | 5 | $0.7808 | 142 s |
+| run-3 (`MAX_FINDINGS=20`) | 9 | **6/16 (37.5%)** | 85.7% (1 FP) | 0/5 | 7/9 | 4 | $0.8476 | 146 s |
+| run-4 (`MAX_FINDINGS=20`) | 8 | **7/16 (43.8%)** | 100% | 0/5 | 7/8 | 5 | $0.8640 | 160 s |
+
+Mean verified recall **6.0/16 (37.5%)**, mean cost **$0.755**, mean duration 136 s. **No trap was ever published (0/20 across runs)**, and precision was 100% in three of four runs.
+
+### Reading
+
+- **Real code is much harder than the calibration fixture.** The scanner found 4-7 of 16 subtle injected defects; the calibration fixture's 8/8 does not transfer to production code of this size. This is the honest number and it is the reason this set exists.
+- **When the pipeline publishes, it is almost always right.** Four runs produced 28 published findings, of which one was a false positive (a verified claim not on any injected defect) and none landed on a trap. The gate is conservative, not permissive.
+- **The model proposes roughly the same number of candidates regardless of the cap**, so the low recall is a scanner limitation, not a `MAX_FINDINGS` artifact. A larger `MAX_FINDINGS` did not help (`run-3`/`run-4`).
+- **L1 still earns its place:** in `run-1`, four of eight candidates cited the wrong lines and were rejected deterministically before any model verification.
 
 ## Limits
 
