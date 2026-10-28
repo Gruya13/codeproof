@@ -51,7 +51,7 @@ export function loadConfig(env) {
     // v0.2.0: L2 escalation is opt-in and out of the mandatory scope.
     verifyEscalate: env.VERIFY_ESCALATE === "1",
     // v0.2.0: the mock adapter runs the real local L3/L4 executions (no network).
-    mockPipeline: env.USE_MOCK === "1" || env.MOCK_PIPELINE === "1"
+    mockPipeline: env.MOCK_PIPELINE === "1" || (env.MOCK_PIPELINE !== "0" && env.USE_MOCK === "1")
   };
 }
 

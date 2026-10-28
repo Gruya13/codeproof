@@ -1,0 +1,41 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"page() slices to `start + size + 1`, so each page returns size+1 items instead of size because slice end is exclusive.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 4, \"path\": \"src/pagination.js\", \"snippet\": \"export function page(items, pageNumber, size) {\\n  const start = pageNumber * size;\\n  return items.slice(start, start + size + 1);\\n}\", \"startLine\": 1}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"pagination off-by-one returns extra item\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "page() slices to `start + size + 1`, so each page returns size+1 items instead of size because slice end is exclusive.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 4,
+            "path": "src/pagination.js",
+            "snippet": "export function page(items, pageNumber, size) {\n  const start = pageNumber * size;\n  return items.slice(start, start + size + 1);\n}",
+            "startLine": 1
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "pagination off-by-one returns extra item"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 1-4 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at src/pagination.js:3 returns items.slice(start, start + size + 1), and with slice's exclusive end this yields size+1 items when available."
+      }
+    }
+  ]
+}

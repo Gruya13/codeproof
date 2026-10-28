@@ -8,6 +8,47 @@ function extractFindingId(messages) {
   return bare ? bare[0] : null;
 }
 
+// Canned two-phase reproducer for the demo fixture. Only F-001 has an executable proof: the other
+// demo findings have no deterministic local reproducer, so they stay unsupported and are reported
+// as such - the mock pipeline never fabricates a result.
+const CONTROL_CODE = [
+  "import assert from 'node:assert/strict';",
+  "import { page } from './src/pagination.js';",
+  "",
+  "const empty = page([], 0, 2);",
+  "assert.deepEqual(empty, []);"
+].join("\n") + "\n";
+const TRIGGER_CODE = [
+  "import assert from 'node:assert/strict';",
+  "import { page } from './src/pagination.js';",
+  "",
+  "const firstPage = page([1, 2, 3, 4, 5], 0, 2);",
+  "assert.deepEqual(firstPage, [1, 2]);"
+].join("\n") + "\n";
+
+export function mockDemoReproducer(findingId) {
+  if (findingId === "F-001") {
+    return {
+      findingId: findingId,
+      kind: "test",
+      controlCode: CONTROL_CODE,
+      testCode: TRIGGER_CODE,
+      expectedBehavior: "page returns exactly size items for a full page",
+      rationale: "the control proves the API call is valid, the trigger exposes the extra item",
+      unsupportedReason: ""
+    };
+  }
+  return {
+    findingId: findingId,
+    kind: "unsupported",
+    controlCode: "",
+    testCode: "",
+    expectedBehavior: "no deterministic local reproducer for this demo finding",
+    rationale: "the demo fixture only ships an executable reproducer for the pagination defect",
+    unsupportedReason: "mock pipeline: no executable reproducer for " + findingId
+  };
+}
+
 export function createMockAgent(options) {
   const scenario = JSON.parse(readFileSync(options.scenarioPath, "utf8"));
   let scannerCallCount = 0;
@@ -57,16 +98,13 @@ export function createMockAgent(options) {
     }
     if (request.role === "repro") {
       const reproFindingId = extractFindingId(request.messages) || "F-001";
+      // The demo fixture has one defect that can be proven by execution: the off-by-one page
+      // slice in fixtures/mini-repo/src/pagination.js. The control passes 3/3, the trigger fails
+      // 3/3, and the CLI executes both for real - the mock adapter supplies code, never results.
+      const demo = mockDemoReproducer(reproFindingId);
       return {
-        text: JSON.stringify({
-          findingId: reproFindingId,
-          kind: "unsupported",
-          testCode: "",
-          expectedBehavior: "mock mode does not execute generated tests",
-          rationale: "the mock adapter has no model that can write a reproducer",
-          unsupportedReason: "mock mode: no reproducer execution"
-        }),
-        usage: { inputTokens: 1200, outputTokens: 120, cachedTokens: 800 },
+        text: JSON.stringify(demo),
+        usage: { inputTokens: 1200, outputTokens: 220, cachedTokens: 800 },
         costUsd: responseCost(),
         model: "mock-repro",
         latencyMs: 2,

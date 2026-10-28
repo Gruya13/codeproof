@@ -21,9 +21,19 @@ import {
 } from "../src/repro/index.mjs";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
-const failingCode = "import assert from 'node:assert/strict';\nimport { value } from './sample.js';\nassert.equal(value, 7);\n";
-const passingCode = "import assert from 'node:assert/strict';\nimport { value } from './sample.js';\nassert.equal(value, 42);\n";
+const failingCode = "import assert from 'node:assert/strict';\nimport { compute } from './sample.js';\nconst got = compute(2);\nassert.equal(got, 7);\n";
+const passingCode = "import assert from 'node:assert/strict';\nimport { compute } from './sample.js';\nconst got = compute(1);\nassert.equal(got, 2);\n";
 const selfContainedCode = "import assert from 'node:assert/strict';\nassert.equal(1, 2);\n";
+
+// A generated control that satisfies the two-phase rules for an arbitrary trigger: same import,
+// same symbol, a different argument, and the assertion tied to the returned value.
+function controlFor(testCode) {
+  const spec = extractReproImports(testCode)[0];
+  const ids = extractImportedIdentifiers(testCode);
+  const called = ids.find(function (id) { return new RegExp("\\b" + id + "\\s*\\(").test(testCode); });
+  if (!spec || !called) return passingCode;
+  return "import assert from 'node:assert/strict';\nimport { " + called + " } from '" + spec + "';\nconst controlValue = " + called + "(0);\nassert.ok(controlValue !== undefined);\n";
+}
 
 function gitHead() {
   try {
@@ -37,13 +47,13 @@ function gitHead() {
 function tempSnapshot(t) {
   const dir = mkdtempSync(join(tmpdir(), "codeproof-repro-test-"));
   t.after(function () { rmSync(dir, { recursive: true, force: true }); });
-  writeFileSync(join(dir, "sample.js"), "export const value = 42;\n", "utf8");
+  writeFileSync(join(dir, "sample.js"), "export const value = 42;\nexport function compute(n) { return n + 1; }\n", "utf8");
   return dir;
 }
 
-function reproResponse(testCode = failingCode) {
+function reproResponse(testCode = failingCode, controlCode = controlFor(testCode)) {
   return {
-    findingId: "F-001", kind: "test", testCode,
+    findingId: "F-001", kind: "test", controlCode, testCode,
     expectedBehavior: "The function should return the documented correct result.",
     rationale: "The assertion exercises the affected branch directly.",
     unsupportedReason: ""
@@ -52,7 +62,7 @@ function reproResponse(testCode = failingCode) {
 
 test("reproducer schema and parser accept a valid test", function () {
   const format = REPRO_RESPONSE_FORMAT.json_schema.schema;
-  assert.deepEqual(format.required, ["findingId", "kind", "testCode", "expectedBehavior", "rationale", "unsupportedReason"]);
+  assert.deepEqual(format.required, ["findingId", "kind", "controlCode", "testCode", "expectedBehavior", "rationale", "unsupportedReason"]);
   assert.equal(format.additionalProperties, false);
   assert.match(REPRO_SYSTEM_PROMPT, /unsupported/);
   assert.deepEqual(parseReproResponse(JSON.stringify(reproResponse())), reproResponse());
@@ -65,7 +75,7 @@ test("reproducer L0 rejects absent assertions, forbidden code and long tests", f
     const result = validateReproL0(reproResponse("import assert from 'node:assert/strict';\n" + code));
     assert.equal(result.ok, false, code);
   }
-  assert.match(validateReproL0(reproResponse("import assert from 'node:assert/strict';\n" + "assert.ok(true);\n".repeat(60))).errors.join(" "), /60 lines/);
+  assert.match(validateReproL0(reproResponse("import assert from 'node:assert/strict';\n" + "assert.ok(true);\n".repeat(60))).errors.join(" "), /45 lines/);
   assert.equal(validateReproL0({ ...reproResponse(), findingId: "bad" }).ok, false);
   assert.equal(validateReproL0({ ...reproResponse(), extra: true }).ok, false);
 });
@@ -83,7 +93,7 @@ test("L0 requires an assertion and a call to an imported repository symbol", fun
   const unusedImport = validateReproL0(reproResponse("import assert from 'node:assert/strict';\nimport { value } from './sample.js';\nassert.equal(1, 2);"));
   assert.equal(unusedImport.ok, false);
   assert.match(unusedImport.errors.join(" "), /call an imported repository symbol/);
-  const valid = validateReproL0(reproResponse("import assert from 'node:assert/strict';\nimport { value } from './sample.js';\nassert.equal(value, 7);"));
+  const valid = validateReproL0(reproResponse("import assert from 'node:assert/strict';\nimport { compute } from './sample.js';\nconst got = compute(1);\nassert.equal(got, 2);"));
   assert.equal(valid.ok, true, valid.errors.join("; "));
   assert.deepEqual(extractImportedIdentifiers("import { a, b as c } from './x.js';\nimport d from './y.js';\nimport * as ns from './z.js';").sort(), ["a", "c", "d", "ns"]);
   // a multi-line import must not leave its continuation lines in the body
@@ -99,7 +109,7 @@ test("L0 rejects non-deterministic and ambient constructs", function () {
     const result = validateReproL0(reproResponse(base + snippet + "\nassert.equal(value, 7);"));
     assert.equal(result.ok, false, snippet);
   }
-  const deterministic = validateReproL0(reproResponse(base + "const n = 42;\nassert.equal(value, 7);\nassert.equal(n, 42);"));
+  const deterministic = validateReproL0(reproResponse("import assert from 'node:assert/strict';\nimport { compute } from './sample.js';\nconst got = compute(1);\nconst n = 42;\nassert.equal(got, 2);\nassert.equal(n, 42);"));
   assert.equal(deterministic.ok, true, deterministic.errors.join("; "));
 });
 
@@ -123,7 +133,7 @@ test("internal import failures are detected for ESM and CommonJS repositories", 
 });
 
 test("unsupported response needs a reason and no code", function () {
-  const unsupported = { ...reproResponse(""), kind: "unsupported", unsupportedReason: "The DOM is not available in the repository." };
+  const unsupported = { ...reproResponse(""), kind: "unsupported", controlCode: "", unsupportedReason: "The DOM is not available in the repository." };
   assert.equal(validateReproL0(unsupported).ok, true);
   assert.equal(validateReproL0({ ...unsupported, testCode: failingCode }).ok, false);
   assert.equal(validateReproL0({ ...unsupported, unsupportedReason: "short" }).ok, false);
@@ -273,7 +283,7 @@ test("L0 rejects direct stream writes that could fake the failure class", functi
 test("attemptRepro refuses a generated test whose import is not in the analyzed snapshot", async function (t) {
   const workDir = tempSnapshot(t);
   const commit = gitHead();
-  const code = "import assert from 'node:assert/strict';\nimport { value } from './does-not-exist.js';\nassert.equal(value, 7);\n";
+  const code = "import assert from 'node:assert/strict';\nimport { compute } from './does-not-exist.js';\nconst got = compute(1);\nassert.equal(got, 2);\n";
   const agent = { async complete() { return { text: JSON.stringify(reproResponse(code)), model: "fake-repro", usage: { inputTokens: 10, outputTokens: 20 }, costUsd: 0 }; } };
   const finding = { id: "F-001", title: "Quota boundary", claim: "The inclusive quota boundary is rejected.", evidence: [] };
   const result = await attemptRepro({ finding, agent, repoRoot, commit, excerpts: "", config: { reproWorkDir: workDir }, outDir: null });
@@ -284,12 +294,13 @@ test("attemptRepro refuses a generated test whose import is not in the analyzed 
 test("attemptRepro retries once when the reproducer call is truncated", async function (t) {
   const workDir = tempSnapshot(t);
   const commit = gitHead();
-  const code = "import assert from 'node:assert/strict';\nimport { PRICES } from './src/config.mjs';\nassert.ok(PRICES);\nassert.equal(1, 2);\n";
+  const trigger = "import assert from 'node:assert/strict';\nimport { loadConfig } from './src/config.mjs';\nconst c = loadConfig({ MAX_FINDINGS: '3' });\nassert.equal(c.maxFindings, 8);\n";
+  const control = "import assert from 'node:assert/strict';\nimport { loadConfig } from './src/config.mjs';\nconst c = loadConfig({});\nassert.equal(c.maxFindings, 8);\n";
   let calls = 0;
   const agent = { async complete() {
     calls += 1;
     if (calls === 1) return { text: "{\"findingId\":\"F-001\",\"kind\":\"test\",\"testCode\":\"", finishReason: "length", model: "fake", usage: { inputTokens: 10, outputTokens: 20, cachedTokens: 0 }, costUsd: 0.01 };
-    return { text: JSON.stringify(reproResponse(code)), finishReason: "stop", model: "fake", usage: { inputTokens: 10, outputTokens: 20, cachedTokens: 0 }, costUsd: 0.02 };
+    return { text: JSON.stringify(reproResponse(trigger, control)), finishReason: "stop", model: "fake", usage: { inputTokens: 10, outputTokens: 20, cachedTokens: 0 }, costUsd: 0.02 };
   } };
   const finding = { id: "F-001", title: "Truncated call", claim: "The reproducer answer was truncated.", evidence: [] };
   const result = await attemptRepro({ finding, agent, repoRoot, commit, excerpts: "", config: { reproWorkDir: workDir }, outDir: null });
@@ -304,4 +315,34 @@ test("attemptRepro rejects a self-contained test before spending a runner", asyn
   const result = await attemptRepro({ finding, agent, repoRoot, commit: gitHead(), excerpts: "", config: { reproWorkDir: workDir }, outDir: null });
   assert.equal(result.status, "inconclusive");
   assert.match(result.reason, /must import the analyzed repository code/);
+});
+
+test("two-phase L0 requires controlCode and rejects decorative, dead and tautological calls", function () {
+  const spec = "import assert from 'node:assert/strict';\nimport { compute } from './sample.js';\n";
+  // control missing
+  const noControl = validateReproL0({ ...reproResponse(failingCode), controlCode: "" });
+  assert.equal(noControl.ok, false);
+  assert.match(noControl.errors.join(" "), /controlCode/);
+  // decorative call followed by an unrelated assertion
+  const decorative = validateReproL0(reproResponse(spec + "compute(1);\nassert.equal(2, 3);\n"));
+  assert.equal(decorative.ok, false);
+  assert.match(decorative.errors.join(" "), /not tied/);
+  // dead-code guard
+  const dead = validateReproL0(reproResponse(spec + "if (false) { compute(1); }\nassert.equal(compute(2), 7);\n"));
+  assert.equal(dead.ok, false);
+  assert.match(dead.errors.join(" "), /dead-code/);
+  // tautology
+  const tautology = validateReproL0(reproResponse(spec + "const got = compute(1);\nassert.equal(got === got, false);\n"));
+  assert.equal(tautology.ok, false);
+  assert.match(tautology.errors.join(" "), /tautological/);
+});
+
+test("two-phase L0 requires control and trigger to use different arguments and a common symbol", function () {
+  const spec = "import assert from 'node:assert/strict';\nimport { compute } from './sample.js';\n";
+  const sameInput = validateReproL0(reproResponse(spec + "const got = compute(1);\nassert.equal(got, 7);\n", spec + "const got = compute(1);\nassert.equal(got, 2);\n"));
+  assert.equal(sameInput.ok, false);
+  assert.match(sameInput.errors.join(" "), /different input/);
+  const noCommon = validateReproL0(reproResponse(spec + "const got = compute(1);\nassert.equal(got, 7);\n", "import assert from 'node:assert/strict';\nimport { other } from './other.js';\nconst got = other(0);\nassert.ok(got);\n"));
+  assert.equal(noCommon.ok, false);
+  assert.match(noCommon.errors.join(" "), /common imported symbol/);
 });

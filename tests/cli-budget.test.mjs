@@ -28,7 +28,7 @@ function runCli(dir) {
     const log = openSync(logPath, "w");
     const child = spawn(process.execPath, [cliPath, "analyze", dir, "--mock", "--mode", "demo", "--out", join(dir, "out")], {
       cwd: dir,
-      env: { ...process.env, BUDGET_USD: "2" },
+      env: { ...process.env, BUDGET_USD: "2", MOCK_PIPELINE: "0" },
       timeout: 60000,
       stdio: ["ignore", log, log]
     });

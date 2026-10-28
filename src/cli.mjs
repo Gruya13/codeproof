@@ -421,7 +421,10 @@ async function main() {
       l1Rejected += 1;
     } else {
       let repro = null;
-      if (outcome.status === "verified" && config.reproEnabled && !controlled && !mock) {
+      // L3 runs for real whenever it is enabled: live runs use the model adapter, and the mock
+      // pipeline supplies canned control/trigger code that is executed locally (F1.9).
+      const reproActive = config.mockPipeline || (!mock && config.reproEnabled);
+      if (outcome.status === "verified" && reproActive && !controlled) {
         try {
           repro = await attemptRepro({
             finding: outcome.finding,
@@ -449,7 +452,9 @@ async function main() {
         l1: { passed: true, reason: outcome.l1.reason, lineTolerance: outcome.l1.lineTolerance === undefined ? 0 : outcome.l1.lineTolerance },
         verifier: outcome.verifier,
         repro: repro,
-        evidenceLevel: repro && repro.status === "reproduced" ? "execution-proven" : "citation+adversarial"
+        // execution-proven requires the two-phase run AND the LinkCheck linkage proof (F1.10):
+        // a test that passed/failed without the imported symbol executing is not a proof.
+        evidenceLevel: repro && repro.status === "reproduced" && repro.linkcheck && repro.linkcheck.status === "proven" ? "execution-proven" : "citation+adversarial"
       });
     }
     if (budget.exceeded) skipFrom(index + 1);
@@ -511,7 +516,7 @@ async function main() {
     config: { hashVersion: 2, payload: configPayloadV2 },
     repo: { source: repo.commit ? "commit" : "worktree", path: target, commit: commit, dirty: dirty, loc: repo.loc, files: repo.files.length },
     models: mock
-      ? [{ role: "scanner-correctness", id: "mock-scanner" }, { role: "verifier", id: "mock-verifier" }]
+      ? [{ role: "scanner-correctness", id: "mock-scanner" }, { role: "verifier", id: "mock-verifier" }].concat(config.mockPipeline ? [{ role: "repro", id: "mock-repro" }] : [])
       : controlled
         ? [{ role: "verifier", id: config.verifierModel }]
         : [{ role: "scanner-correctness", id: config.scannerModel }, { role: "verifier", id: config.verifierModel }]

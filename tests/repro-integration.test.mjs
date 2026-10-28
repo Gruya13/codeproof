@@ -82,19 +82,24 @@ test("config disables repro in mock mode and when REPRO=0, and the hash covers r
   assert.notEqual(first, second);
 });
 
-test("mock adapter returns a valid unsupported repro response", async function (t) {
+test("mock adapter returns a valid two-phase reproducer for the demo defect and unsupported otherwise", async function (t) {
   const dir = mkdtempSync(join(tmpdir(), "mock-repro-scenario-"));
   t.after(function () { rmSync(dir, { recursive: true, force: true }); });
   const scenarioPath = join(dir, "mock-scenario.json");
   writeFileSync(scenarioPath, JSON.stringify({ findings: [], verdicts: [] }), "utf8");
   const complete = createMockAgent({ scenarioPath });
-  const result = await complete({ role: "repro", messages: [{ role: "user", content: "{\"id\":\"F-001\"}" }] });
-  const parsed = JSON.parse(result.text);
-  const checked = validateReproL0(parsed);
-  assert.equal(checked.ok, true, checked.errors.join("; "));
-  assert.equal(parsed.kind, "unsupported");
-  assert.equal(parsed.findingId, "F-001");
-  assert.equal(parsed.testCode, "");
+  const demo = JSON.parse((await complete({ role: "repro", messages: [{ role: "user", content: "{\"id\":\"F-001\"}" }] })).text);
+  const demoChecked = validateReproL0(demo);
+  assert.equal(demoChecked.ok, true, demoChecked.errors.join("; "));
+  assert.equal(demo.kind, "test");
+  assert.match(demo.controlCode, /page\(/);
+  assert.match(demo.testCode, /page\(/);
+  const other = JSON.parse((await complete({ role: "repro", messages: [{ role: "user", content: "{\"id\":\"F-002\"}" }] })).text);
+  const otherChecked = validateReproL0(other);
+  assert.equal(otherChecked.ok, true, otherChecked.errors.join("; "));
+  assert.equal(other.kind, "unsupported");
+  assert.equal(other.findingId, "F-002");
+  assert.equal(other.testCode, "");
 });
 
 test("writeReproArtifacts persists the generated test and the runner result", function (t) {

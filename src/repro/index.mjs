@@ -4,12 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseDirtyJson } from "../run/json.mjs";
 import { gitPrefix, readFileAtCommit } from "../run/index.mjs";
+import { assertionTiedToSymbols, hasDeadCode, hasTautology, inputsDiffer } from "./static-checks.mjs";
+import { runLinkCheck } from "./linkcheck.mjs";
 
 export const REPRO_SYSTEM_PROMPT = [
-  "Write one standalone Node ESM test file for the finding. It MUST import the real exported API from the repository using a path relative to its root. The root is the analyzed directory itself: every path in the file list is already relative to it, so import exactly as listed (for example './validation.ts', not './src/validation.ts' when the list shows 'validation.ts'). A test that does not import the analyzed repository code is not a reproducer and will be rejected. Node can import TypeScript directly.",
-  "Assert the correct behavior with node:assert/strict so the test fails on the analyzed commit specifically because of the claim. Derive the expected behavior from the claim or a documented function contract; do not invent a new requirement.",
+  "Write TWO Node ESM files for the finding: controlCode and testCode. It MUST import the real exported API from the repository using a path relative to its root. The root is the analyzed directory itself: every path in the file list is already relative to it, so import exactly as listed (for example './validation.ts', not './src/validation.ts' when the list shows 'validation.ts'). A test that does not import the analyzed repository code is not a reproducer and will be rejected. Node can import TypeScript directly.",
+  "controlCode proves the environment: it asserts correct behavior and MUST PASS on the analyzed commit. testCode uses a different input, asserts the same correct behavior and MUST FAIL on the analyzed commit because of the claim. Both files call the same imported symbol with different arguments. Derive the expected behavior from the claim or a documented function contract; do not invent a new requirement.",
   "If the claimed defect makes the code throw (a crash on some input), catch that error inside the test and turn it into an assertion failure: record the thrown error in a variable and assert on the recorded value. An uncaught runtime error is not recorded as an assertion failure and the reproducer will be reported as inconclusive instead of execution-proven.",
-  "The test must be at most 60 lines. Use only node:assert/strict for assertions. Do not call assert.fail(), intercept process.exit, use require, make network calls (fetch, http, https, net), read files outside the repository, set a timeout longer than 1000 ms, or use infinite loops.",
+  "Every assertion must be tied to the imported symbol: a direct call, or an identifier assigned from such a call. Each file must be at most 45 lines. Use only node:assert/strict for assertions. Do not call assert.fail(), intercept process.exit, use require, make network calls (fetch, http, https, net), read files outside the repository, set a timeout longer than 1000 ms, or use infinite loops.",
   "If a faithful executable test needs a network, DOM, external file system, unavailable dependency, or environment not included in the repository, return kind unsupported with a specific reason instead of test code.",
   "Return only JSON matching the response schema. An unsupported response must have empty testCode."
 ].join("\n");
@@ -21,10 +23,11 @@ export const REPRO_RESPONSE_FORMAT = {
     schema: {
       type: "object",
       additionalProperties: false,
-      required: ["findingId", "kind", "testCode", "expectedBehavior", "rationale", "unsupportedReason"],
+      required: ["findingId", "kind", "controlCode", "testCode", "expectedBehavior", "rationale", "unsupportedReason"],
       properties: {
         findingId: { type: "string", pattern: "^F-[0-9]{3}$" },
         kind: { enum: ["test", "unsupported"] },
+        controlCode: { type: "string" },
         testCode: { type: "string" },
         expectedBehavior: { type: "string" },
         rationale: { type: "string" },
@@ -72,7 +75,10 @@ const FORBIDDEN_CODE = [
   [/node:(?:fs|os|process|worker_threads|cluster)\b/i, "ambient runtime module"],
   [/\bassert\s*\.\s*ok\s*\(\s*true\s*[,)]/i, "trivial assertion assert.ok(true)"],
   [/\bassert\s*\.\s*(?:equal|strictEqual)\s*\(\s*-?1\s*,\s*-?1\s*[,)]/i, "trivial assertion (same literal on both sides)"],
-  [/\bassert\s*\.\s*(?:equal|strictEqual)\s*\(\s*true\s*,\s*true\s*[,)]/i, "trivial assertion (same literal on both sides)"]
+  [/\bassert\s*\.\s*(?:equal|strictEqual)\s*\(\s*true\s*,\s*true\s*[,)]/i, "trivial assertion (same literal on both sides)"],
+  [/\b(?:from|import\s*\(\s*|import\s+)['"](?:node:)?(?:fs|os|process|child_process|net|http|https|worker_threads|vm|inspector|cluster|tls|dgram)['"]/i, "ambient runtime module import"],
+  [/\bprocess\s*\./i, "process access"],
+  [/\bglobalThis\s*\.\s*process\b/i, "globalThis.process"]
 ];
 
 const ASSERTION_PATTERN = /\bassert\s*\.\s*(?:ok|equal|strictEqual|notEqual|notStrictEqual|deepEqual|deepStrictEqual|match|doesNotMatch|throws|doesNotThrow|rejects|fails)\s*\(/;
@@ -133,6 +139,26 @@ export function extractReproImports(testCode) {
   return found;
 }
 
+function validateCode(code, label, errors) {
+  if (code.trim() === "") { errors.push(label + " is empty"); return; }
+  if (code.split("\n").length > 45) errors.push(label + " exceeds 45 lines");
+  if (!/node:assert(?:\/strict)?/.test(code)) errors.push(label + " must import node:assert");
+  if (extractReproImports(code).length === 0) errors.push(label + " must import the analyzed repository code with a relative path");
+  if (!ASSERTION_PATTERN.test(code)) errors.push(label + " must contain at least one node:assert assertion");
+  const imported = extractImportedIdentifiers(code);
+  const used = extractUsedImportedSymbols(code);
+  if (imported.length === 0) errors.push(label + " must bind at least one symbol from the repository import");
+  else if (used.length === 0) errors.push(label + " must call an imported repository symbol outside the import statements (imported: " + imported.join(", ") + ")");
+  const tied = assertionTiedToSymbols(code, used.length > 0 ? used : imported);
+  if (!tied.ok) errors.push(label + " assertion is not tied to a call of an imported symbol");
+  if (hasDeadCode(code)) errors.push(label + " contains a dead-code guard");
+  const tautology = hasTautology(code);
+  if (tautology) errors.push(label + " contains a tautological assertion (" + tautology + ")");
+  for (const [pattern, thing] of FORBIDDEN_CODE) {
+    if (pattern.test(code)) errors.push(label + ": forbidden " + thing);
+  }
+}
+
 export function validateReproL0(parsed) {
   const errors = [];
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -147,30 +173,29 @@ export function validateReproL0(parsed) {
   }
   if (!/^F-[0-9]{3}$/.test(String(parsed.findingId || ""))) errors.push("invalid findingId");
   if (parsed.kind !== "test" && parsed.kind !== "unsupported") errors.push("invalid kind");
-  for (const key of ["testCode", "expectedBehavior", "rationale", "unsupportedReason"]) {
+  for (const key of ["controlCode", "testCode", "expectedBehavior", "rationale", "unsupportedReason"]) {
     if (typeof parsed[key] !== "string") errors.push(key + " must be a string");
   }
   if (parsed.kind === "unsupported") {
     if (typeof parsed.testCode === "string" && parsed.testCode.trim() !== "") errors.push("unsupported response must not include testCode");
+    if (typeof parsed.controlCode === "string" && parsed.controlCode.trim() !== "") errors.push("unsupported response must not include controlCode");
     if (typeof parsed.unsupportedReason === "string" && parsed.unsupportedReason.trim().length < 10) errors.push("unsupportedReason is too short");
   }
   if (parsed.kind === "test") {
-    if (typeof parsed.testCode === "string") {
-      if (parsed.testCode.trim() === "") errors.push("testCode is empty");
-      if (parsed.testCode.split("\n").length > 60) errors.push("testCode exceeds 60 lines");
-      if (!/node:assert(?:\/strict)?/.test(parsed.testCode)) errors.push("testCode must import node:assert");
-      if (extractReproImports(parsed.testCode).length === 0) errors.push("testCode must import the analyzed repository code with a relative path");
-      if (!ASSERTION_PATTERN.test(parsed.testCode)) errors.push("testCode must contain at least one node:assert assertion");
-      const imported = extractImportedIdentifiers(parsed.testCode);
-      const used = extractUsedImportedSymbols(parsed.testCode);
-      if (imported.length === 0) errors.push("testCode must bind at least one named or default symbol from the repository import");
-      else if (used.length === 0) errors.push("testCode must call an imported repository symbol outside the import statements (imported: " + imported.join(", ") + ")");
-      for (const [pattern, label] of FORBIDDEN_CODE) {
-        if (pattern.test(parsed.testCode)) errors.push("forbidden " + label);
-      }
-    }
     if (typeof parsed.expectedBehavior === "string" && parsed.expectedBehavior.trim().length < 10) errors.push("expectedBehavior is too short");
     if (typeof parsed.rationale === "string" && parsed.rationale.trim().length < 10) errors.push("rationale is too short");
+    if (typeof parsed.controlCode === "string" && typeof parsed.testCode === "string") {
+      validateCode(parsed.controlCode, "controlCode", errors);
+      validateCode(parsed.testCode, "testCode", errors);
+      const controlImports = extractImportedIdentifiers(parsed.controlCode);
+      const triggerImports = extractImportedIdentifiers(parsed.testCode);
+      const shared = controlImports.filter(function (name) { return triggerImports.indexOf(name) !== -1; });
+      if (controlImports.length > 0 && triggerImports.length > 0 && shared.length === 0) errors.push("controlCode and testCode must call at least one common imported symbol");
+      if (shared.length > 0) {
+        const difference = inputsDiffer(parsed.controlCode, parsed.testCode, shared);
+        if (!difference.ok) errors.push("control and trigger must use a different input: " + difference.reason);
+      }
+    }
   }
   return { ok: errors.length === 0, errors, value: errors.length === 0 ? parsed : null };
 }
@@ -276,7 +301,7 @@ export function isInternalImportFailure(run) {
   });
 }
 
-export async function runReproTest({ testCode, snapshotDir, timeoutMs = 2000, attempts = 3 }) {
+export async function runReproTest({ testCode, snapshotDir, timeoutMs = 2000, attempts = 3, expect = "assertion-failure" }) {
   const testPath = join(snapshotDir, ".codeproof-repro.test.mjs");
   const guardPath = join(snapshotDir, ".codeproof-repro-guard.mjs");
   let wroteTest = false;
@@ -298,7 +323,8 @@ export async function runReproTest({ testCode, snapshotDir, timeoutMs = 2000, at
       }));
     }
     const sameClass = runs.every(function (run) { return run.classification === runs[0].classification; });
-    return { classification: sameClass ? runs[0].classification : "mixed", attempts: runs, deterministic: sameClass && runs[0].classification === "assertion-failure" };
+    const classification = sameClass ? runs[0].classification : "mixed";
+    return { classification: classification, attempts: runs, deterministic: sameClass && classification === expect };
   } catch (error) {
     return { classification: "error", attempts: [], deterministic: false, reason: "runner failed: " + error.message };
   } finally {
@@ -312,13 +338,18 @@ function writeArtifacts(outDir, findingId, result, model, usage, costUsd) {
   const directory = join(outDir, "repro", findingId);
   mkdirSync(directory, { recursive: true });
   const testPath = join(directory, "test.mjs");
+  const controlPath = join(directory, "control.mjs");
   const resultPath = join(directory, "result.json");
+  if (result.controlCode) writeFileSync(controlPath, result.controlCode);
   if (result.testCode) writeFileSync(testPath, result.testCode);
   writeFileSync(resultPath, JSON.stringify({
     status: result.status,
     classification: result.classification,
     deterministic: result.deterministic,
     attempts: result.attempts,
+    control: result.control || null,
+    trigger: result.trigger || null,
+    linkcheck: result.linkcheck || null,
     expectedBehavior: result.expectedBehavior,
     rationale: result.rationale,
     reason: result.reason,
@@ -370,6 +401,7 @@ export async function attemptRepro({ finding, agent, repoRoot, commit, excerpts,
     if (parsed.findingId !== finding.id) throw new Error("reproducer findingId does not match finding");
     result.expectedBehavior = parsed.expectedBehavior;
     result.rationale = parsed.rationale;
+    result.controlCode = parsed.controlCode;
     result.testCode = parsed.testCode;
     if (parsed.kind === "unsupported") {
       result.status = "unavailable";
@@ -380,34 +412,53 @@ export async function attemptRepro({ finding, agent, repoRoot, commit, excerpts,
         result.status = "unavailable";
         result.reason = snapshot.reason;
       } else {
-        // The test must exercise code that actually exists in the analyzed snapshot.
-        // A self-contained test (assert.equal(1, 2)) would otherwise be an execution proof of nothing.
-        const imports = extractReproImports(parsed.testCode);
-        const missing = imports.filter(function (specifier) {
+        // Both codes must exercise code that actually exists in the analyzed snapshot.
+        const declaredImports = extractReproImports(parsed.controlCode).concat(extractReproImports(parsed.testCode));
+        const missing = [...new Set(declaredImports)].filter(function (specifier) {
           return !existsSync(join(snapshot.snapshotDir, specifier));
         });
         if (missing.length > 0) {
           result.status = "inconclusive";
           result.reason = "generated test imports paths that are not in the analyzed snapshot: " + missing.join(", ");
         } else {
-          const run = await runReproTest({ testCode: parsed.testCode, snapshotDir: snapshot.snapshotDir,
-            timeoutMs: config.reproTimeoutMs || 2000, attempts: config.reproAttempts || 3 });
-          result.classification = run.classification;
-          result.attempts = run.attempts;
-          result.deterministic = run.deterministic;
-          // A test that cannot run because the repository's own imports are not directly
-          // executable by Node (extensionless specifiers, missing build output) is not a
-          // failed reproducer: it is an unavailable environment. Report it honestly.
-          const internalImportFailure = isInternalImportFailure(run);
-          if (internalImportFailure) {
-            result.status = "unavailable";
+          const attempts = config.reproAttempts || 3;
+          const timeoutMs = config.reproTimeoutMs || 2000;
+          // Phase 1: the control must pass 3/3. If it does not, the environment or the call is invalid
+          // and the trigger is never run, so a broken harness cannot be mistaken for a proof.
+          const controlRun = await runReproTest({ testCode: parsed.controlCode, snapshotDir: snapshot.snapshotDir,
+            timeoutMs: timeoutMs, attempts: attempts, expect: "passed" });
+          result.control = { code: parsed.controlCode, classification: controlRun.classification, attempts: controlRun.attempts, deterministic: controlRun.deterministic };
+          if (!controlRun.deterministic) {
+            result.status = "control-failed";
+            result.classification = controlRun.classification;
+            result.attempts = controlRun.attempts;
+            result.reason = "control did not pass " + attempts + "/" + attempts + " on the analyzed commit (classification: " + controlRun.classification + "); the trigger was not run";
+          } else {
+            // Phase 2: the trigger must fail 3/3 with an assertion error.
+            const run = await runReproTest({ testCode: parsed.testCode, snapshotDir: snapshot.snapshotDir,
+              timeoutMs: timeoutMs, attempts: attempts, expect: "assertion-failure" });
+            result.trigger = { code: parsed.testCode, classification: run.classification, attempts: run.attempts, deterministic: run.deterministic };
             result.classification = run.classification;
             result.attempts = run.attempts;
-            result.reason = "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers or missing packages)";
-          } else {
-            result.status = run.deterministic && run.classification === "assertion-failure" ? "reproduced"
-              : run.classification === "passed" ? "not-reproduced" : "inconclusive";
-            result.reason = run.reason || (result.status === "reproduced" ? "assertion failed consistently on analyzed commit" : "test did not demonstrate the claim consistently");
+            result.deterministic = run.deterministic;
+            const internalImportFailure = isInternalImportFailure(run) || isInternalImportFailure(controlRun);
+            if (internalImportFailure) {
+              result.status = "unavailable";
+              result.reason = "the repository's own imports are not directly executable by Node without a build step (extensionless specifiers or missing packages)";
+            } else {
+              result.status = run.deterministic && run.classification === "assertion-failure" ? "reproduced"
+                : run.classification === "passed" ? "not-reproduced" : "inconclusive";
+              result.reason = run.reason || (result.status === "reproduced" ? "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit" : "test did not demonstrate the claim consistently");
+              if (result.status === "reproduced") {
+                const imports = extractReproImports(parsed.testCode);
+                const symbols = extractImportedIdentifiers(parsed.testCode);
+                result.linkcheck = await runLinkCheck({ testCode: parsed.testCode, snapshotDir: snapshot.snapshotDir,
+                  targetFile: imports[0], symbols: symbols, timeoutMs: 8000 });
+                if (result.linkcheck.status !== "proven") {
+                  result.reason += "; linkcheck " + result.linkcheck.status + " (" + (result.linkcheck.detail || "no detail") + ")";
+                }
+              }
+            }
           }
         }
       }

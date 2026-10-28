@@ -108,17 +108,22 @@ export function buildReport(options) {
       lines.push("");
     }
     const itemRepro = item.repro;
-    const executionProven = Boolean(itemRepro && itemRepro.status === "reproduced");
+    const executionProven = Boolean(itemRepro && itemRepro.status === "reproduced" && itemRepro.linkcheck && itemRepro.linkcheck.status === "proven");
     lines.push("**Evidence level:** citation-proven + adversarially-confirmed" + (executionProven ? " + **execution-proven (generated test fails on the analyzed commit)**" : ""));
     lines.push("");
     if (itemRepro) {
+      const linkcheckSuffix = itemRepro.linkcheck && itemRepro.linkcheck.status !== "proven"
+        ? " [linkcheck " + itemRepro.linkcheck.status + (": " + (itemRepro.linkcheck.detail || "") + "]")
+        : "";
       const executionCheck = itemRepro.status === "reproduced"
-        ? "reproduced by execution (see Reproduced by execution)"
-        : itemRepro.status === "not-reproduced"
-          ? "not reproduced: the generated test passed on the analyzed commit"
-          : itemRepro.status === "unavailable"
-            ? "unavailable: " + (itemRepro.reason || "no faithful executable test could be written")
-            : "inconclusive: " + (itemRepro.reason || "the generated test could not settle the claim");
+        ? "reproduced by execution: the control passed 3/3 and the trigger failed 3/3 (see Reproduced by execution)" + linkcheckSuffix
+        : itemRepro.status === "control-failed"
+          ? "control failed: the control test did not pass 3/3, so the trigger was not run (" + (itemRepro.reason || "") + ")"
+          : itemRepro.status === "not-reproduced"
+            ? "not reproduced: the generated test passed on the analyzed commit"
+            : itemRepro.status === "unavailable"
+              ? "unavailable: " + (itemRepro.reason || "no faithful executable test could be written")
+              : "inconclusive: " + (itemRepro.reason || "the generated test could not settle the claim");
       lines.push("**Execution check:** " + executionCheck);
       lines.push("");
     }
@@ -132,7 +137,12 @@ export function buildReport(options) {
   if (reproducedItems.length > 0) {
     lines.push("## Reproduced by execution");
     lines.push("");
-    lines.push("For each finding below, the verifier model wrote a standalone test. The test runs on a `git archive` snapshot of the analyzed commit inside a permission-model sandbox: no network, no writes, 2 s timeout, three runs. The finding is execution-proven only if the test fails 3/3 with an assertion error.");
+    lines.push("For each finding below, the verifier model wrote two standalone files. They run on a `git archive` snapshot of the analyzed commit inside a permission-model sandbox: no network, no writes, 2 s timeout, three runs each.");
+    lines.push("");
+    lines.push("- **[CONTROL]** uses a clean, normal input and must pass 3/3. It proves the environment and the way the API is called are valid; if it fails, the finding is reported as `control-failed` and the trigger is never run.");
+    lines.push("- **[TRIGGER]** uses a different input and must fail 3/3 with an assertion error on the analyzed commit.");
+    lines.push("- **LinkCheck** (Node 26) runs the trigger under the permission model with inspector coverage and requires that the imported symbol actually executed. Without that linkage proof the finding is not reported as execution-proven.");
+    lines.push("");
     lines.push("");
     for (const item of reproducedItems) {
       const finding = item.finding;
@@ -140,11 +150,22 @@ export function buildReport(options) {
       lines.push("### " + finding.id + " - " + finding.title);
       lines.push("");
       if (itemRepro.expectedBehavior) { lines.push("**Expected behavior:** " + itemRepro.expectedBehavior); lines.push(""); }
-      lines.push("**Generated test (fails on the analyzed commit):**");
+      if (itemRepro.controlCode) {
+        lines.push("**Control (must pass 3/3 on the analyzed commit):**");
+        lines.push(fence() + "js");
+        lines.push(String(itemRepro.controlCode).trim());
+        lines.push(fence());
+        lines.push("");
+      }
+      lines.push("**Trigger (must fail 3/3 with an assertion error on the analyzed commit):**");
       lines.push(fence() + "js");
       lines.push(String(itemRepro.testCode || "").trim());
       lines.push(fence());
       lines.push("");
+      if (itemRepro.linkcheck) {
+        lines.push("**LinkCheck:** " + itemRepro.linkcheck.status + (itemRepro.linkcheck.detail ? " (" + itemRepro.linkcheck.detail + ")" : "") + (itemRepro.linkcheck.status === "unproven" ? " - reported as verified, not execution-proven." : " - the imported symbol executed under inspector coverage."));
+        lines.push("");
+      }
       const attempts = Array.isArray(itemRepro.attempts) ? itemRepro.attempts : [];
       const lastAttempt = attempts.length > 0 ? attempts[attempts.length - 1] : null;
       if (lastAttempt && lastAttempt.stderr) {
