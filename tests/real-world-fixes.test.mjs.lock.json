@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "160b2d086498123f21681dda679dc0d5b2f26900297395f49ce84a8a71fe72d9",
+  "gitRevision": "207781c1c3cafaf63239750c89610eb54a9d3d03",
+  "gitRel": "tests/real-world-fixes.test.mjs",
+  "by": "dsh-orkestrator",
+  "at": "2026-10-28T15:39:42.806Z",
+  "relocks": []
+}
