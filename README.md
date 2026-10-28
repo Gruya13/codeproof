@@ -49,11 +49,12 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026). 
 
 The pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`), and the deterministic suite is green on Node 22 and Node 26:
 
-- **Deterministic tests** (`make test`): **189/189** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), commit-based ingestion (dirty working tree cannot change the analysis), L3 cases (reproducer must import and call repository code that exists in the snapshot, no non-determinism, no trivial assertions, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), agent layer (role/label/cost recording, mock and meta adapters, soft and hard budget gates), dirty-JSON and truncation handling, fault injection, config-hash determinism.
+- **Deterministic tests** (`make test`): **197/197** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), commit-based ingestion (dirty working tree cannot change the analysis), L3 cases (reproducer must import and call repository code that exists in the snapshot, no non-determinism, no trivial assertions, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), agent layer (role/label/cost recording, mock and meta adapters, soft and hard budget gates), dirty-JSON and truncation handling, fault injection, config-hash determinism.
 - **Clean clone**: `make clean-clone` (tmpfs + `env -i`) and the Docker variant `make clean-clone-docker` (node:22-alpine) pass `make test`, `make demo`, `make replay` and `make score RUN=reports/golden` on a fresh clone.
 - **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts with no model calls - **9/9 identical, 0 mismatches**.
 - **Calibration benchmark with L3**: **8/8** recall (100%), 100% precision, 0/4 traps, 0 false refutations, **9/9 published findings execution-proven** - golden run and its generated reproducers are committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
 - **v0.2.0 evidence levels**: two-phase L3 (`[CONTROL]` must pass 3/3, `[TRIGGER]` must fail 3/3), LinkCheck linkage proof (the imported symbol must actually execute, inspector coverage under the permission model), L4 surgical patch with a differential proof (`patch-proven`), offline replay of v2 reports with attestation and a git anchor, a zero-dependency Proof Explorer, and an MCP server with `codeproof_scan`/`codeproof_replay`. Evidence: [reports/v0.2.0/](reports/v0.2.0/).
+- **Dogfooding (v0.2.1)**: CodeProof on its own `src/` (21 files / 4,221 LOC) with the same prompt and schema. Single-pass 3 verified / 1 patch-proven ($0.90), dual 1 verified ($1.41, the secondary Wonder scan failed), **chunked 9 verified / 2 patch-proven** ($2.26). 10 unique defects published across the runs, **7 fixed with 8 regression tests** (3 verified defects remain unfixed - see Limits); `replay` PASS without an API key. Evidence: [reports/v0.2.0/self-analysis/](reports/v0.2.0/self-analysis/).
 - **Extended evaluation on real code**: a second set frozen before its first run - 16 injected defects + 5 traps in axios `lib/` (74 files / 9,564 LOC): 4-7/16 verified per single-pass run, **9-10/16 with chunked scanning** (`CHUNKED_SCAN=1`), 0/5 traps published in seven runs; see [bench/extended/](bench/extended/).
 - **Real repositories** (qualitative, each hand-checked and published with both runs): unjs/ofetch, sindresorhus/execa, preactjs/preact, moment/luxon - see [Real-repository run](#real-repository-run-qualitative). The real-API probe round (axios real + injected, fastify, prompt-cache TTL, safety, parallel calls) is under [reports/probes/](reports/probes/).
 - **Controlled verifier test**: two true findings confirmed and one deliberately false claim **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`); the committed run cost **$0.103** and served 3280 of 4065 input tokens from prompt cache. Recorded as `mode: controlled-verifier`, never as scanner output.
@@ -99,6 +100,41 @@ node src/mcp/index.mjs                           # MCP server over stdio (codepr
 **Replay** re-verifies a v2 report with no model calls: it checks the attestation hash of every artifact, recomputes the config payload hash, verifies the optional git anchor (`git diff` + `status` against a revision), re-runs L1 citations, re-executes the L3 control/trigger pair and re-applies the L4 patch. The semantic L2 verdict is not re-executed - replay proves the record is unchanged and the mechanical gates still hold, not that the model's judgement was true. v1 reports replay in limited mode (L0/L1) with an explicit note.
 
 **Proof Explorer** (`docs/index.html`, single file, no dependencies, no network) shows the evidence funnel (proposed -> L1 rejected -> verified -> execution-proven -> patch-proven) and, per finding, the `[CONTROL]`/`[TRIGGER]` code, LinkCheck status, the patch diff and the counter-citation. Historical v1 findings carry a "control not recorded (v1)" badge.
+
+## Dogfooding - CodeProof on itself (v0.2.1)
+
+The system was run on its own `src/` (21 files / 4,221 LOC `@ 25c2a26`) with the same scanner prompt, schema and digest, then on the same target with the opt-in dual and chunked modes, and with each model standalone. Every run is committed verbatim under [reports/v0.2.0/self-analysis/](reports/v0.2.0/self-analysis/).
+
+| Architecture | Candidates | Verified | L1 rejected | execution-proven | patch-proven | Cost | Time |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Single pass | 3 | 3 | 0 | 1 | 1 | $0.8968 | 5.2 min |
+| Dual scan (`DUAL_SCAN=1`) | 2 | 1 | 1 | 1 | 0 | $1.4074 | 9.3 min |
+| Chunked (`CHUNKED_SCAN=1`) | 11 | 9 | 2 | 3 | 2 | $2.2573 | 14.3 min |
+
+The dual run degraded to the primary scanner because the Wonder secondary scan returned an empty output after the truncation retry (431 s, `scanners[].status = error`) - the same known limitation as on other 4k+ LOC targets. Standalone on the same target: Spark alone proposed 4 candidates, all L1-valid, for $0.1357 (3 overlap with CodeProof, 1 new); Wonder alone returned an empty output after its retry and cost $1.2167 without a single candidate.
+
+**Defects found on itself and fixed (commit `52e6606`):**
+
+1. `unifiedDiff` read index `-1` when `before` was a prefix of `after`, emitting `-undefined`/`+undefined` lines in the L4 diff (the system's own patch-proof gate found it; **patch-proven**).
+2. `applyPatchToSnapshot` used `String.replace` with a string replacement, so `$&`, `$1` and `$$` in a proposed patch were expanded instead of inserted literally.
+3. The hard-budget estimate and the constructed agent used **different fallback models** for `scanner-secondary` (`scannerModel` vs `verifierModel`); a single `roleModel` is now the source of truth for both (**patch-proven**).
+4. `usage.byRole` bucketed every non-scanner role as `verifier`, hiding patcher and secondary-scanner calls and merging their models.
+5. `run.json.repro.enabled` did not include the mock pipeline, although the mock mode executes L3/L4 locally.
+6. `checkCitation` crashed on an unreadable cited file instead of returning a failed citation.
+7. `attemptPatch`'s `unsupported` early return skipped `durationMs`.
+
+Evidence: `tests/self-analysis-fixes.test.mjs` (8 regression tests, two-commit test lock; the suite is **197/197** on Node 22 and Node 26) and the fixes are enforced by `make integrity`.
+
+**Offline re-verification (no API key):**
+
+```bash
+node src/cli.mjs replay reports/v0.2.0/self-analysis/a5e5c1c9868a5e4f --anchor 1e5f577 --out /tmp/replay-self
+# Anchor: 1e5f577 (verified); Attestation: 11 artifacts, 0 problems
+# F-001 ... L1 pass | control passed / trigger assertion-failure | patch-proven
+# REPLAY PASS: every replayed check matches the recorded report
+```
+
+**Not fixed here:** three verified findings from the chunked run remain open and are stated instead of silently dropped - an `from`-import scan that crosses semicolon/ASI boundaries (`ingest/index.mjs`), scanner input separator bytes omitted from the token budget (`ingest/index.mjs`; execution-proven, its generated patch was rejected by the differential gate) and an extra line in the numbered scanner output for a trailing newline (`ingest/index.mjs`).
 
 ## Meta AI tooling used
 
@@ -156,6 +192,8 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 | Real-repository probe round with L3 (4 repos) | [reports/real-world/probes-27-10/](reports/real-world/probes-27-10/) | defu, p-queue, zustand, yup: 7 candidates, 6 published (4 hand-confirmed), no false positives; L3 reported `repro-unavailable` on the TypeScript trees | not a benchmark; one run per repository, n = 4 |
 | Real-repository probe round II with L3 (5 repos) | [reports/real-world/probes-27-10b/](reports/real-world/probes-27-10b/) | semver, dotenv, json5, ufo, validator.js: 11 candidates, 10 published (4 hand-confirmed), 1 L1 reject, **1 execution-proven** (`LRUCache.set` loses the entry on update) | not a benchmark; one run per repository, n = 5 |
 | Dual-scanner run (ufo) | [reports/real-world/dual-scan/](reports/real-world/dual-scan/) | same commit as the single-scanner run: **4 → 10 published findings** (6 proposed only by Wonder, each cross-verified by Spark), 0 false positives, 3x cost | one run, n = 1; same vendor family |
+| Dogfooding - CodeProof on its own `src/` | [reports/v0.2.0/self-analysis/](reports/v0.2.0/self-analysis/) | 21 files / 4,221 LOC: single 3 verified + 1 patch-proven ($0.90), dual 1 verified ($1.41, secondary Wonder scan failed), chunked 9 verified + 2 patch-proven ($2.26); 10 unique findings, 7 fixed with 8 regression tests, 197/197 tests, replay PASS without an API key | one target (the project itself), n = 1 per architecture |
+| Model ablation on `src/` (same target) | [reports/model-ablation/](reports/model-ablation/) | Spark-alone 4/4 L1-valid candidates for $0.136; Wonder-alone empty output after the truncation retry for $1.217; CodeProof 3 verified for $0.897 | n = 1 per variant |
 | Three architectures on one task | [reports/three-way/](reports/three-way/) | Spark-alone 8/8 candidates ($0.026), Wonder-alone 7/8 ($0.135), CodeProof 8/8 **verified** + 8 execution proofs ($0.76); on ufo: 4 vs 7 unverified vs **10 verified**. Verification is what costs; scanning with the cheap model keeps it affordable | n = 1 per variant, calibration fixture + one real repo |
 | Extended evaluation: real code, frozen | [bench/extended/](bench/extended/) | 16 injected defects + 5 traps in axios `lib/` (74 files / 9,564 LOC): 4-7/16 verified per single-pass run, **9-10/16 with chunked scanning**, 0/5 traps published, mean $0.76/run (single) or $2.08/run (chunked); four runs with `MAX_FINDINGS` 8 and 20 all reported | an organic-bug discovery rate - the defects are injected; n = 16 is larger but still small |
 | Recall levers on the extended set | [bench/extended/README.md](bench/extended/README.md) | chunked scanning raises scanner recall 8/16 (50%) -> **11/16 (68.8%)** for $0.245; the dual scanner does not help here (7/16, one trap leaked) | n = 2 chunked runs; one set, one repository |
@@ -292,6 +330,7 @@ Capabilities built after the initial pipeline, each with its own evidence: commi
 - TypeScript/JavaScript only. Scan and verify are static; L3 executes only the generated test in a sandboxed Node process. The test must import **and call** the analyzed repository code, the import must resolve inside the committed snapshot, it may not use non-deterministic or ambient APIs (`Math.random`, `Date.now`, `new Date`, `performance.now`, `process.env`, `node:fs`/`os`/`process`), and trivial assertions (`assert.ok(true)`, `assert.equal(1, 1)`) are rejected at L0 - a self-contained test is no proof of anything.
 - **L3 caveats:** isolation is process-level (Node permission model + network guard + 2 s timeout), not OS-level. TypeScript is executed through Node's built-in type stripping, so a repository that needs its own build step, external dependencies or extensionless internal imports yields `repro-unavailable` - most TypeScript source trees do use extensionless imports. **CommonJS repositories** (`require` resolution) and ESM with explicit `.js`/`.ts` extensions are directly executable. L3 has been measured on the calibration fixture, on ofetch (explicit extensions) and on semver (CommonJS); on the two probe rounds it was correctly reported as unavailable rather than faked whenever execution was not possible. A failing test proves that a concrete input misbehaves on the analyzed commit; combined with the claim it is evidence, not a semantic proof of every consequence.
 - Hand checks may downgrade the scanner's severity (for example a latent internal defect or an error-path-only issue); such findings are labelled as latent/partial in the corresponding HAND-CHECK.md. Real-repository findings are qualitative anecdotes, never benchmark metrics.
+- **Self-analysis (v0.2.1):** one target (the project's own `src/`), n = 1 per architecture, so it is dogfooding, not a benchmark. The dual run degraded to the primary scanner (the Wonder secondary scan failed) and Wonder-alone returned an empty output after its truncation retry. Three verified defects found there remain unfixed (listed in [Dogfooding](#dogfooding---codeproof-on-itself-v021)) and one execution-proven defect (scanner separator bytes in the token budget) did not get a verified patch - both are stated rather than dropped.
 
 ## License
 

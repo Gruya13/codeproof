@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { replayRun } from "../run/replay.mjs";
 
-export const SERVER_INFO = { name: "codeproof", version: "0.2.0" };
+export const SERVER_INFO = { name: "codeproof", version: "0.2.1" };
 export const PROTOCOL_VERSION = "2024-11-05";
 
 export const TOOLS = [
