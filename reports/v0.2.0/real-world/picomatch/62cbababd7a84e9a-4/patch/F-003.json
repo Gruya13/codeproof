@@ -1,0 +1,84 @@
+{
+  "status": "patch-proven",
+  "rationale": "noext should only disable extglob detection, not clear isGlob for plain globs like *.js.",
+  "warnings": [],
+  "searchBlockSha256": "b494b311020e0d20e69c61cee2a4389368600714d7825c67708f0ad95c8afe54",
+  "replaceBlockSha256": "25a9ff8698f8c3856ea1195b47295b64a1057a9bd44453aafe303462ad02587e",
+  "attempts": {
+    "control": {
+      "classification": "passed",
+      "attempts": [
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 82,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 82,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 81,
+          "classification": "passed"
+        }
+      ],
+      "deterministic": true
+    },
+    "trigger": {
+      "classification": "passed",
+      "attempts": [
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 91,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 84,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 82,
+          "classification": "passed"
+        }
+      ],
+      "deterministic": true
+    }
+  },
+  "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+  "model": "muse-wonder-1.0",
+  "costUsd": 0.1924504
+}

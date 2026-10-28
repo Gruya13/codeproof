@@ -1,0 +1,180 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"picomatch.test returns match=true whenever input string equals glob string without running the regex, so a pattern like \\\"[abc]\\\" incorrectly matches the literal input \\\"[abc]\\\".\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 153, \"path\": \"picomatch.js\", \"snippet\": \"  let match = input === glob;\\n  let output = (match && format) ? format(input) : input;\\n\\n  if (match === false) {\\n    output = format ? format(input) : input;\\n    match = output === glob;\\n  }\\n\\n  if (match === false || opts.capture === true) {\\n    if (opts.matchBase === true || opts.basename === true) {\\n      match = picomatch.matchBase(input, regex, options, posix);\\n    } else {\\n      match = regex.exec(output);\\n    }\\n  }\", \"startLine\": 139}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"input-equals-glob shortcut bypasses regex\"}, {\"category\": \"correctness\", \"claim\": \"Last token value is only assigned when prevIndex is truthy, so for inputs with a leading slash where prevIndex is 0 the assignment is skipped and tokens keep an empty value.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 394, \"path\": \"scan.js\", \"snippet\": \"    if (opts.tokens && prevIndex && prevIndex + 1 < input.length) {\\n      tokens[tokens.length - 1].value = value;\\n      depth(tokens[tokens.length - 1]);\\n      state.maxDepth += tokens[tokens.length - 1].depth;\\n    }\", \"startLine\": 390}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"tokens assignment uses falsy check for index 0\"}, {\"category\": \"correctness\", \"claim\": \"With opts.noext=true both isExtglob and isGlob are cleared, so a plain glob like \\\"*.js\\\" is incorrectly reported as non-glob even though noext should only disable extglobs.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 304, \"path\": \"scan.js\", \"snippet\": \"  if (opts.noext === true) {\\n    isExtglob = false;\\n    isGlob = false;\\n  }\", \"startLine\": 301}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"noext clears isGlob\"}, {\"category\": \"correctness\", \"claim\": \"When braces were entered via an escaped \\\"\\\\{\\\", closing \\\"}\\\" still sets isBrace=true, so escaped braces are incorrectly reported as brace globs.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 145, \"path\": \"scan.js\", \"snippet\": \"        if (code === CHAR_RIGHT_CURLY_BRACE) {\\n          braces--;\\n\\n          if (braces === 0) {\\n            braceEscaped = false;\\n            isBrace = token.isBrace = true;\\n            finished = true;\\n            break;\\n          }\\n        }\", \"startLine\": 137}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"escaped braces marked as braces\"}, {\"category\": \"correctness\", \"claim\": \"The single-dot check does code=advance() inside the condition, so when the second char is not a dot the lookahead char is consumed and never examined for comma handling, missing e.g. the comma in \\\"{a.,b}\\\".\", \"confidence\": 0.78, \"evidence\": [{\"endLine\": 116, \"path\": \"scan.js\", \"snippet\": \"        if (braceEscaped !== true && code === CHAR_DOT && (code = advance()) === CHAR_DOT) {\\n          isBrace = token.isBrace = true;\\n          isGlob = token.isGlob = true;\\n          finished = true;\", \"startLine\": 113}], \"id\": \"F-005\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"dot lookahead consumes following char\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "picomatch.test returns match=true whenever input string equals glob string without running the regex, so a pattern like \"[abc]\" incorrectly matches the literal input \"[abc]\".",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 153,
+            "path": "picomatch.js",
+            "snippet": "  let match = input === glob;\n  let output = (match && format) ? format(input) : input;\n\n  if (match === false) {\n    output = format ? format(input) : input;\n    match = output === glob;\n  }\n\n  if (match === false || opts.capture === true) {\n    if (opts.matchBase === true || opts.basename === true) {\n      match = picomatch.matchBase(input, regex, options, posix);\n    } else {\n      match = regex.exec(output);\n    }\n  }",
+            "startLine": 139
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "input-equals-glob shortcut bypasses regex"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 139-153 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "picomatch.test at picomatch.js:139 sets match=input===glob and at picomatch.js:147 only runs the regex when match is false or capture is true, so input '[abc]' equal to glob '[abc]' returns Boolean(match)=true at picomatch.js:155 without regex execution."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Last token value is only assigned when prevIndex is truthy, so for inputs with a leading slash where prevIndex is 0 the assignment is skipped and tokens keep an empty value.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 394,
+            "path": "scan.js",
+            "snippet": "    if (opts.tokens && prevIndex && prevIndex + 1 < input.length) {\n      tokens[tokens.length - 1].value = value;\n      depth(tokens[tokens.length - 1]);\n      state.maxDepth += tokens[tokens.length - 1].depth;\n    }",
+            "startLine": 390
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "tokens assignment uses falsy check for index 0"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 390-394 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The condition at scan.js:390 requires prevIndex to be truthy before assigning the final token at scan.js:391, and scan.js:380-383 sets prevIndex to the slash index i, so a sole leading slash leaves prevIndex as 0 and the final assignment is skipped."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "With opts.noext=true both isExtglob and isGlob are cleared, so a plain glob like \"*.js\" is incorrectly reported as non-glob even though noext should only disable extglobs.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 304,
+            "path": "scan.js",
+            "snippet": "  if (opts.noext === true) {\n    isExtglob = false;\n    isGlob = false;\n  }",
+            "startLine": 301
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "noext clears isGlob"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 301-304 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The block at scan.js:301-304 unconditionally clears both isExtglob and isGlob when opts.noext is true, and the cleared isGlob is then used for the base/glob split at scan.js:316-324 and reported in state at scan.js:340-352, so non-extglob glob detection such as the bracket case at scan.js:242-243 is also erased."
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "When braces were entered via an escaped \"\\{\", closing \"}\" still sets isBrace=true, so escaped braces are incorrectly reported as brace globs.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 145,
+            "path": "scan.js",
+            "snippet": "        if (code === CHAR_RIGHT_CURLY_BRACE) {\n          braces--;\n\n          if (braces === 0) {\n            braceEscaped = false;\n            isBrace = token.isBrace = true;\n            finished = true;\n            break;\n          }\n        }",
+            "startLine": 137
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "escaped braces marked as braces"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 9 non-blank lines but snippet has 10"
+      }
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "The single-dot check does code=advance() inside the condition, so when the second char is not a dot the lookahead char is consumed and never examined for comma handling, missing e.g. the comma in \"{a.,b}\".",
+        "confidence": 0.78,
+        "evidence": [
+          {
+            "endLine": 116,
+            "path": "scan.js",
+            "snippet": "        if (braceEscaped !== true && code === CHAR_DOT && (code = advance()) === CHAR_DOT) {\n          isBrace = token.isBrace = true;\n          isGlob = token.isGlob = true;\n          finished = true;",
+            "startLine": 113
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "dot lookahead consumes following char"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "moderate",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 113-116 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "refute",
+        "reason": "At scan.js:113 the lookahead is assigned to the same `code` variable, and the immediately following non-else check at scan.js:125 tests that same `code` for CHAR_COMMA, so in \"{a.,b}\" the comma consumed as lookahead is examined and triggers the comma branch.",
+        "mode": "weak"
+      }
+    }
+  ]
+}

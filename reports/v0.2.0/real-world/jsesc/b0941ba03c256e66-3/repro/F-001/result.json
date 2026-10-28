@@ -1,0 +1,140 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-A' !== '-0xA'\n\n    at file:///tmp/codeproof-repro-RrRHgl/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-A',\n  expected: '-0xA',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 101,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-A' !== '-0xA'\n\n    at file:///tmp/codeproof-repro-RrRHgl/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-A',\n  expected: '-0xA',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 98,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-A' !== '-0xA'\n\n    at file:///tmp/codeproof-repro-RrRHgl/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-A',\n  expected: '-0xA',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 88,
+      "classification": "assertion-failure"
+    }
+  ],
+  "control": {
+    "code": "import assert from 'node:assert/strict';\nimport jsesc from './jsesc.js';\nconst hex = jsesc(255, { numbers: 'hexadecimal' });\nassert.equal(hex, '0xFF');\nconst bin = jsesc(6, { numbers: 'binary' });\nassert.equal(bin, '0b110');\nconst oct = jsesc(9, { numbers: 'octal' });\nassert.equal(oct, '0o11');\n",
+    "classification": "passed",
+    "attempts": [
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 84,
+        "classification": "passed"
+      },
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 87,
+        "classification": "passed"
+      },
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 128,
+        "classification": "passed"
+      }
+    ],
+    "deterministic": true
+  },
+  "trigger": {
+    "code": "import assert from 'node:assert/strict';\nimport jsesc from './jsesc.js';\nconst hex = jsesc(-10, { numbers: 'hexadecimal' });\nassert.equal(hex, '-0xA');\nconst bin = jsesc(-5, { numbers: 'binary' });\nassert.equal(bin, '-0b101');\nconst oct = jsesc(-8, { numbers: 'octal' });\nassert.equal(oct, '-0o10');\n",
+    "classification": "assertion-failure",
+    "attempts": [
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-A' !== '-0xA'\n\n    at file:///tmp/codeproof-repro-RrRHgl/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-A',\n  expected: '-0xA',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 101,
+        "classification": "assertion-failure"
+      },
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-A' !== '-0xA'\n\n    at file:///tmp/codeproof-repro-RrRHgl/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-A',\n  expected: '-0xA',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 98,
+        "classification": "assertion-failure"
+      },
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'0x-A' !== '-0xA'\n\n    at file:///tmp/codeproof-repro-RrRHgl/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: '0x-A',\n  expected: '-0xA',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 88,
+        "classification": "assertion-failure"
+      }
+    ],
+    "deterministic": true
+  },
+  "linkcheck": {
+    "status": "proven",
+    "targetFile": "jsesc.js",
+    "symbols": [
+      "jsesc"
+    ],
+    "executed": {
+      "forOwn": 1,
+      "extend": 1,
+      "isBuffer": 1,
+      "isString": 1,
+      "isNumber": 1,
+      "isBigInt": 1,
+      "isMap": 1,
+      "isSet": 1,
+      "jsesc": 1
+    },
+    "detail": null
+  },
+  "expectedBehavior": "Negative numbers formatted as hexadecimal/binary/octal should place the minus sign before the prefix, e.g. -0xA, -0b101, -0o10, producing valid JavaScript literals.",
+  "rationale": "Control uses positive numbers where prefixing 0x/0b/0o is already correct and passes. Test uses negative numbers where toString(radix) yields a leading '-', so the current code produces 0x-A/0b-101/0o-10 instead of -0xA/-0b101/-0o10 and fails.",
+  "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 4288,
+    "outputTokens": 1669,
+    "cachedTokens": 500
+  },
+  "costUsd": 0.048632
+}

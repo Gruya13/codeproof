@@ -1,0 +1,4 @@
+--- a/scan.js
++++ b/scan.js
+@@ -303,1 +302,0 @@
+-    isGlob = false;

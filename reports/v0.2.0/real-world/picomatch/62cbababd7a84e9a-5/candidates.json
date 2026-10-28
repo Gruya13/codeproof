@@ -1,0 +1,149 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Last segment token value is never assigned when there are no slashes or when the first slash is at index 0, because prevIndex (0 or undefined) is tested for truthiness instead of definedness.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 394, \"path\": \"scan.js\", \"snippet\": \"    if (opts.tokens && prevIndex && prevIndex + 1 < input.length) {\\n      tokens[tokens.length - 1].value = value;\\n      depth(tokens[tokens.length - 1]);\\n      state.maxDepth += tokens[tokens.length - 1].depth;\\n    }\", \"startLine\": 390}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Tokens last value skipped due to falsy prevIndex check\"}, {\"category\": \"correctness\", \"claim\": \"With noext:true the scanner clears isGlob for all patterns, so a pattern like *.js that still contains a star is incorrectly reported as non-glob.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 304, \"path\": \"scan.js\", \"snippet\": \"  if (opts.noext === true) {\\n    isExtglob = false;\\n    isGlob = false;\\n  }\", \"startLine\": 301}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"noext incorrectly clears isGlob\"}, {\"category\": \"correctness\", \"claim\": \"When start != 0 the first slash token value is overwritten with prefix, discarding the first path segment value from tokens.\", \"confidence\": 0.8, \"evidence\": [{\"endLine\": 378, \"path\": \"scan.js\", \"snippet\": \"      if (opts.tokens) {\\n        if (idx === 0 && start !== 0) {\\n          tokens[idx].isPrefix = true;\\n          tokens[idx].value = prefix;\\n        } else {\\n          tokens[idx].value = value;\\n        }\\n        depth(tokens[idx]);\\n        state.maxDepth += tokens[idx].depth;\", \"startLine\": 370}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Prefix handling discards first segment token value\"}, {\"category\": \"correctness\", \"claim\": \"basename(\\\"\\\") returns undefined instead of a string because segs[segs.length-2] is out of bounds when the split yields a single empty segment.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 72, \"path\": \"utils.js\", \"snippet\": \"exports.basename = (path, { windows } = {}) => {\\n  const segs = path.split(windows ? /[\\\\\\\\/]/ : '/');\\n  const last = segs[segs.length - 1];\\n\\n  if (last === '') {\\n    return segs[segs.length - 2];\\n  }\\n\\n  return last;\\n};\", \"startLine\": 63}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"low\", \"title\": \"basename returns undefined for empty path\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Last segment token value is never assigned when there are no slashes or when the first slash is at index 0, because prevIndex (0 or undefined) is tested for truthiness instead of definedness.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 394,
+            "path": "scan.js",
+            "snippet": "    if (opts.tokens && prevIndex && prevIndex + 1 < input.length) {\n      tokens[tokens.length - 1].value = value;\n      depth(tokens[tokens.length - 1]);\n      state.maxDepth += tokens[tokens.length - 1].depth;\n    }",
+            "startLine": 390
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Tokens last value skipped due to falsy prevIndex check"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "uncertain",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 390-394 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "uncertain",
+        "reason": "verifier output was not parseable JSON (empty model output), finish_reason=length"
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "With noext:true the scanner clears isGlob for all patterns, so a pattern like *.js that still contains a star is incorrectly reported as non-glob.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 304,
+            "path": "scan.js",
+            "snippet": "  if (opts.noext === true) {\n    isExtglob = false;\n    isGlob = false;\n  }",
+            "startLine": 301
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "noext incorrectly clears isGlob"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 301-304 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The unconditional block at scan.js:301-304 sets isGlob=false whenever opts.noext is true, and that cleared value is reported in the returned state at scan.js:348, so a plain star pattern such as *.js loses its glob status."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "When start != 0 the first slash token value is overwritten with prefix, discarding the first path segment value from tokens.",
+        "confidence": 0.8,
+        "evidence": [
+          {
+            "endLine": 378,
+            "path": "scan.js",
+            "snippet": "      if (opts.tokens) {\n        if (idx === 0 && start !== 0) {\n          tokens[idx].isPrefix = true;\n          tokens[idx].value = prefix;\n        } else {\n          tokens[idx].value = value;\n        }\n        depth(tokens[idx]);\n        state.maxDepth += tokens[idx].depth;",
+            "startLine": 370
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Prefix handling discards first segment token value"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "uncertain",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 370-378 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "uncertain",
+        "reason": "verifier output was not parseable JSON (empty model output), finish_reason=length"
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "basename(\"\") returns undefined instead of a string because segs[segs.length-2] is out of bounds when the split yields a single empty segment.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 72,
+            "path": "utils.js",
+            "snippet": "exports.basename = (path, { windows } = {}) => {\n  const segs = path.split(windows ? /[\\\\/]/ : '/');\n  const last = segs[segs.length - 1];\n\n  if (last === '') {\n    return segs[segs.length - 2];\n  }\n\n  return last;\n};",
+            "startLine": 63
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "low",
+        "title": "basename returns undefined for empty path"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 63-72 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: at utils.js:63-68, basename splits the path and returns segs[segs.length-2] when last is '', so for '' the split is [''] and segs[-1] is undefined."
+      }
+    }
+  ]
+}

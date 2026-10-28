@@ -1,0 +1,47 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"For negative numbers argument.toString(16/2/8) returns a string with a leading '-', so prefixing with '0x'/'0b'/'0o' yields '0x-A' / '0b-...' / '0o-...' instead of '-0xA' / '-0b...' / '-0o...', which is not valid JavaScript.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 221, \"path\": \"jsesc.js\", \"snippet\": \"\\t\\t\\t} else if (useHexNumbers) {\\n\\t\\t\\t\\tlet hexadecimal = argument.toString(16);\\n\\t\\t\\t\\tif (!lowercaseHex) {\\n\\t\\t\\t\\t\\thexadecimal = hexadecimal.toUpperCase();\\n\\t\\t\\t\\t}\\n\\t\\t\\t\\tresult = '0x' + hexadecimal;\", \"startLine\": 216}, {\"endLine\": 225, \"path\": \"jsesc.js\", \"snippet\": \"\\t\\t\\t} else if (useBinNumbers) {\\n\\t\\t\\t\\tresult = '0b' + argument.toString(2);\\n\\t\\t\\t} else if (useOctNumbers) {\\n\\t\\t\\t\\tresult = '0o' + argument.toString(8);\", \"startLine\": 222}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Negative numbers with hexadecimal/binary/octal produce invalid literals\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "For negative numbers argument.toString(16/2/8) returns a string with a leading '-', so prefixing with '0x'/'0b'/'0o' yields '0x-A' / '0b-...' / '0o-...' instead of '-0xA' / '-0b...' / '-0o...', which is not valid JavaScript.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 221,
+            "path": "jsesc.js",
+            "snippet": "\t\t\t} else if (useHexNumbers) {\n\t\t\t\tlet hexadecimal = argument.toString(16);\n\t\t\t\tif (!lowercaseHex) {\n\t\t\t\t\thexadecimal = hexadecimal.toUpperCase();\n\t\t\t\t}\n\t\t\t\tresult = '0x' + hexadecimal;",
+            "startLine": 216
+          },
+          {
+            "endLine": 225,
+            "path": "jsesc.js",
+            "snippet": "\t\t\t} else if (useBinNumbers) {\n\t\t\t\tresult = '0b' + argument.toString(2);\n\t\t\t} else if (useOctNumbers) {\n\t\t\t\tresult = '0o' + argument.toString(8);",
+            "startLine": 222
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Negative numbers with hexadecimal/binary/octal produce invalid literals"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 216-221 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The number branch at jsesc.js:216-225 unconditionally prefixes argument.toString(16/2/8) with '0x'/'0b'/'0o' with no sign handling, so a negative value such as -10 yields '0x-A'/'0b-1010'/'0o-12', which is invalid JavaScript."
+      }
+    }
+  ]
+}

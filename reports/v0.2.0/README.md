@@ -39,7 +39,9 @@ Zero-dependency CommonJS targets were re-run 2-3 times to measure variance; the 
 | [real-world/picomatch/62cbababd7a84e9a-3/](real-world/picomatch/62cbababd7a84e9a-3/) | third picomatch run: 3 proposed -> 2 verified + 1 uncertain, 1 execution-proven + 1 patch-proven; $1.0269 |
 | [real-world/commander/2be86e38745c0256-2/](real-world/commander/2be86e38745c0256-2/) and [-3](real-world/commander/2be86e38745c0256-3/) | commander variance runs: 1 verified / 0 verified (L1 reject), $0.8341 combined; both re-runs still fail closed on process signals |
 | [real-world/marked/6cd8009a29058221-2/](real-world/marked/6cd8009a29058221-2/) and [-3](real-world/marked/6cd8009a29058221-3/) | marked variance runs (v0.2.2 rules): 1 verified each; the third run found `_Lexer` instance tokens are appended on reuse; $0.7211 combined |
-| fixes | v0.2.2 commit `207781c`: patcher retry on empty/truncated output (P1) and a stricter reproducer prompt (P2); `tests/real-world-fixes.test.mjs` (5 tests, locked), suite 202/202 |
+| [real-world/picomatch/62cbababd7a84e9a-4/](real-world/picomatch/62cbababd7a84e9a-4/) and [-5](real-world/picomatch/62cbababd7a84e9a-5/) | P1/P2 verification on v0.2.2: run 4 = 5 proposed -> 3 verified + 1 moderate, **2 patch-proven** (leading-slash token and `noext`), 4 patcher calls for 2 proofs (the retry is visible), $1.5348; run 5 = 4 proposed -> 2 verified + 2 uncertain, 1 patch-proven, $1.0231 |
+| [real-world/jsesc/b0941ba03c256e66-3/](real-world/jsesc/b0941ba03c256e66-3/) | P1 verification on v0.2.2: the negative-number literal patch that came back empty in run 1 is now **patch-proven**; $0.2101 |
+| fixes | v0.2.2 commit `207781c`: patcher retry on empty/truncated output (P1) and a stricter reproducer prompt (P2); `tests/real-world-fixes.test.mjs` (5 tests, locked), suite 202/202. P1 recovered three previously lost patch proofs in the verification runs; P2 did not remove the L0 rejections |
 
 ## How to re-verify offline (no API key)
 

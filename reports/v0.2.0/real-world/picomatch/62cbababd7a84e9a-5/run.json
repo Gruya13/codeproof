@@ -1,0 +1,385 @@
+{
+  "runId": "62cbababd7a84e9a",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "aa497cf3dd6fb62ddf5152b1dbc9f58075d0a87c4eda694f67554dae9770b6ec",
+  "configHashVersion": 2,
+  "config": {
+    "hashVersion": 2,
+    "payload": {
+      "mode": "smoke",
+      "scannerModel": "muse-spark-1.3",
+      "verifierModel": "muse-wonder-1.0",
+      "temperature": 0,
+      "maxFindings": 8,
+      "citationMaxLines": 15,
+      "scannerMaxTokens": 16000,
+      "verifierMaxTokens": 4000,
+      "verifierContextChars": 24000,
+      "reproEnabled": true,
+      "reproModel": "muse-wonder-1.0",
+      "reproMaxTokens": 8000,
+      "reproTimeoutMs": 2000,
+      "reproAttempts": 3,
+      "hardBudget": true,
+      "dualScan": false,
+      "chunkedScan": false,
+      "secondaryScannerModel": "muse-wonder-1.0",
+      "dualScanMaxLoc": 0,
+      "patchEnabled": true,
+      "patchModel": "muse-wonder-1.0",
+      "patchMaxTokens": 6000,
+      "patchMaxCandidates": 3,
+      "verifyEscalate": false,
+      "mockPipeline": false
+    }
+  },
+  "repo": {
+    "source": "commit",
+    "path": "/home/gru/Projects/Meta hakatron/real-world/picomatch/lib",
+    "commit": "6bb40679c218cefba5d4e9662408c5fdf699a8bb",
+    "dirty": false,
+    "loc": 2445,
+    "files": 5
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    },
+    {
+      "role": "repro",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+    }
+  ],
+  "usage": {
+    "inputTokens": 98360,
+    "outputTokens": 69709,
+    "cachedTokens": 63490,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 2,
+        "inputTokens": 46734,
+        "outputTokens": 33042,
+        "cachedTokens": 46562,
+        "costUsd": 0.14762779999999998
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 6,
+        "inputTokens": 45615,
+        "outputTokens": 27883,
+        "cachedTokens": 16312,
+        "costUsd": 0.6781344
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "calls": 2,
+        "inputTokens": 5583,
+        "outputTokens": 3628,
+        "cachedTokens": 500,
+        "costUsd": 0.09299199999999999
+      },
+      {
+        "role": "patcher",
+        "model": "muse-wonder-1.0",
+        "calls": 1,
+        "inputTokens": 428,
+        "outputTokens": 5156,
+        "cachedTokens": 116,
+        "costUsd": 0.1043912
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 23367,
+        "outputTokens": 16000,
+        "cachedTokens": 23281,
+        "costUsd": 0.07159965,
+        "durationMs": 72354,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 1,
+        "inputTokens": 23367,
+        "outputTokens": 17042,
+        "cachedTokens": 23281,
+        "costUsd": 0.07602814999999999,
+        "durationMs": 72783,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 7111,
+        "outputTokens": 4000,
+        "cachedTokens": 500,
+        "costUsd": 0.106544,
+        "durationMs": 23357,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 3,
+        "inputTokens": 7111,
+        "outputTokens": 8000,
+        "cachedTokens": 7028,
+        "costUsd": 0.1617376,
+        "durationMs": 52266,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 4,
+        "inputTokens": 7922,
+        "outputTokens": 3126,
+        "cachedTokens": 500,
+        "costUsd": 0.092308,
+        "durationMs": 17246,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 5,
+        "inputTokens": 4108,
+        "outputTokens": 2195,
+        "cachedTokens": 0,
+        "costUsd": 0.060332,
+        "durationMs": 12293,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "patcher",
+        "model": "muse-wonder-1.0",
+        "index": 6,
+        "inputTokens": 428,
+        "outputTokens": 5156,
+        "cachedTokens": 116,
+        "costUsd": 0.1043912,
+        "durationMs": 25972,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 7,
+        "inputTokens": 7313,
+        "outputTokens": 4000,
+        "cachedTokens": 500,
+        "costUsd": 0.107352,
+        "durationMs": 18584,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 8,
+        "inputTokens": 7313,
+        "outputTokens": 8000,
+        "cachedTokens": 7284,
+        "costUsd": 0.1615728,
+        "durationMs": 43098,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 9,
+        "inputTokens": 8845,
+        "outputTokens": 757,
+        "cachedTokens": 500,
+        "costUsd": 0.04862,
+        "durationMs": 4727,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 10,
+        "inputTokens": 1475,
+        "outputTokens": 1433,
+        "cachedTokens": 500,
+        "costUsd": 0.03266,
+        "durationMs": 6738,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      }
+    ],
+    "costUsd": 1.0231454,
+    "measured": true
+  },
+  "calls": 11,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-28T16:02:25.225Z",
+    "durationMs": 350746
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 39
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 145140
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 205529
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 15
+    }
+  ],
+  "budget": {
+    "limitUsd": 4,
+    "spentUsd": 1.023145,
+    "measured": true,
+    "exceeded": false,
+    "hard": true,
+    "aborted": false,
+    "abortReason": null,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 4,
+    "byScanner": {
+      "spark": 4,
+      "wonder": 0,
+      "both": 0,
+      "controlled": 0
+    },
+    "duplicates": 0,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 0,
+    "verified": 2,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 2,
+    "reproduced": 1,
+    "patched": 1
+  },
+  "scanCoverage": {
+    "filesInPrompt": 5,
+    "filesTotal": 5,
+    "chars": 76640,
+    "cap": 400000,
+    "truncated": false
+  },
+  "scanners": [
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 4,
+      "rejectedAtL0": 0,
+      "costUsd": 0.07602814999999999,
+      "durationMs": 145139,
+      "group": null,
+      "coverage": null,
+      "reason": null
+    }
+  ],
+  "dualScan": false,
+  "chunkedScan": false,
+  "patch": {
+    "enabled": true,
+    "model": "muse-wonder-1.0"
+  },
+  "repro": {
+    "enabled": true,
+    "model": "muse-wonder-1.0",
+    "timeoutMs": 2000,
+    "attempts": 3,
+    "counts": {
+      "reproduced": 1,
+      "notReproduced": 0,
+      "unavailable": 0,
+      "inconclusive": 1
+    }
+  },
+  "outputs": {
+    "report": "reports/v0.2.0/real-world/picomatch/62cbababd7a84e9a-5/REPORT.md",
+    "findings": "reports/v0.2.0/real-world/picomatch/62cbababd7a84e9a-5/findings.json",
+    "rejected": "reports/v0.2.0/real-world/picomatch/62cbababd7a84e9a-5/rejected.md"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.2.2"
+  },
+  "attestation": {
+    "schemaVersion": 2,
+    "findingsSha256": "f42872f05d2eb0e169938c437c5c7ec76f85c994676422ef570b606c29fb3365",
+    "artifacts": {
+      "REPORT.md": "fd06326830e4d611f59bad40fd1cb36d632b2141b775bcff7583c86104506666",
+      "candidates.json": "c4348d2d1fcc3a14f8df3a2b9ae197181d91511ee06b0a78c9c920a51a361048",
+      "findings.json": "f42872f05d2eb0e169938c437c5c7ec76f85c994676422ef570b606c29fb3365",
+      "patch/F-002.diff": "a4c237a9d16f49f2ea318cd233971a779dfdd108c661c8fcc6a6223fe1308d6e",
+      "patch/F-002.json": "86ba6ac6bc2df4a23d54dc547dbce46239dcb99ac5225848fd4837c899d24aaf",
+      "rejected.md": "103cc405da2d9213a1c9e08e418b552d1d689309765f8486bec3e157eb79ca96",
+      "repro/F-002/control.mjs": "e30e38efdcbb909343c6e7112bc72ebcf0464750e0a347a5b56c945e96ce1d27",
+      "repro/F-002/result.json": "84d469d6c7d700241359db41bc572a6316bf3494c00785c5c047135bc5779149",
+      "repro/F-002/test.mjs": "d7577cb4de5fc98ca92cb28afcc066ea3d618a28f9820c8de3a23846a46fd47d",
+      "repro/F-004/result.json": "485ac30afe6c06b7b229c9bff2616aa8a2bcf6f869e91157c698cf2549b5e868"
+    }
+  }
+}
