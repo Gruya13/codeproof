@@ -1,4 +1,4 @@
-.PHONY: demo test controlled bench score replay clean-clone clean-clone-docker probe-repo ablation three-way
+.PHONY: demo test controlled bench score replay replay-v2 integrity clean-clone clean-clone-docker probe-repo ablation three-way
 
 demo:
 	USE_MOCK=1 node src/cli.mjs analyze fixtures/mini-repo --mock
@@ -19,7 +19,13 @@ three-way:
 	node scripts/three-way.mjs --repo bench/seed-repo --expected bench/expected.json $(if $(RUN),--codeproof-run $(RUN),) --runs 1
 
 replay:
-	node scripts/replay-gates.mjs --run "$(if $(RUN),$(RUN),reports/golden)"
+	node scripts/replay-gates.mjs --run "$(if $(RUN),$(RUN),reports/golden)" $(if $(REPLAY_OUT),--out "$(REPLAY_OUT)",)
+
+replay-v2:
+	node src/cli.mjs replay "$(RUN)"
+
+integrity:
+	node scripts/integrity.mjs
 
 clean-clone:
 	scripts/clean-clone.sh

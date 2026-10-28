@@ -2,8 +2,10 @@
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { loadConfig, computeConfigSha256, VERSION } from "./config.mjs";
+import { loadConfig, computeConfigSha256, configPayload, VERSION } from "./config.mjs";
 import { ingest, repoDigest, buildScannerInput, filesWithLineNumbers } from "./ingest/index.mjs";
+import { buildAttestation } from "./run/attest.mjs";
+import { writePatchArtifacts } from "./patch/index.mjs";
 import { buildScannerMessages, buildScannerResponseFormat, scannerSystemPrompt, validateFindingsL0 } from "./scan/index.mjs";
 import { mergeScannerRuns } from "./scan/merge.mjs";
 import { verifyOne, VERIFIER_SYSTEM_PROMPT } from "./verify/index.mjs";
@@ -114,7 +116,9 @@ async function main() {
   const startedAtMs = Date.now();
   const phases = [];
   const models = controlled ? [config.verifierModel] : [config.scannerModel, config.verifierModel];
-  const configSha256 = computeConfigSha256(config, mode);
+  // v0.2.0: the run identity is the version-2 payload; v1 hashes stay valid for old artifacts.
+  const configSha256 = computeConfigSha256(config, mode, { version: 2 });
+  const configPayloadV2 = configPayload(config, mode, { version: 2 });
   const commit = await gitCommit(target);
   const dirty = !(await repoIsClean(target));
   if (mode === "bench" && dirty) {
@@ -503,6 +507,8 @@ async function main() {
     mode: mode,
     mock: mock,
     configSha256: configSha256,
+    configHashVersion: 2,
+    config: { hashVersion: 2, payload: configPayloadV2 },
     repo: { source: repo.commit ? "commit" : "worktree", path: target, commit: commit, dirty: dirty, loc: repo.loc, files: repo.files.length },
     models: mock
       ? [{ role: "scanner-correctness", id: "mock-scanner" }, { role: "verifier", id: "mock-verifier" }]
@@ -594,9 +600,12 @@ async function main() {
   writeFileSync(join(outDir, "candidates.json"), JSON.stringify({ raw: scanRaw, candidates: candidateAudit }, null, 2) + "\n");
   for (const item of published) {
     if (item.repro) writeReproArtifacts(outDir, item.finding.id, item.repro);
+    if (item.patch && item.patch.diff) writePatchArtifacts(outDir, item.finding.id, item.patch);
   }
   phases.push({ name: "publish", status: "ok", durationMs: Date.now() - publishStarted });
   runJson.timings.durationMs = Date.now() - startedAtMs;
+  // v0.2.0 attestation: hashes of every committed artifact of this run (run.json excluded).
+  runJson.attestation = buildAttestation(outDir);
   writeFileSync(join(outDir, "run.json"), JSON.stringify(runJson, null, 2) + "\n");
   console.log("  publish  " + String(Date.now() - publishStarted).padStart(4) + " ms  " + outDir);
   console.log("");

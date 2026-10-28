@@ -41,12 +41,25 @@ export function loadConfig(env) {
     secondaryScannerModel: env.SECONDARY_SCANNER_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0",
     // The secondary scanner (Wonder) only finishes on small targets; above this LOC the second
     // scan is skipped. 0 disables the guard (explicit opt-in for experiments).
-    dualScanMaxLoc: Number(env.DUAL_SCAN_MAX_LOC || "0")
+    dualScanMaxLoc: Number(env.DUAL_SCAN_MAX_LOC || "0"),
+    // v0.2.0: L4 patch stage. The patch model is the existing verifier model (no new prices) and
+    // every patch call goes through the same hard-budget preflight as any other call.
+    patchEnabled: env.PATCH !== "0",
+    patchModel: env.PATCH_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0",
+    patchMaxTokens: Number(env.PATCH_MAX_TOKENS || "6000"),
+    patchMaxCandidates: Number(env.PATCH_MAX_CANDIDATES || "3"),
+    // v0.2.0: L2 escalation is opt-in and out of the mandatory scope.
+    verifyEscalate: env.VERIFY_ESCALATE === "1",
+    // v0.2.0: the mock adapter runs the real local L3/L4 executions (no network).
+    mockPipeline: env.USE_MOCK === "1" || env.MOCK_PIPELINE === "1"
   };
 }
 
-export function computeConfigSha256(config, mode) {
-  const payload = JSON.stringify({
+// The config payload that the run identity hashes. Version 1 is byte-identical to the pre-v0.2.0
+// payload, so every existing v1 hash stays valid. Version 2 appends the v0.2.0 fields additively.
+export function configPayload(config, mode, options) {
+  const version = options && options.version === 2 ? 2 : 1;
+  const payload = {
     mode: mode,
     scannerModel: config.scannerModel,
     verifierModel: config.verifierModel,
@@ -66,8 +79,20 @@ export function computeConfigSha256(config, mode) {
     chunkedScan: config.chunkedScan,
     secondaryScannerModel: config.secondaryScannerModel,
     dualScanMaxLoc: config.dualScanMaxLoc
-  });
-  return createHash("sha256").update(payload).digest("hex");
+  };
+  if (version === 2) {
+    payload.patchEnabled = config.patchEnabled;
+    payload.patchModel = config.patchModel;
+    payload.patchMaxTokens = config.patchMaxTokens;
+    payload.patchMaxCandidates = config.patchMaxCandidates;
+    payload.verifyEscalate = config.verifyEscalate;
+    payload.mockPipeline = config.mockPipeline;
+  }
+  return payload;
+}
+
+export function computeConfigSha256(config, mode, options) {
+  return createHash("sha256").update(JSON.stringify(configPayload(config, mode, options))).digest("hex");
 }
 
 // Worst-case cost of one call: no cache hits and the full max_tokens output budget.
