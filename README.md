@@ -22,6 +22,19 @@ L1 is a provenance check, not a semantic judge: it checks every cited snippet ag
 | `refuted` | The verifier supplied a counter-citation that passed the current mechanical policy. | Current; semantic relevance is not guaranteed |
 | `unresolved` | Weak refutation, uncertainty, failed citation or budget skip; not verified. | Current; see `rejected.md` |
 
+## Proof levels (v0.2.0)
+
+| Level | Name | How it is earned |
+|---|---|---|
+| L1 | citation-proven | the cited file and lines exist in the analyzed commit and the snippet matches them exactly |
+| L2 | adversarially-confirmed | the verifier model, seeing the bounded context, failed to refute the claim (a strong refutation carries a machine-checked counter-citation) |
+| L3 | execution-proven | the verifier wrote two files: a `[CONTROL]` that must pass 3/3 on a `git archive` snapshot, and a `[TRIGGER]` with a different input that must fail 3/3 with an assertion error. LinkCheck then proves the imported symbol actually executed (inspector coverage in memory, under the Node permission model, no writes, no network). All three must hold |
+| L4 | patch-proven | for an execution-proven finding, the patcher model proposes a minimal patch to one of the cited files (unique `searchBlock`, at most 25 lines, no API change); the patch is applied to a **copy** of the snapshot, and both phases must pass: control 3/3 and trigger 3/3 after the patch |
+
+What the chain does **not** prove is stated in Limits: the semantic tie between the failure and the claimed defect is a human review (F1.11), not a machine proof; `patch-proven` is a differential result over the reproduction, not a root-cause fix, and the repository's own test suite is never run.
+
+L3/L4 proof is awarded on **Node 26.8.2** only, because LinkCheck needs `--allow-inspector`. On Node 22.23.3 the same run reports `link-unproven` (fail-closed) and the finding stays `verified` - that is documented behaviour, not a failure.
+
 ## The problem
 
 An AI review tool can produce a convincing but wrong claim even when it cites real lines. The developer then has to check both the provenance of the citation and the interpretation of the code. A tool can also miss an existing bug.
@@ -36,10 +49,11 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026). 
 
 The pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`), and the deterministic suite is green on Node 22 and Node 26:
 
-- **Deterministic tests** (`make test`): **161/161** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), commit-based ingestion (dirty working tree cannot change the analysis), L3 cases (reproducer must import and call repository code that exists in the snapshot, no non-determinism, no trivial assertions, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), agent layer (role/label/cost recording, mock and meta adapters, soft and hard budget gates), dirty-JSON and truncation handling, fault injection, config-hash determinism.
+- **Deterministic tests** (`make test`): **189/189** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), commit-based ingestion (dirty working tree cannot change the analysis), L3 cases (reproducer must import and call repository code that exists in the snapshot, no non-determinism, no trivial assertions, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), agent layer (role/label/cost recording, mock and meta adapters, soft and hard budget gates), dirty-JSON and truncation handling, fault injection, config-hash determinism.
 - **Clean clone**: `make clean-clone` (tmpfs + `env -i`) and the Docker variant `make clean-clone-docker` (node:22-alpine) pass `make test`, `make demo`, `make replay` and `make score RUN=reports/golden` on a fresh clone.
 - **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts with no model calls - **9/9 identical, 0 mismatches**.
 - **Calibration benchmark with L3**: **8/8** recall (100%), 100% precision, 0/4 traps, 0 false refutations, **9/9 published findings execution-proven** - golden run and its generated reproducers are committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
+- **v0.2.0 evidence levels**: two-phase L3 (`[CONTROL]` must pass 3/3, `[TRIGGER]` must fail 3/3), LinkCheck linkage proof (the imported symbol must actually execute, inspector coverage under the permission model), L4 surgical patch with a differential proof (`patch-proven`), offline replay of v2 reports with attestation and a git anchor, a zero-dependency Proof Explorer, and an MCP server with `codeproof_scan`/`codeproof_replay`. Evidence: [reports/v0.2.0/](reports/v0.2.0/).
 - **Extended evaluation on real code**: a second set frozen before its first run - 16 injected defects + 5 traps in axios `lib/` (74 files / 9,564 LOC): 4-7/16 verified per single-pass run, **9-10/16 with chunked scanning** (`CHUNKED_SCAN=1`), 0/5 traps published in seven runs; see [bench/extended/](bench/extended/).
 - **Real repositories** (qualitative, each hand-checked and published with both runs): unjs/ofetch, sindresorhus/execa, preactjs/preact, moment/luxon - see [Real-repository run](#real-repository-run-qualitative). The real-API probe round (axios real + injected, fastify, prompt-cache TTL, safety, parallel calls) is under [reports/probes/](reports/probes/).
 - **Controlled verifier test**: two true findings confirmed and one deliberately false claim **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`); the committed run cost **$0.103** and served 3280 of 4065 input tokens from prompt cache. Recorded as `mode: controlled-verifier`, never as scanner output.
@@ -73,6 +87,19 @@ Scan and verify are static: the analyzed code is never executed while the scanne
 
 **Limits:** both models are from the same vendor family, so cross-verification is independent by role and model, not by provenance; duplicate detection is heuristic (file + overlapping lines), so two citations of the same defect that do not overlap remain two findings; the hard budget gate can refuse the second scan or later verifications, and `run.json` records the abort reason. The secondary scanner (Wonder) only finishes on small targets: on 4k and 7.6k LOC it hit the output-token limit even at 48k and the retry failed, so the run degraded to the primary scanner (`scanners[].status = error`). `DUAL_SCAN_MAX_LOC=2500` skips the secondary scan above that size (`status: skipped-loc`) and avoids the wasted spend; it is off by default.
 
+## Offline replay, Proof Explorer, MCP (v0.2.0)
+
+```bash
+make integrity                                   # baseline tree/file hashes + frozen evidence + test locks
+node src/cli.mjs replay <report-dir> [repo-path] --anchor <rev> --out <dir>
+node docs/index.html                             # Proof Explorer: load run.json + findings.json
+node src/mcp/index.mjs                           # MCP server over stdio (codeproof_scan, codeproof_replay)
+```
+
+**Replay** re-verifies a v2 report with no model calls: it checks the attestation hash of every artifact, recomputes the config payload hash, verifies the optional git anchor (`git diff` + `status` against a revision), re-runs L1 citations, re-executes the L3 control/trigger pair and re-applies the L4 patch. The semantic L2 verdict is not re-executed - replay proves the record is unchanged and the mechanical gates still hold, not that the model's judgement was true. v1 reports replay in limited mode (L0/L1) with an explicit note.
+
+**Proof Explorer** (`docs/index.html`, single file, no dependencies, no network) shows the evidence funnel (proposed -> L1 rejected -> verified -> execution-proven -> patch-proven) and, per finding, the `[CONTROL]`/`[TRIGGER]` code, LinkCheck status, the patch diff and the counter-citation. Historical v1 findings carry a "control not recorded (v1)" badge.
+
 ## Meta AI tooling used
 
 - **Two models in one gate:** Muse Spark 1.3 as producer, Muse Wonder as adversarial verifier - not one model grading itself.
@@ -92,6 +119,8 @@ make bench       # scored benchmark: bench/seed-repo, MAX_FINDINGS=12, mode benc
 DUAL_SCAN=1 make bench  # both models scan; each candidate is verified by the other model
 CHUNKED_SCAN=1 make bench  # one focused scanner call per top-level directory (higher recall, see below)
 make score       # score the newest benchmark run; RUN=reports/<id> selects one explicitly
+make integrity   # v0.2.0 gate: frozen baseline hashes, no diff under frozen paths, test locks
+node src/cli.mjs replay reports/v0.2.0/f2-mini-repo/72becdf8e629b60f --anchor HEAD --out /tmp/replay
 make replay      # re-run L0/L1 over the committed golden artifacts (no model calls)
 make clean-clone # fresh clone in tmpfs with env -i, make test/demo/score
 make clean-clone-docker # same inside node:22-alpine (needs Docker)
@@ -253,6 +282,9 @@ Capabilities built after the initial pipeline, each with its own evidence: commi
 
 - Only direct correctness defects; omission, security and style findings are out of scope for this milestone.
 - **Budget is enforced up front, but with an estimate:** the hard gate uses a conservative upper bound (3 chars/token, no cache, full output budget). It can therefore refuse a call that would in reality have fit; the estimate is never allowed to understate the cost. `HARD_BUDGET=0` disables the pre-flight gate and keeps only the post-hoc limit.
+- **The semantic tie is a review, not a machine proof.** The mechanical chain proves that the control passes and the trigger fails 3/3, that the imported symbol executed, and (for L4) that a patch flips the result. That the failure corresponds to the claimed defect is judged by an independent semantic review (F1.11), recorded in [reports/v0.2.0/F1-SEMANTIC-REVIEW.md](reports/v0.2.0/F1-SEMANTIC-REVIEW.md); the report never claims otherwise.
+- **`patch-proven` is differential, not a root-cause fix.** The patch is applied to a copy of the snapshot and never written to the analyzed repository; the repository's own test suite is not run.
+- **L3/L4 proof requires Node 26.8.2.** Node 22.23.3 has no `--allow-inspector`, so LinkCheck returns `link-unproven`, the finding stays `verified`, and no execution/patch proof is awarded (fail-closed). `--allow-inspector` carries Node's PERM0004 warning; it is needed only to read coverage from memory, and the sandbox still has no write and no network permissions.
 - **Real-code recall is lower than the calibration numbers.** On the extended set (16 injected defects in axios `lib/`, 9,564 LOC) the scanner verified 4-7 of 16 across four single-pass runs (~37% mean; **9-10/16 with chunked scanning**), while publishing no trap and almost no false positive. The calibration fixture is easier than production code; both numbers are published and labelled.
 - **Large repositories are analysed partially.** The scanner prompt is capped at 400,000 characters; above roughly 15-20k LOC only an alphabetical prefix of the files reaches the model. The run reports this honestly (console warning, `run.json.scanCoverage`, a line in the report summary), but the selection is not relevance-aware: for a large repository, run the pipeline per directory (`analyze <repo>/src/router`) or raise the cap deliberately.
 - No completeness claim: the report shows what passed the gate, not everything that exists in a repository.

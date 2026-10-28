@@ -1,6 +1,6 @@
 {
   "name": "codeproof",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Every finding carries the level of proof it earned: machine-checked citation, adversarial confirmation, or a failing test. Built for the Meta Global AI Developer Hackathon 2026.",
   "type": "module",

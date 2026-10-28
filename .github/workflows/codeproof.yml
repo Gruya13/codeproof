@@ -1,0 +1,41 @@
+name: codeproof
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22", "26"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: integrity gate (baseline hashes, frozen evidence, test locks)
+        run: make integrity
+      - name: deterministic tests
+        run: make test
+      - name: historical replay v1 (must stay 9/9)
+        run: make replay REPLAY_OUT=/tmp/cp-replay-v1.json
+      - name: replay v2 evidence offline
+        run: |
+          set -e
+          for run in reports/v0.2.0/f1-mini-repo/* reports/v0.2.0/f2-mini-repo/*; do
+            if [ -f "$run/run.json" ]; then
+              node src/cli.mjs replay "$run" --anchor HEAD --out "/tmp/replay-$(basename "$run")"
+            fi
+          done
+      - name: demo (mock pipeline executes L3/L4 locally)
+        run: make demo
