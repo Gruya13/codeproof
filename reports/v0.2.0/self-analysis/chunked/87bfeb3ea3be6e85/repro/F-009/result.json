@@ -1,0 +1,19 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "reproducer failed L0: unsupported response must not include testCode; unsupported response must not include controlCode; unsupportedReason is too short",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 5201,
+    "outputTokens": 4001,
+    "cachedTokens": 372
+  },
+  "costUsd": 0.0994104
+}

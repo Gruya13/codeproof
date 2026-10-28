@@ -1,0 +1,5 @@
+--- a/agents/index.mjs
++++ b/agents/index.mjs
+@@ -42,1 +42,1 @@
+-    if (role === "scanner-secondary") return options.secondaryScannerModel || options.scannerModel;
++    if (role === "scanner-secondary") return options.secondaryScannerModel || options.verifierModel;

@@ -1,0 +1,136 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 101,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 97,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 95,
+      "classification": "assertion-failure"
+    }
+  ],
+  "control": {
+    "code": "import assert from \"node:assert/strict\";\nimport { createAgents } from \"./agents/index.mjs\";\nconst budget = { spentUsd: 0, limitUsd: 1, exceeded: false, canAfford: () => false, charge: () => {} };\nconst agents = createAgents({\n  apiKey: \"k\",\n  baseUrl: \"https://example.invalid\",\n  scannerModel: \"control-scanner-model\",\n  verifierModel: \"control-verifier-model\",\n  secondaryScannerModel: \"control-secondary-model\",\n  hardBudget: true,\n  budget,\n  fetchImpl: async () => { throw new Error(\"fetch should not run\"); },\n  sleepImpl: async () => {}\n});\nassert.equal(agents.kind, \"meta\");\nlet error = null;\ntry {\n  await agents.complete({ role: \"scanner-secondary\", messages: [{ content: \"hello\" }], maxTokens: 10 });\n} catch (e) { error = e; }\nassert.ok(error);\nassert.equal(error.code, \"BUDGET_EXCEEDED\");\nassert.ok(error.message.includes(\"control-secondary-model\"));\n",
+    "classification": "passed",
+    "attempts": [
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 91,
+        "classification": "passed"
+      },
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 87,
+        "classification": "passed"
+      },
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 84,
+        "classification": "passed"
+      }
+    ],
+    "deterministic": true
+  },
+  "trigger": {
+    "code": "import assert from \"node:assert/strict\";\nimport { createAgents } from \"./agents/index.mjs\";\nconst budget = { spentUsd: 0, limitUsd: 1, exceeded: false, canAfford: () => false, charge: () => {} };\nconst agents = createAgents({\n  apiKey: \"k\",\n  baseUrl: \"https://example.invalid\",\n  scannerModel: \"test-scanner-model\",\n  verifierModel: \"test-verifier-model\",\n  hardBudget: true,\n  budget,\n  fetchImpl: async () => { throw new Error(\"fetch should not run\"); },\n  sleepImpl: async () => {}\n});\nassert.equal(agents.kind, \"meta\");\nlet error = null;\ntry {\n  await agents.complete({ role: \"scanner-secondary\", messages: [{ content: \"hello\" }], maxTokens: 10 });\n} catch (e) { error = e; }\nassert.ok(error);\nassert.equal(error.code, \"BUDGET_EXCEEDED\");\nassert.ok(error.message.includes(\"test-verifier-model\"));\n",
+    "classification": "assertion-failure",
+    "attempts": [
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 101,
+        "classification": "assertion-failure"
+      },
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 97,
+        "classification": "assertion-failure"
+      },
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 95,
+        "classification": "assertion-failure"
+      }
+    ],
+    "deterministic": true
+  },
+  "linkcheck": {
+    "status": "proven",
+    "targetFile": "agents/index.mjs",
+    "symbols": [
+      "createAgents"
+    ],
+    "executed": {
+      "createAgents": 1,
+      "estimateRequestCost": 1,
+      "hardBudgetError": 1,
+      "modelForRole": 1,
+      "complete": 1
+    },
+    "detail": null
+  },
+  "expectedBehavior": "For scanner-secondary, the hard-budget estimate must price the model that will actually execute. With secondaryScannerModel set, both estimate and execution use it; without it, execution falls back to verifierModel (agents/index.mjs:121), so the estimate/error must name verifierModel, not scannerModel.",
+  "rationale": "unsupported",
+  "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 2515,
+    "outputTokens": 5403,
+    "cachedTokens": 372
+  },
+  "costUsd": 0.11670639999999999
+}

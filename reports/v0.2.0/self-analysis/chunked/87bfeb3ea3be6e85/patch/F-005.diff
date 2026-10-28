@@ -1,0 +1,10 @@
+--- a/ingest/index.mjs
++++ b/ingest/index.mjs
+@@ -227,3 +227,4 @@
+-    if (used + block.length > limit) break;
+-    parts.push(block);
+-    used += block.length;
++    const separatorLength = parts.length > 0 ? 2 : 0;
++    if (used + separatorLength + block.length > limit) break;
++    parts.push(block);
++    used += separatorLength + block.length;

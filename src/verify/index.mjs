@@ -201,7 +201,16 @@ export function checkCitation(evidence, repo) {
   if (repo.commit && committed === null && gitPrefix(repo.root) !== null) {
     return { passed: false, reason: "path is not present in the analyzed commit: " + file };
   }
-  const source = committed === null ? readFileSync(join(repo.root, file), "utf8") : committed;
+  let source;
+  if (committed === null) {
+    try {
+      source = readFileSync(join(repo.root, file), "utf8");
+    } catch (error) {
+      return { passed: false, reason: "cited file cannot be read: " + error.message };
+    }
+  } else {
+    source = committed;
+  }
   const lines = source.split("\n");
   if (endLine > lines.length) return { passed: false, reason: "line range exceeds file length" };
   const expectedRange = lines.slice(startLine - 1, endLine);

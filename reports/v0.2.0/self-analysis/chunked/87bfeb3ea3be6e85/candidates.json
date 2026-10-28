@@ -1,0 +1,379 @@
+{
+  "raw": "{\n  \"chunked\": true,\n  \"groups\": [\n    {\n      \"group\": \"(root)\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"Secondary scanner calls use role scanner-secondary but the usage aggregation only maps exact scanner to scanner-correctness, so all secondary scanner tokens/calls are misattributed to verifier.\\\", \\\"confidence\\\": 0.92, \\\"evidence\\\": [{\\\"endLine\\\": 336, \\\"path\\\": \\\"cli.mjs\\\", \\\"snippet\\\": \\\"        const secondary = await runScanner(\\\\\\\"scanner-secondary\\\\\\\", secondaryLabel, scanMessages, scanFormat);\\\", \\\"startLine\\\": 336}, {\\\"endLine\\\": 232, \\\"path\\\": \\\"cli.mjs\\\", \\\"snippet\\\": \\\"      let call = await agents.complete({ role: role, messages: messages, responseFormat: format, temperature: config.temperature, maxTokens: config.scannerMaxTokens });\\\", \\\"startLine\\\": 232}, {\\\"endLine\\\": 566, \\\"path\\\": \\\"cli.mjs\\\", \\\"snippet\\\": \\\"    const role = call.role === \\\\\\\"scanner\\\\\\\" ? \\\\\\\"scanner-correctness\\\\\\\" : call.role === \\\\\\\"repro\\\\\\\" ? \\\\\\\"repro\\\\\\\" : \\\\\\\"verifier\\\\\\\";\\\", \\\"startLine\\\": 566}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"Secondary scanner usage counted as verifier\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"When secondaryScannerModel equals scannerModel the secondary run is labeled secondary, but byScanner counts and cross-verifier routing only check for wonder, so those findings are miscounted and verified by the wrong verifier role.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 329, \\\"path\\\": \\\"cli.mjs\\\", \\\"snippet\\\": \\\"      const secondaryLabel = config.secondaryScannerModel === config.scannerModel ? \\\\\\\"secondary\\\\\\\" : \\\\\\\"wonder\\\\\\\";\\\", \\\"startLine\\\": 329}, {\\\"endLine\\\": 390, \\\"path\\\": \\\"cli.mjs\\\", \\\"snippet\\\": \\\"    spark: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\\\\\\\"spark\\\\\\\") !== -1; }).length,\\\\n    wonder: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\\\\\\\"wonder\\\\\\\") !== -1; }).length,\\\\n    both: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\\\\\\\"spark\\\\\\\") !== -1 && entry.proposedBy.indexOf(\\\\\\\"wonder\\\\\\\") !== -1; }).length,\\\", \\\"startLine\\\": 387}, {\\\"endLine\\\": 426, \\\"path\\\": \\\"cli.mjs\\\", \\\"snippet\\\": \\\"    const crossVerifier = config.dualScan && entry.proposedBy.length === 1 && entry.proposedBy[0] === \\\\\\\"wonder\\\\\\\"\\\\n      ? { complete: function (request) { return agents.complete(Object.assign({}, request, { role: \\\\\\\"verifier-secondary\\\\\\\" })); } }\\\\n      : agents;\\\", \\\"startLine\\\": 424}], \\\"id\\\": \\\"F-002\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"Secondary label never matched for counts and cross-verification\\\"}]}\"\n    },\n    {\n      \"group\": \"agents\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"modelForRole falls back to scannerModel for scanner-secondary while the actual scanner-secondary agent is constructed with verifierModel, so the hard-budget estimate prices a different model than the one executed.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 42, \\\"path\\\": \\\"agents/index.mjs\\\", \\\"snippet\\\": \\\"    if (role === \\\\\\\"scanner-secondary\\\\\\\") return options.secondaryScannerModel || options.scannerModel;\\\", \\\"startLine\\\": 42}, {\\\"endLine\\\": 121, \\\"path\\\": \\\"agents/index.mjs\\\", \\\"snippet\\\": \\\"      model: options.secondaryScannerModel || options.verifierModel,\\\", \\\"startLine\\\": 121}, {\\\"endLine\\\": 145, \\\"path\\\": \\\"agents/index.mjs\\\", \\\"snippet\\\": \\\"      if (options.hardBudget) {\\\\n        const model = modelForRole(request.role);\\\\n        const estimate = estimateRequestCost(model, request);\\\\n        if (!budget.canAfford(estimate)) return Promise.reject(hardBudgetError(estimate, model));\\\\n      }\\\\n      return byRole[request.role](request).then(function (result) { return record(request.role, result); });\\\", \\\"startLine\\\": 140}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"scanner-secondary fallback model differs between estimate and execution\\\"}]}\"\n    },\n    {\n      \"group\": \"ingest\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"extractSpecifiers scans forward for 'from' until ';', so when statements omit semicolons (ASI) the scan crosses statement boundaries and attributes a later import's specifier to an earlier import/export, yielding false or duplicate edges.\\\", \\\"confidence\\\": 0.85, \\\"evidence\\\": [{\\\"endLine\\\": 96, \\\"path\\\": \\\"ingest/index.mjs\\\", \\\"snippet\\\": \\\"      for (let j = i + 1; j < tokens.length && tokens[j].value !== \\\\\\\";\\\\\\\"; j++) {\\\\n        if (tokens[j].value === \\\\\\\"from\\\\\\\" && tokens[j + 1]?.type === \\\\\\\"string\\\\\\\") {\\\\n          out.push(tokens[j + 1].value);\\\\n          break;\\\\n        }\\\\n      }\\\", \\\"startLine\\\": 91}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"from-scan uses semicolon terminator crossing ASI boundaries\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"buildScannerInput budgets only block.length but joins with \\\\\\\"\\\\\\\\n\\\\\\\\n\\\\\\\", so chars omits separators and text.length can exceed the maxChars limit.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 237, \\\"path\\\": \\\"ingest/index.mjs\\\", \\\"snippet\\\": \\\"    if (used + block.length > limit) break;\\\\n    parts.push(block);\\\\n    used += block.length;\\\\n    included.push(file.path);\\\\n  }\\\\n  return {\\\\n    text: parts.join(\\\\\\\"\\\\\\\\n\\\\\\\\n\\\\\\\"),\\\\n    included: included,\\\\n    filesInPrompt: included.length,\\\\n    filesTotal: result.files.length,\\\\n    chars: used,\\\", \\\"startLine\\\": 227}], \\\"id\\\": \\\"F-002\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"scanner input separator bytes omitted from budget\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"findCycles deduplicates by sorted node-set key, so two distinct directed cycles containing the same nodes but different edge order/direction share a key and the second is dropped.\\\", \\\"confidence\\\": 0.78, \\\"evidence\\\": [{\\\"endLine\\\": 139, \\\"path\\\": \\\"ingest/index.mjs\\\", \\\"snippet\\\": \\\"      if (nextState === 1) {\\\\n        const index = stack.lastIndexOf(next);\\\\n        const cycle = stack.slice(index).concat(next);\\\\n        const key = cycle.slice(0, -1).slice().sort().join(\\\\\\\"|\\\\\\\");\\\\n        if (!seen.has(key)) {\\\\n          seen.add(key);\\\\n          cycles.push(cycle);\\\", \\\"startLine\\\": 132}], \\\"id\\\": \\\"F-003\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"cycle dedup collapses distinct cycles with same node set\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"ingest loc excludes a trailing newline but buildScannerInput numbers source.split(\\\\\\\"\\\\\\\\n\\\\\\\") including the trailing empty string, so a file ending with newline emits loc+1 numbered lines while the header claims loc lines.\\\", \\\"confidence\\\": 0.88, \\\"evidence\\\": [{\\\"endLine\\\": 175, \\\"path\\\": \\\"ingest/index.mjs\\\", \\\"snippet\\\": \\\"    const lineCount = source === \\\\\\\"\\\\\\\" ? 0 : source.split(\\\\\\\"\\\\\\\\n\\\\\\\").length - (source.endsWith(\\\\\\\"\\\\\\\\n\\\\\\\") ? 1 : 0);\\\", \\\"startLine\\\": 175}, {\\\"endLine\\\": 226, \\\"path\\\": \\\"ingest/index.mjs\\\", \\\"snippet\\\": \\\"    const numbered = source.split(\\\\\\\"\\\\\\\\n\\\\\\\").map(function (line, index) {\\\\n      return String(index + 1) + \\\\\\\" | \\\\\\\" + line;\\\\n    }).join(\\\\\\\"\\\\\\\\n\\\\\\\");\\\\n    const block = \\\\\\\"### \\\\\\\" + file.path + \\\\\\\" (\\\\\\\" + file.loc + \\\\\\\" lines)\\\\\\\\n\\\\\\\" + numbered;\\\", \\\"startLine\\\": 223}], \\\"id\\\": \\\"F-004\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"low\\\", \\\"title\\\": \\\"numbered scanner output adds extra line for trailing newline\\\"}]}\"\n    },\n    {\n      \"group\": \"mcp\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"patch\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"When before is a prefix of after (append-only change) findIndex returns -1, start is left as -1, so the loops start at -1 pushing '-undefined'/'+undefined' and the hunk header uses line 0.\\\", \\\"confidence\\\": 0.95, \\\"evidence\\\": [{\\\"endLine\\\": 159, \\\"path\\\": \\\"patch/index.mjs\\\", \\\"snippet\\\": \\\"  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\\\\n  if (start === -1 && beforeLines.length === afterLines.length) return \\\\\\\"\\\\\\\";\\\\n  let beforeEnd = beforeLines.length;\\\\n  let afterEnd = afterLines.length;\\\\n  while (beforeEnd > start && afterEnd > start && beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]) { beforeEnd -= 1; afterEnd -= 1; }\\\\n  const lines = [\\\\\\\"--- a/\\\\\\\" + label, \\\\\\\"+++ b/\\\\\\\" + label, \\\\\\\"@@ -\\\\\\\" + (start + 1) + \\\\\\\",\\\\\\\" + Math.max(1, beforeEnd - start) + \\\\\\\" +\\\\\\\" + (start + 1) + \\\\\\\",\\\\\\\" + Math.max(1, afterEnd - start) + \\\\\\\" @@\\\\\\\"];\\\\n  for (let index = start; index < beforeEnd; index += 1) lines.push(\\\\\\\"-\\\\\\\" + beforeLines[index]);\\\\n  for (let index = start; index < afterEnd; index += 1) lines.push(\\\\\\\"+\\\\\\\" + afterLines[index]);\\\", \\\"startLine\\\": 152}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"unifiedDiff mishandles prefix-only changes with start -1\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"String.replace with a string replacement interprets $&, $', $`, $n sequences, so replaceBlock containing $ (e.g. template literals) is not inserted literally and the patched file is corrupted.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 145, \\\"path\\\": \\\"patch/index.mjs\\\", \\\"snippet\\\": \\\"export function applyPatchToSnapshot(options) {\\\\n  const path = join(options.snapshotDir, options.targetFile);\\\\n  const source = readFileSync(path, \\\\\\\"utf8\\\\\\\");\\\\n  const occurrences = countOccurrences(source, options.searchBlock);\\\\n  if (occurrences !== 1) throw new Error(\\\\\\\"searchBlock must occur exactly once in \\\\\\\" + options.targetFile + \\\\\\\" (found \\\\\\\" + occurrences + \\\\\\\")\\\\\\\");\\\\n  const patched = source.replace(options.searchBlock, options.replaceBlock);\\\\n  writeFileSync(path, patched);\\\\n  return { before: source, after: patched };\\\", \\\"startLine\\\": 138}], \\\"id\\\": \\\"F-002\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"applyPatchToSnapshot uses String.replace with unescaped $ patterns\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"attemptPatch sets durationMs only after the try/catch, but the unsupported branch returns early inside try, so unsupported results always keep the initial durationMs 0.\\\", \\\"confidence\\\": 0.95, \\\"evidence\\\": [{\\\"endLine\\\": 225, \\\"path\\\": \\\"patch/index.mjs\\\", \\\"snippet\\\": \\\"    if (parsed.kind === \\\\\\\"unsupported\\\\\\\") {\\\\n      const checked = validatePatchL0(parsed, { finding: finding });\\\\n      if (!checked.ok) throw new Error(\\\\\\\"patcher failed L0: \\\\\\\" + checked.errors.join(\\\\\\\"; \\\\\\\"));\\\\n      result.status = \\\\\\\"unsupported\\\\\\\";\\\\n      result.reason = parsed.unsupportedReason;\\\\n      return result;\\\", \\\"startLine\\\": 220}, {\\\"endLine\\\": 257, \\\"path\\\": \\\"patch/index.mjs\\\", \\\"snippet\\\": \\\"  } catch (error) {\\\\n    if (error && error.code === \\\\\\\"BUDGET_EXCEEDED\\\\\\\") throw error;\\\\n    result.status = \\\\\\\"rejected\\\\\\\";\\\\n    result.reason = error.message;\\\\n  }\\\\n  result.durationMs = Date.now() - started;\\\\n  return result;\\\", \\\"startLine\\\": 251}], \\\"id\\\": \\\"F-003\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"low\\\", \\\"title\\\": \\\"attemptPatch unsupported early return skips durationMs\\\"}]}\"\n    },\n    {\n      \"group\": \"repro\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"run\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"scan\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"synthesize\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"verify\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"checkCitation calls readFileSync without try/catch, so a manifest-listed but missing/unreadable file throws instead of returning {passed:false}.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 204, \\\"path\\\": \\\"verify/index.mjs\\\", \\\"snippet\\\": \\\"  const committed = repo.commit ? readFileAtCommit(repo.root, repo.commit, file) : null;\\\\n  if (repo.commit && committed === null && gitPrefix(repo.root) !== null) {\\\\n    return { passed: false, reason: \\\\\\\"path is not present in the analyzed commit: \\\\\\\" + file };\\\\n  }\\\\n  const source = committed === null ? readFileSync(join(repo.root, file), \\\\\\\"utf8\\\\\\\") : committed;\\\", \\\"startLine\\\": 200}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"Unhandled readFileSync throw in checkCitation\\\"}]}\"\n    }\n  ]\n}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Secondary scanner calls use role scanner-secondary but the usage aggregation only maps exact scanner to scanner-correctness, so all secondary scanner tokens/calls are misattributed to verifier.",
+        "confidence": 0.92,
+        "evidence": [
+          {
+            "endLine": 336,
+            "path": "cli.mjs",
+            "snippet": "        const secondary = await runScanner(\"scanner-secondary\", secondaryLabel, scanMessages, scanFormat);",
+            "startLine": 336
+          },
+          {
+            "endLine": 232,
+            "path": "cli.mjs",
+            "snippet": "      let call = await agents.complete({ role: role, messages: messages, responseFormat: format, temperature: config.temperature, maxTokens: config.scannerMaxTokens });",
+            "startLine": 232
+          },
+          {
+            "endLine": 566,
+            "path": "cli.mjs",
+            "snippet": "    const role = call.role === \"scanner\" ? \"scanner-correctness\" : call.role === \"repro\" ? \"repro\" : \"verifier\";",
+            "startLine": 566
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Secondary scanner usage counted as verifier"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 200-204 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "checkCitation at verify/index.mjs:186-242 contains no try/catch, and at verify/index.mjs:204 it falls back to readFileSync(join(repo.root, file), \"utf8\") when committed is null after only the manifest check at verify/index.mjs:192, so a manifest-listed but missing/unreadable file will throw instead of returning {passed:false}."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "When secondaryScannerModel equals scannerModel the secondary run is labeled secondary, but byScanner counts and cross-verifier routing only check for wonder, so those findings are miscounted and verified by the wrong verifier role.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 329,
+            "path": "cli.mjs",
+            "snippet": "      const secondaryLabel = config.secondaryScannerModel === config.scannerModel ? \"secondary\" : \"wonder\";",
+            "startLine": 329
+          },
+          {
+            "endLine": 390,
+            "path": "cli.mjs",
+            "snippet": "    spark: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\"spark\") !== -1; }).length,\n    wonder: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\"wonder\") !== -1; }).length,\n    both: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\"spark\") !== -1 && entry.proposedBy.indexOf(\"wonder\") !== -1; }).length,",
+            "startLine": 387
+          },
+          {
+            "endLine": 426,
+            "path": "cli.mjs",
+            "snippet": "    const crossVerifier = config.dualScan && entry.proposedBy.length === 1 && entry.proposedBy[0] === \"wonder\"\n      ? { complete: function (request) { return agents.complete(Object.assign({}, request, { role: \"verifier-secondary\" })); } }\n      : agents;",
+            "startLine": 424
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Secondary label never matched for counts and cross-verification"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 138-145 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The cited code at patch/index.mjs:143 passes options.replaceBlock directly as the string replacement to source.replace(options.searchBlock, options.replaceBlock), so $$, $&, $`, and $' sequences in replaceBlock are substituted rather than inserted literally, with no function replacer or escaping in patch/index.mjs:138-145."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "modelForRole falls back to scannerModel for scanner-secondary while the actual scanner-secondary agent is constructed with verifierModel, so the hard-budget estimate prices a different model than the one executed.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 42,
+            "path": "agents/index.mjs",
+            "snippet": "    if (role === \"scanner-secondary\") return options.secondaryScannerModel || options.scannerModel;",
+            "startLine": 42
+          },
+          {
+            "endLine": 121,
+            "path": "agents/index.mjs",
+            "snippet": "      model: options.secondaryScannerModel || options.verifierModel,",
+            "startLine": 121
+          },
+          {
+            "endLine": 145,
+            "path": "agents/index.mjs",
+            "snippet": "      if (options.hardBudget) {\n        const model = modelForRole(request.role);\n        const estimate = estimateRequestCost(model, request);\n        if (!budget.canAfford(estimate)) return Promise.reject(hardBudgetError(estimate, model));\n      }\n      return byRole[request.role](request).then(function (result) { return record(request.role, result); });",
+            "startLine": 140
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "scanner-secondary fallback model differs between estimate and execution"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "extractSpecifiers scans forward for 'from' until ';', so when statements omit semicolons (ASI) the scan crosses statement boundaries and attributes a later import's specifier to an earlier import/export, yielding false or duplicate edges.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 96,
+            "path": "ingest/index.mjs",
+            "snippet": "      for (let j = i + 1; j < tokens.length && tokens[j].value !== \";\"; j++) {\n        if (tokens[j].value === \"from\" && tokens[j + 1]?.type === \"string\") {\n          out.push(tokens[j + 1].value);\n          break;\n        }\n      }",
+            "startLine": 91
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "from-scan uses semicolon terminator crossing ASI boundaries"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "buildScannerInput budgets only block.length but joins with \"\\n\\n\", so chars omits separators and text.length can exceed the maxChars limit.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 237,
+            "path": "ingest/index.mjs",
+            "snippet": "    if (used + block.length > limit) break;\n    parts.push(block);\n    used += block.length;\n    included.push(file.path);\n  }\n  return {\n    text: parts.join(\"\\n\\n\"),\n    included: included,\n    filesInPrompt: included.length,\n    filesTotal: result.files.length,\n    chars: used,",
+            "startLine": 227
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "scanner input separator bytes omitted from budget"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "findCycles deduplicates by sorted node-set key, so two distinct directed cycles containing the same nodes but different edge order/direction share a key and the second is dropped.",
+        "confidence": 0.78,
+        "evidence": [
+          {
+            "endLine": 139,
+            "path": "ingest/index.mjs",
+            "snippet": "      if (nextState === 1) {\n        const index = stack.lastIndexOf(next);\n        const cycle = stack.slice(index).concat(next);\n        const key = cycle.slice(0, -1).slice().sort().join(\"|\");\n        if (!seen.has(key)) {\n          seen.add(key);\n          cycles.push(cycle);",
+            "startLine": 132
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "cycle dedup collapses distinct cycles with same node set"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 220-225 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: result is initialized with durationMs 0 at patch/index.mjs:205, the unsupported branch returns it directly at patch/index.mjs:225, and the only durationMs assignment is after the try/catch at patch/index.mjs:256, so that path skips it."
+      }
+    },
+    {
+      "index": 6,
+      "candidate": {
+        "category": "correctness",
+        "claim": "ingest loc excludes a trailing newline but buildScannerInput numbers source.split(\"\\n\") including the trailing empty string, so a file ending with newline emits loc+1 numbered lines while the header claims loc lines.",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "endLine": 175,
+            "path": "ingest/index.mjs",
+            "snippet": "    const lineCount = source === \"\" ? 0 : source.split(\"\\n\").length - (source.endsWith(\"\\n\") ? 1 : 0);",
+            "startLine": 175
+          },
+          {
+            "endLine": 226,
+            "path": "ingest/index.mjs",
+            "snippet": "    const numbered = source.split(\"\\n\").map(function (line, index) {\n      return String(index + 1) + \" | \" + line;\n    }).join(\"\\n\");\n    const block = \"### \" + file.path + \" (\" + file.loc + \" lines)\\n\" + numbered;",
+            "startLine": 223
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "low",
+        "title": "numbered scanner output adds extra line for trailing newline"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 175-175 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: ingest/index.mjs:175 subtracts one for a trailing newline when computing loc, while ingest/index.mjs:223-226 numbers every element of source.split(\"\\n\") including the trailing empty string and labels the block with file.loc, so a newline-terminated file gets loc+1 numbered lines."
+      }
+    },
+    {
+      "index": 7,
+      "candidate": {
+        "category": "correctness",
+        "claim": "When before is a prefix of after (append-only change) findIndex returns -1, start is left as -1, so the loops start at -1 pushing '-undefined'/'+undefined' and the hunk header uses line 0.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 159,
+            "path": "patch/index.mjs",
+            "snippet": "  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n  let beforeEnd = beforeLines.length;\n  let afterEnd = afterLines.length;\n  while (beforeEnd > start && afterEnd > start && beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]) { beforeEnd -= 1; afterEnd -= 1; }\n  const lines = [\"--- a/\" + label, \"+++ b/\" + label, \"@@ -\" + (start + 1) + \",\" + Math.max(1, beforeEnd - start) + \" +\" + (start + 1) + \",\" + Math.max(1, afterEnd - start) + \" @@\"];\n  for (let index = start; index < beforeEnd; index += 1) lines.push(\"-\" + beforeLines[index]);\n  for (let index = start; index < afterEnd; index += 1) lines.push(\"+\" + afterLines[index]);",
+            "startLine": 152
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "unifiedDiff mishandles prefix-only changes with start -1"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 8,
+      "candidate": {
+        "category": "correctness",
+        "claim": "String.replace with a string replacement interprets $&, $', $`, $n sequences, so replaceBlock containing $ (e.g. template literals) is not inserted literally and the patched file is corrupted.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 145,
+            "path": "patch/index.mjs",
+            "snippet": "export function applyPatchToSnapshot(options) {\n  const path = join(options.snapshotDir, options.targetFile);\n  const source = readFileSync(path, \"utf8\");\n  const occurrences = countOccurrences(source, options.searchBlock);\n  if (occurrences !== 1) throw new Error(\"searchBlock must occur exactly once in \" + options.targetFile + \" (found \" + occurrences + \")\");\n  const patched = source.replace(options.searchBlock, options.replaceBlock);\n  writeFileSync(path, patched);\n  return { before: source, after: patched };",
+            "startLine": 138
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "applyPatchToSnapshot uses String.replace with unescaped $ patterns"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 9,
+      "candidate": {
+        "category": "correctness",
+        "claim": "attemptPatch sets durationMs only after the try/catch, but the unsupported branch returns early inside try, so unsupported results always keep the initial durationMs 0.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 225,
+            "path": "patch/index.mjs",
+            "snippet": "    if (parsed.kind === \"unsupported\") {\n      const checked = validatePatchL0(parsed, { finding: finding });\n      if (!checked.ok) throw new Error(\"patcher failed L0: \" + checked.errors.join(\"; \"));\n      result.status = \"unsupported\";\n      result.reason = parsed.unsupportedReason;\n      return result;",
+            "startLine": 220
+          },
+          {
+            "endLine": 257,
+            "path": "patch/index.mjs",
+            "snippet": "  } catch (error) {\n    if (error && error.code === \"BUDGET_EXCEEDED\") throw error;\n    result.status = \"rejected\";\n    result.reason = error.message;\n  }\n  result.durationMs = Date.now() - started;\n  return result;",
+            "startLine": 251
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "low",
+        "title": "attemptPatch unsupported early return skips durationMs"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 10,
+      "candidate": {
+        "category": "correctness",
+        "claim": "checkCitation calls readFileSync without try/catch, so a manifest-listed but missing/unreadable file throws instead of returning {passed:false}.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 204,
+            "path": "verify/index.mjs",
+            "snippet": "  const committed = repo.commit ? readFileAtCommit(repo.root, repo.commit, file) : null;\n  if (repo.commit && committed === null && gitPrefix(repo.root) !== null) {\n    return { passed: false, reason: \"path is not present in the analyzed commit: \" + file };\n  }\n  const source = committed === null ? readFileSync(join(repo.root, file), \"utf8\") : committed;",
+            "startLine": 200
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Unhandled readFileSync throw in checkCitation"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    }
+  ]
+}

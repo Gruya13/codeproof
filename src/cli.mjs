@@ -14,7 +14,7 @@ import { buildVerifierContext } from "./verify/context.mjs";
 import { buildReport, buildRejected } from "./synthesize/index.mjs";
 import { parseDirtyJson } from "./run/json.mjs";
 import { computeRunId, sha256Hex, gitCommit, repoIsClean, Budget } from "./run/index.mjs";
-import { createAgents } from "./agents/index.mjs";
+import { createAgents, aggregateUsage } from "./agents/index.mjs";
 import { attemptRepro, writeReproArtifacts } from "./repro/index.mjs";
 
 function loadDotEnv(path) {
@@ -561,19 +561,7 @@ async function main() {
   }
   mkdirSync(outDir, { recursive: true });
   const outLabel = args.out + "/" + outDir.slice(resolve(args.out).length + 1);
-  const byRoleMap = new Map();
-  for (const call of agents.callLog) {
-    const role = call.role === "scanner" ? "scanner-correctness" : call.role === "repro" ? "repro" : "verifier";
-    if (!byRoleMap.has(role)) {
-      byRoleMap.set(role, { role: role, model: call.model, calls: 0, inputTokens: 0, outputTokens: 0, cachedTokens: 0, costUsd: mock ? null : 0 });
-    }
-    const aggregate = byRoleMap.get(role);
-    aggregate.calls += 1;
-    aggregate.inputTokens += call.inputTokens;
-    aggregate.outputTokens += call.outputTokens;
-    aggregate.cachedTokens += call.cachedTokens;
-    if (!mock && call.costUsd !== null) aggregate.costUsd += call.costUsd;
-  }
+  const byRole = aggregateUsage(agents.callLog, { mock: mock });
   const totalInput = agents.callLog.reduce(function (sum, call) { return sum + call.inputTokens; }, 0);
   const totalOutput = agents.callLog.reduce(function (sum, call) { return sum + call.outputTokens; }, 0);
   const totalCached = agents.callLog.reduce(function (sum, call) { return sum + call.cachedTokens; }, 0);
@@ -598,7 +586,7 @@ async function main() {
       inputTokens: totalInput,
       outputTokens: totalOutput,
       cachedTokens: totalCached,
-      byRole: Array.from(byRoleMap.values()),
+      byRole: byRole,
       callLog: agents.callLog,
       costUsd: aborted ? budget.spentUsd : totalCost,
       measured: measured
@@ -654,7 +642,7 @@ async function main() {
     chunkedScan: Boolean(config.chunkedScan),
     patch: { enabled: Boolean(config.patchEnabled), model: config.patchModel },
     repro: {
-      enabled: Boolean(config.reproEnabled && !controlled && !mock),
+      enabled: Boolean(config.mockPipeline || (config.reproEnabled && !controlled && !mock)),
       model: config.reproModel,
       timeoutMs: config.reproTimeoutMs,
       attempts: config.reproAttempts,

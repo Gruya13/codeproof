@@ -1,0 +1,77 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"unifiedDiff does not handle the prefix case where start is -1 but lengths differ: it builds a header with 0 offsets and indexes beforeLines[-1], producing '-undefined' lines.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 159, \"path\": \"patch/index.mjs\", \"snippet\": \"  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\\n  if (start === -1 && beforeLines.length === afterLines.length) return \\\"\\\";\\n  let beforeEnd = beforeLines.length;\\n  let afterEnd = afterLines.length;\\n  while (beforeEnd > start && afterEnd > start && beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]) { beforeEnd -= 1; afterEnd -= 1; }\\n  const lines = [\\\"--- a/\\\" + label, \\\"+++ b/\\\" + label, \\\"@@ -\\\" + (start + 1) + \\\",\\\" + Math.max(1, beforeEnd - start) + \\\" +\\\" + (start + 1) + \\\",\\\" + Math.max(1, afterEnd - start) + \\\" @@\\\"];\\n  for (let index = start; index < beforeEnd; index += 1) lines.push(\\\"-\\\" + beforeLines[index]);\\n  for (let index = start; index < afterEnd; index += 1) lines.push(\\\"+\\\" + afterLines[index]);\", \"startLine\": 152}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"unifiedDiff prefix insertion emits invalid diff with undefined\"}, {\"category\": \"correctness\", \"claim\": \"hard-budget estimate for scanner-secondary falls back to scannerModel while the actual secondary scanner agent falls back to verifierModel, so the preflight prices the wrong model.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 43, \"path\": \"agents/index.mjs\", \"snippet\": \"  function modelForRole(role) {\\n    if (role === \\\"scanner\\\") return options.scannerModel;\\n    if (role === \\\"scanner-secondary\\\") return options.secondaryScannerModel || options.scannerModel;\", \"startLine\": 40}, {\"endLine\": 122, \"path\": \"agents/index.mjs\", \"snippet\": \"    \\\"scanner-secondary\\\": createMetaAgent({\\n      apiKey: options.apiKey,\\n      baseUrl: options.baseUrl,\\n      model: options.secondaryScannerModel || options.verifierModel,\", \"startLine\": 118}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"secondary scanner budget model differs from executed model\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "unifiedDiff does not handle the prefix case where start is -1 but lengths differ: it builds a header with 0 offsets and indexes beforeLines[-1], producing '-undefined' lines.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 159,
+            "path": "patch/index.mjs",
+            "snippet": "  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n  let beforeEnd = beforeLines.length;\n  let afterEnd = afterLines.length;\n  while (beforeEnd > start && afterEnd > start && beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]) { beforeEnd -= 1; afterEnd -= 1; }\n  const lines = [\"--- a/\" + label, \"+++ b/\" + label, \"@@ -\" + (start + 1) + \",\" + Math.max(1, beforeEnd - start) + \" +\" + (start + 1) + \",\" + Math.max(1, afterEnd - start) + \" @@\"];\n  for (let index = start; index < beforeEnd; index += 1) lines.push(\"-\" + beforeLines[index]);\n  for (let index = start; index < afterEnd; index += 1) lines.push(\"+\" + afterLines[index]);",
+            "startLine": 152
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "unifiedDiff prefix insertion emits invalid diff with undefined"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 152-159 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at patch/index.mjs:152-159 returns early only when start===-1 and lengths are equal, otherwise uses start=-1 in the header (start+1=0) and loops from index=-1, so beforeLines[-1]/afterLines[-1] produce '-undefined'/'+undefined' when before is a prefix of after."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "hard-budget estimate for scanner-secondary falls back to scannerModel while the actual secondary scanner agent falls back to verifierModel, so the preflight prices the wrong model.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 43,
+            "path": "agents/index.mjs",
+            "snippet": "  function modelForRole(role) {\n    if (role === \"scanner\") return options.scannerModel;\n    if (role === \"scanner-secondary\") return options.secondaryScannerModel || options.scannerModel;",
+            "startLine": 40
+          },
+          {
+            "endLine": 122,
+            "path": "agents/index.mjs",
+            "snippet": "    \"scanner-secondary\": createMetaAgent({\n      apiKey: options.apiKey,\n      baseUrl: options.baseUrl,\n      model: options.secondaryScannerModel || options.verifierModel,",
+            "startLine": 118
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "secondary scanner budget model differs from executed model"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 4 non-blank lines but snippet has 3"
+      }
+    }
+  ]
+}

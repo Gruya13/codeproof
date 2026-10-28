@@ -1,0 +1,19 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "reproducer failed L0: controlCode: forbidden file write; controlCode: forbidden ambient runtime module; controlCode: forbidden process access; testCode: forbidden file write; testCode: forbidden ambient runtime module; testCode: forbidden process access",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 3787,
+    "outputTokens": 5227,
+    "cachedTokens": 372
+  },
+  "costUsd": 0.11827439999999999
+}

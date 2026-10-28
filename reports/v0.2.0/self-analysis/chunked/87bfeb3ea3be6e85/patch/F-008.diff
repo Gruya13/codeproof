@@ -1,0 +1,8 @@
+--- a/patch/index.mjs
++++ b/patch/index.mjs
+@@ -152,2 +152,3 @@
+-  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });
+-  if (start === -1 && beforeLines.length === afterLines.length) return "";
++  let start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });
++  if (start === -1 && beforeLines.length === afterLines.length) return "";
++  if (start === -1) start = beforeLines.length;

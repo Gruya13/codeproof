@@ -1,0 +1,10 @@
+import assert from "node:assert/strict";
+import { unifiedDiff } from "./patch/index.mjs";
+const result = unifiedDiff("alpha\nbeta\ngamma", "alpha\nBETA\ngamma", { label: "patch" });
+assert.equal(result.includes("undefined"), false);
+assert.equal(result.includes("-beta"), true);
+assert.equal(result.includes("+BETA"), true);
+assert.equal(result.includes("-alpha"), false);
+assert.equal(result.includes("+alpha"), false);
+assert.equal(result.includes("@@ -2,1 +2,1 @@"), true);
+assert.equal(result.split("\n").length, 5);

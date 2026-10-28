@@ -2,6 +2,47 @@ import { createMetaAgent } from "./meta.mjs";
 import { createMockAgent } from "./mock.mjs";
 import { estimateCost } from "../config.mjs";
 
+// The model that will actually be called for a role. Both the hard-budget preflight and the agent
+// construction must use this function: a different fallback in either place prices one model and
+// calls another (found by the v0.2.0 self-analysis run, F-003/F-002).
+export function roleModel(options, role) {
+  if (role === "scanner") return options.scannerModel;
+  if (role === "scanner-secondary") return options.secondaryScannerModel || options.verifierModel;
+  if (role === "verifier-secondary") return options.secondaryVerifierModel || options.scannerModel;
+  if (role === "patcher") return options.patchModel || options.verifierModel;
+  if (role === "repro") return options.reproModel || options.verifierModel;
+  return options.verifierModel;
+}
+
+// Usage buckets are keyed by the role that actually ran. Reporting every non-scanner role as
+// "verifier" (the v0.2.0 behaviour) hid patcher and secondary-scanner calls and merged their models.
+const USAGE_ROLE_LABEL = {
+  scanner: "scanner-correctness",
+  verifier: "verifier",
+  "verifier-secondary": "verifier-secondary",
+  "scanner-secondary": "scanner-secondary",
+  repro: "repro",
+  patcher: "patcher"
+};
+
+export function aggregateUsage(callLog, options) {
+  const mock = Boolean(options && options.mock);
+  const byRoleMap = new Map();
+  for (const call of callLog) {
+    const role = USAGE_ROLE_LABEL[call.role] || call.role;
+    if (!byRoleMap.has(role)) {
+      byRoleMap.set(role, { role: role, model: call.model, calls: 0, inputTokens: 0, outputTokens: 0, cachedTokens: 0, costUsd: mock ? null : 0 });
+    }
+    const aggregate = byRoleMap.get(role);
+    aggregate.calls += 1;
+    aggregate.inputTokens += call.inputTokens;
+    aggregate.outputTokens += call.outputTokens;
+    aggregate.cachedTokens += call.cachedTokens;
+    if (!mock && call.costUsd !== null) aggregate.costUsd += call.costUsd;
+  }
+  return Array.from(byRoleMap.values());
+}
+
 export function createAgents(options) {
   const callLog = [];
   const budget = options.budget;
@@ -38,12 +79,7 @@ export function createAgents(options) {
   }
 
   function modelForRole(role) {
-    if (role === "scanner") return options.scannerModel;
-    if (role === "scanner-secondary") return options.secondaryScannerModel || options.scannerModel;
-    if (role === "verifier-secondary") return options.secondaryVerifierModel || options.scannerModel;
-    if (role === "patcher") return options.patchModel || options.verifierModel;
-    if (role === "repro") return options.reproModel || options.verifierModel;
-    return options.verifierModel;
+    return roleModel(options, role);
   }
 
   function record(role, result) {
@@ -82,56 +118,19 @@ export function createAgents(options) {
     };
   }
 
-  const byRole = {
-    scanner: createMetaAgent({
+  // Construction goes through roleModel too, so the preflight estimate and the executed model
+  // can never diverge again.
+  const byRole = {};
+  for (const role of ["scanner", "verifier", "repro", "patcher", "scanner-secondary", "verifier-secondary"]) {
+    byRole[role] = createMetaAgent({
       apiKey: options.apiKey,
       baseUrl: options.baseUrl,
-      model: options.scannerModel,
+      model: roleModel(options, role),
       maxRetries: options.maxRetries,
       fetchImpl: options.fetchImpl,
       sleepImpl: options.sleepImpl
-    }),
-    verifier: createMetaAgent({
-      apiKey: options.apiKey,
-      baseUrl: options.baseUrl,
-      model: options.verifierModel,
-      maxRetries: options.maxRetries,
-      fetchImpl: options.fetchImpl,
-      sleepImpl: options.sleepImpl
-    }),
-    repro: createMetaAgent({
-      apiKey: options.apiKey,
-      baseUrl: options.baseUrl,
-      model: options.reproModel || options.verifierModel,
-      maxRetries: options.maxRetries,
-      fetchImpl: options.fetchImpl,
-      sleepImpl: options.sleepImpl
-    }),
-    patcher: createMetaAgent({
-      apiKey: options.apiKey,
-      baseUrl: options.baseUrl,
-      model: options.patchModel || options.verifierModel,
-      maxRetries: options.maxRetries,
-      fetchImpl: options.fetchImpl,
-      sleepImpl: options.sleepImpl
-    }),
-    "scanner-secondary": createMetaAgent({
-      apiKey: options.apiKey,
-      baseUrl: options.baseUrl,
-      model: options.secondaryScannerModel || options.verifierModel,
-      maxRetries: options.maxRetries,
-      fetchImpl: options.fetchImpl,
-      sleepImpl: options.sleepImpl
-    }),
-    "verifier-secondary": createMetaAgent({
-      apiKey: options.apiKey,
-      baseUrl: options.baseUrl,
-      model: options.secondaryVerifierModel || options.scannerModel,
-      maxRetries: options.maxRetries,
-      fetchImpl: options.fetchImpl,
-      sleepImpl: options.sleepImpl
-    })
-  };
+    });
+  }
   return {
     kind: "meta",
     callLog: callLog,

@@ -140,7 +140,9 @@ export function applyPatchToSnapshot(options) {
   const source = readFileSync(path, "utf8");
   const occurrences = countOccurrences(source, options.searchBlock);
   if (occurrences !== 1) throw new Error("searchBlock must occur exactly once in " + options.targetFile + " (found " + occurrences + ")");
-  const patched = source.replace(options.searchBlock, options.replaceBlock);
+  // A function replacement keeps `$&`, `$1`, `$$` in replaceBlock literal: a string replacement
+  // would expand them and silently corrupt the applied patch.
+  const patched = source.replace(options.searchBlock, function () { return options.replaceBlock; });
   writeFileSync(path, patched);
   return { before: source, after: patched };
 }
@@ -149,12 +151,19 @@ export function unifiedDiff(before, after, options) {
   const beforeLines = String(before).split("\n");
   const afterLines = String(after).split("\n");
   const label = (options && options.label) || "patch";
-  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });
+  let start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });
   if (start === -1 && beforeLines.length === afterLines.length) return "";
+  // A prefix-only change (append) makes findIndex return -1 even though the lengths differ: every
+  // line of `before` matches. Normalize to the common prefix length so no line is read at index -1.
+  if (start === -1) start = beforeLines.length;
   let beforeEnd = beforeLines.length;
   let afterEnd = afterLines.length;
   while (beforeEnd > start && afterEnd > start && beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]) { beforeEnd -= 1; afterEnd -= 1; }
-  const lines = ["--- a/" + label, "+++ b/" + label, "@@ -" + (start + 1) + "," + Math.max(1, beforeEnd - start) + " +" + (start + 1) + "," + Math.max(1, afterEnd - start) + " @@"];
+  const beforeCount = Math.max(0, beforeEnd - start);
+  const afterCount = Math.max(0, afterEnd - start);
+  const headerBefore = "-" + (beforeCount === 0 ? beforeEnd : start + 1) + "," + beforeCount;
+  const headerAfter = "+" + (afterCount === 0 ? afterEnd : start + 1) + "," + afterCount;
+  const lines = ["--- a/" + label, "+++ b/" + label, "@@ " + headerBefore + " " + headerAfter + " @@"];
   for (let index = start; index < beforeEnd; index += 1) lines.push("-" + beforeLines[index]);
   for (let index = start; index < afterEnd; index += 1) lines.push("+" + afterLines[index]);
   return lines.join("\n");
@@ -222,6 +231,7 @@ export async function attemptPatch(options) {
       if (!checked.ok) throw new Error("patcher failed L0: " + checked.errors.join("; "));
       result.status = "unsupported";
       result.reason = parsed.unsupportedReason;
+      result.durationMs = Date.now() - started;
       return result;
     }
     const snapshot = options.snapshotDir;

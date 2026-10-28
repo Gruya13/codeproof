@@ -1,0 +1,11 @@
+{
+  "status": "rejected",
+  "rationale": null,
+  "warnings": [],
+  "searchBlockSha256": null,
+  "replaceBlockSha256": null,
+  "attempts": null,
+  "reason": "no JSON object in model output: {\"findingId\": \"F-001\", \"kind\": \"patch\", \"rationale\": \"When before is a prefix of after, findIndex returns -1, causing 0 ",
+  "model": "muse-wonder-1.0",
+  "costUsd": 0.123072
+}

@@ -1,0 +1,19 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "reproducer failed L0: controlCode: forbidden ambient runtime module; testCode assertion is not tied to a call of an imported symbol",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 6652,
+    "outputTokens": 2534,
+    "cachedTokens": 372
+  },
+  "costUsd": 0.0758744
+}

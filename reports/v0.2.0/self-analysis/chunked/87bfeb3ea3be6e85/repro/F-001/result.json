@@ -1,0 +1,19 @@
+{
+  "status": "unavailable",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "",
+  "rationale": "The usage aggregation at cli.mjs:566 is inline inside the unexported main() function. cli.mjs only exports buildRunBanner, which does not perform or expose callLog/byRole aggregation, and no other listed module exports that aggregation. A faithful test would require executing the guarded full CLI pipeline in dual-scan mode with environment configuration, a target repository, model/mock agents, and filesystem report outputs, then inspecting run.json; its assertions would not be tied to a direct call of an imported symbol as required.",
+  "reason": "Bug is in unexported inline logic in cli.mjs main(); no exported API exposes secondary-scanner usage aggregation.",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 11800,
+    "outputTokens": 3205,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.1113
+}

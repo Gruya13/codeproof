@@ -1,0 +1,196 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "unifiedDiff does not handle the prefix case where start is -1 but lengths differ: it builds a header with 0 offsets and indexes beforeLines[-1], producing '-undefined' lines.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 159,
+          "path": "patch/index.mjs",
+          "snippet": "  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n  let beforeEnd = beforeLines.length;\n  let afterEnd = afterLines.length;\n  while (beforeEnd > start && afterEnd > start && beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]) { beforeEnd -= 1; afterEnd -= 1; }\n  const lines = [\"--- a/\" + label, \"+++ b/\" + label, \"@@ -\" + (start + 1) + \",\" + Math.max(1, beforeEnd - start) + \" +\" + (start + 1) + \",\" + Math.max(1, afterEnd - start) + \" @@\"];\n  for (let index = start; index < beforeEnd; index += 1) lines.push(\"-\" + beforeLines[index]);\n  for (let index = start; index < afterEnd; index += 1) lines.push(\"+\" + afterLines[index]);",
+          "startLine": 152
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "unifiedDiff prefix insertion emits invalid diff with undefined"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 152-159 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at patch/index.mjs:152-159 returns early only when start===-1 and lengths are equal, otherwise uses start=-1 in the header (start+1=0) and loops from index=-1, so beforeLines[-1]/afterLines[-1] produce '-undefined'/'+undefined' when before is a prefix of after."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-YjbSEV/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 89,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-YjbSEV/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 89,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-YjbSEV/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 90,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst diff = unifiedDiff(\"a\\nb\", \"a\\nb\\nc\", { label: \"patch\" });\nassert.equal(diff.includes(\"undefined\"), false);\nassert.equal(diff.includes(\"+c\"), true);\nassert.equal(diff.includes(\"\\n-a\"), false);\nassert.equal(diff.includes(\"\\n-b\"), false);\nassert.equal(diff.includes(\"@@ -0,\"), false);\nassert.equal(diff.includes(\" +0,\"), false);\n",
+      "expectedBehavior": "unifiedDiff emits a valid diff for a changed line and, for a pure prefix insertion, emits only the added line with no undefined, no deletions of unchanged lines, and no 0 header offsets.",
+      "rationale": "Control uses a mid-file substitution where start != -1 and passes. Test uses before as a strict prefix of after (start === -1, lengths differ), which triggers indexing beforeLines[-1] and 0 offsets in the buggy code.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst diff = unifiedDiff(\"a\\nb\\nc\", \"a\\nX\\nc\", { label: \"patch\" });\nassert.equal(diff, \"--- a/patch\\n+++ b/patch\\n@@ -2,1 +2,1 @@\\n-b\\n+X\");\nassert.equal(diff.includes(\"undefined\"), false);\n",
+      "control": {
+        "code": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst diff = unifiedDiff(\"a\\nb\\nc\", \"a\\nX\\nc\", { label: \"patch\" });\nassert.equal(diff, \"--- a/patch\\n+++ b/patch\\n@@ -2,1 +2,1 @@\\n-b\\n+X\");\nassert.equal(diff.includes(\"undefined\"), false);\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 87,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 89,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 85,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst diff = unifiedDiff(\"a\\nb\", \"a\\nb\\nc\", { label: \"patch\" });\nassert.equal(diff.includes(\"undefined\"), false);\nassert.equal(diff.includes(\"+c\"), true);\nassert.equal(diff.includes(\"\\n-a\"), false);\nassert.equal(diff.includes(\"\\n-b\"), false);\nassert.equal(diff.includes(\"@@ -0,\"), false);\nassert.equal(diff.includes(\" +0,\"), false);\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-YjbSEV/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 89,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-YjbSEV/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 89,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-YjbSEV/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 90,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "patch/index.mjs",
+        "symbols": [
+          "unifiedDiff"
+        ],
+        "executed": {
+          "unifiedDiff": 1
+        },
+        "detail": null
+      },
+      "durationMs": 23590,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 5319,
+        "outputTokens": 3950,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.100276
+    },
+    "patch": {
+      "status": "rejected",
+      "diff": null,
+      "targetFile": null,
+      "searchBlock": null,
+      "replaceBlock": null,
+      "searchBlockSha256": null,
+      "replaceBlockSha256": null,
+      "rationale": null,
+      "attempts": null,
+      "warnings": [],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 768,
+        "outputTokens": 6000,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.123072,
+      "reason": "no JSON object in model output: {\"findingId\": \"F-001\", \"kind\": \"patch\", \"rationale\": \"When before is a prefix of after, findIndex returns -1, causing 0 ",
+      "durationMs": 35940
+    },
+    "evidenceLevel": "execution-proven"
+  }
+]

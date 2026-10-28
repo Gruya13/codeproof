@@ -1,0 +1,1188 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Secondary scanner calls use role scanner-secondary but the usage aggregation only maps exact scanner to scanner-correctness, so all secondary scanner tokens/calls are misattributed to verifier.",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "endLine": 336,
+          "path": "cli.mjs",
+          "snippet": "        const secondary = await runScanner(\"scanner-secondary\", secondaryLabel, scanMessages, scanFormat);",
+          "startLine": 336
+        },
+        {
+          "endLine": 232,
+          "path": "cli.mjs",
+          "snippet": "      let call = await agents.complete({ role: role, messages: messages, responseFormat: format, temperature: config.temperature, maxTokens: config.scannerMaxTokens });",
+          "startLine": 232
+        },
+        {
+          "endLine": 566,
+          "path": "cli.mjs",
+          "snippet": "    const role = call.role === \"scanner\" ? \"scanner-correctness\" : call.role === \"repro\" ? \"repro\" : \"verifier\";",
+          "startLine": 566
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Secondary scanner usage counted as verifier"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 336-336 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: cli.mjs:336 runs the secondary scanner with role scanner-secondary, agents/index.mjs:55 preserves that exact role in callLog, and cli.mjs:566 maps only exact scanner to scanner-correctness with every other role falling through to verifier."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "The usage aggregation at cli.mjs:566 is inline inside the unexported main() function. cli.mjs only exports buildRunBanner, which does not perform or expose callLog/byRole aggregation, and no other listed module exports that aggregation. A faithful test would require executing the guarded full CLI pipeline in dual-scan mode with environment configuration, a target repository, model/mock agents, and filesystem report outputs, then inspecting run.json; its assertions would not be tied to a direct call of an imported symbol as required.",
+      "reason": "Bug is in unexported inline logic in cli.mjs main(); no exported API exposes secondary-scanner usage aggregation.",
+      "artifacts": null,
+      "controlCode": "",
+      "durationMs": 23528,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 11800,
+        "outputTokens": 3205,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.1113
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "modelForRole falls back to scannerModel for scanner-secondary while the actual scanner-secondary agent is constructed with verifierModel, so the hard-budget estimate prices a different model than the one executed.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 42,
+          "path": "agents/index.mjs",
+          "snippet": "    if (role === \"scanner-secondary\") return options.secondaryScannerModel || options.scannerModel;",
+          "startLine": 42
+        },
+        {
+          "endLine": 121,
+          "path": "agents/index.mjs",
+          "snippet": "      model: options.secondaryScannerModel || options.verifierModel,",
+          "startLine": 121
+        },
+        {
+          "endLine": 145,
+          "path": "agents/index.mjs",
+          "snippet": "      if (options.hardBudget) {\n        const model = modelForRole(request.role);\n        const estimate = estimateRequestCost(model, request);\n        if (!budget.canAfford(estimate)) return Promise.reject(hardBudgetError(estimate, model));\n      }\n      return byRole[request.role](request).then(function (result) { return record(request.role, result); });",
+          "startLine": 140
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "high",
+      "title": "scanner-secondary fallback model differs between estimate and execution"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 42-42 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: agents/index.mjs:42 makes modelForRole fall back to options.scannerModel for scanner-secondary, while agents/index.mjs:121 constructs that agent with options.secondaryScannerModel || options.verifierModel, and agents/index.mjs:140-143 uses modelForRole for the hard-budget estimate, so when secondaryScannerModel is unset the estimate prices a different model than execution."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 101,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 97,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 95,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { createAgents } from \"./agents/index.mjs\";\nconst budget = { spentUsd: 0, limitUsd: 1, exceeded: false, canAfford: () => false, charge: () => {} };\nconst agents = createAgents({\n  apiKey: \"k\",\n  baseUrl: \"https://example.invalid\",\n  scannerModel: \"test-scanner-model\",\n  verifierModel: \"test-verifier-model\",\n  hardBudget: true,\n  budget,\n  fetchImpl: async () => { throw new Error(\"fetch should not run\"); },\n  sleepImpl: async () => {}\n});\nassert.equal(agents.kind, \"meta\");\nlet error = null;\ntry {\n  await agents.complete({ role: \"scanner-secondary\", messages: [{ content: \"hello\" }], maxTokens: 10 });\n} catch (e) { error = e; }\nassert.ok(error);\nassert.equal(error.code, \"BUDGET_EXCEEDED\");\nassert.ok(error.message.includes(\"test-verifier-model\"));\n",
+      "expectedBehavior": "For scanner-secondary, the hard-budget estimate must price the model that will actually execute. With secondaryScannerModel set, both estimate and execution use it; without it, execution falls back to verifierModel (agents/index.mjs:121), so the estimate/error must name verifierModel, not scannerModel.",
+      "rationale": "unsupported",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from \"node:assert/strict\";\nimport { createAgents } from \"./agents/index.mjs\";\nconst budget = { spentUsd: 0, limitUsd: 1, exceeded: false, canAfford: () => false, charge: () => {} };\nconst agents = createAgents({\n  apiKey: \"k\",\n  baseUrl: \"https://example.invalid\",\n  scannerModel: \"control-scanner-model\",\n  verifierModel: \"control-verifier-model\",\n  secondaryScannerModel: \"control-secondary-model\",\n  hardBudget: true,\n  budget,\n  fetchImpl: async () => { throw new Error(\"fetch should not run\"); },\n  sleepImpl: async () => {}\n});\nassert.equal(agents.kind, \"meta\");\nlet error = null;\ntry {\n  await agents.complete({ role: \"scanner-secondary\", messages: [{ content: \"hello\" }], maxTokens: 10 });\n} catch (e) { error = e; }\nassert.ok(error);\nassert.equal(error.code, \"BUDGET_EXCEEDED\");\nassert.ok(error.message.includes(\"control-secondary-model\"));\n",
+      "control": {
+        "code": "import assert from \"node:assert/strict\";\nimport { createAgents } from \"./agents/index.mjs\";\nconst budget = { spentUsd: 0, limitUsd: 1, exceeded: false, canAfford: () => false, charge: () => {} };\nconst agents = createAgents({\n  apiKey: \"k\",\n  baseUrl: \"https://example.invalid\",\n  scannerModel: \"control-scanner-model\",\n  verifierModel: \"control-verifier-model\",\n  secondaryScannerModel: \"control-secondary-model\",\n  hardBudget: true,\n  budget,\n  fetchImpl: async () => { throw new Error(\"fetch should not run\"); },\n  sleepImpl: async () => {}\n});\nassert.equal(agents.kind, \"meta\");\nlet error = null;\ntry {\n  await agents.complete({ role: \"scanner-secondary\", messages: [{ content: \"hello\" }], maxTokens: 10 });\n} catch (e) { error = e; }\nassert.ok(error);\nassert.equal(error.code, \"BUDGET_EXCEEDED\");\nassert.ok(error.message.includes(\"control-secondary-model\"));\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 91,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 87,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 84,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from \"node:assert/strict\";\nimport { createAgents } from \"./agents/index.mjs\";\nconst budget = { spentUsd: 0, limitUsd: 1, exceeded: false, canAfford: () => false, charge: () => {} };\nconst agents = createAgents({\n  apiKey: \"k\",\n  baseUrl: \"https://example.invalid\",\n  scannerModel: \"test-scanner-model\",\n  verifierModel: \"test-verifier-model\",\n  hardBudget: true,\n  budget,\n  fetchImpl: async () => { throw new Error(\"fetch should not run\"); },\n  sleepImpl: async () => {}\n});\nassert.equal(agents.kind, \"meta\");\nlet error = null;\ntry {\n  await agents.complete({ role: \"scanner-secondary\", messages: [{ content: \"hello\" }], maxTokens: 10 });\n} catch (e) { error = e; }\nassert.ok(error);\nassert.equal(error.code, \"BUDGET_EXCEEDED\");\nassert.ok(error.message.includes(\"test-verifier-model\"));\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 101,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 97,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(error.message.includes(\"test-verifier-model\"))\n\n    at file:///tmp/codeproof-repro-wzRfOg/snapshot/.codeproof-repro.test.mjs:21:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 95,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "agents/index.mjs",
+        "symbols": [
+          "createAgents"
+        ],
+        "executed": {
+          "createAgents": 1,
+          "estimateRequestCost": 1,
+          "hardBudgetError": 1,
+          "modelForRole": 1,
+          "complete": 1
+        },
+        "detail": null
+      },
+      "durationMs": 41046,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2515,
+        "outputTokens": 5403,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.11670639999999999
+    },
+    "patch": {
+      "status": "patch-proven",
+      "diff": "--- a/agents/index.mjs\n+++ b/agents/index.mjs\n@@ -42,1 +42,1 @@\n-    if (role === \"scanner-secondary\") return options.secondaryScannerModel || options.scannerModel;\n+    if (role === \"scanner-secondary\") return options.secondaryScannerModel || options.verifierModel;",
+      "targetFile": "agents/index.mjs",
+      "searchBlock": "if (role === \"scanner-secondary\") return options.secondaryScannerModel || options.scannerModel;",
+      "replaceBlock": "if (role === \"scanner-secondary\") return options.secondaryScannerModel || options.verifierModel;",
+      "searchBlockSha256": "89a9fe270ef83b7ed9459d032ca8d383e76d754f3f576c844fd120987ac20b3d",
+      "replaceBlockSha256": "970b6400b23d3210832b3eba354aafeb79920c9b5835e106e8ec28c089d726dd",
+      "rationale": "Align modelForRole fallback for scanner-secondary with actual agent construction (verifierModel) so hard-budget estimate prices the executed model; explicit secondaryScannerModel still takes precedence.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 91,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 85,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 88,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 85,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 88,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 89,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        }
+      },
+      "warnings": [
+        "replaceBlock contains literals that also appear in the generated test (possible overfitting): \"scanner-secondary\""
+      ],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 958,
+        "outputTokens": 1974,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.043312,
+      "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+      "durationMs": 13515
+    },
+    "evidenceLevel": "patch-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "extractSpecifiers scans forward for 'from' until ';', so when statements omit semicolons (ASI) the scan crosses statement boundaries and attributes a later import's specifier to an earlier import/export, yielding false or duplicate edges.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 96,
+          "path": "ingest/index.mjs",
+          "snippet": "      for (let j = i + 1; j < tokens.length && tokens[j].value !== \";\"; j++) {\n        if (tokens[j].value === \"from\" && tokens[j + 1]?.type === \"string\") {\n          out.push(tokens[j + 1].value);\n          break;\n        }\n      }",
+          "startLine": 91
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "high",
+      "title": "from-scan uses semicolon terminator crossing ASI boundaries"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 91-96 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The scan at ingest/index.mjs:91 stops only on ';' and pushes the first following 'from' string at ingest/index.mjs:92-94, while the tokenizer discards newlines as whitespace at ingest/index.mjs:48, so a semicolon-less import/export can capture a later import's specifier and push it again when that later import is visited."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode: forbidden file write; controlCode: forbidden ambient runtime module; controlCode: forbidden process access; testCode: forbidden file write; testCode: forbidden ambient runtime module; testCode: forbidden process access",
+      "artifacts": null,
+      "durationMs": 40392,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 3787,
+        "outputTokens": 5227,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.11827439999999999
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "buildScannerInput budgets only block.length but joins with \"\\n\\n\", so chars omits separators and text.length can exceed the maxChars limit.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 237,
+          "path": "ingest/index.mjs",
+          "snippet": "    if (used + block.length > limit) break;\n    parts.push(block);\n    used += block.length;\n    included.push(file.path);\n  }\n  return {\n    text: parts.join(\"\\n\\n\"),\n    included: included,\n    filesInPrompt: included.length,\n    filesTotal: result.files.length,\n    chars: used,",
+          "startLine": 227
+        }
+      ],
+      "id": "F-005",
+      "kind": "direct",
+      "severity": "high",
+      "title": "scanner input separator bytes omitted from budget"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 227-237 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed at ingest/index.mjs:227-233: the loop budgets only block.length into used and returns chars: used, while text is parts.join(\"\\n\\n\"), adding 2*(parts.length-1) unbudgeted characters so text.length can exceed the limit."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n72 !== 76\n\n    at file:///tmp/codeproof-repro-a0hKJi/snapshot/.codeproof-repro.test.mjs:17:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 72,\n  expected: 76,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 88,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n72 !== 76\n\n    at file:///tmp/codeproof-repro-a0hKJi/snapshot/.codeproof-repro.test.mjs:17:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 72,\n  expected: 76,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 92,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n72 !== 76\n\n    at file:///tmp/codeproof-repro-a0hKJi/snapshot/.codeproof-repro.test.mjs:17:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 72,\n  expected: 76,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 91,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { buildScannerInput } from \"./ingest/index.mjs\";\nconst result = {\n  root: \".\",\n  files: [\n    { path: \"a.js\", loc: 1 },\n    { path: \"b.js\", loc: 1 },\n    { path: \"c.js\", loc: 1 },\n  ],\n  sources: new Map([\n    [\"a.js\", \"a\"],\n    [\"b.js\", \"a\"],\n    [\"c.js\", \"a\"],\n  ]),\n};\nconst out = buildScannerInput(result, 74);\nassert.equal(out.chars, out.text.length);\nassert.ok(out.text.length <= out.cap);\nassert.equal(out.filesInPrompt, 3);\n",
+      "expectedBehavior": "buildScannerInput is bounded by maxChars: returned text.length must not exceed cap and chars must equal text.length.",
+      "rationale": "Single file has no join separator, so chars equals text.length and respects the cap. Three 24-char blocks sum to 72, within a 74-char cap, but joining with two \"\\n\\n\" separators makes text 76 chars, exceeding the cap and making chars inaccurate.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from \"node:assert/strict\";\nimport { buildScannerInput } from \"./ingest/index.mjs\";\nconst result = {\n  root: \".\",\n  files: [{ path: \"a.js\", loc: 1 }],\n  sources: new Map([[\"a.js\", \"a\"]]),\n};\nconst out = buildScannerInput(result, 100);\nassert.equal(out.chars, out.text.length);\nassert.ok(out.text.length <= out.cap);\nassert.equal(out.filesInPrompt, 1);\n",
+      "control": {
+        "code": "import assert from \"node:assert/strict\";\nimport { buildScannerInput } from \"./ingest/index.mjs\";\nconst result = {\n  root: \".\",\n  files: [{ path: \"a.js\", loc: 1 }],\n  sources: new Map([[\"a.js\", \"a\"]]),\n};\nconst out = buildScannerInput(result, 100);\nassert.equal(out.chars, out.text.length);\nassert.ok(out.text.length <= out.cap);\nassert.equal(out.filesInPrompt, 1);\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 83,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 88,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 92,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from \"node:assert/strict\";\nimport { buildScannerInput } from \"./ingest/index.mjs\";\nconst result = {\n  root: \".\",\n  files: [\n    { path: \"a.js\", loc: 1 },\n    { path: \"b.js\", loc: 1 },\n    { path: \"c.js\", loc: 1 },\n  ],\n  sources: new Map([\n    [\"a.js\", \"a\"],\n    [\"b.js\", \"a\"],\n    [\"c.js\", \"a\"],\n  ]),\n};\nconst out = buildScannerInput(result, 74);\nassert.equal(out.chars, out.text.length);\nassert.ok(out.text.length <= out.cap);\nassert.equal(out.filesInPrompt, 3);\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n72 !== 76\n\n    at file:///tmp/codeproof-repro-a0hKJi/snapshot/.codeproof-repro.test.mjs:17:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 72,\n  expected: 76,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 88,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n72 !== 76\n\n    at file:///tmp/codeproof-repro-a0hKJi/snapshot/.codeproof-repro.test.mjs:17:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 72,\n  expected: 76,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 92,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n72 !== 76\n\n    at file:///tmp/codeproof-repro-a0hKJi/snapshot/.codeproof-repro.test.mjs:17:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 72,\n  expected: 76,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 91,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "ingest/index.mjs",
+        "symbols": [
+          "buildScannerInput"
+        ],
+        "executed": {
+          "buildScannerInput": 1
+        },
+        "detail": null
+      },
+      "durationMs": 16521,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 3775,
+        "outputTokens": 2353,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.06216
+    },
+    "patch": {
+      "status": "rejected",
+      "diff": "--- a/ingest/index.mjs\n+++ b/ingest/index.mjs\n@@ -227,3 +227,4 @@\n-    if (used + block.length > limit) break;\n-    parts.push(block);\n-    used += block.length;\n+    const separatorLength = parts.length > 0 ? 2 : 0;\n+    if (used + separatorLength + block.length > limit) break;\n+    parts.push(block);\n+    used += separatorLength + block.length;",
+      "targetFile": "ingest/index.mjs",
+      "searchBlock": "    if (used + block.length > limit) break;\n    parts.push(block);\n    used += block.length;\n    included.push(file.path);\n  }\n  return {\n    text: parts.join(\"\\n\\n\"),\n    included: included,\n    filesInPrompt: included.length,\n    filesTotal: result.files.length,\n    chars: used,",
+      "replaceBlock": "    const separatorLength = parts.length > 0 ? 2 : 0;\n    if (used + separatorLength + block.length > limit) break;\n    parts.push(block);\n    used += separatorLength + block.length;\n    included.push(file.path);\n  }\n  return {\n    text: parts.join(\"\\n\\n\"),\n    included: included,\n    filesInPrompt: included.length,\n    filesTotal: result.files.length,\n    chars: used,",
+      "searchBlockSha256": "77896ec9948f8c44002097effaf43e7b210297c7d1fd7225a32d382adf0bd827",
+      "replaceBlockSha256": "4bf6c4c376a59fa45a9df8230ecd2c89c99032051c2d05dad5db8660c1e66b4f",
+      "rationale": "Account for the 2-char join separator in the budget and char count.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 89,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 82,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 84,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "assertion-failure",
+          "attempts": [
+            {
+              "exitCode": 1,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 3\n\n    at file:///tmp/codeproof-patch-96isgy/snapshot/.codeproof-repro.test.mjs:19:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 2,\n  expected: 3,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+              "durationMs": 84,
+              "classification": "assertion-failure"
+            },
+            {
+              "exitCode": 1,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 3\n\n    at file:///tmp/codeproof-patch-96isgy/snapshot/.codeproof-repro.test.mjs:19:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 2,\n  expected: 3,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+              "durationMs": 79,
+              "classification": "assertion-failure"
+            },
+            {
+              "exitCode": 1,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 3\n\n    at file:///tmp/codeproof-patch-96isgy/snapshot/.codeproof-repro.test.mjs:19:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 2,\n  expected: 3,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+              "durationMs": 81,
+              "classification": "assertion-failure"
+            }
+          ],
+          "deterministic": false
+        }
+      },
+      "warnings": [],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 649,
+        "outputTokens": 4739,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.097376,
+      "reason": "the trigger still fails after the patch (assertion-failure)",
+      "durationMs": 38175
+    },
+    "evidenceLevel": "execution-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "ingest loc excludes a trailing newline but buildScannerInput numbers source.split(\"\\n\") including the trailing empty string, so a file ending with newline emits loc+1 numbered lines while the header claims loc lines.",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "endLine": 175,
+          "path": "ingest/index.mjs",
+          "snippet": "    const lineCount = source === \"\" ? 0 : source.split(\"\\n\").length - (source.endsWith(\"\\n\") ? 1 : 0);",
+          "startLine": 175
+        },
+        {
+          "endLine": 226,
+          "path": "ingest/index.mjs",
+          "snippet": "    const numbered = source.split(\"\\n\").map(function (line, index) {\n      return String(index + 1) + \" | \" + line;\n    }).join(\"\\n\");\n    const block = \"### \" + file.path + \" (\" + file.loc + \" lines)\\n\" + numbered;",
+          "startLine": 223
+        }
+      ],
+      "id": "F-007",
+      "kind": "direct",
+      "severity": "low",
+      "title": "numbered scanner output adds extra line for trailing newline"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-004"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 175-175 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: ingest/index.mjs:175 subtracts one for a trailing newline when computing loc, while ingest/index.mjs:223-226 numbers every element of source.split(\"\\n\") including the trailing empty string and labels the block with file.loc, so a newline-terminated file gets loc+1 numbered lines."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 16271,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 3853,
+        "outputTokens": 2666,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.0673184
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "When before is a prefix of after (append-only change) findIndex returns -1, start is left as -1, so the loops start at -1 pushing '-undefined'/'+undefined' and the hunk header uses line 0.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 159,
+          "path": "patch/index.mjs",
+          "snippet": "  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n  let beforeEnd = beforeLines.length;\n  let afterEnd = afterLines.length;\n  while (beforeEnd > start && afterEnd > start && beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]) { beforeEnd -= 1; afterEnd -= 1; }\n  const lines = [\"--- a/\" + label, \"+++ b/\" + label, \"@@ -\" + (start + 1) + \",\" + Math.max(1, beforeEnd - start) + \" +\" + (start + 1) + \",\" + Math.max(1, afterEnd - start) + \" @@\"];\n  for (let index = start; index < beforeEnd; index += 1) lines.push(\"-\" + beforeLines[index]);\n  for (let index = start; index < afterEnd; index += 1) lines.push(\"+\" + afterLines[index]);",
+          "startLine": 152
+        }
+      ],
+      "id": "F-008",
+      "kind": "direct",
+      "severity": "high",
+      "title": "unifiedDiff mishandles prefix-only changes with start -1"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 152-159 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At patch/index.mjs:152-159, findIndex over beforeLines returns -1 when every before line matches the corresponding after line, the guard at patch/index.mjs:153 only returns for equal lengths, and no later code corrects start, so the header at patch/index.mjs:157 uses start+1=0 and the loops at patch/index.mjs:158-159 begin at index -1, producing '-undefined'/'+undefined'."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-GdMZOK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 86,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-GdMZOK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 84,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-GdMZOK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 98,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst result = unifiedDiff(\"alpha\\nbeta\", \"alpha\\nbeta\\ngamma\", { label: \"patch\" });\nassert.equal(result.includes(\"undefined\"), false);\nassert.equal(result.includes(\"-alpha\"), false);\nassert.equal(result.includes(\"-beta\"), false);\nassert.equal(result.includes(\"+alpha\"), false);\nassert.equal(result.includes(\"+beta\"), false);\nassert.equal(result.includes(\"+gamma\"), true);\nassert.equal(result.includes(\"@@ -0\"), false);\nassert.equal(result.includes(\" +0,\"), false);\nassert.equal(result.split(\"\\n\").length, 4);\n",
+      "expectedBehavior": "unifiedDiff should emit only changed lines with a 1-based hunk header and no undefined entries; append-only changes should emit only the added lines.",
+      "rationale": "Control uses a mid-file replacement that the current prefix/suffix scan handles correctly. Test uses an append-only change where before is a prefix of after, so findIndex returns -1 on the current code, producing -undefined/+undefined, re-emitting unchanged lines, and a line-0 header.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst result = unifiedDiff(\"alpha\\nbeta\\ngamma\", \"alpha\\nBETA\\ngamma\", { label: \"patch\" });\nassert.equal(result.includes(\"undefined\"), false);\nassert.equal(result.includes(\"-beta\"), true);\nassert.equal(result.includes(\"+BETA\"), true);\nassert.equal(result.includes(\"-alpha\"), false);\nassert.equal(result.includes(\"+alpha\"), false);\nassert.equal(result.includes(\"@@ -2,1 +2,1 @@\"), true);\nassert.equal(result.split(\"\\n\").length, 5);\n",
+      "control": {
+        "code": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst result = unifiedDiff(\"alpha\\nbeta\\ngamma\", \"alpha\\nBETA\\ngamma\", { label: \"patch\" });\nassert.equal(result.includes(\"undefined\"), false);\nassert.equal(result.includes(\"-beta\"), true);\nassert.equal(result.includes(\"+BETA\"), true);\nassert.equal(result.includes(\"-alpha\"), false);\nassert.equal(result.includes(\"+alpha\"), false);\nassert.equal(result.includes(\"@@ -2,1 +2,1 @@\"), true);\nassert.equal(result.split(\"\\n\").length, 5);\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 91,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 94,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 103,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst result = unifiedDiff(\"alpha\\nbeta\", \"alpha\\nbeta\\ngamma\", { label: \"patch\" });\nassert.equal(result.includes(\"undefined\"), false);\nassert.equal(result.includes(\"-alpha\"), false);\nassert.equal(result.includes(\"-beta\"), false);\nassert.equal(result.includes(\"+alpha\"), false);\nassert.equal(result.includes(\"+beta\"), false);\nassert.equal(result.includes(\"+gamma\"), true);\nassert.equal(result.includes(\"@@ -0\"), false);\nassert.equal(result.includes(\" +0,\"), false);\nassert.equal(result.split(\"\\n\").length, 4);\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-GdMZOK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 86,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-GdMZOK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 84,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-GdMZOK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 98,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "patch/index.mjs",
+        "symbols": [
+          "unifiedDiff"
+        ],
+        "executed": {
+          "unifiedDiff": 1
+        },
+        "detail": null
+      },
+      "durationMs": 24516,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 5332,
+        "outputTokens": 4031,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.101948
+    },
+    "patch": {
+      "status": "patch-proven",
+      "diff": "--- a/patch/index.mjs\n+++ b/patch/index.mjs\n@@ -152,2 +152,3 @@\n-  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n-  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n+  let start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n+  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n+  if (start === -1) start = beforeLines.length;",
+      "targetFile": "patch/index.mjs",
+      "searchBlock": "  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n  if (start === -1 && beforeLines.length === afterLines.length) return \"\";",
+      "replaceBlock": "  let start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n  if (start === -1) start = beforeLines.length;",
+      "searchBlockSha256": "c7842b669554a703345455e276c4cd4105fb0cbd6f026e79320f226e2457afeb",
+      "replaceBlockSha256": "5c166f30e9a01560e1034a1f7bb3d66bfdbb034b5cc767761667841054d50968",
+      "rationale": "When before is a prefix of after, findIndex returns -1; defaulting start to beforeLines.length makes the hunk start after the common prefix, avoiding undefined lines and line 0.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 90,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 87,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 90,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 84,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 87,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 79,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        }
+      },
+      "warnings": [],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 848,
+        "outputTokens": 3249,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.068372,
+      "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+      "durationMs": 20559
+    },
+    "evidenceLevel": "patch-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "String.replace with a string replacement interprets $&, $', $`, $n sequences, so replaceBlock containing $ (e.g. template literals) is not inserted literally and the patched file is corrupted.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 145,
+          "path": "patch/index.mjs",
+          "snippet": "export function applyPatchToSnapshot(options) {\n  const path = join(options.snapshotDir, options.targetFile);\n  const source = readFileSync(path, \"utf8\");\n  const occurrences = countOccurrences(source, options.searchBlock);\n  if (occurrences !== 1) throw new Error(\"searchBlock must occur exactly once in \" + options.targetFile + \" (found \" + occurrences + \")\");\n  const patched = source.replace(options.searchBlock, options.replaceBlock);\n  writeFileSync(path, patched);\n  return { before: source, after: patched };",
+          "startLine": 138
+        }
+      ],
+      "id": "F-009",
+      "kind": "direct",
+      "severity": "high",
+      "title": "applyPatchToSnapshot uses String.replace with unescaped $ patterns"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 138-145 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The cited code at patch/index.mjs:143 passes options.replaceBlock directly as the string replacement to source.replace(options.searchBlock, options.replaceBlock), so $$, $&, $`, and $' sequences in replaceBlock are substituted rather than inserted literally, with no function replacer or escaping in patch/index.mjs:138-145."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: unsupported response must not include testCode; unsupported response must not include controlCode; unsupportedReason is too short",
+      "artifacts": null,
+      "durationMs": 27148,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 5201,
+        "outputTokens": 4001,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.0994104
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "attemptPatch sets durationMs only after the try/catch, but the unsupported branch returns early inside try, so unsupported results always keep the initial durationMs 0.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 225,
+          "path": "patch/index.mjs",
+          "snippet": "    if (parsed.kind === \"unsupported\") {\n      const checked = validatePatchL0(parsed, { finding: finding });\n      if (!checked.ok) throw new Error(\"patcher failed L0: \" + checked.errors.join(\"; \"));\n      result.status = \"unsupported\";\n      result.reason = parsed.unsupportedReason;\n      return result;",
+          "startLine": 220
+        },
+        {
+          "endLine": 257,
+          "path": "patch/index.mjs",
+          "snippet": "  } catch (error) {\n    if (error && error.code === \"BUDGET_EXCEEDED\") throw error;\n    result.status = \"rejected\";\n    result.reason = error.message;\n  }\n  result.durationMs = Date.now() - started;\n  return result;",
+          "startLine": 251
+        }
+      ],
+      "id": "F-010",
+      "kind": "direct",
+      "severity": "low",
+      "title": "attemptPatch unsupported early return skips durationMs"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-003"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 220-225 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: result is initialized with durationMs 0 at patch/index.mjs:205, the unsupported branch returns it directly at patch/index.mjs:225, and the only durationMs assignment is after the try/catch at patch/index.mjs:256, so that path skips it."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 22012,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 5239,
+        "outputTokens": 3342,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.0863824
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "checkCitation calls readFileSync without try/catch, so a manifest-listed but missing/unreadable file throws instead of returning {passed:false}.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 204,
+          "path": "verify/index.mjs",
+          "snippet": "  const committed = repo.commit ? readFileAtCommit(repo.root, repo.commit, file) : null;\n  if (repo.commit && committed === null && gitPrefix(repo.root) !== null) {\n    return { passed: false, reason: \"path is not present in the analyzed commit: \" + file };\n  }\n  const source = committed === null ? readFileSync(join(repo.root, file), \"utf8\") : committed;",
+          "startLine": 200
+        }
+      ],
+      "id": "F-011",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Unhandled readFileSync throw in checkCitation"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 200-204 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "checkCitation at verify/index.mjs:186-242 contains no try/catch, and at verify/index.mjs:204 it falls back to readFileSync(join(repo.root, file), \"utf8\") when committed is null after only the manifest check at verify/index.mjs:192, so a manifest-listed but missing/unreadable file will throw instead of returning {passed:false}."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode: forbidden ambient runtime module; testCode assertion is not tied to a call of an imported symbol",
+      "artifacts": null,
+      "durationMs": 18154,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 6652,
+        "outputTokens": 2534,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.0758744
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]
