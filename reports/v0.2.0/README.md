@@ -26,6 +26,21 @@ Every artifact below was produced by the v0.2.0 code and is committed verbatim. 
 | [real-world/json5/084c1d49becd3975/](real-world/json5/084c1d49becd3975/) | [json5/json5](https://github.com/json5/json5) `v2.2.3` (`lib/`, 13 files / 1,708 LOC): **0 candidates** ($0.0722) | `BUDGET_USD=4 node src/cli.mjs analyze <json5>/lib --mode smoke --out reports/v0.2.0/real-world/json5` |
 | replay | `replay` output for the picomatch run 2: anchor verified, 19 artifacts, 0 problems, L1/L3/L4 all match | `node src/cli.mjs replay reports/v0.2.0/real-world/picomatch/62cbababd7a84e9a-2 --anchor c9cf16a --out /tmp/replay-picomatch   # c9cf16a = the evidence commit (verified)` |
 
+### CJS-focused series and variance runs (v0.2.2)
+
+Zero-dependency CommonJS targets were re-run 2-3 times to measure variance; the two single-run targets (commander, marked) were re-run with the v0.2.2 rules.
+
+| Artifact | What it shows |
+|---|---|
+| [real-world/jsesc/b0941ba03c256e66/](real-world/jsesc/b0941ba03c256e66/) and [-2](real-world/jsesc/b0941ba03c256e66-2/) | [mathiasbynens/jsesc](https://github.com/mathiasbynens/jsesc) `v3.1.0` (337 LOC, CJS): 2/2 verified, **both execution-proven**, run 2 **patch-proven** (negative and non-integer numbers in hex/bin/oct produce invalid literals); $0.6331 |
+| [real-world/he/0b59fb64d98f1e4e/](real-world/he/0b59fb64d98f1e4e/) and [-2](real-world/he/0b59fb64d98f1e4e-2/) | [mathiasbynens/he](https://github.com/mathiasbynens/he) `v1.2.0` (345 LOC): 0 candidates in both runs, $0.2540 |
+| [real-world/flatted/cfdf683490416cc3/](real-world/flatted/cfdf683490416cc3/) and [-2](real-world/flatted/cfdf683490416cc3-2/) | [WebReflection/flatted](https://github.com/WebReflection/flatted) `v3.4.1` (132 LOC): 0 candidates in both runs, $0.0906 |
+| [real-world/json5/084c1d49becd3975-2/](real-world/json5/084c1d49becd3975-2/) | second json5 run: 0 candidates; two runs cost $0.1533 |
+| [real-world/picomatch/62cbababd7a84e9a-3/](real-world/picomatch/62cbababd7a84e9a-3/) | third picomatch run: 3 proposed -> 2 verified + 1 uncertain, 1 execution-proven + 1 patch-proven; $1.0269 |
+| [real-world/commander/2be86e38745c0256-2/](real-world/commander/2be86e38745c0256-2/) and [-3](real-world/commander/2be86e38745c0256-3/) | commander variance runs: 1 verified / 0 verified (L1 reject), $0.8341 combined; both re-runs still fail closed on process signals |
+| [real-world/marked/6cd8009a29058221-2/](real-world/marked/6cd8009a29058221-2/) and [-3](real-world/marked/6cd8009a29058221-3/) | marked variance runs (v0.2.2 rules): 1 verified each; the third run found `_Lexer` instance tokens are appended on reuse; $0.7211 combined |
+| fixes | v0.2.2 commit `207781c`: patcher retry on empty/truncated output (P1) and a stricter reproducer prompt (P2); `tests/real-world-fixes.test.mjs` (5 tests, locked), suite 202/202 |
+
 ## How to re-verify offline (no API key)
 
 ```bash

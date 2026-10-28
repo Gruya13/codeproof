@@ -1,0 +1,19 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; controlCode: forbidden process access; testCode assertion is not tied to a call of an imported symbol; testCode: forbidden process access",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 58628,
+    "outputTokens": 18552,
+    "cachedTokens": 29300
+  },
+  "costUsd": 0.494212
+}

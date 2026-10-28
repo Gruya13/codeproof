@@ -1,0 +1,59 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "listitem mutates the input token in place (prepends checkbox to text and unshifts a new token), so rendering the same tokens a second time prepends/unshifts the checkbox again and double-counts it.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 92,
+          "path": "Renderer.ts",
+          "snippet": "        if (item.tokens[0]?.type === 'paragraph') {\n          item.tokens[0].text = checkbox + ' ' + item.tokens[0].text;\n          if (item.tokens[0].tokens && item.tokens[0].tokens.length > 0 && item.tokens[0].tokens[0].type === 'text') {\n            item.tokens[0].tokens[0].text = checkbox + ' ' + escape(item.tokens[0].tokens[0].text);\n            item.tokens[0].tokens[0].escaped = true;\n          }\n        } else {\n          item.tokens.unshift({\n            type: 'text',\n            raw: checkbox + ' ',\n            text: checkbox + ' ',\n            escaped: true,\n          });",
+          "startLine": 80
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Renderer.listitem mutates tokens causing duplicate checkbox on re-render"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 80-92 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Renderer.ts:80-92 mutates the loose task item in place by prepending the checkbox to paragraph/text token text and by unshifting a new checkbox text token in the else branch, with no guard, clearing of item.task, or already-present check, so calling listitem again on the same tokens at Renderer.ts:75-99 reapplies the checkbox."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 111207,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 5808,
+        "outputTokens": 14757,
+        "cachedTokens": 2804
+      },
+      "costUsd": 0.3077168
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

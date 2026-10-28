@@ -1,0 +1,65 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Lexer.lex reuses the same instance field this.tokens without clearing it, so a second lex() call on the same _Lexer instance appends new block tokens and links to the previous result instead of starting fresh, double-counting output.",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "endLine": 25,
+          "path": "Lexer.ts",
+          "snippet": "  constructor(options?: MarkedOptions) {\n    // TokenList cannot be created in one go\n    this.tokens = [] as unknown as TokensList;\n    this.tokens.links = Object.create(null);",
+          "startLine": 22
+        },
+        {
+          "endLine": 99,
+          "path": "Lexer.ts",
+          "snippet": "  lex(src: string) {\n    src = src.replace(other.carriageReturn, '\\n');\n\n    this.blockTokens(src, this.tokens);\n\n    for (let i = 0; i < this.inlineQueue.length; i++) {\n      const next = this.inlineQueue[i];\n      this.inlineTokens(next.src, next.tokens);\n    }\n    this.inlineQueue = [];\n\n    return this.tokens;\n  }",
+          "startLine": 87
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Lexer.lex appends to stale instance tokens on reuse"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 22-25 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Lexer.ts:22 initializes this.tokens once in the constructor and Lexer.ts:87 passes that same this.tokens to blockTokens and returns it without any reset, so a second instance lex() call appends to the prior array."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 11593,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 5099,
+        "outputTokens": 1781,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.056016
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

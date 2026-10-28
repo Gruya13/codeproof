@@ -1,0 +1,59 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "_executeSubCommand registers five process signal listeners on every invocation without removing listeners from previous invocations, so repeated executions accumulate listeners and stale closures over old child processes.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 1302,
+          "path": "command.js",
+          "snippet": "    if (!proc.killed) {\n      // testing mainly to avoid leak warnings during unit tests with mocked spawn\n      const signals = ['SIGUSR1', 'SIGUSR2', 'SIGTERM', 'SIGINT', 'SIGHUP'];\n      signals.forEach((signal) => {\n        process.on(signal, () => {\n          if (proc.killed === false && proc.exitCode === null) {\n            // @ts-ignore because signals not typed to known strings\n            proc.kill(signal);\n          }\n        });\n      });\n    }",
+          "startLine": 1291
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Signal listeners leak on each subcommand execution"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 1291-1302 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at command.js:1291-1302 registers anonymous process.on handlers for five signals capturing each new proc, and the close/error handlers at command.js:1306-1343 contain no removeListener cleanup, so repeated _executeSubCommand invocations (possible via the exitCallback path at command.js:1308-1318) accumulate stale handlers."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; controlCode: forbidden process access; testCode assertion is not tied to a call of an imported symbol; testCode: forbidden process access",
+      "artifacts": null,
+      "durationMs": 159914,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 58628,
+        "outputTokens": 18552,
+        "cachedTokens": 29300
+      },
+      "costUsd": 0.494212
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

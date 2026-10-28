@@ -1,0 +1,47 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Lexer.lex reuses the same instance field this.tokens without clearing it, so a second lex() call on the same _Lexer instance appends new block tokens and links to the previous result instead of starting fresh, double-counting output.\", \"confidence\": 0.92, \"evidence\": [{\"endLine\": 25, \"path\": \"Lexer.ts\", \"snippet\": \"  constructor(options?: MarkedOptions) {\\n    // TokenList cannot be created in one go\\n    this.tokens = [] as unknown as TokensList;\\n    this.tokens.links = Object.create(null);\", \"startLine\": 22}, {\"endLine\": 99, \"path\": \"Lexer.ts\", \"snippet\": \"  lex(src: string) {\\n    src = src.replace(other.carriageReturn, '\\\\n');\\n\\n    this.blockTokens(src, this.tokens);\\n\\n    for (let i = 0; i < this.inlineQueue.length; i++) {\\n      const next = this.inlineQueue[i];\\n      this.inlineTokens(next.src, next.tokens);\\n    }\\n    this.inlineQueue = [];\\n\\n    return this.tokens;\\n  }\", \"startLine\": 87}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Lexer.lex appends to stale instance tokens on reuse\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Lexer.lex reuses the same instance field this.tokens without clearing it, so a second lex() call on the same _Lexer instance appends new block tokens and links to the previous result instead of starting fresh, double-counting output.",
+        "confidence": 0.92,
+        "evidence": [
+          {
+            "endLine": 25,
+            "path": "Lexer.ts",
+            "snippet": "  constructor(options?: MarkedOptions) {\n    // TokenList cannot be created in one go\n    this.tokens = [] as unknown as TokensList;\n    this.tokens.links = Object.create(null);",
+            "startLine": 22
+          },
+          {
+            "endLine": 99,
+            "path": "Lexer.ts",
+            "snippet": "  lex(src: string) {\n    src = src.replace(other.carriageReturn, '\\n');\n\n    this.blockTokens(src, this.tokens);\n\n    for (let i = 0; i < this.inlineQueue.length; i++) {\n      const next = this.inlineQueue[i];\n      this.inlineTokens(next.src, next.tokens);\n    }\n    this.inlineQueue = [];\n\n    return this.tokens;\n  }",
+            "startLine": 87
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Lexer.lex appends to stale instance tokens on reuse"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 22-25 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Lexer.ts:22 initializes this.tokens once in the constructor and Lexer.ts:87 passes that same this.tokens to blockTokens and returns it without any reset, so a second instance lex() call appends to the prior array."
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"_executeSubCommand adds 5 process signal forwarders closing over the new child proc on every call and overwrites this.runningCommand without removing prior listeners or clearing the prior handle, so repeated calls accumulate listeners and leak the previous proc reference.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 1301, \"path\": \"command.js\", \"snippet\": \"    if (!proc.killed) {\\n      // testing mainly to avoid leak warnings during unit tests with mocked spawn\\n      const signals = ['SIGUSR1', 'SIGUSR2', 'SIGTERM', 'SIGINT', 'SIGHUP'];\\n      signals.forEach((signal) => {\\n        process.on(signal, () => {\\n          if (proc.killed === false && proc.exitCode === null) {\\n            // @ts-ignore because signals not typed to known strings\\n            proc.kill(signal);\\n          }\\n        });\\n      });\\n    }\", \"startLine\": 1291}, {\"endLine\": 1346, \"path\": \"command.js\", \"snippet\": \"    // Store the reference to the child process\\n    this.runningCommand = proc;\", \"startLine\": 1345}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Subcommand signal listeners and runningCommand handle never cleared on repeated execute\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "_executeSubCommand adds 5 process signal forwarders closing over the new child proc on every call and overwrites this.runningCommand without removing prior listeners or clearing the prior handle, so repeated calls accumulate listeners and leak the previous proc reference.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 1301,
+            "path": "command.js",
+            "snippet": "    if (!proc.killed) {\n      // testing mainly to avoid leak warnings during unit tests with mocked spawn\n      const signals = ['SIGUSR1', 'SIGUSR2', 'SIGTERM', 'SIGINT', 'SIGHUP'];\n      signals.forEach((signal) => {\n        process.on(signal, () => {\n          if (proc.killed === false && proc.exitCode === null) {\n            // @ts-ignore because signals not typed to known strings\n            proc.kill(signal);\n          }\n        });\n      });\n    }",
+            "startLine": 1291
+          },
+          {
+            "endLine": 1346,
+            "path": "command.js",
+            "snippet": "    // Store the reference to the child process\n    this.runningCommand = proc;",
+            "startLine": 1345
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Subcommand signal listeners and runningCommand handle never cleared on repeated execute"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 11 non-blank lines but snippet has 12"
+      }
+    }
+  ]
+}
