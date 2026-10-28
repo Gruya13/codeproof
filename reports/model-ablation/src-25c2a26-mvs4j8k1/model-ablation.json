@@ -1,0 +1,138 @@
+{
+  "repo": {
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/src",
+    "commit": "25c2a26c1c00666886df0b9a8c0a29be015a9635",
+    "files": 21,
+    "loc": 4221
+  },
+  "codeproofRun": "reports/v0.2.0/self-analysis/a5e5c1c9868a5e4f",
+  "codeProof": {
+    "published": 3,
+    "verified": 3,
+    "reproduced": 1,
+    "findings": [
+      {
+        "id": "F-001",
+        "title": "unifiedDiff emits undefined lines for prefix append",
+        "where": "patch/index.mjs:152-159"
+      },
+      {
+        "id": "F-002",
+        "title": "scanner-secondary estimate vs execution model mismatch",
+        "where": "agents/index.mjs:40-43, agents/index.mjs:118-122"
+      },
+      {
+        "id": "F-003",
+        "title": "secondary and patcher calls aggregated as verifier",
+        "where": "cli.mjs:565-566"
+      }
+    ]
+  },
+  "variants": [
+    {
+      "variant": "spark-only",
+      "model": "muse-spark-1.3",
+      "run": 1,
+      "calls": 1,
+      "durationMs": 73488,
+      "costUsd": 0.1356615,
+      "usage": {
+        "inputTokens": 61242,
+        "outputTokens": 13908,
+        "cachedTokens": 0
+      },
+      "finishReason": "stop",
+      "candidates": 4,
+      "l0Valid": 4,
+      "l1Valid": 4,
+      "overlapWithCodeProof": 3,
+      "newVsCodeProof": 1,
+      "findings": [
+        {
+          "id": "F-001",
+          "title": "unifiedDiff emits line 0 header when one side is a prefix",
+          "claim": "unifiedDiff does not handle the prefix case: when one file is a prefix of the other findIndex returns -1 with different lengths, the guard only returns for equal lengths, so the hunk header is built with start+1 == 0 producing an invalid @@ -0 ... @@ header.",
+          "severity": "medium",
+          "where": "patch/index.mjs:152-157",
+          "l1": true,
+          "evidence": [
+            {
+              "endLine": 157,
+              "path": "patch/index.mjs",
+              "snippet": "  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n  let beforeEnd = beforeLines.length;\n  let afterEnd = afterLines.length;\n  while (beforeEnd > start && afterEnd > start && beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]) { beforeEnd -= 1; afterEnd -= 1; }\n  const lines = [\"--- a/\" + label, \"+++ b/\" + label, \"@@ -\" + (start + 1) + \",\" + Math.max(1, beforeEnd - start) + \" +\" + (start + 1) + \",\" + Math.max(1, afterEnd - start) + \" @@\"];",
+              "startLine": 152
+            }
+          ]
+        },
+        {
+          "id": "F-002",
+          "title": "secondary scanner calls aggregated as verifier",
+          "claim": "usage aggregation maps only exact role scanner to scanner-correctness, so scanner-secondary calls fall through to verifier and secondary scan cost/tokens are misattributed to the verifier role.",
+          "severity": "medium",
+          "where": "cli.mjs:564-566",
+          "l1": true,
+          "evidence": [
+            {
+              "endLine": 566,
+              "path": "cli.mjs",
+              "snippet": "  const byRoleMap = new Map();\n  for (const call of agents.callLog) {\n    const role = call.role === \"scanner\" ? \"scanner-correctness\" : call.role === \"repro\" ? \"repro\" : \"verifier\";",
+              "startLine": 564
+            }
+          ]
+        },
+        {
+          "id": "F-003",
+          "title": "repro.enabled omits mockPipeline while execution uses it",
+          "claim": "L3 is executed when config.mockPipeline is true, but run.json repro.enabled ignores mockPipeline, so mock-pipeline runs execute repro while reporting repro disabled and hiding the reproduced count.",
+          "severity": "medium",
+          "where": "cli.mjs:464-464, cli.mjs:656-658",
+          "l1": true,
+          "evidence": [
+            {
+              "endLine": 464,
+              "path": "cli.mjs",
+              "snippet": "      const reproActive = config.mockPipeline || (!mock && config.reproEnabled);",
+              "startLine": 464
+            },
+            {
+              "endLine": 658,
+              "path": "cli.mjs",
+              "snippet": "    repro: {\n      enabled: Boolean(config.reproEnabled && !controlled && !mock),\n      model: config.reproModel,",
+              "startLine": 656
+            }
+          ]
+        },
+        {
+          "id": "F-004",
+          "title": "hard-budget model fallback differs from actual secondary scanner",
+          "claim": "hard-budget estimate for scanner-secondary falls back to scannerModel while the actual secondary agent falls back to verifierModel, so the preflight prices the wrong model when secondaryScannerModel is unset.",
+          "severity": "low",
+          "where": "agents/index.mjs:40-43, agents/index.mjs:118-121",
+          "l1": true,
+          "evidence": [
+            {
+              "endLine": 43,
+              "path": "agents/index.mjs",
+              "snippet": "  function modelForRole(role) {\n    if (role === \"scanner\") return options.scannerModel;\n    if (role === \"scanner-secondary\") return options.secondaryScannerModel || options.scannerModel;\n    if (role === \"verifier-secondary\") return options.secondaryVerifierModel || options.scannerModel;",
+              "startLine": 40
+            },
+            {
+              "endLine": 121,
+              "path": "agents/index.mjs",
+              "snippet": "    \"scanner-secondary\": createMetaAgent({\n      apiKey: options.apiKey,\n      baseUrl: options.baseUrl,\n      model: options.secondaryScannerModel || options.verifierModel,",
+              "startLine": 118
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "variant": "wonder-only",
+      "model": "muse-wonder-1.0",
+      "run": 1,
+      "error": "unparseable output: empty model output",
+      "durationMs": 736507,
+      "costUsd": 1.2166552
+    }
+  ]
+}

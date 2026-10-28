@@ -1,0 +1,19 @@
+{
+  "status": "unavailable",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "Usage aggregation should preserve distinct roles such as scanner-secondary, verifier-secondary, and patcher instead of bucketing them as verifier.",
+  "rationale": "The defective aggregation at cli.mjs:565-576 is inline inside the non-exported main() function. cli.mjs exports only buildRunBanner, which does not accept a call log or perform usage aggregation, and no other listed module exports a callLog-to-byRole aggregation API. Exercising the defect would require running the complete analyze CLI pipeline, including repository ingestion, mock or model agents, scan/verify phases, and reading the generated run.json from the filesystem, rather than calling an imported repository symbol with different inputs.",
+  "reason": "No exported API exposes the usage-aggregation logic; it is embedded in cli.mjs main() and only reachable through a full CLI run.",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 11690,
+    "outputTokens": 3195,
+    "cachedTokens": 372
+  },
+  "costUsd": 0.1092464
+}

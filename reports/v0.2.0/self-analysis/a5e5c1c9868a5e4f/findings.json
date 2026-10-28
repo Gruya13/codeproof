@@ -1,0 +1,390 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "unifiedDiff does not handle append-only changes: when before is a prefix of after, start is -1 with different lengths so it does not return early and then indexes beforeLines[-1]/afterLines[-1] producing undefined diff lines.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 159,
+          "path": "patch/index.mjs",
+          "snippet": "  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n  let beforeEnd = beforeLines.length;\n  let afterEnd = afterLines.length;\n  while (beforeEnd > start && afterEnd > start && beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]) { beforeEnd -= 1; afterEnd -= 1; }\n  const lines = [\"--- a/\" + label, \"+++ b/\" + label, \"@@ -\" + (start + 1) + \",\" + Math.max(1, beforeEnd - start) + \" +\" + (start + 1) + \",\" + Math.max(1, afterEnd - start) + \" @@\"];\n  for (let index = start; index < beforeEnd; index += 1) lines.push(\"-\" + beforeLines[index]);\n  for (let index = start; index < afterEnd; index += 1) lines.push(\"+\" + afterLines[index]);",
+          "startLine": 152
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "unifiedDiff emits undefined lines for prefix append"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 152-159 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed at patch/index.mjs:152-159: when beforeLines is a line-prefix of afterLines findIndex returns -1, the equality guard at patch/index.mjs:153 does not return because lengths differ, the suffix loop cannot remove the -1 start, and both output loops begin at index -1, pushing '-'+beforeLines[-1] and '+'+afterLines[-1] i.e. '-undefined'/'+undefined'."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-hJf8Lj/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 85,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-hJf8Lj/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 94,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-hJf8Lj/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 86,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst diff = unifiedDiff(\"alpha\\nbeta\", \"alpha\\nbeta\\ngamma\", { label: \"sample\" });\nassert.equal(diff.includes(\"undefined\"), false);\nassert.ok(diff.includes(\"+gamma\"));\nassert.equal(diff.includes(\"-alpha\"), false);\nassert.equal(diff.includes(\"-beta\"), false);\nassert.equal(diff.includes(\"+alpha\"), false);\nassert.equal(diff.includes(\"+beta\"), false);\n",
+      "expectedBehavior": "unifiedDiff for a changed line emits -beta/+gamma with no undefined or unchanged lines; for an append-only change where before is a prefix of after it should emit only +gamma with no undefined or removed/unchanged lines.",
+      "rationale": "Control uses a mid-file change that the current prefix/suffix trimming handles correctly. Trigger uses an append-only change (before is a prefix of after) where findIndex returns -1, causing indexing at -1 and undefined lines, so the same no-undefined/only-changed-lines assertions fail.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst diff = unifiedDiff(\"alpha\\nbeta\", \"alpha\\ngamma\", { label: \"sample\" });\nassert.ok(diff.includes(\"-beta\"));\nassert.ok(diff.includes(\"+gamma\"));\nassert.equal(diff.includes(\"undefined\"), false);\nassert.equal(diff.includes(\"-alpha\"), false);\nassert.equal(diff.includes(\"+alpha\"), false);\n",
+      "control": {
+        "code": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst diff = unifiedDiff(\"alpha\\nbeta\", \"alpha\\ngamma\", { label: \"sample\" });\nassert.ok(diff.includes(\"-beta\"));\nassert.ok(diff.includes(\"+gamma\"));\nassert.equal(diff.includes(\"undefined\"), false);\nassert.equal(diff.includes(\"-alpha\"), false);\nassert.equal(diff.includes(\"+alpha\"), false);\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 89,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 121,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 97,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from \"node:assert/strict\";\nimport { unifiedDiff } from \"./patch/index.mjs\";\nconst diff = unifiedDiff(\"alpha\\nbeta\", \"alpha\\nbeta\\ngamma\", { label: \"sample\" });\nassert.equal(diff.includes(\"undefined\"), false);\nassert.ok(diff.includes(\"+gamma\"));\nassert.equal(diff.includes(\"-alpha\"), false);\nassert.equal(diff.includes(\"-beta\"), false);\nassert.equal(diff.includes(\"+alpha\"), false);\nassert.equal(diff.includes(\"+beta\"), false);\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-hJf8Lj/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 85,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-hJf8Lj/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 94,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-hJf8Lj/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 86,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "patch/index.mjs",
+        "symbols": [
+          "unifiedDiff"
+        ],
+        "executed": {
+          "unifiedDiff": 1
+        },
+        "detail": null
+      },
+      "durationMs": 18967,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 5328,
+        "outputTokens": 2835,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.0765984
+    },
+    "patch": {
+      "status": "patch-proven",
+      "diff": "--- a/patch/index.mjs\n+++ b/patch/index.mjs\n@@ -152,2 +152,3 @@\n-  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n-  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n+  let start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n+  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n+  if (start === -1) start = Math.min(beforeLines.length, afterLines.length);",
+      "targetFile": "patch/index.mjs",
+      "searchBlock": "  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n  if (start === -1 && beforeLines.length === afterLines.length) return \"\";",
+      "replaceBlock": "  let start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n  if (start === -1) start = Math.min(beforeLines.length, afterLines.length);",
+      "searchBlockSha256": "c7842b669554a703345455e276c4cd4105fb0cbd6f026e79320f226e2457afeb",
+      "replaceBlockSha256": "883e0c1b6169cef4c5ae99f5bd15e95926558ba9ab1979efc95327a7bb66b537",
+      "rationale": "When before is a prefix of after, findIndex returns -1 but lengths differ so the early return is skipped, causing indexing at -1. Normalizing -1 to the common prefix length makes the diff emit only the appended lines.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 85,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 86,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 85,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 89,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 82,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 84,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        }
+      },
+      "warnings": [],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 767,
+        "outputTokens": 2801,
+        "cachedTokens": 116
+      },
+      "costUsd": 0.0586472,
+      "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+      "durationMs": 17264
+    },
+    "evidenceLevel": "patch-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Hard-budget estimate and actual execution use different fallback models for scanner-secondary: estimate falls back to scannerModel while the agent is constructed with verifierModel, so the preflight prices a different model than is called.",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "endLine": 43,
+          "path": "agents/index.mjs",
+          "snippet": "  function modelForRole(role) {\n    if (role === \"scanner\") return options.scannerModel;\n    if (role === \"scanner-secondary\") return options.secondaryScannerModel || options.scannerModel;\n    if (role === \"verifier-secondary\") return options.secondaryVerifierModel || options.scannerModel;",
+          "startLine": 40
+        },
+        {
+          "endLine": 122,
+          "path": "agents/index.mjs",
+          "snippet": "    \"scanner-secondary\": createMetaAgent({\n      apiKey: options.apiKey,\n      baseUrl: options.baseUrl,\n      model: options.secondaryScannerModel || options.verifierModel,\n      maxRetries: options.maxRetries,",
+          "startLine": 118
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "scanner-secondary estimate vs execution model mismatch"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 40-43 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: agents/index.mjs:42 estimates scanner-secondary as secondaryScannerModel || scannerModel, while agents/index.mjs:121 constructs that agent as secondaryScannerModel || verifierModel, and agents/index.mjs:141-145 uses modelForRole for the hard-budget preflight before dispatching to byRole."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 117770,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 4960,
+        "outputTokens": 14426,
+        "cachedTokens": 2792
+      },
+      "costUsd": 0.29775039999999997
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Usage aggregation buckets every non-scanner/non-repro role into verifier, so scanner-secondary, verifier-secondary and patcher calls are misreported as verifier calls with the wrong model bucket.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 566,
+          "path": "cli.mjs",
+          "snippet": "  for (const call of agents.callLog) {\n    const role = call.role === \"scanner\" ? \"scanner-correctness\" : call.role === \"repro\" ? \"repro\" : \"verifier\";",
+          "startLine": 565
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "secondary and patcher calls aggregated as verifier"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-003"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 565-566 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The ternary at cli.mjs:566 maps only scanner and repro explicitly and defaults every other role to verifier, while agents/index.mjs:110-133 defines distinct patcher, scanner-secondary, and verifier-secondary agents with different model fallbacks, and cli.mjs:568 fixes the bucket model from the first aggregated call, so those calls are misreported as verifier usage."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": null,
+      "attempts": [],
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "Usage aggregation should preserve distinct roles such as scanner-secondary, verifier-secondary, and patcher instead of bucketing them as verifier.",
+      "rationale": "The defective aggregation at cli.mjs:565-576 is inline inside the non-exported main() function. cli.mjs exports only buildRunBanner, which does not accept a call log or perform usage aggregation, and no other listed module exports a callLog-to-byRole aggregation API. Exercising the defect would require running the complete analyze CLI pipeline, including repository ingestion, mock or model agents, scan/verify phases, and reading the generated run.json from the filesystem, rather than calling an imported repository symbol with different inputs.",
+      "reason": "No exported API exposes the usage-aggregation logic; it is embedded in cli.mjs main() and only reachable through a full CLI run.",
+      "artifacts": null,
+      "controlCode": "",
+      "durationMs": 30467,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 11690,
+        "outputTokens": 3195,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.1092464
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

@@ -1,0 +1,119 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"unifiedDiff does not handle append-only changes: when before is a prefix of after, start is -1 with different lengths so it does not return early and then indexes beforeLines[-1]/afterLines[-1] producing undefined diff lines.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 159, \"path\": \"patch/index.mjs\", \"snippet\": \"  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\\n  if (start === -1 && beforeLines.length === afterLines.length) return \\\"\\\";\\n  let beforeEnd = beforeLines.length;\\n  let afterEnd = afterLines.length;\\n  while (beforeEnd > start && afterEnd > start && beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]) { beforeEnd -= 1; afterEnd -= 1; }\\n  const lines = [\\\"--- a/\\\" + label, \\\"+++ b/\\\" + label, \\\"@@ -\\\" + (start + 1) + \\\",\\\" + Math.max(1, beforeEnd - start) + \\\" +\\\" + (start + 1) + \\\",\\\" + Math.max(1, afterEnd - start) + \\\" @@\\\"];\\n  for (let index = start; index < beforeEnd; index += 1) lines.push(\\\"-\\\" + beforeLines[index]);\\n  for (let index = start; index < afterEnd; index += 1) lines.push(\\\"+\\\" + afterLines[index]);\", \"startLine\": 152}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"unifiedDiff emits undefined lines for prefix append\"}, {\"category\": \"correctness\", \"claim\": \"Hard-budget estimate and actual execution use different fallback models for scanner-secondary: estimate falls back to scannerModel while the agent is constructed with verifierModel, so the preflight prices a different model than is called.\", \"confidence\": 0.88, \"evidence\": [{\"endLine\": 43, \"path\": \"agents/index.mjs\", \"snippet\": \"  function modelForRole(role) {\\n    if (role === \\\"scanner\\\") return options.scannerModel;\\n    if (role === \\\"scanner-secondary\\\") return options.secondaryScannerModel || options.scannerModel;\\n    if (role === \\\"verifier-secondary\\\") return options.secondaryVerifierModel || options.scannerModel;\", \"startLine\": 40}, {\"endLine\": 122, \"path\": \"agents/index.mjs\", \"snippet\": \"    \\\"scanner-secondary\\\": createMetaAgent({\\n      apiKey: options.apiKey,\\n      baseUrl: options.baseUrl,\\n      model: options.secondaryScannerModel || options.verifierModel,\\n      maxRetries: options.maxRetries,\", \"startLine\": 118}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"scanner-secondary estimate vs execution model mismatch\"}, {\"category\": \"correctness\", \"claim\": \"Usage aggregation buckets every non-scanner/non-repro role into verifier, so scanner-secondary, verifier-secondary and patcher calls are misreported as verifier calls with the wrong model bucket.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 566, \"path\": \"cli.mjs\", \"snippet\": \"  for (const call of agents.callLog) {\\n    const role = call.role === \\\"scanner\\\" ? \\\"scanner-correctness\\\" : call.role === \\\"repro\\\" ? \\\"repro\\\" : \\\"verifier\\\";\", \"startLine\": 565}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"secondary and patcher calls aggregated as verifier\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "unifiedDiff does not handle append-only changes: when before is a prefix of after, start is -1 with different lengths so it does not return early and then indexes beforeLines[-1]/afterLines[-1] producing undefined diff lines.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 159,
+            "path": "patch/index.mjs",
+            "snippet": "  const start = beforeLines.findIndex(function (line, index) { return line !== afterLines[index]; });\n  if (start === -1 && beforeLines.length === afterLines.length) return \"\";\n  let beforeEnd = beforeLines.length;\n  let afterEnd = afterLines.length;\n  while (beforeEnd > start && afterEnd > start && beforeLines[beforeEnd - 1] === afterLines[afterEnd - 1]) { beforeEnd -= 1; afterEnd -= 1; }\n  const lines = [\"--- a/\" + label, \"+++ b/\" + label, \"@@ -\" + (start + 1) + \",\" + Math.max(1, beforeEnd - start) + \" +\" + (start + 1) + \",\" + Math.max(1, afterEnd - start) + \" @@\"];\n  for (let index = start; index < beforeEnd; index += 1) lines.push(\"-\" + beforeLines[index]);\n  for (let index = start; index < afterEnd; index += 1) lines.push(\"+\" + afterLines[index]);",
+            "startLine": 152
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "unifiedDiff emits undefined lines for prefix append"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 152-159 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed at patch/index.mjs:152-159: when beforeLines is a line-prefix of afterLines findIndex returns -1, the equality guard at patch/index.mjs:153 does not return because lengths differ, the suffix loop cannot remove the -1 start, and both output loops begin at index -1, pushing '-'+beforeLines[-1] and '+'+afterLines[-1] i.e. '-undefined'/'+undefined'."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Hard-budget estimate and actual execution use different fallback models for scanner-secondary: estimate falls back to scannerModel while the agent is constructed with verifierModel, so the preflight prices a different model than is called.",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "endLine": 43,
+            "path": "agents/index.mjs",
+            "snippet": "  function modelForRole(role) {\n    if (role === \"scanner\") return options.scannerModel;\n    if (role === \"scanner-secondary\") return options.secondaryScannerModel || options.scannerModel;\n    if (role === \"verifier-secondary\") return options.secondaryVerifierModel || options.scannerModel;",
+            "startLine": 40
+          },
+          {
+            "endLine": 122,
+            "path": "agents/index.mjs",
+            "snippet": "    \"scanner-secondary\": createMetaAgent({\n      apiKey: options.apiKey,\n      baseUrl: options.baseUrl,\n      model: options.secondaryScannerModel || options.verifierModel,\n      maxRetries: options.maxRetries,",
+            "startLine": 118
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "scanner-secondary estimate vs execution model mismatch"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 40-43 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed: agents/index.mjs:42 estimates scanner-secondary as secondaryScannerModel || scannerModel, while agents/index.mjs:121 constructs that agent as secondaryScannerModel || verifierModel, and agents/index.mjs:141-145 uses modelForRole for the hard-budget preflight before dispatching to byRole."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Usage aggregation buckets every non-scanner/non-repro role into verifier, so scanner-secondary, verifier-secondary and patcher calls are misreported as verifier calls with the wrong model bucket.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 566,
+            "path": "cli.mjs",
+            "snippet": "  for (const call of agents.callLog) {\n    const role = call.role === \"scanner\" ? \"scanner-correctness\" : call.role === \"repro\" ? \"repro\" : \"verifier\";",
+            "startLine": 565
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "secondary and patcher calls aggregated as verifier"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 565-566 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The ternary at cli.mjs:566 maps only scanner and repro explicitly and defaults every other role to verifier, while agents/index.mjs:110-133 defines distinct patcher, scanner-secondary, and verifier-secondary agents with different model fallbacks, and cli.mjs:568 fixes the bucket model from the first aggregated call, so those calls are misreported as verifier usage."
+      }
+    }
+  ]
+}
