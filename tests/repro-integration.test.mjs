@@ -26,7 +26,7 @@ test("report is execution-proven and shows the generated test when L3 reproduced
     finding: sampleFinding(), status: "verified",
     verifier: { model: "m", verdict: "confirm", reason: "confirmed" },
     repro: { status: "reproduced", testCode: "import assert from 'node:assert/strict';\nassert.equal(1, 2);",
-      expectedBehavior: "slice should exclude the end", attempts: [{ stderr: "AssertionError: 1 != 2" }] },
+      expectedBehavior: "slice should exclude the end", attempts: [{ stderr: "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:" }] },
     evidenceLevel: "execution-proven"
   }];
   const report = buildReport({ repo: { files: [], loc: 0, edges: [], cycles: [] }, published, run: baseRun });

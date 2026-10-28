@@ -102,6 +102,12 @@ export function hasDeadCode(code) {
     || /\btrue\s*\|\|/.test(code);
 }
 
+// Generated reproducers must report failures through node:assert, not throw manually.
+// This intentionally fails closed even when "throw" appears in a string or comment.
+export function hasExplicitThrow(code) {
+  return /\bthrow\b/.test(code);
+}
+
 // Tautological assertions: comparing an identifier with itself, or a literal with the same literal.
 export function hasTautology(code) {
   const selfCompare = new RegExp("\\b(" + IDENT + ")\\s*(?:===|!==|==|!=)\\s*\\1\\b");

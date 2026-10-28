@@ -74,5 +74,6 @@ test("a long cited file is windowed around the citation", function () {
   const ctx = buildVerifierContext({ repo: repo, finding: longFinding, maxChars: 12000 });
   assert.match(ctx.text, /lines 340-461 of 600/);
   assert.match(ctx.text, /400 \| export const line400/);
-  assert.ok(!ctx.text.includes("line1 ="));
+  assert.match(ctx.text, /1 \| export const line1 = 1;/, "long cited files include the first 30 lines as a header");
+  assert.ok(ctx.segments.some(function (segment) { return segment.path === "src/long.ts" && segment.startLine <= 400 && segment.endLine >= 401; }));
 });

@@ -433,7 +433,7 @@ async function main() {
       : agents;
     let outcome;
     try {
-      outcome = await verifyOne({ finding: finding, repo: repoForGate, agent: crossVerifier, excerpts: verifierContext.text, maxTokens: config.verifierMaxTokens });
+      outcome = await verifyOne({ finding: finding, repo: repoForGate, agent: crossVerifier, excerpts: verifierContext, maxTokens: config.verifierMaxTokens });
     } catch (error) {
       if (error.code === "BUDGET_EXCEEDED") {
         skipFrom(index, error.message);

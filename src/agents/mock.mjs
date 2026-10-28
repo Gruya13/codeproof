@@ -124,8 +124,8 @@ export function createMockAgent(options) {
     if (request.role === "repro") {
       const reproFindingId = extractFindingId(request.messages) || "F-001";
       // The demo fixture has one defect that can be proven by execution: the off-by-one page
-      // slice in fixtures/mini-repo/src/pagination.js. The control passes 3/3, the trigger fails
-      // 3/3, and the CLI executes both for real - the mock adapter supplies code, never results.
+      // slice in fixtures/mini-repo/src/pagination.js. The control passes every run, the trigger
+      // fails every run, and the CLI executes both for real - the mock adapter supplies code, never results.
       const demo = mockDemoReproducer(reproFindingId);
       return {
         text: JSON.stringify(demo),

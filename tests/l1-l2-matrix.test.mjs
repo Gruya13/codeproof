@@ -616,7 +616,7 @@ test("T-B14a: strong refute from manifest file absent in verifier context degrad
   assert.equal(result.verifier.counterEvidencePolicy.inContext, false);
 });
 
-test("T-B14b: characterization — unrelated counter-citation inside context still yields 'refuted' (Z5 residual risk)", (t) => {
+test("T-B14b: same-file but semantically unrelated counter-citation remains a residual risk", (t) => {
   const { dir, cleanup } = createTempRepo();
   t.after(cleanup);
 
@@ -903,7 +903,7 @@ test("T-B19: weak refute triggers strong-refute retry; promotes to 'refuted' on 
     finding,
     repo,
     agent: agentSuccess,
-    excerpts: "   1 | const val = input.val;\n   2 | if (val == null) return fallback;",
+    excerpts: "### guard.js\n   1 | const val = input.val;\n   2 | if (val == null) return fallback;",
     maxTokens: 2000
   });
 
@@ -929,7 +929,7 @@ test("T-B19: weak refute triggers strong-refute retry; promotes to 'refuted' on 
     finding,
     repo,
     agent: agentStillWeak,
-    excerpts: "   1 | const val = input.val;\n   2 | if (val == null) return fallback;",
+    excerpts: "### guard.js\n   1 | const val = input.val;\n   2 | if (val == null) return fallback;",
     maxTokens: 2000
   });
 

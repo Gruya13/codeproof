@@ -140,7 +140,7 @@ test("unsupported response needs a reason and no code", function () {
 });
 
 test("run classifier separates assertions, success, syntax, timeout, sandbox and permission errors", function () {
-  assert.equal(classifyReproRun({ exitCode: 1, stderr: "AssertionError [ERR_ASSERTION]" }), "assertion-failure");
+  assert.equal(classifyReproRun({ exitCode: 1, stderr: "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:" }), "assertion-failure");
   assert.equal(classifyReproRun({ exitCode: 0, stderr: "" }), "passed");
   assert.equal(classifyReproRun({ exitCode: 1, stderr: "SyntaxError: Unexpected token" }), "invalid-test");
   assert.equal(classifyReproRun({ exitCode: null, killed: true, signal: "SIGTERM" }), "timeout");
@@ -271,7 +271,7 @@ test("extractReproImports finds static, side-effect and dynamic relative imports
 
 test("L0 rejects direct stream writes that could fake the failure class", function () {
   for (const code of [
-    "process.stderr.write('AssertionError [ERR_ASSERTION]');",
+    "process.stderr.write('AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:');",
     "process.stdout.write('AssertionError');"
   ]) {
     const result = validateReproL0(reproResponse("import assert from 'node:assert/strict';\nimport { value } from './sample.js';\n" + code));

@@ -3,7 +3,7 @@
 // Exposes two tools - codeproof_scan and codeproof_replay - and nothing else. Errors are returned
 // as JSON-RPC errors; the server never writes to stdout except protocol messages.
 import { spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
@@ -15,12 +15,12 @@ export const PROTOCOL_VERSION = "2024-11-05";
 export const TOOLS = [
   {
     name: "codeproof_scan",
-    description: "Run CodeProof on a local repository (mock adapter, no network) and return the findings summary.",
+    description: "Run CodeProof on a local repository with the mock adapter only (no network). The report remains at reportDir for offline replay.",
     inputSchema: {
       type: "object",
       properties: {
         path: { type: "string", description: "path to the local repository or directory to analyze" },
-        mock: { type: "boolean", description: "use the deterministic mock adapter (default true)" }
+        mock: { type: "boolean", description: "only true is supported; false is rejected" }
       },
       required: ["path"]
     }
@@ -43,26 +43,37 @@ function textResult(text) {
   return { content: [{ type: "text", text: text }] };
 }
 
-function runScan(path, mock) {
+function runScan(path) {
   return new Promise(function (resolve, reject) {
     const outDir = mkdtempSync(join(tmpdir(), "codeproof-mcp-scan-"));
-    const args = [join(import.meta.dirname || process.cwd(), "..", "cli.mjs"), "analyze", path, "--out", outDir];
-    if (mock !== false) args.push("--mock");
-    const child = spawn(process.execPath, args, { env: Object.assign({}, process.env, { USE_MOCK: mock === false ? "0" : "1", MOCK_PIPELINE: "1" }), stdio: ["ignore", "pipe", "pipe"] });
+    let settled = false;
+    function fail(error) {
+      if (settled) return;
+      settled = true;
+      try { rmSync(outDir, { recursive: true, force: true }); } catch (cleanupError) { /* report cleanup is best effort */ }
+      reject(error);
+    }
+    const args = [join(import.meta.dirname || process.cwd(), "..", "cli.mjs"), "analyze", path, "--out", outDir, "--mock"];
+    let child;
+    try {
+      child = spawn(process.execPath, args, { env: Object.assign({}, process.env, { USE_MOCK: "1", MOCK_PIPELINE: "1" }), stdio: ["ignore", "pipe", "pipe"] });
+    } catch (error) { fail(error); return; }
     let output = "";
     child.stdout.on("data", function (chunk) { output += chunk; });
     child.stderr.on("data", function (chunk) { output += chunk; });
-    child.on("error", reject);
+    child.on("error", fail);
     child.on("close", function (code) {
-      if (code !== 0) { reject(new Error("codeproof_scan failed (exit " + code + "): " + output.slice(-800))); return; }
+      if (settled) return;
+      if (code !== 0) { fail(new Error("codeproof_scan failed (exit " + code + "): " + output.slice(-800))); return; }
       try {
         const runName = readdirSync(outDir, { withFileTypes: true }).find(function (entry) { return entry.isDirectory(); }).name;
         const reportDir = join(outDir, runName);
         const findings = JSON.parse(readFileSync(join(reportDir, "findings.json"), "utf8"));
         const run = JSON.parse(readFileSync(join(reportDir, "run.json"), "utf8"));
+        settled = true;
         resolve(textResult(JSON.stringify({ reportDir: reportDir, runId: run.runId, mode: run.mode, findings: run.findings, verified: findings.map(function (item) { return { id: item.finding.id, status: item.status, evidenceLevel: item.evidenceLevel, title: item.finding.title }; }) }, null, 2)));
       } catch (error) {
-        reject(new Error("codeproof_scan could not read its output: " + error.message));
+        fail(new Error("codeproof_scan could not read its output: " + error.message));
       }
     });
   });
@@ -71,7 +82,8 @@ function runScan(path, mock) {
 async function callTool(name, args) {
   if (name === "codeproof_scan") {
     if (!args || typeof args.path !== "string" || args.path.trim() === "") throw new Error("path is required");
-    return runScan(args.path, args.mock);
+    if (args.mock === false) throw new Error("codeproof_scan only supports the offline mock adapter; mock:false is not allowed");
+    return runScan(args.path);
   }
   if (name === "codeproof_replay") {
     if (!args || typeof args.reportDir !== "string" || args.reportDir.trim() === "") throw new Error("reportDir is required");

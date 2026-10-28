@@ -1,8 +1,8 @@
 // L4 (v0.2.0): surgical patch generation and the differential proof gate.
 //
 // A patch-proven finding is not a claim that the root cause is fixed. It is a differential result:
-// after applying a minimal patch to a COPY of the L3 snapshot, the control still passes 3/3 and
-// the trigger now passes 3/3. The repository's own test suite is never run.
+// after applying a minimal patch to a COPY of the L3 snapshot, the control still passes every run
+// and the trigger now passes every run. The repository's own test suite is never run.
 import { execFile } from "node:child_process";
 import { cpSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -221,7 +221,7 @@ export async function runPatchGate(options) {
     result.trigger = { classification: trigger.classification, attempts: trigger.attempts, deterministic: trigger.deterministic };
     if (trigger.deterministic) {
       result.status = "patch-proven";
-      result.reason = "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)";
+      result.reason = "control passed " + control.attempts.length + "/" + control.attempts.length + " and the trigger passed " + trigger.attempts.length + "/" + trigger.attempts.length + " after the patch (differential proof)";
     } else {
       result.status = "rejected";
       result.reason = "the trigger still fails after the patch (" + trigger.classification + ")";

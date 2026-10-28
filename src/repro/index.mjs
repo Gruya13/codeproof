@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseDirtyJson } from "../run/json.mjs";
 import { gitPrefix, readFileAtCommit } from "../run/index.mjs";
-import { assertionTiedToSymbols, hasDeadCode, hasTautology, inputsDiffer } from "./static-checks.mjs";
+import { assertionTiedToSymbols, hasDeadCode, hasExplicitThrow, hasTautology, inputsDiffer } from "./static-checks.mjs";
 import { runLinkCheck } from "./linkcheck.mjs";
 
 export const REPRO_SYSTEM_PROMPT = [
@@ -12,6 +12,7 @@ export const REPRO_SYSTEM_PROMPT = [
   "controlCode proves the environment: it asserts correct behavior and MUST PASS on the analyzed commit. testCode uses a different input, asserts the same correct behavior and MUST FAIL on the analyzed commit because of the claim. Both files call the same imported symbol with different arguments; do not repeat the same arguments in both files. Derive the expected behavior from the claim or a documented function contract; do not invent a new requirement.",
   "Example of a valid pair for a function page(items, offset, size): control 'assert.equal(page([1, 2], 0, 2).length, 2)' and trigger 'assert.equal(page([1, 2, 3, 4], 0, 2).length, 2)'. Both call page with different arguments and assert on the returned value. A pair that calls page with the same arguments twice, that asserts a constant ('assert.equal(2, 3)'), or whose assertion does not use the call result is rejected.",
   "If the claimed defect makes the code throw (a crash on some input), catch that error inside the test and turn it into an assertion failure: record the thrown error in a variable and assert on the recorded value. An uncaught runtime error is not recorded as an assertion failure and the reproducer will be reported as inconclusive instead of execution-proven.",
+  "Do not write an explicit throw statement in either file; only node:assert may cause the test to fail.",
   "Every assertion must be tied to the imported symbol: a direct call, or an identifier assigned from such a call; do not assert on a constant or on a value that ignores the call result. Each file must be at most 45 lines. Use only node:assert/strict for assertions. Do not call assert.fail(), intercept process.exit, use require, make network calls (fetch, http, https, net), read files outside the repository, set a timeout longer than 1000 ms, or use infinite loops.",
   "If a faithful executable test needs a network, DOM, external file system, unavailable dependency, or environment not included in the repository, return kind unsupported with a specific reason instead of test code.",
   "Return only JSON matching the response schema. An unsupported response must have empty testCode and empty controlCode; never include code with kind unsupported."
@@ -68,8 +69,8 @@ const FORBIDDEN_CODE = [
   [/\bsetTimeout\s*\([^,]+,\s*(?:[1-9]\d{3,}|[2-9]\d{2,})\s*\)/i, "long timeout"],
   [/\bconsole\s*\.\s*(?:error|warn|log|info|debug)\s*\(/i, "console output (it could mask the real failure class)"],
   [/\bprocess\s*\.\s*(?:stdout|stderr)\s*\.\s*write\s*\(/i, "direct stream output (it could mask the real failure class)"],
-  [/\bMath\s*\.\s*random\s*\(/i, "non-deterministic Math.random (the proof must fail 3/3 the same way)"],
-  [/\bDate\s*\.\s*now\s*\(/i, "non-deterministic Date.now (the proof must fail 3/3 the same way)"],
+  [/\bMath\s*\.\s*random\s*\(/i, "non-deterministic Math.random (the proof must fail every run the same way)"],
+  [/\bDate\s*\.\s*now\s*\(/i, "non-deterministic Date.now (the proof must fail every run the same way)"],
   [/\bnew\s+Date\s*\(/i, "non-deterministic Date construction (use fixed values instead)"],
   [/\bperformance\s*\.\s*now\s*\(/i, "non-deterministic performance.now"],
   [/\bprocess\s*\.\s*env\b/i, "process.env (the sandbox environment is empty on purpose)"],
@@ -153,6 +154,7 @@ function validateCode(code, label, errors) {
   const tied = assertionTiedToSymbols(code, used.length > 0 ? used : imported);
   if (!tied.ok) errors.push(label + " assertion is not tied to a call of an imported symbol");
   if (hasDeadCode(code)) errors.push(label + " contains a dead-code guard");
+  if (hasExplicitThrow(code)) errors.push(label + " must not throw explicitly; use node:assert for failures");
   const tautology = hasTautology(code);
   if (tautology) errors.push(label + " contains a tautological assertion (" + tautology + ")");
   for (const [pattern, thing] of FORBIDDEN_CODE) {
@@ -266,7 +268,7 @@ export function classifyReproRun(result) {
   if (result.exitCode === 0) return "passed";
   if (/network disabled in repro sandbox/i.test(stderr)) return "sandbox-blocked";
   if (/SyntaxError|ERR_MODULE_NOT_FOUND|Cannot find module|ERR_UNKNOWN_FILE_EXTENSION|PermissionDenied|ERR_ACCESS_DENIED|Access to this API has been restricted/i.test(stderr)) return "invalid-test";
-  if (/AssertionError|ERR_ASSERTION|Expected values to be strictly/i.test(stderr)) return "assertion-failure";
+  if (/^AssertionError \[ERR_ASSERTION\]:/m.test(stderr)) return "assertion-failure";
   return "error";
 }
 
@@ -348,6 +350,7 @@ function writeArtifacts(outDir, findingId, result, model, usage, costUsd) {
     classification: result.classification,
     deterministic: result.deterministic,
     attempts: result.attempts,
+    attemptCount: result.attemptCount,
     control: result.control || null,
     trigger: result.trigger || null,
     linkcheck: result.linkcheck || null,
@@ -366,7 +369,7 @@ export async function attemptRepro({ finding, agent, repoRoot, commit, excerpts,
   let model = null;
   let usage = null;
   let costUsd = null;
-  const result = { status: "inconclusive", classification: null, attempts: [], deterministic: false,
+  const result = { status: "inconclusive", classification: null, attempts: [], attemptCount: 0, deterministic: false,
     testCode: "", expectedBehavior: "", rationale: "", reason: "", artifacts: null };
   let snapshot = null;
   try {
@@ -422,23 +425,25 @@ export async function attemptRepro({ finding, agent, repoRoot, commit, excerpts,
           result.status = "inconclusive";
           result.reason = "generated test imports paths that are not in the analyzed snapshot: " + missing.join(", ");
         } else {
-          const attempts = config.reproAttempts || 3;
+          const attempts = Math.max(3, Math.min(10, Number.isInteger(config.reproAttempts) ? config.reproAttempts : 3));
           const timeoutMs = config.reproTimeoutMs || 2000;
-          // Phase 1: the control must pass 3/3. If it does not, the environment or the call is invalid
+          // Phase 1: the control must pass every run. If it does not, the environment or the call is invalid
           // and the trigger is never run, so a broken harness cannot be mistaken for a proof.
           const controlRun = await runReproTest({ testCode: parsed.controlCode, snapshotDir: snapshot.snapshotDir,
             timeoutMs: timeoutMs, attempts: attempts, expect: "passed" });
           result.control = { code: parsed.controlCode, classification: controlRun.classification, attempts: controlRun.attempts, deterministic: controlRun.deterministic };
+          result.attemptCount = controlRun.attempts.length;
           if (!controlRun.deterministic) {
             result.status = "control-failed";
             result.classification = controlRun.classification;
             result.attempts = controlRun.attempts;
             result.reason = "control did not pass " + attempts + "/" + attempts + " on the analyzed commit (classification: " + controlRun.classification + "); the trigger was not run";
           } else {
-            // Phase 2: the trigger must fail 3/3 with an assertion error.
+            // Phase 2: the trigger must fail every run with an assertion error.
             const run = await runReproTest({ testCode: parsed.testCode, snapshotDir: snapshot.snapshotDir,
               timeoutMs: timeoutMs, attempts: attempts, expect: "assertion-failure" });
             result.trigger = { code: parsed.testCode, classification: run.classification, attempts: run.attempts, deterministic: run.deterministic };
+            result.attemptCount = run.attempts.length;
             result.classification = run.classification;
             result.attempts = run.attempts;
             result.deterministic = run.deterministic;
@@ -449,7 +454,7 @@ export async function attemptRepro({ finding, agent, repoRoot, commit, excerpts,
             } else {
               result.status = run.deterministic && run.classification === "assertion-failure" ? "reproduced"
                 : run.classification === "passed" ? "not-reproduced" : "inconclusive";
-              result.reason = run.reason || (result.status === "reproduced" ? "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit" : "test did not demonstrate the claim consistently");
+              result.reason = run.reason || (result.status === "reproduced" ? "control passed " + controlRun.attempts.length + "/" + controlRun.attempts.length + " and the trigger failed " + run.attempts.length + "/" + run.attempts.length + " with an assertion error on the analyzed commit" : "test did not demonstrate the claim consistently");
               if (result.status === "reproduced") {
                 const imports = extractReproImports(parsed.testCode);
                 const symbols = extractImportedIdentifiers(parsed.testCode);

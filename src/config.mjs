@@ -14,6 +14,8 @@ export const LIMITS = { citationMaxLines: 15, maxFindings: 8 };
 export const VERSION = "0.2.2";
 
 export function loadConfig(env) {
+  // Proof labels require at least three runs; the runner accepts at most ten.
+  const requestedReproAttempts = Number(env.REPRO_ATTEMPTS || "3");
   return {
     baseUrl: env.META_BASE_URL || "https://api.meta.ai/v1",
     scannerModel: env.SCANNER_MODEL || "muse-spark-1.3",
@@ -32,7 +34,7 @@ export function loadConfig(env) {
     reproModel: env.REPRO_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0",
     reproMaxTokens: Number(env.REPRO_MAX_TOKENS || "8000"),
     reproTimeoutMs: Number(env.REPRO_TIMEOUT_MS || "2000"),
-    reproAttempts: Number(env.REPRO_ATTEMPTS || "3"),
+    reproAttempts: Number.isInteger(requestedReproAttempts) ? Math.max(3, Math.min(10, requestedReproAttempts)) : 3,
     hardBudget: env.HARD_BUDGET !== "0",
     dualScan: env.DUAL_SCAN === "1",
     // Chunked scanning: slice the repository by top-level directory and scan each slice with the

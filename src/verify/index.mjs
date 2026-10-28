@@ -131,24 +131,49 @@ export function normalizeSnippetLines(snippet) {
   return raw.map(normalizeLine);
 }
 
-export function isSnippetInExcerpts(snippet, excerpts) {
-  // No context means we cannot claim the snippet is present: fail closed.
-  if (typeof excerpts !== "string") return false;
+function excerptSegments(excerpts) {
+  if (excerpts && Array.isArray(excerpts.segments)) return excerpts.segments;
+  if (typeof excerpts !== "string") return [];
+  const segments = [];
+  let current = null;
+  for (const line of excerpts.split("\n")) {
+    if (line.startsWith("### ")) {
+      const path = line.slice(4)
+        .replace(/ - (?:lines \d+-\d+ of \d+|\d+ lines)$/, "")
+        .replace(/ - (?:cited file|imported by cited file|imports cited file)$/, "");
+      current = { path: path, lines: [] };
+      segments.push(current);
+      continue;
+    }
+    const numbered = line.match(/^\s*(\d+)\s*\|\s?(.*)$/);
+    if (numbered) {
+      if (!current) { current = { path: null, lines: [] }; segments.push(current); }
+      current.lines.push({ number: Number(numbered[1]), text: numbered[2] });
+    }
+  }
+  return segments;
+}
+
+export function isSnippetInExcerpts(snippet, excerpts, evidence = null) {
+  // An L2 counter-citation must match its own file and declared lines, not another excerpt.
   const snippetLines = normalizeSnippetLines(snippet);
   if (snippetLines.length === 0) return false;
-
-  const excerptLines = excerpts.split("\n").map(normalizeExcerptLine);
-  if (excerptLines.length < snippetLines.length) return false;
-
-  for (let k = 0; k <= excerptLines.length - snippetLines.length; k += 1) {
-    let match = true;
-    for (let i = 0; i < snippetLines.length; i += 1) {
-      if (excerptLines[k + i] !== snippetLines[i]) {
-        match = false;
-        break;
+  for (const segment of excerptSegments(excerpts)) {
+    if (evidence && segment.path !== evidence.path) continue;
+    const lines = segment.lines || [];
+    for (let index = 0; index <= lines.length - snippetLines.length; index += 1) {
+      const start = lines[index].number;
+      const end = start + snippetLines.length - 1;
+      if (evidence && (evidence.startLine !== start || evidence.endLine !== end)) continue;
+      let match = true;
+      for (let offset = 0; offset < snippetLines.length; offset += 1) {
+        if (lines[index + offset].number !== start + offset || normalizeLine(lines[index + offset].text) !== snippetLines[offset]) {
+          match = false;
+          break;
+        }
       }
+      if (match) return true;
     }
-    if (match) return true;
   }
   return false;
 }
@@ -316,9 +341,10 @@ export async function verifyOne(input) {
     return { finding: finding, status: "l1-rejected", l1: failed || { passed: false, reason: "finding has no evidence" }, verifier: null };
   }
   const maxTokens = input.maxTokens || 4000;
+  const excerptText = typeof input.excerpts === "string" ? input.excerpts : (input.excerpts && input.excerpts.text) || "";
   let call = await input.agent.complete({
     role: "verifier",
-    messages: buildVerifierMessages(finding, input.excerpts),
+    messages: buildVerifierMessages(finding, excerptText),
     responseFormat: VERIFIER_RESPONSE_FORMAT,
     temperature: 0,
     maxTokens: maxTokens
@@ -326,7 +352,7 @@ export async function verifyOne(input) {
   if (String(call.text || "").trim() === "") {
     call = await input.agent.complete({
       role: "verifier",
-      messages: buildVerifierMessages(finding, input.excerpts),
+      messages: buildVerifierMessages(finding, excerptText),
       responseFormat: VERIFIER_RESPONSE_FORMAT,
       temperature: 0,
       maxTokens: maxTokens * 2
@@ -353,7 +379,7 @@ export async function verifyOne(input) {
     try {
       retryCall = await input.agent.complete({
         role: "verifier",
-        messages: buildStrongRefuteMessages(finding, input.excerpts, call.text),
+        messages: buildStrongRefuteMessages(finding, excerptText, call.text),
         responseFormat: STRONG_REFUTE_RESPONSE_FORMAT,
         temperature: 0,
         maxTokens: maxTokens
@@ -406,11 +432,11 @@ export function applyVerdict(verdict, model, repo, finding = null, excerpts = nu
       };
 
       // F8: Provera bounded konteksta i različitosti od citata nalaza (Z5)
-      const hasContext = typeof excerpts === "string" && finding && Array.isArray(finding.evidence) && finding.evidence.length > 0;
+      const hasContext = (typeof excerpts === "string" || (excerpts && Array.isArray(excerpts.segments))) && finding && Array.isArray(finding.evidence) && finding.evidence.length > 0;
       let inContext = false;
       if (hasContext) {
         inContext = counterEvidence.every(function (evidence) {
-          return isSnippetInExcerpts(evidence.snippet, excerpts);
+          return isSnippetInExcerpts(evidence.snippet, excerpts, evidence);
         });
       }
 

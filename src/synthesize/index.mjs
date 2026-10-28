@@ -4,6 +4,14 @@ function fence() {
   return "```";
 }
 
+function runs(phase, fallback) {
+  return phase && Array.isArray(phase.attempts) && phase.attempts.length > 0 ? phase.attempts.length : fallback;
+}
+
+function ratio(count) {
+  return count + "/" + count;
+}
+
 function escapeMermaidText(value) {
   return value.replace(/"/g, "#quot;").replace(/\r\n?|\n/g, "<br/>").replace(/[\x00-\x1f\x7f]/g, "");
 }
@@ -45,6 +53,7 @@ export function buildReport(options) {
   const repo = options.repo;
   const published = options.published;
   const run = options.run;
+  const configuredRuns = run.repro && Number.isInteger(run.repro.attempts) ? run.repro.attempts : 3;
   const verified = published.filter(function (item) { return item.status === "verified"; });
   const lines = [];
   lines.push("# CodeProof report");
@@ -110,6 +119,8 @@ export function buildReport(options) {
       lines.push("");
     }
     const itemRepro = item.repro;
+    const controlRuns = runs(itemRepro && itemRepro.control, itemRepro && itemRepro.attemptCount || configuredRuns);
+    const triggerRuns = runs(itemRepro && itemRepro.trigger, itemRepro && itemRepro.attemptCount || configuredRuns);
     const executionProven = Boolean(itemRepro && itemRepro.status === "reproduced" && itemRepro.linkcheck && itemRepro.linkcheck.status === "proven");
     lines.push("**Evidence level:** citation-proven + adversarially-confirmed" + (executionProven ? " + **execution-proven (generated test fails on the analyzed commit)**" : ""));
     lines.push("");
@@ -118,9 +129,9 @@ export function buildReport(options) {
         ? " [linkcheck " + itemRepro.linkcheck.status + (": " + (itemRepro.linkcheck.detail || "") + "]")
         : "";
       const executionCheck = itemRepro.status === "reproduced"
-        ? "reproduced by execution: the control passed 3/3 and the trigger failed 3/3 (see Reproduced by execution)" + linkcheckSuffix
+        ? "reproduced by execution: the control passed " + ratio(controlRuns) + " and the trigger failed " + ratio(triggerRuns) + " (see Reproduced by execution)" + linkcheckSuffix
         : itemRepro.status === "control-failed"
-          ? "control failed: the control test did not pass 3/3, so the trigger was not run (" + (itemRepro.reason || "") + ")"
+          ? "control failed: the control test did not pass " + ratio(controlRuns) + ", so the trigger was not run (" + (itemRepro.reason || "") + ")"
           : itemRepro.status === "not-reproduced"
             ? "not reproduced: the generated test passed on the analyzed commit"
             : itemRepro.status === "unavailable"
@@ -139,27 +150,29 @@ export function buildReport(options) {
   if (reproducedItems.length > 0) {
     lines.push("## Reproduced by execution");
     lines.push("");
-    lines.push("For each finding below, the verifier model wrote two standalone files. They run on a `git archive` snapshot of the analyzed commit inside a permission-model sandbox: no network, no writes, 2 s timeout, three runs each.");
+    lines.push("For each finding below, the verifier model wrote two standalone files. They run on a `git archive` snapshot of the analyzed commit inside a permission-model sandbox: no network, no writes, 2 s timeout, at least three runs each.");
     lines.push("");
-    lines.push("- **[CONTROL]** uses a clean, normal input and must pass 3/3. It proves the environment and the way the API is called are valid; if it fails, the finding is reported as `control-failed` and the trigger is never run.");
-    lines.push("- **[TRIGGER]** uses a different input and must fail 3/3 with an assertion error on the analyzed commit.");
+    lines.push("- **[CONTROL]** uses a clean, normal input and must pass every run. It proves the environment and the way the API is called are valid; if it fails, the finding is reported as `control-failed` and the trigger is never run.");
+    lines.push("- **[TRIGGER]** uses a different input and must fail every run with an assertion error on the analyzed commit.");
     lines.push("- **LinkCheck** (Node 26) runs the trigger under the permission model with inspector coverage and requires that the imported symbol actually executed. Without that linkage proof the finding is not reported as execution-proven.");
     lines.push("");
     lines.push("");
     for (const item of reproducedItems) {
       const finding = item.finding;
       const itemRepro = item.repro;
+      const controlRuns = runs(itemRepro.control, itemRepro.attemptCount || configuredRuns);
+      const triggerRuns = runs(itemRepro.trigger, itemRepro.attemptCount || configuredRuns);
       lines.push("### " + finding.id + " - " + finding.title);
       lines.push("");
       if (itemRepro.expectedBehavior) { lines.push("**Expected behavior:** " + itemRepro.expectedBehavior); lines.push(""); }
       if (itemRepro.controlCode) {
-        lines.push("**Control (must pass 3/3 on the analyzed commit):**");
+        lines.push("**Control (must pass " + ratio(controlRuns) + " on the analyzed commit):**");
         lines.push(fence() + "js");
         lines.push(String(itemRepro.controlCode).trim());
         lines.push(fence());
         lines.push("");
       }
-      lines.push("**Trigger (must fail 3/3 with an assertion error on the analyzed commit):**");
+      lines.push("**Trigger (must fail " + ratio(triggerRuns) + " with an assertion error on the analyzed commit):**");
       lines.push(fence() + "js");
       lines.push(String(itemRepro.testCode || "").trim());
       lines.push(fence());
@@ -183,7 +196,7 @@ export function buildReport(options) {
   if (patchedItems.length > 0) {
     lines.push("## Patch-proven (differential proof)");
     lines.push("");
-    lines.push("For each finding below the patcher model proposed a minimal patch to one of the cited files. The patch is applied to a **copy** of the L3 snapshot (the snapshot itself is never mutated) and both phases are re-run: the control must still pass 3/3 and the trigger must now pass 3/3. This is a differential result over the reproduction - it does not claim to fix the root cause, and the repository's own test suite is not run.");
+    lines.push("For each finding below the patcher model proposed a minimal patch to one of the cited files. The patch is applied to a **copy** of the L3 snapshot (the snapshot itself is never mutated) and both phases are re-run: the control must still pass every run and the trigger must now pass every run. This is a differential result over the reproduction - it does not claim to fix the root cause, and the repository's own test suite is not run.");
     lines.push("");
     for (const item of patchedItems) {
       const finding = item.finding;
@@ -197,7 +210,7 @@ export function buildReport(options) {
       lines.push("");
       const control = itemPatch.attempts && itemPatch.attempts.control ? itemPatch.attempts.control : null;
       const trigger = itemPatch.attempts && itemPatch.attempts.trigger ? itemPatch.attempts.trigger : null;
-      lines.push("**Differential result:** control " + (control ? control.classification : "?") + " 3/3, trigger " + (trigger ? trigger.classification : "?") + " 3/3 after the patch. The repository's own test suite was not run; the patch was never written to the analyzed repository.");
+      lines.push("**Differential result:** control " + (control ? control.classification : "?") + " " + ratio(runs(control, configuredRuns)) + ", trigger " + (trigger ? trigger.classification : "?") + " " + ratio(runs(trigger, configuredRuns)) + " after the patch. The repository's own test suite was not run; the patch was never written to the analyzed repository.");
       lines.push("");
       if (Array.isArray(itemPatch.warnings) && itemPatch.warnings.length > 0) { lines.push("**Warnings:** " + itemPatch.warnings.join("; ")); lines.push(""); }
     }
