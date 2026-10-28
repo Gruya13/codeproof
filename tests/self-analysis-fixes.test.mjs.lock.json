@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "9ad1faa1fa2ae2575acc4c1f00ef68fb7d6eaef377e0298d43bf723c50701ca8",
+  "gitRevision": "52e6606862ccae0dbf7da67eca1326b0f23b7fef",
+  "gitRel": "tests/self-analysis-fixes.test.mjs",
+  "by": "dsh-orkestrator",
+  "at": "2026-10-28T13:40:00.537Z",
+  "relocks": []
+}
