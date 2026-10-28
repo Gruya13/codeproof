@@ -2,10 +2,8 @@
 // Their candidates are merged into one list, with duplicate findings collapsed and every
 // finding tagged with the model(s) that proposed it.
 //
-// Dedup rule: two candidates are the same finding when their first citation points at the same
-// file and the cited line ranges overlap. This is deliberately conservative: a candidate with a
-// non-overlapping citation is kept as a separate finding (it may describe a different defect),
-// and the merge never drops a candidate silently - duplicates are recorded for the audit trail.
+// Dedup requires overlapping citations AND similar claims. Keeping uncertain matches separate
+// avoids silently dropping a different defect on the same line; duplicates remain in the audit.
 
 function overlaps(left, right) {
   return left.startLine <= right.endLine && right.startLine <= left.endLine;
@@ -15,11 +13,30 @@ function firstEvidence(finding) {
   return finding && Array.isArray(finding.evidence) && finding.evidence.length > 0 ? finding.evidence[0] : null;
 }
 
+function claimTokens(finding) {
+  // Use both fields, but discard generated ids and generic "Finding" titles.
+  const statement = (String(finding.claim || "") + " " + String(finding.title || "")).toLowerCase();
+  return new Set((statement.match(/[a-z0-9_$]+/g) || []).filter(function (token) {
+    return token.length > 2 && !/^\d+$|^f\d+$/.test(token) &&
+      !["the", "and", "for", "with", "that", "this", "from", "into", "are", "was", "finding"].includes(token);
+  }));
+}
+
+function similarClaim(left, right) {
+  const a = claimTokens(left);
+  const b = claimTokens(right);
+  if (a.size === 0 || b.size === 0) return false;
+  let shared = 0;
+  for (const token of a) if (b.has(token)) shared += 1;
+  // Jaccard >= 0.5 requires at least half of the distinct substantive words to agree.
+  return shared / (a.size + b.size - shared) >= 0.5;
+}
+
 export function sameFinding(left, right) {
   const a = firstEvidence(left);
   const b = firstEvidence(right);
   if (!a || !b) return false;
-  return a.path === b.path && overlaps(a, b);
+  return a.path === b.path && overlaps(a, b) && similarClaim(left, right);
 }
 
 // Input: runs = [{ proposedBy: "spark" | "wonder", findings: [...], rejected: [...] }]

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { resolve, join } from "node:path";
+import { resolve, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { loadConfig, computeConfigSha256, configPayload, VERSION } from "./config.mjs";
@@ -164,6 +164,11 @@ async function main() {
   const configSha256 = computeConfigSha256(config, mode, { version: 2 });
   const configPayloadV2 = configPayload(config, mode, { version: 2 });
   const commit = await gitCommit(target);
+  const targetResolved = resolve(target);
+  const outputRoot = resolve(args.out);
+  if (outputRoot === targetResolved || outputRoot.startsWith(targetResolved + sep)) {
+    console.warn("  WARN output directory is inside the analyzed repository (" + outputRoot + "); pass --out <path outside the repository> to leave the analyzed repository unchanged");
+  }
   const dirty = !(await repoIsClean(target));
   if (mode === "bench" && dirty) {
     throw new Error("bench mode requires a clean working tree under " + target + " (commit or stash changes first)");

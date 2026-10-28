@@ -1,4 +1,8 @@
 import { createHash } from "node:crypto";
+import { scannerSystemPrompt } from "./scan/index.mjs";
+import { VERIFIER_SYSTEM_PROMPT } from "./verify/index.mjs";
+import { REPRO_SYSTEM_PROMPT } from "./repro/index.mjs";
+import { PATCH_SYSTEM_PROMPT } from "./patch/index.mjs";
 
 export const PRICES = {
   "muse-spark-1.3": { input: 1.25, cachedInput: 0.15, output: 4.25 },
@@ -13,28 +17,38 @@ export const LIMITS = { citationMaxLines: 15, maxFindings: 8 };
 
 export const VERSION = "0.2.2";
 
+function numberFromEnv(env, name, fallback, min, max, integer = true) {
+  const raw = env[name];
+  if (raw === undefined) return fallback;
+  const value = Number(raw);
+  if ((typeof raw !== "string" && typeof raw !== "number") || String(raw).trim() === "" || !Number.isFinite(value) || (integer && !Number.isInteger(value)) || value < min || value > max) {
+    throw new Error("invalid " + name + "=" + JSON.stringify(String(raw)) + " (expected " + (integer ? "integer" : "number") + " in " + min + ".." + max + ")");
+  }
+  return value;
+}
+
 export function loadConfig(env) {
-  // Proof labels require at least three runs; the runner accepts at most ten.
-  const requestedReproAttempts = Number(env.REPRO_ATTEMPTS || "3");
+  // Valid requests are clamped to 3..10: proof labels require at least three runs.
+  const requestedReproAttempts = numberFromEnv(env, "REPRO_ATTEMPTS", 3, 1, 1000);
   return {
     baseUrl: env.META_BASE_URL || "https://api.meta.ai/v1",
     scannerModel: env.SCANNER_MODEL || "muse-spark-1.3",
     verifierModel: env.VERIFIER_MODEL || "muse-wonder-1.0",
     temperature: 0,
-    maxFindings: Number(env.MAX_FINDINGS || String(LIMITS.maxFindings)),
+    maxFindings: numberFromEnv(env, "MAX_FINDINGS", LIMITS.maxFindings, 1, 100),
     citationMaxLines: LIMITS.citationMaxLines,
-    budgetUsd: Number(env.BUDGET_USD || "2"),
+    budgetUsd: numberFromEnv(env, "BUDGET_USD", 2, 0, 100000, false),
     mock: env.USE_MOCK === "1",
     apiKey: env.MODEL_API_KEY || "",
-    maxRetries: Number(env.MAX_RETRIES || "4"),
-    scannerMaxTokens: Number(env.SCANNER_MAX_TOKENS || "16000"),
-    verifierMaxTokens: Number(env.VERIFIER_MAX_TOKENS || "4000"),
-    verifierContextChars: Number(env.VERIFIER_CONTEXT_CHARS || "24000"),
+    maxRetries: numberFromEnv(env, "MAX_RETRIES", 4, 0, 100),
+    scannerMaxTokens: numberFromEnv(env, "SCANNER_MAX_TOKENS", 16000, 1, 1000000),
+    verifierMaxTokens: numberFromEnv(env, "VERIFIER_MAX_TOKENS", 4000, 1, 1000000),
+    verifierContextChars: numberFromEnv(env, "VERIFIER_CONTEXT_CHARS", 24000, 1, 1000000),
     reproEnabled: env.USE_MOCK !== "1" && env.REPRO !== "0",
     reproModel: env.REPRO_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0",
-    reproMaxTokens: Number(env.REPRO_MAX_TOKENS || "8000"),
-    reproTimeoutMs: Number(env.REPRO_TIMEOUT_MS || "2000"),
-    reproAttempts: Number.isInteger(requestedReproAttempts) ? Math.max(3, Math.min(10, requestedReproAttempts)) : 3,
+    reproMaxTokens: numberFromEnv(env, "REPRO_MAX_TOKENS", 8000, 1, 1000000),
+    reproTimeoutMs: numberFromEnv(env, "REPRO_TIMEOUT_MS", 2000, 1, 600000),
+    reproAttempts: Math.max(3, Math.min(10, requestedReproAttempts)),
     hardBudget: env.HARD_BUDGET !== "0",
     dualScan: env.DUAL_SCAN === "1",
     // Chunked scanning: slice the repository by top-level directory and scan each slice with the
@@ -43,13 +57,13 @@ export function loadConfig(env) {
     secondaryScannerModel: env.SECONDARY_SCANNER_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0",
     // The secondary scanner (Wonder) only finishes on small targets; above this LOC the second
     // scan is skipped. 0 disables the guard (explicit opt-in for experiments).
-    dualScanMaxLoc: Number(env.DUAL_SCAN_MAX_LOC || "0"),
+    dualScanMaxLoc: numberFromEnv(env, "DUAL_SCAN_MAX_LOC", 0, 0, 1000000000),
     // v0.2.0: L4 patch stage. The patch model is the existing verifier model (no new prices) and
     // every patch call goes through the same hard-budget preflight as any other call.
     patchEnabled: env.PATCH !== "0",
     patchModel: env.PATCH_MODEL || env.VERIFIER_MODEL || "muse-wonder-1.0",
-    patchMaxTokens: Number(env.PATCH_MAX_TOKENS || "6000"),
-    patchMaxCandidates: Number(env.PATCH_MAX_CANDIDATES || "3"),
+    patchMaxTokens: numberFromEnv(env, "PATCH_MAX_TOKENS", 6000, 1, 1000000),
+    patchMaxCandidates: numberFromEnv(env, "PATCH_MAX_CANDIDATES", 3, 0, 100),
     // v0.2.0: L2 escalation is opt-in and out of the mandatory scope.
     verifyEscalate: env.VERIFY_ESCALATE === "1",
     // v0.2.0: the mock adapter runs the real local L3/L4 executions (no network).
@@ -83,6 +97,19 @@ export function configPayload(config, mode, options) {
     dualScanMaxLoc: config.dualScanMaxLoc
   };
   if (version === 2) {
+    payload.baseUrl = config.baseUrl;
+    payload.budgetUsd = config.budgetUsd;
+    payload.maxRetries = config.maxRetries;
+    payload.mock = config.mock;
+    // Hash the actual prompt text, not a hand-maintained version label. Old v2 payloads replay
+    // unchanged because replay hashes the payload stored in their run.json verbatim.
+    const hashPrompt = function (prompt) { return createHash("sha256").update(prompt).digest("hex"); };
+    payload.promptSha256 = {
+      scanner: hashPrompt(scannerSystemPrompt(config.maxFindings)),
+      verifier: hashPrompt(VERIFIER_SYSTEM_PROMPT),
+      repro: hashPrompt(REPRO_SYSTEM_PROMPT),
+      patch: hashPrompt(PATCH_SYSTEM_PROMPT)
+    };
     payload.patchEnabled = config.patchEnabled;
     payload.patchModel = config.patchModel;
     payload.patchMaxTokens = config.patchMaxTokens;

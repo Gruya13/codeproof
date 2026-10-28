@@ -154,7 +154,12 @@ export function buildReport(options) {
     lines.push("");
     lines.push("- **[CONTROL]** uses a clean, normal input and must pass every run. It proves the environment and the way the API is called are valid; if it fails, the finding is reported as `control-failed` and the trigger is never run.");
     lines.push("- **[TRIGGER]** uses a different input and must fail every run with an assertion error on the analyzed commit.");
-    lines.push("- **LinkCheck** (Node 26) runs the trigger under the permission model with inspector coverage and requires that the imported symbol actually executed. Without that linkage proof the finding is not reported as execution-proven.");
+    const hasFileCoverage = reproducedItems.some(function (item) {
+      return item.repro.linkcheck && item.repro.linkcheck.status === "proven" && item.repro.linkcheck.method === "file";
+    });
+    lines.push(hasFileCoverage
+      ? "- **LinkCheck** (Node 26) runs the trigger under the permission model with inspector coverage and requires that the imported symbol or cited file actually executed. Without that linkage proof the finding is not reported as execution-proven."
+      : "- **LinkCheck** (Node 26) runs the trigger under the permission model with inspector coverage and requires that the imported symbol actually executed. Without that linkage proof the finding is not reported as execution-proven.");
     lines.push("");
     lines.push("");
     for (const item of reproducedItems) {
@@ -178,7 +183,13 @@ export function buildReport(options) {
       lines.push(fence());
       lines.push("");
       if (itemRepro.linkcheck) {
-        lines.push("**LinkCheck:** " + itemRepro.linkcheck.status + (itemRepro.linkcheck.detail ? " (" + itemRepro.linkcheck.detail + ")" : "") + (itemRepro.linkcheck.status === "unproven" ? " - reported as verified, not execution-proven." : " - the imported symbol executed under inspector coverage."));
+        const linkcheck = itemRepro.linkcheck;
+        const method = linkcheck.status === "proven" && linkcheck.method === "file" ? " (file coverage)"
+          : linkcheck.status === "proven" && linkcheck.method === "symbol" ? " (symbol)" : "";
+        const proof = linkcheck.status === "proven" && linkcheck.method === "file"
+          ? " - the cited file executed under inspector coverage."
+          : " - the imported symbol executed under inspector coverage.";
+        lines.push("**LinkCheck:** " + linkcheck.status + method + (linkcheck.detail ? " (" + linkcheck.detail + ")" : "") + (linkcheck.status === "unproven" ? " - reported as verified, not execution-proven." : proof));
         lines.push("");
       }
       const attempts = Array.isArray(itemRepro.attempts) ? itemRepro.attempts : [];

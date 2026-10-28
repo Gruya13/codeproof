@@ -170,8 +170,15 @@ function findCycles(nodes, edges) {
 // see exactly the same bytes. Without a commit (or for a non-git target) ingestion falls back to
 // the checked-out working tree, which keeps the mock demo working.
 export function ingest(rootPath, options = {}) {
-  const commit = options.commit && String(options.commit) !== "0000000" ? String(options.commit) : null;
-  const committed = commit === null ? null : listCommittedFiles(rootPath, commit);
+  const requestedCommit = options.commit && String(options.commit) !== "0000000" ? String(options.commit) : null;
+  const committed = requestedCommit === null ? null : listCommittedFiles(rootPath, requestedCommit);
+  // Fail closed: in a git repository an explicitly requested commit that cannot be listed must not
+  // silently fall back to the working tree - the run would analyse bytes other than the recorded
+  // commit. Non-git targets keep the documented working-tree fallback (mock demo, replay fixtures).
+  if (requestedCommit !== null && (committed === null ? gitPrefix(rootPath) !== null : committed.length === 0)) {
+    throw new Error("commit " + requestedCommit + " could not be read in " + rootPath + " (refusing to fall back to the working tree)");
+  }
+  const commit = requestedCommit;
   const fromCommit = committed !== null && committed.length > 0;
   const tracked = fromCommit ? committed : listGitFiles(rootPath);
   const files = tracked !== null && tracked.length > 0
