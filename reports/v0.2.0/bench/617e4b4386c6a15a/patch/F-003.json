@@ -1,0 +1,84 @@
+{
+  "status": "patch-proven",
+  "rationale": "Replace async forEach (which returns before callbacks finish and would push in completion order) with a sequential awaited for...of loop, preserving input order and the existing try/catch.",
+  "warnings": [],
+  "searchBlockSha256": "0d6b7a876fadeca844d8de7cf8a9fc095358df3f0e2920e523b76accd2fd3a3f",
+  "replaceBlockSha256": "682aff4342cafd14c3bdf71df47ef7fc7d5b578b13fc42d136d698f2a9bd2d5d",
+  "attempts": {
+    "control": {
+      "classification": "passed",
+      "attempts": [
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 131,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 135,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 129,
+          "classification": "passed"
+        }
+      ],
+      "deterministic": true
+    },
+    "trigger": {
+      "classification": "passed",
+      "attempts": [
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 163,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 164,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 171,
+          "classification": "passed"
+        }
+      ],
+      "deterministic": true
+    }
+  },
+  "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+  "model": "muse-wonder-1.0",
+  "costUsd": 0.037047199999999995
+}

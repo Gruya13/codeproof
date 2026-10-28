@@ -1,0 +1,9 @@
+--- a/src/analytics.ts
++++ b/src/analytics.ts
+@@ -6,3 +6,3 @@
+-    tasks.forEach(async (task) => {
+-      results.push(await task());
+-    });
++    for (const task of tasks) {
++      results.push(await task());
++    }

@@ -1,0 +1,19 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "reproducer failed L0: controlCode: forbidden console output (it could mask the real failure class); testCode: forbidden console output (it could mask the real failure class)",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 930,
+    "outputTokens": 2633,
+    "cachedTokens": 372
+  },
+  "costUsd": 0.0549664
+}

@@ -1,0 +1,19 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 800,
+    "outputTokens": 6006,
+    "cachedTokens": 372
+  },
+  "costUsd": 0.1219064
+}

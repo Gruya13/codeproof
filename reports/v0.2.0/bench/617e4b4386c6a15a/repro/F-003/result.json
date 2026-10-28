@@ -1,0 +1,132 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ []\n- [\n-   1,\n-   2\n- ]\n\n    at file:///tmp/codeproof-repro-lm6t90/snapshot/.codeproof-repro.test.mjs:8:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 142,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ []\n- [\n-   1,\n-   2\n- ]\n\n    at file:///tmp/codeproof-repro-lm6t90/snapshot/.codeproof-repro.test.mjs:8:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 125,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ []\n- [\n-   1,\n-   2\n- ]\n\n    at file:///tmp/codeproof-repro-lm6t90/snapshot/.codeproof-repro.test.mjs:8:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 159,
+      "classification": "assertion-failure"
+    }
+  ],
+  "control": {
+    "code": "import assert from 'node:assert/strict';\nimport { collect } from './src/analytics.ts';\nconst result = await collect([]);\nassert.deepEqual(result, []);\nassert.equal(result.length, 0);\n",
+    "classification": "passed",
+    "attempts": [
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 154,
+        "classification": "passed"
+      },
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 142,
+        "classification": "passed"
+      },
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 128,
+        "classification": "passed"
+      }
+    ],
+    "deterministic": true
+  },
+  "trigger": {
+    "code": "import assert from 'node:assert/strict';\nimport { collect } from './src/analytics.ts';\nconst delayed = (value, ms) => async () => {\n  await new Promise((resolve) => setTimeout(resolve, ms));\n  return value;\n};\nconst result = await collect([delayed(1, 20), delayed(2, 10)]);\nassert.deepEqual(result, [1, 2]);\n",
+    "classification": "assertion-failure",
+    "attempts": [
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ []\n- [\n-   1,\n-   2\n- ]\n\n    at file:///tmp/codeproof-repro-lm6t90/snapshot/.codeproof-repro.test.mjs:8:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 142,
+        "classification": "assertion-failure"
+      },
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ []\n- [\n-   1,\n-   2\n- ]\n\n    at file:///tmp/codeproof-repro-lm6t90/snapshot/.codeproof-repro.test.mjs:8:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 125,
+        "classification": "assertion-failure"
+      },
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ []\n- [\n-   1,\n-   2\n- ]\n\n    at file:///tmp/codeproof-repro-lm6t90/snapshot/.codeproof-repro.test.mjs:8:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 159,
+        "classification": "assertion-failure"
+      }
+    ],
+    "deterministic": true
+  },
+  "linkcheck": {
+    "status": "proven",
+    "targetFile": "src/analytics.ts",
+    "symbols": [
+      "collect"
+    ],
+    "executed": {
+      "collect": 1
+    },
+    "detail": null
+  },
+  "expectedBehavior": "collect should await all tasks and return their resolved values in input order; collect([]) returns [] and collect of delayed tasks returning 1 and 2 returns [1, 2].",
+  "rationale": "Control with empty tasks passes on buggy code, proving the harness works. Test uses tasks delayed by timers (macrotasks) so the un-awaited forEach in collect returns [] before any push can happen via microtask timing, making the failure deterministic; a correct awaited implementation would return [1, 2].",
+  "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 852,
+    "outputTokens": 2420,
+    "cachedTokens": 372
+  },
+  "costUsd": 0.0503944
+}
