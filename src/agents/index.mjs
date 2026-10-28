@@ -41,6 +41,7 @@ export function createAgents(options) {
     if (role === "scanner") return options.scannerModel;
     if (role === "scanner-secondary") return options.secondaryScannerModel || options.scannerModel;
     if (role === "verifier-secondary") return options.secondaryVerifierModel || options.scannerModel;
+    if (role === "patcher") return options.patchModel || options.verifierModel;
     if (role === "repro") return options.reproModel || options.verifierModel;
     return options.verifierModel;
   }
@@ -102,6 +103,14 @@ export function createAgents(options) {
       apiKey: options.apiKey,
       baseUrl: options.baseUrl,
       model: options.reproModel || options.verifierModel,
+      maxRetries: options.maxRetries,
+      fetchImpl: options.fetchImpl,
+      sleepImpl: options.sleepImpl
+    }),
+    patcher: createMetaAgent({
+      apiKey: options.apiKey,
+      baseUrl: options.baseUrl,
+      model: options.patchModel || options.verifierModel,
       maxRetries: options.maxRetries,
       fetchImpl: options.fetchImpl,
       sleepImpl: options.sleepImpl

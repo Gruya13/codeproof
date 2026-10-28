@@ -1,0 +1,266 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "slice end uses start + size + 1, so each page returns size+1 elements instead of size",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 3,
+          "path": "src/pagination.js",
+          "snippet": "  return items.slice(start, start + size + 1);",
+          "startLine": 3
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Pagination slice off-by-one returns extra element"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 3-3 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at src/pagination.js:3 uses slice(start, start + size + 1), whose exclusive end yields size+1 elements when available."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    1,\n    2,\n+   3\n  ]\n\n    at file:///tmp/codeproof-repro-G3uhfm/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 1, 2, 3 ],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 83,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    1,\n    2,\n+   3\n  ]\n\n    at file:///tmp/codeproof-repro-G3uhfm/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 1, 2, 3 ],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 92,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    1,\n    2,\n+   3\n  ]\n\n    at file:///tmp/codeproof-repro-G3uhfm/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 1, 2, 3 ],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 80,
+          "classification": "assertion-failure"
+        }
+      ],
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport { page } from './src/pagination.js';\nconst result = page([1, 2, 3, 4, 5], 0, 2);\nassert.deepEqual(result, [1, 2]);\nassert.equal(result.length, 2);\n",
+      "expectedBehavior": "page(items, pageNumber, size) returns exactly size elements for the requested page (fewer only at the end of the array)",
+      "rationale": "Control uses a full final page where slice truncation masks the +1, so it passes; test uses a middle/full page with more items remaining, where start+size+1 returns size+1 elements and fails.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from 'node:assert/strict';\nimport { page } from './src/pagination.js';\nconst result = page([1, 2, 3], 0, 3);\nassert.deepEqual(result, [1, 2, 3]);\nassert.equal(result.length, 3);\n",
+      "control": {
+        "code": "import assert from 'node:assert/strict';\nimport { page } from './src/pagination.js';\nconst result = page([1, 2, 3], 0, 3);\nassert.deepEqual(result, [1, 2, 3]);\nassert.equal(result.length, 3);\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 86,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 89,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 81,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from 'node:assert/strict';\nimport { page } from './src/pagination.js';\nconst result = page([1, 2, 3, 4, 5], 0, 2);\nassert.deepEqual(result, [1, 2]);\nassert.equal(result.length, 2);\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    1,\n    2,\n+   3\n  ]\n\n    at file:///tmp/codeproof-repro-G3uhfm/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 1, 2, 3 ],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 83,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    1,\n    2,\n+   3\n  ]\n\n    at file:///tmp/codeproof-repro-G3uhfm/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 1, 2, 3 ],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 92,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    1,\n    2,\n+   3\n  ]\n\n    at file:///tmp/codeproof-repro-G3uhfm/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 1, 2, 3 ],\n  expected: [ 1, 2 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 80,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "src/pagination.js",
+        "symbols": [
+          "page"
+        ],
+        "executed": {
+          "page": 1
+        },
+        "detail": null
+      },
+      "durationMs": 11079,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 613,
+        "outputTokens": 1765,
+        "cachedTokens": 372
+      },
+      "costUsd": 0.0363384
+    },
+    "patch": {
+      "status": "patch-proven",
+      "diff": "--- a/src/pagination.js\n+++ b/src/pagination.js\n@@ -3,1 +3,1 @@\n-  return items.slice(start, start + size + 1);\n+  return items.slice(start, start + size);",
+      "searchBlockSha256": "2e91a203afda3b85425909aa3393410dfae834ae928283587b22623a3a9c95df",
+      "replaceBlockSha256": "00c155fda621948548b9541dfcaa403b00f31db6d6e37d8a55484ea8a145752c",
+      "rationale": "Remove the +1 from the slice end index so a page returns exactly size elements.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 79,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 81,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 84,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 92,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 90,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 84,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        }
+      },
+      "warnings": [],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 444,
+        "outputTokens": 1359,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.028956,
+      "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+      "durationMs": 11243
+    },
+    "evidenceLevel": "patch-proven"
+  }
+]

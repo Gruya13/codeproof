@@ -49,6 +49,31 @@ export function mockDemoReproducer(findingId) {
   };
 }
 
+// Canned patch for the demo defect: remove the off-by-one slice end. The patch is applied to a
+// copy of the snapshot and the differential gate runs the real control and trigger.
+export function mockDemoPatch(findingId) {
+  if (findingId === "F-001") {
+    return {
+      findingId: findingId,
+      kind: "patch",
+      targetFile: "src/pagination.js",
+      searchBlock: "  return items.slice(start, start + size + 1);",
+      replaceBlock: "  return items.slice(start, start + size);",
+      rationale: "the slice end is exclusive, so the extra +1 makes the page leak one item",
+      unsupportedReason: ""
+    };
+  }
+  return {
+    findingId: findingId,
+    kind: "unsupported",
+    targetFile: "",
+    searchBlock: "",
+    replaceBlock: "",
+    rationale: "the demo fixture only ships a canned patch for the pagination defect",
+    unsupportedReason: "mock pipeline: no canned patch for " + findingId
+  };
+}
+
 export function createMockAgent(options) {
   const scenario = JSON.parse(readFileSync(options.scenarioPath, "utf8"));
   let scannerCallCount = 0;
@@ -107,6 +132,19 @@ export function createMockAgent(options) {
         usage: { inputTokens: 1200, outputTokens: 220, cachedTokens: 800 },
         costUsd: responseCost(),
         model: "mock-repro",
+        latencyMs: 2,
+        retries: 0,
+        finishReason: "stop",
+        httpStatus: 200
+      };
+    }
+    if (request.role === "patcher") {
+      const patchFindingId = extractFindingId(request.messages) || "F-001";
+      return {
+        text: JSON.stringify(mockDemoPatch(patchFindingId)),
+        usage: { inputTokens: 1100, outputTokens: 180, cachedTokens: 700 },
+        costUsd: responseCost(),
+        model: "mock-patcher",
         latencyMs: 2,
         retries: 0,
         finishReason: "stop",

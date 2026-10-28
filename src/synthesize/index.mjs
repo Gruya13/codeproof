@@ -77,6 +77,8 @@ export function buildReport(options) {
   const reproducedCount = published.filter(function (item) { return item.repro && item.repro.status === "reproduced"; }).length;
   const executionEnabled = Boolean(run.repro && run.repro.enabled);
   if (executionEnabled) lines.push("| Reproduced by execution (L3) | " + reproducedCount + " |");
+  const patchedCount = published.filter(function (item) { return item.patch && item.patch.status === "patch-proven"; }).length;
+  if (patchedCount > 0) lines.push("| Patch-proven (L4, differential) | " + patchedCount + " |");
   lines.push("| Moderate confidence | " + run.findings.moderate + " |");
   lines.push("| Refuted | " + run.findings.refuted + " |");
   lines.push("| Uncertain | " + run.findings.uncertain + " |");
@@ -175,6 +177,29 @@ export function buildReport(options) {
         lines.push(fence());
         lines.push("");
       }
+    }
+  }
+  const patchedItems = verified.filter(function (item) { return item.patch && item.patch.status === "patch-proven"; });
+  if (patchedItems.length > 0) {
+    lines.push("## Patch-proven (differential proof)");
+    lines.push("");
+    lines.push("For each finding below the patcher model proposed a minimal patch to one of the cited files. The patch is applied to a **copy** of the L3 snapshot (the snapshot itself is never mutated) and both phases are re-run: the control must still pass 3/3 and the trigger must now pass 3/3. This is a differential result over the reproduction - it does not claim to fix the root cause, and the repository's own test suite is not run.");
+    lines.push("");
+    for (const item of patchedItems) {
+      const finding = item.finding;
+      const itemPatch = item.patch;
+      lines.push("### " + finding.id + " - " + finding.title);
+      lines.push("");
+      if (itemPatch.rationale) { lines.push("**Patch rationale:** " + itemPatch.rationale); lines.push(""); }
+      lines.push(fence() + "diff");
+      lines.push(String(itemPatch.diff || "(no diff)").trim());
+      lines.push(fence());
+      lines.push("");
+      const control = itemPatch.attempts && itemPatch.attempts.control ? itemPatch.attempts.control : null;
+      const trigger = itemPatch.attempts && itemPatch.attempts.trigger ? itemPatch.attempts.trigger : null;
+      lines.push("**Differential result:** control " + (control ? control.classification : "?") + " 3/3, trigger " + (trigger ? trigger.classification : "?") + " 3/3 after the patch. The repository's own test suite was not run; the patch was never written to the analyzed repository.");
+      lines.push("");
+      if (Array.isArray(itemPatch.warnings) && itemPatch.warnings.length > 0) { lines.push("**Warnings:** " + itemPatch.warnings.join("; ")); lines.push(""); }
     }
   }
   lines.push("## Architecture");

@@ -5,7 +5,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { loadConfig, computeConfigSha256, configPayload, VERSION } from "./config.mjs";
 import { ingest, repoDigest, buildScannerInput, filesWithLineNumbers } from "./ingest/index.mjs";
 import { buildAttestation } from "./run/attest.mjs";
-import { writePatchArtifacts } from "./patch/index.mjs";
+import { prepareSnapshot } from "./repro/index.mjs";
+import { attemptPatch, writePatchArtifacts } from "./patch/index.mjs";
 import { buildScannerMessages, buildScannerResponseFormat, scannerSystemPrompt, validateFindingsL0 } from "./scan/index.mjs";
 import { mergeScannerRuns } from "./scan/merge.mjs";
 import { verifyOne, VERIFIER_SYSTEM_PROMPT } from "./verify/index.mjs";
@@ -162,6 +163,7 @@ async function main() {
     scannerModel: config.scannerModel,
     verifierModel: config.verifierModel,
     reproModel: config.reproModel,
+    patchModel: config.patchModel,
     secondaryScannerModel: config.secondaryScannerModel,
     secondaryVerifierModel: config.scannerModel,
     maxRetries: config.maxRetries,
@@ -444,6 +446,38 @@ async function main() {
           }
         }
       }
+      // L4 (F2): only an execution-proven finding with a valid linkage proof can be patched.
+      let patch = null;
+      const patchActive = config.patchEnabled && repro && repro.status === "reproduced" && repro.linkcheck && repro.linkcheck.status === "proven";
+      if (patchActive) {
+        let patchSnapshot = null;
+        try {
+          patchSnapshot = prepareSnapshot({ root: target, commit: commit, workDir: config.reproWorkDir });
+          if (!patchSnapshot.available) {
+            patch = { status: "unsupported", reason: patchSnapshot.reason };
+          } else {
+            patch = await attemptPatch({
+              finding: outcome.finding,
+              agent: agents,
+              repoRoot: target,
+              controlCode: repro.controlCode,
+              testCode: repro.testCode,
+              excerpts: verifierContext.text,
+              snapshotDir: patchSnapshot.snapshotDir,
+              config: config
+            });
+          }
+        } catch (error) {
+          if (error.code === "BUDGET_EXCEEDED") {
+            skipFrom(index + 1, error.message);
+            patch = { status: "unsupported", reason: "budget gate refused the patcher call: " + error.message };
+          } else {
+            patch = { status: "unsupported", reason: "patcher failed: " + error.message };
+          }
+        } finally {
+          if (patchSnapshot && patchSnapshot.available) patchSnapshot.cleanup();
+        }
+      }
       published.push({
         finding: outcome.finding,
         status: outcome.status,
@@ -452,9 +486,10 @@ async function main() {
         l1: { passed: true, reason: outcome.l1.reason, lineTolerance: outcome.l1.lineTolerance === undefined ? 0 : outcome.l1.lineTolerance },
         verifier: outcome.verifier,
         repro: repro,
-        // execution-proven requires the two-phase run AND the LinkCheck linkage proof (F1.10):
-        // a test that passed/failed without the imported symbol executing is not a proof.
-        evidenceLevel: repro && repro.status === "reproduced" && repro.linkcheck && repro.linkcheck.status === "proven" ? "execution-proven" : "citation+adversarial"
+        patch: patch,
+        // patch-proven is the strongest level; execution-proven requires the two-phase run AND the
+        // LinkCheck linkage proof (F1.10). A test that ran without the symbol executing is not a proof.
+        evidenceLevel: patch && patch.status === "patch-proven" ? "patch-proven" : (repro && repro.status === "reproduced" && repro.linkcheck && repro.linkcheck.status === "proven" ? "execution-proven" : "citation+adversarial")
       });
     }
     if (budget.exceeded) skipFrom(index + 1);
@@ -473,7 +508,8 @@ async function main() {
     moderate: published.filter(function (item) { return item.status === "moderate"; }).length,
     refuted: published.filter(function (item) { return item.status === "refuted"; }).length,
     uncertain: published.filter(function (item) { return item.status === "uncertain"; }).length,
-    reproduced: published.filter(function (item) { return item.repro && item.repro.status === "reproduced"; }).length
+    reproduced: published.filter(function (item) { return item.repro && item.repro.status === "reproduced"; }).length,
+    patched: published.filter(function (item) { return item.patch && item.patch.status === "patch-proven"; }).length
   };
   console.log("  verify   " + String(Date.now() - verifyStarted).padStart(4) + " ms  " +
     counts.verified + " verified, " + counts.refuted + " refuted, " + counts.moderate + " moderate, " +
@@ -580,6 +616,7 @@ async function main() {
     }),
     dualScan: Boolean(config.dualScan),
     chunkedScan: Boolean(config.chunkedScan),
+    patch: { enabled: Boolean(config.patchEnabled), model: config.patchModel },
     repro: {
       enabled: Boolean(config.reproEnabled && !controlled && !mock),
       model: config.reproModel,
@@ -605,7 +642,7 @@ async function main() {
   writeFileSync(join(outDir, "candidates.json"), JSON.stringify({ raw: scanRaw, candidates: candidateAudit }, null, 2) + "\n");
   for (const item of published) {
     if (item.repro) writeReproArtifacts(outDir, item.finding.id, item.repro);
-    if (item.patch && item.patch.diff) writePatchArtifacts(outDir, item.finding.id, item.patch);
+    if (item.patch) writePatchArtifacts(outDir, item.finding.id, item.patch);
   }
   phases.push({ name: "publish", status: "ok", durationMs: Date.now() - publishStarted });
   runJson.timings.durationMs = Date.now() - startedAtMs;

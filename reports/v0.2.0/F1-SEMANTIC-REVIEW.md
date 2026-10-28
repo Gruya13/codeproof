@@ -24,6 +24,14 @@ The mechanical chain proves that the trigger fails 3/3 while the control passes 
 
 The demo uses the same canned two-phase pair for the same pagination defect (`src/agents/mock.mjs`). control passes, trigger fails with `actual: [1, 2, 3], expected: [1, 2]`, LinkCheck proven - REVIEW PASS. The mock adapter supplies code only; both phases are executed locally for real.
 
+## F2 patch review (differential proof, real run `72becdf8e629b60f`, $0.0845)
+
+- **F-001 (off-by-one page slice)** - REVIEW PASS.
+  - Proposed patch: `return items.slice(start, start + size + 1);` -> `return items.slice(start, start + size);`, one line, inside the cited file, exported names unchanged.
+  - Applied to a **copy** of the L3 snapshot; the analyzed snapshot and repository are never mutated.
+  - Differential result: control passed 3/3 and the trigger passed 3/3 after the patch.
+  - The patch is minimal and addresses the observed `actual: [1, 2, 3]` vs `expected: [1, 2]`; it is a differential result over the reproduction, not a root-cause claim, and the repository's own test suite was not run.
+
 ## Limit of the chain (stated in README Limits)
 
 `execution-proven` means: a control passed 3/3, a trigger failed 3/3 on the analyzed commit, the imported symbol actually executed (LinkCheck), and this review judged the trigger faithful to the claim. It does not re-run the repository's own test suite and it does not prove the defect is the root cause.

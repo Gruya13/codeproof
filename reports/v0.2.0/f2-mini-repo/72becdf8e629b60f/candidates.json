@@ -1,0 +1,41 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"slice end uses start + size + 1, so each page returns size+1 elements instead of size\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 3, \"path\": \"src/pagination.js\", \"snippet\": \"  return items.slice(start, start + size + 1);\", \"startLine\": 3}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Pagination slice off-by-one returns extra element\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "slice end uses start + size + 1, so each page returns size+1 elements instead of size",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 3,
+            "path": "src/pagination.js",
+            "snippet": "  return items.slice(start, start + size + 1);",
+            "startLine": 3
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Pagination slice off-by-one returns extra element"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 3-3 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at src/pagination.js:3 uses slice(start, start + size + 1), whose exclusive end yields size+1 elements when available."
+      }
+    }
+  ]
+}

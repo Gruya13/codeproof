@@ -1,0 +1,5 @@
+--- a/src/pagination.js
++++ b/src/pagination.js
+@@ -3,1 +3,1 @@
+-  return items.slice(start, start + size + 1);
++  return items.slice(start, start + size);
