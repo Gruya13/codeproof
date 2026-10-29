@@ -88,7 +88,10 @@ async function main() {
   const agents = createAgents({
     mock: false, apiKey: config.apiKey, baseUrl: config.baseUrl,
     scannerModel: config.scannerModel, verifierModel: config.verifierModel,
-    reproModel: config.reproModel, maxRetries: config.maxRetries, budget: budget
+    reproModel: config.reproModel, maxRetries: config.maxRetries, budget: budget,
+    // PREREG-AMENDMENT-3 §1: without hardBudget the ablation's BUDGET_USD is only a soft cap
+    // (one call may overrun it), so the settled reservation would not be a proven upper bound.
+    hardBudget: config.hardBudget
   });
   const started = Date.now();
   const scanCall = await agents.complete({
