@@ -64,7 +64,9 @@
     if (run && run.findings) { out.proposed = run.findings.proposed || 0; out.l1Rejected = run.findings.l1Rejected || 0; }
     findings.forEach(function (item) {
       if (item.status === 'verified') out.verified += 1;
-      if (item.evidenceLevel === 'execution-proven') out.executionProven += 1;
+      // patch-proven implies execution-proven: the L4 gate runs on an L3 reproduction, so the
+      // funnel's L3 step counts both levels instead of showing 0 for a patch-proven run.
+      if (item.evidenceLevel === 'execution-proven' || item.evidenceLevel === 'patch-proven') out.executionProven += 1;
       if (item.evidenceLevel === 'patch-proven') out.patchProven += 1;
     });
     return out;

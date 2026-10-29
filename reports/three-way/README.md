@@ -12,7 +12,7 @@ Prices: Muse Spark 1.3 - $1.25/M input, $4.25/M output; Muse Wonder 1.0 - **$4/M
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Spark alone | 9 | **8/8** | n/a (no verification) | n/a | 0 | **$0.0255** | 15 s |
 | Wonder alone | 8 | 7/8 | n/a (no verification) | n/a | 0 | $0.1346 | 52 s |
-| CodeProof, no L3 | 9 | 9/9 | **8/8** | **100%** | 0 | $0.3416 | 142 s |
+| CodeProof, no L3 | 9 | 8/8 | **8/8** | **100%** | 0 | $0.3416 | 142 s |
 | CodeProof single + L3 | 10 | 7/8 | 6/8 | 85.7% (1 FP) | **6** | $0.7037 | 282 s |
 | CodeProof dual + L3 | 9 | 8/8 | **8/8** | **100%** | **8** | $0.7605 | 266 s |
 
