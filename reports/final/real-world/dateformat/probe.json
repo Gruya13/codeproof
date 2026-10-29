@@ -1,0 +1,129 @@
+{
+  "tool": "probe-repo",
+  "createdAt": "2026-10-29T21:34:21.841Z",
+  "stats": {
+    "repo": "https://github.com/felixge/node-dateformat",
+    "commit": "e6800aa902fcbd523d5ea06a9a79050878cfa48e",
+    "scope": ".",
+    "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/dateformat/_repo",
+    "clean": true,
+    "files": 43,
+    "loc": 2085,
+    "importEdges": 1,
+    "cycles": 0,
+    "digestChars": 1633,
+    "promptChars": 71640,
+    "promptFiles": 43,
+    "promptComplete": true,
+    "promptCap": 400000,
+    "estimatedInputTokens": 19900
+  },
+  "runs": [
+    {
+      "index": 1,
+      "runId": "fead8f9fa0544305",
+      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/dateformat/fead8f9fa0544305",
+      "exitCode": 0,
+      "elapsedMs": 40673,
+      "mode": "smoke",
+      "mock": false,
+      "repo": {
+        "source": "commit",
+        "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/dateformat/_repo",
+        "commit": "e6800aa902fcbd523d5ea06a9a79050878cfa48e",
+        "dirty": false,
+        "loc": 2085,
+        "files": 43
+      },
+      "usage": {
+        "inputTokens": 24698,
+        "outputTokens": 9599,
+        "cachedTokens": 0,
+        "byRole": [
+          {
+            "role": "scanner-correctness",
+            "model": "muse-spark-1.3",
+            "calls": 1,
+            "inputTokens": 24698,
+            "outputTokens": 9599,
+            "cachedTokens": 0,
+            "costUsd": 0.07166825
+          }
+        ]
+      },
+      "costUsd": 0.07166825,
+      "measured": true,
+      "calls": 1,
+      "retries": 0,
+      "budget": {
+        "limitUsd": 4,
+        "spentUsd": 0.071668,
+        "measured": true,
+        "exceeded": false,
+        "hard": true,
+        "aborted": false,
+        "abortReason": null,
+        "skippedFindings": []
+      },
+      "findings": {
+        "proposed": 0,
+        "byScanner": {
+          "spark": 0,
+          "wonder": 0,
+          "secondary": 0,
+          "both": 0,
+          "controlled": 0
+        },
+        "duplicates": 0,
+        "l0Rejected": {
+          "count": 0,
+          "items": []
+        },
+        "l1Rejected": 0,
+        "verified": 0,
+        "moderate": 0,
+        "refuted": 0,
+        "uncertain": 0,
+        "reproduced": 0,
+        "patched": 0
+      },
+      "l1PassRate": null,
+      "l1Checked": 0,
+      "phases": [
+        {
+          "name": "ingest",
+          "status": "ok",
+          "durationMs": 190
+        },
+        {
+          "name": "scan",
+          "status": "ok",
+          "durationMs": 40401
+        },
+        {
+          "name": "verify",
+          "status": "ok",
+          "durationMs": 0
+        },
+        {
+          "name": "publish",
+          "status": "ok",
+          "durationMs": 2
+        }
+      ],
+      "durationMs": 40612
+    }
+  ],
+  "summary": {
+    "runs": 1,
+    "totalCostUsd": 0.071668,
+    "costBeforeUsd": 0,
+    "avgL1PassRate": null,
+    "verified": 0,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "l1Rejected": 0,
+    "promptComplete": true
+  }
+}
