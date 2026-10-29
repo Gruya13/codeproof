@@ -1,0 +1,4 @@
+--- a/index.js
++++ b/index.js
+@@ -492,0 +493,1 @@
++    if (c4 == -1) break;

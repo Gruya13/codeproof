@@ -1,0 +1,156 @@
+{
+  "tool": "probe-repo",
+  "createdAt": "2026-10-29T21:31:15.106Z",
+  "stats": {
+    "repo": "https://github.com/dcodeIO/bcrypt.js",
+    "commit": "1211e9a2213e0b3ee232a204b3ce899beebce31a",
+    "scope": ".",
+    "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/bcryptjs/_repo",
+    "clean": true,
+    "files": 11,
+    "loc": 1666,
+    "importEdges": 3,
+    "cycles": 0,
+    "digestChars": 520,
+    "promptChars": 67232,
+    "promptFiles": 11,
+    "promptComplete": true,
+    "promptCap": 400000,
+    "estimatedInputTokens": 18676
+  },
+  "runs": [
+    {
+      "index": 1,
+      "runId": "56f8831fa1284062",
+      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/bcryptjs/56f8831fa1284062",
+      "exitCode": 0,
+      "elapsedMs": 326210,
+      "mode": "smoke",
+      "mock": false,
+      "repo": {
+        "source": "commit",
+        "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/bcryptjs/_repo",
+        "commit": "1211e9a2213e0b3ee232a204b3ce899beebce31a",
+        "dirty": false,
+        "loc": 1666,
+        "files": 11
+      },
+      "usage": {
+        "inputTokens": 120747,
+        "outputTokens": 37662,
+        "cachedTokens": 0,
+        "byRole": [
+          {
+            "role": "scanner-correctness",
+            "model": "muse-spark-1.3",
+            "calls": 1,
+            "inputTokens": 26955,
+            "outputTokens": 15248,
+            "cachedTokens": 0,
+            "costUsd": 0.09849775
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "calls": 3,
+            "inputTokens": 20669,
+            "outputTokens": 6096,
+            "cachedTokens": 0,
+            "costUsd": 0.204596
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "calls": 3,
+            "inputTokens": 65993,
+            "outputTokens": 14511,
+            "cachedTokens": 0,
+            "costUsd": 0.554192
+          },
+          {
+            "role": "patcher",
+            "model": "muse-wonder-1.0",
+            "calls": 1,
+            "inputTokens": 7130,
+            "outputTokens": 1807,
+            "cachedTokens": 0,
+            "costUsd": 0.06466
+          }
+        ]
+      },
+      "costUsd": 0.9219457500000001,
+      "measured": true,
+      "calls": 8,
+      "retries": 0,
+      "budget": {
+        "limitUsd": 4,
+        "spentUsd": 0.921946,
+        "measured": true,
+        "exceeded": false,
+        "hard": true,
+        "aborted": false,
+        "abortReason": null,
+        "skippedFindings": []
+      },
+      "findings": {
+        "proposed": 3,
+        "byScanner": {
+          "spark": 3,
+          "wonder": 0,
+          "secondary": 0,
+          "both": 0,
+          "controlled": 0
+        },
+        "duplicates": 0,
+        "l0Rejected": {
+          "count": 0,
+          "items": []
+        },
+        "l1Rejected": 0,
+        "verified": 3,
+        "moderate": 0,
+        "refuted": 0,
+        "uncertain": 0,
+        "reproduced": 1,
+        "patched": 1
+      },
+      "l1PassRate": 1,
+      "l1Checked": 3,
+      "phases": [
+        {
+          "name": "ingest",
+          "status": "ok",
+          "durationMs": 67
+        },
+        {
+          "name": "scan",
+          "status": "ok",
+          "durationMs": 74316
+        },
+        {
+          "name": "verify",
+          "status": "ok",
+          "durationMs": 251723
+        },
+        {
+          "name": "publish",
+          "status": "ok",
+          "durationMs": 26
+        }
+      ],
+      "durationMs": 326150
+    }
+  ],
+  "summary": {
+    "runs": 1,
+    "totalCostUsd": 0.921946,
+    "costBeforeUsd": 0,
+    "avgL1PassRate": 1,
+    "verified": 3,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "l1Rejected": 0,
+    "promptComplete": true
+  }
+}

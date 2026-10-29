@@ -1,0 +1,119 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"hash() with numeric salt calls genSalt then unconditionally calls _hash with the salt result without checking err, so a genSalt failure is masked and _hash is invoked with undefined salt producing a different error.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 176, \"path\": \"index.js\", \"snippet\": \"  function _async(callback) {\\n    if (typeof password === \\\"string\\\" && typeof salt === \\\"number\\\")\\n      genSalt(salt, function (err, salt) {\\n        _hash(password, salt, callback, progressCallback);\\n      });\", \"startLine\": 172}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"hash ignores genSalt error before calling _hash\"}, {\"category\": \"correctness\", \"claim\": \"genSalt throws synchronously for non-number rounds even when a callback was supplied, while hash/compare deliver argument errors via callback; an async caller with callback gets an unexpected synchronous throw.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 118, \"path\": \"index.js\", \"snippet\": \"export function genSalt(rounds, seed_length, callback) {\\n  if (typeof seed_length === \\\"function\\\")\\n    (callback = seed_length), (seed_length = undefined); // Not supported.\\n  if (typeof rounds === \\\"function\\\") (callback = rounds), (rounds = undefined);\\n  if (typeof rounds === \\\"undefined\\\") rounds = GENSALT_DEFAULT_LOG2_ROUNDS;\\n  else if (typeof rounds !== \\\"number\\\")\\n    throw Error(\\\"illegal arguments: \\\" + typeof rounds);\", \"startLine\": 112}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"genSalt throws instead of callback on illegal rounds\"}, {\"category\": \"correctness\", \"claim\": \"base64_decode breaks on invalid c1/c2/c3 but does not check c4 for -1 before OR-ing it into the output byte, producing an out-of-range byte (65535) and incrementing olen instead of stopping.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 486, \"path\": \"index.js\", \"snippet\": \"  while (off < slen - 1 && olen < len) {\\n    code = s.charCodeAt(off++);\\n    c1 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\\n    code = s.charCodeAt(off++);\\n    c2 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\\n    if (c1 == -1 || c2 == -1) break;\\n    o = (c1 << 2) >>> 0;\\n    o |= (c2 & 0x30) >> 4;\\n    rs.push(String.fromCharCode(o));\\n    if (++olen >= len || off >= slen) break;\\n    code = s.charCodeAt(off++);\\n    c3 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\\n    if (c3 == -1) break;\", \"startLine\": 474}, {\"endLine\": 496, \"path\": \"index.js\", \"snippet\": \"    code = s.charCodeAt(off++);\\n    c4 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\\n    o = ((c3 & 0x03) << 6) >>> 0;\\n    o |= c4;\\n    rs.push(String.fromCharCode(o));\\n    ++olen;\", \"startLine\": 491}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"base64_decode missing invalid check for c4\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "hash() with numeric salt calls genSalt then unconditionally calls _hash with the salt result without checking err, so a genSalt failure is masked and _hash is invoked with undefined salt producing a different error.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 176,
+            "path": "index.js",
+            "snippet": "  function _async(callback) {\n    if (typeof password === \"string\" && typeof salt === \"number\")\n      genSalt(salt, function (err, salt) {\n        _hash(password, salt, callback, progressCallback);\n      });",
+            "startLine": 172
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "hash ignores genSalt error before calling _hash"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 172-176 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The callback at index.js:174-175 receives err but unconditionally calls _hash(password, salt, callback, progressCallback), and genSalt invokes callback(err) with no salt value on failure at index.js:125-126, so the original error is ignored and _hash receives undefined salt."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "genSalt throws synchronously for non-number rounds even when a callback was supplied, while hash/compare deliver argument errors via callback; an async caller with callback gets an unexpected synchronous throw.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 118,
+            "path": "index.js",
+            "snippet": "export function genSalt(rounds, seed_length, callback) {\n  if (typeof seed_length === \"function\")\n    (callback = seed_length), (seed_length = undefined); // Not supported.\n  if (typeof rounds === \"function\") (callback = rounds), (rounds = undefined);\n  if (typeof rounds === \"undefined\") rounds = GENSALT_DEFAULT_LOG2_ROUNDS;\n  else if (typeof rounds !== \"number\")\n    throw Error(\"illegal arguments: \" + typeof rounds);",
+            "startLine": 112
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "genSalt throws instead of callback on illegal rounds"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 112-118 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "genSalt at index.js:117-118 throws synchronously for non-number rounds before the callback handling at index.js:131-134 is reached, so a supplied callback is never invoked for that argument error."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "base64_decode breaks on invalid c1/c2/c3 but does not check c4 for -1 before OR-ing it into the output byte, producing an out-of-range byte (65535) and incrementing olen instead of stopping.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 486,
+            "path": "index.js",
+            "snippet": "  while (off < slen - 1 && olen < len) {\n    code = s.charCodeAt(off++);\n    c1 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    code = s.charCodeAt(off++);\n    c2 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    if (c1 == -1 || c2 == -1) break;\n    o = (c1 << 2) >>> 0;\n    o |= (c2 & 0x30) >> 4;\n    rs.push(String.fromCharCode(o));\n    if (++olen >= len || off >= slen) break;\n    code = s.charCodeAt(off++);\n    c3 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    if (c3 == -1) break;",
+            "startLine": 474
+          },
+          {
+            "endLine": 496,
+            "path": "index.js",
+            "snippet": "    code = s.charCodeAt(off++);\n    c4 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    o = ((c3 & 0x03) << 6) >>> 0;\n    o |= c4;\n    rs.push(String.fromCharCode(o));\n    ++olen;",
+            "startLine": 491
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "base64_decode missing invalid check for c4"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 474-486 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed at index.js:491-496: c4 is assigned -1 for invalid codes with no c4==-1 break unlike c1/c2 at index.js:479 and c3 at index.js:486, then o|=c4 yields -1, String.fromCharCode(-1) is 65535, and ++olen includes it in the result."
+      }
+    }
+  ]
+}

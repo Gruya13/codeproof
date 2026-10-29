@@ -1,0 +1,399 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "hash() with numeric salt calls genSalt then unconditionally calls _hash with the salt result without checking err, so a genSalt failure is masked and _hash is invoked with undefined salt producing a different error.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 176,
+          "path": "index.js",
+          "snippet": "  function _async(callback) {\n    if (typeof password === \"string\" && typeof salt === \"number\")\n      genSalt(salt, function (err, salt) {\n        _hash(password, salt, callback, progressCallback);\n      });",
+          "startLine": 172
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "hash ignores genSalt error before calling _hash"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 172-176 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The callback at index.js:174-175 receives err but unconditionally calls _hash(password, salt, callback, progressCallback), and genSalt invokes callback(err) with no salt value on failure at index.js:125-126, so the original error is ignored and _hash receives undefined salt."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: testCode assertion is not tied to a call of an imported symbol",
+      "artifacts": null,
+      "durationMs": 88191,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 21894,
+        "outputTokens": 7676,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.241096
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "genSalt throws synchronously for non-number rounds even when a callback was supplied, while hash/compare deliver argument errors via callback; an async caller with callback gets an unexpected synchronous throw.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 118,
+          "path": "index.js",
+          "snippet": "export function genSalt(rounds, seed_length, callback) {\n  if (typeof seed_length === \"function\")\n    (callback = seed_length), (seed_length = undefined); // Not supported.\n  if (typeof rounds === \"function\") (callback = rounds), (rounds = undefined);\n  if (typeof rounds === \"undefined\") rounds = GENSALT_DEFAULT_LOG2_ROUNDS;\n  else if (typeof rounds !== \"number\")\n    throw Error(\"illegal arguments: \" + typeof rounds);",
+          "startLine": 112
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "genSalt throws instead of callback on illegal rounds"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 112-118 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "genSalt at index.js:117-118 throws synchronously for non-number rounds before the callback handling at index.js:131-134 is reached, so a supplied callback is never invoked for that argument error."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol",
+      "artifacts": null,
+      "durationMs": 31542,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 21943,
+        "outputTokens": 3189,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.151552
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "base64_decode breaks on invalid c1/c2/c3 but does not check c4 for -1 before OR-ing it into the output byte, producing an out-of-range byte (65535) and incrementing olen instead of stopping.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 486,
+          "path": "index.js",
+          "snippet": "  while (off < slen - 1 && olen < len) {\n    code = s.charCodeAt(off++);\n    c1 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    code = s.charCodeAt(off++);\n    c2 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    if (c1 == -1 || c2 == -1) break;\n    o = (c1 << 2) >>> 0;\n    o |= (c2 & 0x30) >> 4;\n    rs.push(String.fromCharCode(o));\n    if (++olen >= len || off >= slen) break;\n    code = s.charCodeAt(off++);\n    c3 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    if (c3 == -1) break;",
+          "startLine": 474
+        },
+        {
+          "endLine": 496,
+          "path": "index.js",
+          "snippet": "    code = s.charCodeAt(off++);\n    c4 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    o = ((c3 & 0x03) << 6) >>> 0;\n    o |= c4;\n    rs.push(String.fromCharCode(o));\n    ++olen;",
+          "startLine": 491
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "base64_decode missing invalid check for c4"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-003"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 474-486 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed at index.js:491-496: c4 is assigned -1 for invalid codes with no c4==-1 break unlike c1/c2 at index.js:479 and c3 at index.js:486, then o|=c4 yields -1, String.fromCharCode(-1) is 65535, and ++olen includes it in the result."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    0,\n    0,\n+   65535\n  ]\n\n    at file:///tmp/codeproof-repro-ttcctM/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 0, 0, 65535 ],\n  expected: [ 0, 0 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 64,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    0,\n    0,\n+   65535\n  ]\n\n    at file:///tmp/codeproof-repro-ttcctM/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 0, 0, 65535 ],\n  expected: [ 0, 0 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 67,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    0,\n    0,\n+   65535\n  ]\n\n    at file:///tmp/codeproof-repro-ttcctM/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 0, 0, 65535 ],\n  expected: [ 0, 0 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 64,
+          "classification": "assertion-failure"
+        }
+      ],
+      "attemptCount": 3,
+      "deterministic": true,
+      "testCode": "import assert from \"node:assert/strict\";\nimport { decodeBase64 } from \"./index.js\";\nconst result = decodeBase64(\"...!\", 3);\nassert.deepEqual(result, [0, 0]);\n",
+      "expectedBehavior": "decodeBase64 stops at an invalid character and returns only bytes decoded before it, with all values in byte range",
+      "rationale": "Control uses invalid c3 ('!'), which existing code checks and stops after 1 byte. Test uses valid c1-c3 with invalid c4 ('!'); missing c4 check ORs -1, producing 65535 as a third byte instead of stopping after 2 bytes.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from \"node:assert/strict\";\nimport { decodeBase64 } from \"./index.js\";\nconst result = decodeBase64(\"..!.\", 3);\nassert.deepEqual(result, [0]);\n",
+      "control": {
+        "code": "import assert from \"node:assert/strict\";\nimport { decodeBase64 } from \"./index.js\";\nconst result = decodeBase64(\"..!.\", 3);\nassert.deepEqual(result, [0]);\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 73,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 62,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 73,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from \"node:assert/strict\";\nimport { decodeBase64 } from \"./index.js\";\nconst result = decodeBase64(\"...!\", 3);\nassert.deepEqual(result, [0, 0]);\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    0,\n    0,\n+   65535\n  ]\n\n    at file:///tmp/codeproof-repro-ttcctM/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 0, 0, 65535 ],\n  expected: [ 0, 0 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 64,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    0,\n    0,\n+   65535\n  ]\n\n    at file:///tmp/codeproof-repro-ttcctM/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 0, 0, 65535 ],\n  expected: [ 0, 0 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 67,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n    0,\n    0,\n+   65535\n  ]\n\n    at file:///tmp/codeproof-repro-ttcctM/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [ 0, 0, 65535 ],\n  expected: [ 0, 0 ],\n  operator: 'deepStrictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 64,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "index.js",
+        "targetFiles": [
+          "index.js"
+        ],
+        "symbols": [
+          "decodeBase64"
+        ],
+        "method": "symbol",
+        "executed": {
+          "base64_decode": 1,
+          "decodeBase64": 1
+        },
+        "detail": null
+      },
+      "durationMs": 34990,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 22156,
+        "outputTokens": 3646,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.161544
+    },
+    "patch": {
+      "status": "patch-proven",
+      "diff": "--- a/index.js\n+++ b/index.js\n@@ -492,0 +493,1 @@\n+    if (c4 == -1) break;",
+      "targetFile": "index.js",
+      "searchBlock": "    code = s.charCodeAt(off++);\n    c4 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    o = ((c3 & 0x03) << 6) >>> 0;",
+      "replaceBlock": "    code = s.charCodeAt(off++);\n    c4 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    if (c4 == -1) break;\n    o = ((c3 & 0x03) << 6) >>> 0;",
+      "searchBlockSha256": "9b2485296e0fcb65776a85888f43a4aebb101c3716b9e38a8cc84ab94d8754ec",
+      "replaceBlockSha256": "921e86dd0cfa155643021b7af3fbc0822d8ccfcdea43846450685b26c4d9cf98",
+      "rationale": "Add the missing c4 == -1 break in base64_decode, mirroring the existing c3 check, so an invalid fourth character stops decoding instead of producing 65535.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 63,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 68,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 63,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 63,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 68,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 67,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        }
+      },
+      "warnings": [
+        "replaceBlock contains literals that also appear in the generated test (possible overfitting): 6, 0"
+      ],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 7130,
+        "outputTokens": 1807,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.06466,
+      "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+      "durationMs": 16997
+    },
+    "evidenceLevel": "patch-proven"
+  }
+]
