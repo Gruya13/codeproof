@@ -1,9 +1,17 @@
 {
   "schemaVersion": 1,
-  "casesSha256": "73a73bd9a5f319271e0b7ad1e325e04165902ede5e27e1c07870220861cc7531",
-  "gitRevision": "1cd0572720e6d8435f004796673e3412aba8ef7b",
+  "casesSha256": "94a9ffc19b2c8c9d9ba751cfe867afe8d918bb1fd62a31fb6b80608c2f8bef82",
+  "gitRevision": "72f9707f8c8d09512a9845e75f8d90e807802b7e",
   "gitRel": "tests/hardening-package-e.test.mjs",
   "by": "dsh-orkestrator",
-  "at": "2026-10-29T06:24:12.081Z",
-  "relocks": []
+  "at": "2026-10-29T06:28:35.550Z",
+  "relocks": [
+    {
+      "by": "dsh-orkestrator",
+      "at": "2026-10-29T06:28:35.549Z",
+      "reason": "hardening E: added the symlinked --out isolation regression test after independent verification found the bypass",
+      "previousSha256": "73a73bd9a5f319271e0b7ad1e325e04165902ede5e27e1c07870220861cc7531",
+      "previousGitRevision": "1cd0572720e6d8435f004796673e3412aba8ef7b"
+    }
+  ]
 }
