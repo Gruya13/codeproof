@@ -1,0 +1,137 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'old-test-token'\n- 'new-test-token'\n\n    at file:///tmp/codeproof-repro-W9qsBE/snapshot/.codeproof-repro.test.mjs:13:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old-test-token',\n  expected: 'new-test-token',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 100,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'old-test-token'\n- 'new-test-token'\n\n    at file:///tmp/codeproof-repro-W9qsBE/snapshot/.codeproof-repro.test.mjs:13:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old-test-token',\n  expected: 'new-test-token',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 113,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'old-test-token'\n- 'new-test-token'\n\n    at file:///tmp/codeproof-repro-W9qsBE/snapshot/.codeproof-repro.test.mjs:13:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old-test-token',\n  expected: 'new-test-token',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 96,
+      "classification": "assertion-failure"
+    }
+  ],
+  "attemptCount": 3,
+  "control": {
+    "code": "import assert from 'node:assert/strict';\nimport { rotateToken } from './src/session.ts';\n\nlet stored = 'old-control-token';\nconst store = {\n  async save(userId, token) { stored = token; },\n  async get(userId) { return stored; }\n};\nconst result = await rotateToken(store, 'control-user', 'new-control-token');\nassert.equal(result, 'new-control-token');\n",
+    "classification": "passed",
+    "attempts": [
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 99,
+        "classification": "passed"
+      },
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 111,
+        "classification": "passed"
+      },
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 93,
+        "classification": "passed"
+      }
+    ],
+    "deterministic": true
+  },
+  "trigger": {
+    "code": "import assert from 'node:assert/strict';\nimport { rotateToken } from './src/session.ts';\n\nlet stored = 'old-test-token';\nconst store = {\n  async save(userId, token) {\n    await new Promise((resolve) => setTimeout(resolve, 20));\n    stored = token;\n  },\n  async get(userId) { return stored; }\n};\nconst result = await rotateToken(store, 'test-user', 'new-test-token');\nassert.equal(result, 'new-test-token');\n",
+    "classification": "assertion-failure",
+    "attempts": [
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'old-test-token'\n- 'new-test-token'\n\n    at file:///tmp/codeproof-repro-W9qsBE/snapshot/.codeproof-repro.test.mjs:13:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old-test-token',\n  expected: 'new-test-token',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 100,
+        "classification": "assertion-failure"
+      },
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'old-test-token'\n- 'new-test-token'\n\n    at file:///tmp/codeproof-repro-W9qsBE/snapshot/.codeproof-repro.test.mjs:13:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old-test-token',\n  expected: 'new-test-token',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 113,
+        "classification": "assertion-failure"
+      },
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'old-test-token'\n- 'new-test-token'\n\n    at file:///tmp/codeproof-repro-W9qsBE/snapshot/.codeproof-repro.test.mjs:13:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'old-test-token',\n  expected: 'new-test-token',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 96,
+        "classification": "assertion-failure"
+      }
+    ],
+    "deterministic": true
+  },
+  "linkcheck": {
+    "status": "proven",
+    "targetFile": "src/session.ts",
+    "targetFiles": [
+      "src/session.ts"
+    ],
+    "symbols": [
+      "rotateToken"
+    ],
+    "method": "symbol",
+    "executed": {
+      "rotateToken": 1
+    },
+    "detail": null
+  },
+  "expectedBehavior": "rotateToken returns the newly saved token after rotation, i.e. the get observes the preceding save.",
+  "rationale": "Control uses a store whose save completes synchronously, so rotateToken returns the new token even without await. Test uses a store whose save completes after a 20ms delay; without awaiting save, the subsequent get races and returns the old token, failing the same assertion.",
+  "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 981,
+    "outputTokens": 2239,
+    "cachedTokens": 500
+  },
+  "costUsd": 0.046804
+}

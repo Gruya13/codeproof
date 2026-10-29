@@ -1,0 +1,137 @@
+{
+  "status": "reproduced",
+  "classification": "assertion-failure",
+  "deterministic": true,
+  "attempts": [
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 0\n\n    at file:///tmp/codeproof-repro-xS9cqX/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 2,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 105,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 0\n\n    at file:///tmp/codeproof-repro-xS9cqX/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 2,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 97,
+      "classification": "assertion-failure"
+    },
+    {
+      "exitCode": 1,
+      "signal": null,
+      "killed": false,
+      "errorCode": null,
+      "stdout": "",
+      "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 0\n\n    at file:///tmp/codeproof-repro-xS9cqX/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 2,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+      "durationMs": 96,
+      "classification": "assertion-failure"
+    }
+  ],
+  "attemptCount": 3,
+  "control": {
+    "code": "import assert from 'node:assert/strict';\nimport { validate } from './src/validation.ts';\n\nconst errors = validate({});\nassert.equal(errors.length, 2);\nassert.equal(errors.includes('id is required'), true);\nassert.equal(errors.includes('value is required'), true);\n",
+    "classification": "passed",
+    "attempts": [
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 98,
+        "classification": "passed"
+      },
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 113,
+        "classification": "passed"
+      },
+      {
+        "exitCode": 0,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "",
+        "durationMs": 100,
+        "classification": "passed"
+      }
+    ],
+    "deterministic": true
+  },
+  "trigger": {
+    "code": "import assert from 'node:assert/strict';\nimport { validate } from './src/validation.ts';\n\nconst errors = validate({ id: 'complete-1', value: 42 });\nassert.equal(errors.length, 0);\nassert.deepEqual(errors, []);\n",
+    "classification": "assertion-failure",
+    "attempts": [
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 0\n\n    at file:///tmp/codeproof-repro-xS9cqX/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 2,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 105,
+        "classification": "assertion-failure"
+      },
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 0\n\n    at file:///tmp/codeproof-repro-xS9cqX/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 2,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 97,
+        "classification": "assertion-failure"
+      },
+      {
+        "exitCode": 1,
+        "signal": null,
+        "killed": false,
+        "errorCode": null,
+        "stdout": "",
+        "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n2 !== 0\n\n    at file:///tmp/codeproof-repro-xS9cqX/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 2,\n  expected: 0,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+        "durationMs": 96,
+        "classification": "assertion-failure"
+      }
+    ],
+    "deterministic": true
+  },
+  "linkcheck": {
+    "status": "proven",
+    "targetFile": "src/validation.ts",
+    "targetFiles": [
+      "src/validation.ts"
+    ],
+    "symbols": [
+      "validate"
+    ],
+    "method": "symbol",
+    "executed": {
+      "validate": 1
+    },
+    "detail": null
+  },
+  "expectedBehavior": "validate returns an empty error list for a complete payload and reports errors only for missing fields.",
+  "rationale": "Control passes because an empty payload correctly yields both required errors even with the bug. A complete payload should yield no errors, but the always-true OR conditions push both errors, so the test fails.",
+  "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 1024,
+    "outputTokens": 1888,
+    "cachedTokens": 500
+  },
+  "costUsd": 0.039956
+}

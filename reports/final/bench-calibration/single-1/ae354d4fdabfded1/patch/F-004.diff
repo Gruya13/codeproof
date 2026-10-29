@@ -1,0 +1,5 @@
+--- a/src/session.ts
++++ b/src/session.ts
+@@ -11,1 +11,1 @@
+-  store.save(userId, token);
++  await store.save(userId, token);
