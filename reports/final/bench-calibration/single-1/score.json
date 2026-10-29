@@ -1,0 +1,60 @@
+# Benchmark score
+
+Run: reports/final/bench-calibration/single-1/ae354d4fdabfded1/findings.json | n = 8 problems (calibration set)
+
+| Metric | Value | Threshold |
+|---|---|---|
+| Verified TP | 7 | |
+| Verified FP | 0 | |
+| Precision (verified-only) | 100% | >= 90% |
+| End-to-end recall | 7/8 (87.5%) | >= 6/8 |
+| Traps verified | 0/4 | 0/4 |
+| Traps moderate (shown separately) | 0 | displayed |
+| False refutations | 0 | <= 1 |
+| Duplicate verified findings | 0 | not FP |
+| extraTrue seen (neither TP nor FP) | X-02 | |
+
+## Threshold checks
+
+- [x] e2e recall >= 6/8
+- [x] precision >= 90%
+- [x] traps verified = 0/4
+- [x] false refutations <= 1
+
+Computed from the status field in findings.json, never from where a finding is displayed.
+
+{
+  "problems": 8,
+  "trapsTotal": 4,
+  "verifiedTp": 7,
+  "verifiedFp": 0,
+  "precision": 1,
+  "e2eRecall": 0.875,
+  "trapsVerified": 0,
+  "trapsModerate": 0,
+  "falseRefutations": 0,
+  "duplicateVerified": 0,
+  "extraTrueSeen": [
+    "X-02"
+  ],
+  "falsePositives": [],
+  "checks": [
+    {
+      "name": "e2e recall >= 6/8",
+      "pass": true
+    },
+    {
+      "name": "precision >= 90%",
+      "pass": true
+    },
+    {
+      "name": "traps verified = 0/4",
+      "pass": true
+    },
+    {
+      "name": "false refutations <= 1",
+      "pass": true
+    }
+  ],
+  "pass": true
+}
