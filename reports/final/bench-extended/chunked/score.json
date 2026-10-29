@@ -1,0 +1,36 @@
+# Injected-defect score
+
+Run: /home/gru/Projects/Meta hakatron/codeproof/reports/final/bench-extended/chunked/27937bbf34fed1b7/findings.json | n = 16 injected defects | tolerance +/-2 lines
+
+| Metric | Value |
+|---|---|
+| Defects found (any status) | 9/16 (56.3%) |
+| Defects verified | 9/16 (56.3%) |
+| Verified findings published | 9 |
+| Verified false positives | 0 |
+| Precision (verified-only) | 100% |
+| Traps verified (leaked) | 0/5 |
+| Traps cited at any status | 0/5 |
+| L1 pass rate | 60% (6/10) |
+| L0 rejected candidates | 0 |
+
+## Per defect
+
+- INJ-01 helpers/isAbsoluteURL.js:15 -> missed
+- INJ-02 helpers/combineURLs.js:22 -> verified (line delta 6)
+- INJ-03 helpers/buildURL.js:63 -> verified (line delta 3)
+- INJ-04 core/InterceptorManager.js:167 -> verified (line delta 0)
+- INJ-05 helpers/scheduler.js:7 -> verified (line delta 1)
+- INJ-06 helpers/session.js:4 -> missed
+- INJ-07 helpers/parseHeaders.js:51 -> missed
+- INJ-08 core/settle.js:16 -> verified (line delta 2)
+- INJ-09 helpers/isAxiosError.js:13 -> verified (line delta 1)
+- INJ-10 helpers/throttle.js:33 -> missed
+- INJ-11 cancel/CancelToken.js:55 -> verified (line delta 1)
+- INJ-12 helpers/spread.js:26 -> verified (line delta 2)
+- INJ-13 helpers/buildURL.js:56 -> missed
+- INJ-14 helpers/formDataToJSON.js:42 -> missed
+- INJ-15 helpers/cookies.js:48 -> verified (line delta 0)
+- INJ-16 core/transformData.js:22 -> missed
+
+score written to /home/gru/Projects/Meta hakatron/codeproof/reports/final/bench-extended/chunked/27937bbf34fed1b7/score.json
