@@ -9,3 +9,4 @@
 {"attemptNo":9,"block":"F3","label":"extended-single","startedAt":"2026-10-29T20:37:25.318Z","endedAt":"2026-10-29T20:40:47.986Z","status":"ok","reservedUsd":4,"costUsd":0.6067715,"runDir":"reports/final/bench-extended/single/f0b6d3c2b5e351ae","note":null}
 {"attemptNo":10,"block":"F3","label":"extended-chunked","startedAt":"2026-10-29T20:40:53.016Z","endedAt":"2026-10-29T20:52:25.392Z","status":"ok","reservedUsd":5,"costUsd":1.5038462499999998,"runDir":"reports/final/bench-extended/chunked/27937bbf34fed1b7","note":null}
 {"attemptNo":11,"block":"F3","label":"heldout-ablation","startedAt":"2026-10-29T20:52:32.061Z","endedAt":"2026-10-29T20:52:32.163Z","status":"unknown-cost","reservedUsd":2,"costUsd":null,"runDir":null,"note":"run produced no artifact"}
+{"attemptNo":12,"block":"F3","label":"heldout-ablation","startedAt":"2026-10-29T20:52:41.365Z","endedAt":null,"status":"reserved","reservedUsd":2,"costUsd":null,"runDir":null,"note":null}
