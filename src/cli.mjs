@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { resolve, join, sep } from "node:path";
+import { resolve, join, sep, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { loadConfig, computeConfigSha256, configPayload, VERSION } from "./config.mjs";
 import { ingest, repoDigest, buildScannerInput, filesWithLineNumbers } from "./ingest/index.mjs";
 import { buildAttestation } from "./run/attest.mjs";
@@ -58,6 +58,24 @@ function parseArgs(argv) {
     }
   }
   return args;
+}
+
+// Resolve symlinks for the nearest existing ancestor, then re-append the not-yet-created suffix.
+// Plain resolve() normalises ".." but does not follow a symlink, so a symlinked --out could point
+// back into the analyzed repository and bypass the output-isolation check.
+function resolveExistingPrefix(inputPath) {
+  let current = resolve(inputPath);
+  const suffix = [];
+  for (;;) {
+    try {
+      return resolve(realpathSync(current), ...suffix);
+    } catch (error) {
+      const parent = dirname(current);
+      if (parent === current) return resolve(inputPath);
+      suffix.unshift(basename(current));
+      current = parent;
+    }
+  }
 }
 
 export function evidenceLevelFor(status, patch, repro) {
@@ -166,8 +184,8 @@ async function main() {
   const configSha256 = computeConfigSha256(config, mode, { version: 2 });
   const configPayloadV2 = configPayload(config, mode, { version: 2 });
   const commit = await gitCommit(target);
-  const targetResolved = resolve(target);
-  const outputRoot = resolve(args.out);
+  const targetResolved = resolveExistingPrefix(target);
+  const outputRoot = resolveExistingPrefix(args.out);
   if (outputRoot === targetResolved || outputRoot.startsWith(targetResolved + sep)) {
     // Writing reports into the analyzed repository would change the bytes a later run analyses and
     // contradicts the "nothing is written to the analyzed repository" claim. Refuse unless the
