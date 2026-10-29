@@ -1,0 +1,41 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"c4 is ORed into the output byte without checking for -1, producing String.fromCharCode(0xFFFFFFFF)=65535 instead of breaking like c1/c2/c3 do.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 496, \"path\": \"index.js\", \"snippet\": \"    code = s.charCodeAt(off++);\\n    c3 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\\n    if (c3 == -1) break;\\n    o = ((c2 & 0x0f) << 4) >>> 0;\\n    o |= (c3 & 0x3c) >> 2;\\n    rs.push(String.fromCharCode(o));\\n    if (++olen >= len || off >= slen) break;\\n    code = s.charCodeAt(off++);\\n    c4 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\\n    o = ((c3 & 0x03) << 6) >>> 0;\\n    o |= c4;\\n    rs.push(String.fromCharCode(o));\\n    ++olen;\", \"startLine\": 484}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"base64_decode missing invalid-character check for c4\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "c4 is ORed into the output byte without checking for -1, producing String.fromCharCode(0xFFFFFFFF)=65535 instead of breaking like c1/c2/c3 do.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 496,
+            "path": "index.js",
+            "snippet": "    code = s.charCodeAt(off++);\n    c3 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    if (c3 == -1) break;\n    o = ((c2 & 0x0f) << 4) >>> 0;\n    o |= (c3 & 0x3c) >> 2;\n    rs.push(String.fromCharCode(o));\n    if (++olen >= len || off >= slen) break;\n    code = s.charCodeAt(off++);\n    c4 = code < BASE64_INDEX.length ? BASE64_INDEX[code] : -1;\n    o = ((c3 & 0x03) << 6) >>> 0;\n    o |= c4;\n    rs.push(String.fromCharCode(o));\n    ++olen;",
+            "startLine": 484
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "base64_decode missing invalid-character check for c4"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 484-496 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Confirmed at index.js:492-495: c4 gets the -1 fallback and is ORed into o and pushed via String.fromCharCode(o) with no c4==-1 break, unlike c3 at index.js:486, so o becomes -1 and fromCharCode yields 65535."
+      }
+    }
+  ]
+}
