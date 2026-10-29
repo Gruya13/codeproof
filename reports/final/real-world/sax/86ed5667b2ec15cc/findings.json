@@ -1,0 +1,60 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "SGML_DECL enters SGML_DECL_QUOTED without saving the quote char to parser.q, so the exit test `c === parser.q` can never succeed and the parser stays in quoted state.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 1371,
+          "path": "sax.js",
+          "snippet": "          } else if (isQuote(c)) {\n            parser.state = S.SGML_DECL_QUOTED\n            parser.sgmlDecl += c\n          } else {\n            parser.sgmlDecl += c\n          }\n          continue\n\n        case S.SGML_DECL_QUOTED:\n          if (c === parser.q) {\n            parser.state = S.SGML_DECL\n            parser.q = ''\n          }\n          parser.sgmlDecl += c\n          continue",
+          "startLine": 1357
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "SGML_DECL_QUOTED never exits: missing parser.q assignment"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 1357-1371 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At sax.js:1357-1359 SGML_DECL transitions to SGML_DECL_QUOTED on isQuote(c) without assigning parser.q=c, unlike sax.js:1382-1384 and sax.js:1404-1407, while the only exit at sax.js:1365-1368 requires c === parser.q and clears parser.q to '' on exit, so the quoted state cannot terminate on the opening quote."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: no shared symbol is called in both codes",
+      "artifacts": null,
+      "durationMs": 59932,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 19013,
+        "outputTokens": 5277,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.181592
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

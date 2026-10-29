@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeProof report - 86ed5667b2ec15cc</title>
+<style>:root { color-scheme: dark; --bg: #0f1115; --panel: #171a21; --line: #2a2f3a; --text: #e6e8ee; --muted: #9aa3b2; --ok: #2f9e6f; --warn: #b8862f; --bad: #b04a4a; --blue: #3b6ea5; }
+body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 28px 0 10px; }
+h3 { font-size: 16px; margin: 0 0 6px; }
+.meta, .muted { color: var(--muted); font-size: 13px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; }
+td, th { text-align: left; padding: 3px 10px 3px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.funnel { display: flex; gap: 10px; flex-wrap: wrap; }
+.step { background: #11151c; border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; min-width: 120px; }
+.step .n { font-size: 22px; font-weight: 700; }
+.finding { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.badge { display: inline-block; border-radius: 4px; padding: 1px 8px; font-size: 12px; margin: 0 6px 6px 0; border: 1px solid var(--line); }
+.badge.ok { border-color: var(--ok); } .badge.warn { border-color: var(--warn); } .badge.bad { border-color: var(--bad); } .badge.info { border-color: var(--blue); }
+pre { background: #0b0e13; border: 1px solid var(--line); border-radius: 6px; padding: 10px; overflow-x: auto; font-size: 13px; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+details { margin: 8px 0; } summary { cursor: pointer; color: var(--muted); }
+.cite { color: var(--muted); font-size: 13px; }
+footer { margin-top: 34px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; }
+a { color: #8ab4f8; }</style>
+</head>
+<body>
+<h1>CodeProof report</h1>
+<p class="meta">run-id: 86ed5667b2ec15cc | mode: smoke | commit: 961ceeefcc5186005466f2085aeb36f31b161e37 | config: 9c0a3c84bda394b8fe6fb15bae1abceb03bd87d9fca2c076ebe61277ed0ed191</p>
+<p class="meta">models: scanner-correctness=muse-spark-1.3, verifier=muse-wonder-1.0, repro=muse-wonder-1.0 | codeproof 0.2.2 | node v26.8.2</p>
+<h2>Evidence funnel</h2>
+<div class="panel"><div class="funnel"><div class="step"><div class="n">4</div><div class="muted">proposed</div></div><div class="step"><div class="n">3</div><div class="muted">L1 rejected</div></div><div class="step"><div class="n">1</div><div class="muted">verified</div></div><div class="step"><div class="n">0</div><div class="muted">execution-proven</div></div><div class="step"><div class="n">0</div><div class="muted">patch-proven</div></div></div></div>
+<h2>Summary</h2>
+<div class="panel"><table><tr><td>Files / LOC</td><td>1 / 1866</td></tr><tr><td>Files in scanner prompt</td><td>1 / 1</td></tr><tr><td>Findings proposed</td><td>4</td></tr><tr><td>Rejected at L1 (bad citation)</td><td>3</td></tr><tr><td>Verified</td><td>1</td></tr><tr><td>Execution-proven (L3)</td><td>0</td></tr><tr><td>Patch-proven (L4)</td><td>0</td></tr><tr><td>Moderate / refuted / uncertain</td><td>0 / 0 / 0</td></tr><tr><td>Calls / retries</td><td>3 / 0</td></tr><tr><td>Tokens in / out</td><td>40405 / 20358</td></tr><tr><td>Cached input tokens</td><td>0</td></tr><tr><td>Cost</td><td>$0.3164</td></tr></table></div>
+<h2>Verified findings</h2>
+<article class="finding"><h3>F-001 - high - SGML_DECL_QUOTED never exits: missing parser.q assignment</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> SGML_DECL enters SGML_DECL_QUOTED without saving the quote char to parser.q, so the exit test `c === parser.q` can never succeed and the parser stays in quoted state.</p><p class="cite">sax.js:1357-1371</p><pre><code>          } else if (isQuote(c)) {
+            parser.state = S.SGML_DECL_QUOTED
+            parser.sgmlDecl += c
+          } else {
+            parser.sgmlDecl += c
+          }
+          continue
+
+        case S.SGML_DECL_QUOTED:
+          if (c === parser.q) {
+            parser.state = S.SGML_DECL
+            parser.q = &#39;&#39;
+          }
+          parser.sgmlDecl += c
+          continue</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - At sax.js:1357-1359 SGML_DECL transitions to SGML_DECL_QUOTED on isQuote(c) without assigning parser.q=c, unlike sax.js:1382-1384 and sax.js:1404-1407, while the only exit at sax.js:1365-1368 requires c === parser.q and clears parser.q to &#39;&#39; on exit, so the quoted state cannot terminate on the opening quote.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: no shared symbol is called in both codes</p></article>
+<h2>Rejected and unresolved</h2>
+<details><summary>Other published findings: 0 (refuted / moderate / uncertain)</summary></details><details><summary>Rejected candidates (audit trail): 3</summary><p class="cite">F-002 - l1-rejected - by spark - citation range expects 14 non-blank lines but snippet has 13</p><p class="cite">F-003 - l1-rejected - by spark - citation range expects 14 non-blank lines but snippet has 13</p><p class="cite">F-004 - l1-rejected - by spark - citation range expects 12 non-blank lines but snippet has 11</p></details>
+<footer>
+<p>This page is a static view of the recorded evidence; it re-runs nothing. Levels: citation-proven = L1 (provenance, not a semantic judge); verified = L1 + L2 (a model judgment); execution-proven = L3 (two-phase reproducer + LinkCheck under the Node permission model); patch-proven = L4 (differential result on a copy of the snapshot, not a root-cause fix; the repository's own test suite is never run). Offline replay verifies the artifacts and mechanical gates; it does not re-execute the semantic L2 verdict.</p>
+<p>Artifacts: <a href="./findings.json">findings.json</a> | <a href="./rejected.md">rejected.md</a> | <a href="./REPORT.md">REPORT.md</a> | <a href="./run.json">run.json</a>. Every artifact of this run, including this file, is hashed in <code>run.json.attestation</code>.</p>
+<p>Findings proposed: 4 | verified: 1 | execution-proven: 0 | patch-proven: 0</p>
+</footer>
+</body>
+</html>

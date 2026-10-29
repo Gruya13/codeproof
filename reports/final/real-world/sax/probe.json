@@ -1,0 +1,147 @@
+{
+  "tool": "probe-repo",
+  "createdAt": "2026-10-29T21:12:57.447Z",
+  "stats": {
+    "repo": "https://github.com/isaacs/sax-js",
+    "commit": "961ceeefcc5186005466f2085aeb36f31b161e37",
+    "scope": "lib",
+    "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/sax/_repo/lib",
+    "clean": true,
+    "files": 1,
+    "loc": 1866,
+    "importEdges": 0,
+    "cycles": 0,
+    "digestChars": 91,
+    "promptChars": 62796,
+    "promptFiles": 1,
+    "promptComplete": true,
+    "promptCap": 400000,
+    "estimatedInputTokens": 17443
+  },
+  "runs": [
+    {
+      "index": 1,
+      "runId": "86ed5667b2ec15cc",
+      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/sax/86ed5667b2ec15cc",
+      "exitCode": 0,
+      "elapsedMs": 145783,
+      "mode": "smoke",
+      "mock": false,
+      "repo": {
+        "source": "commit",
+        "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/sax/_repo/lib",
+        "commit": "961ceeefcc5186005466f2085aeb36f31b161e37",
+        "dirty": false,
+        "loc": 1866,
+        "files": 1
+      },
+      "usage": {
+        "inputTokens": 40405,
+        "outputTokens": 20358,
+        "cachedTokens": 0,
+        "byRole": [
+          {
+            "role": "scanner-correctness",
+            "model": "muse-spark-1.3",
+            "calls": 1,
+            "inputTokens": 18699,
+            "outputTokens": 12758,
+            "cachedTokens": 0,
+            "costUsd": 0.07759525
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "calls": 1,
+            "inputTokens": 2693,
+            "outputTokens": 2323,
+            "cachedTokens": 0,
+            "costUsd": 0.057232
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "calls": 1,
+            "inputTokens": 19013,
+            "outputTokens": 5277,
+            "cachedTokens": 0,
+            "costUsd": 0.181592
+          }
+        ]
+      },
+      "costUsd": 0.31641925000000004,
+      "measured": true,
+      "calls": 3,
+      "retries": 0,
+      "budget": {
+        "limitUsd": 4,
+        "spentUsd": 0.316419,
+        "measured": true,
+        "exceeded": false,
+        "hard": true,
+        "aborted": false,
+        "abortReason": null,
+        "skippedFindings": []
+      },
+      "findings": {
+        "proposed": 4,
+        "byScanner": {
+          "spark": 4,
+          "wonder": 0,
+          "secondary": 0,
+          "both": 0,
+          "controlled": 0
+        },
+        "duplicates": 0,
+        "l0Rejected": {
+          "count": 0,
+          "items": []
+        },
+        "l1Rejected": 3,
+        "verified": 1,
+        "moderate": 0,
+        "refuted": 0,
+        "uncertain": 0,
+        "reproduced": 0,
+        "patched": 0
+      },
+      "l1PassRate": 0.25,
+      "l1Checked": 4,
+      "phases": [
+        {
+          "name": "ingest",
+          "status": "ok",
+          "durationMs": 21
+        },
+        {
+          "name": "scan",
+          "status": "ok",
+          "durationMs": 56279
+        },
+        {
+          "name": "verify",
+          "status": "ok",
+          "durationMs": 89395
+        },
+        {
+          "name": "publish",
+          "status": "ok",
+          "durationMs": 10
+        }
+      ],
+      "durationMs": 145724
+    }
+  ],
+  "summary": {
+    "runs": 1,
+    "totalCostUsd": 0.316419,
+    "costBeforeUsd": 0,
+    "avgL1PassRate": 0.25,
+    "verified": 1,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "l1Rejected": 3,
+    "promptComplete": true
+  }
+}
