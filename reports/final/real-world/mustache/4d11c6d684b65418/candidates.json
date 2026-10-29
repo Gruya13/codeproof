@@ -1,0 +1,77 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Context.lookup checks cache.hasOwnProperty(name). After caching a view key named 'hasOwnProperty', the method is shadowed by a string value, so any later lookup on the same Context throws TypeError instead of returning the value.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 398, \"path\": \"mustache.js\", \"snippet\": \"  if (cache.hasOwnProperty(name)) {\\n    value = cache[name];\", \"startLine\": 397}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Context cache lookup shadows hasOwnProperty method\"}, {\"category\": \"correctness\", \"claim\": \"Parse cache key concatenates template and tags with ':' separator, so distinct template/tags pairs (e.g. template 'foo' with tags ['bar:baz','qux'] vs template 'foo:bar' with tags ['baz','qux']) produce the same key and return wrong cached tokens.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 512, \"path\": \"mustache.js\", \"snippet\": \"  var cacheKey = template + ':' + (tags || mustache.tags).join(':');\", \"startLine\": 512}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Ambiguous template cache key collides\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Context.lookup checks cache.hasOwnProperty(name). After caching a view key named 'hasOwnProperty', the method is shadowed by a string value, so any later lookup on the same Context throws TypeError instead of returning the value.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 398,
+            "path": "mustache.js",
+            "snippet": "  if (cache.hasOwnProperty(name)) {\n    value = cache[name];",
+            "startLine": 397
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Context cache lookup shadows hasOwnProperty method"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 397-398 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The cache is created as a plain object literal at mustache.js:377, and lookup invokes it as cache.hasOwnProperty(name) at mustache.js:397, so once a string view value is cached under 'hasOwnProperty' it shadows Object.prototype.hasOwnProperty and any subsequent lookup on that Context attempts to call a string and throws TypeError."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Parse cache key concatenates template and tags with ':' separator, so distinct template/tags pairs (e.g. template 'foo' with tags ['bar:baz','qux'] vs template 'foo:bar' with tags ['baz','qux']) produce the same key and return wrong cached tokens.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 512,
+            "path": "mustache.js",
+            "snippet": "  var cacheKey = template + ':' + (tags || mustache.tags).join(':');",
+            "startLine": 512
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Ambiguous template cache key collides"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 512-512 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The key at mustache.js:512 is built as template + ':' + (tags || mustache.tags).join(':') with no escaping or length prefix, so 'foo' with ['bar:baz','qux'] and 'foo:bar' with ['baz','qux'] both produce 'foo:bar:baz:qux', and mustache.js:514-518 returns the cached tokens on a hit without re-parsing."
+      }
+    }
+  ]
+}

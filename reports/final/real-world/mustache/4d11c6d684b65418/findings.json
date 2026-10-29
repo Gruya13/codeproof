@@ -1,0 +1,118 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Context.lookup checks cache.hasOwnProperty(name). After caching a view key named 'hasOwnProperty', the method is shadowed by a string value, so any later lookup on the same Context throws TypeError instead of returning the value.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 398,
+          "path": "mustache.js",
+          "snippet": "  if (cache.hasOwnProperty(name)) {\n    value = cache[name];",
+          "startLine": 397
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Context cache lookup shadows hasOwnProperty method"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 397-398 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The cache is created as a plain object literal at mustache.js:377, and lookup invokes it as cache.hasOwnProperty(name) at mustache.js:397, so once a string view value is cached under 'hasOwnProperty' it shadows Object.prototype.hasOwnProperty and any subsequent lookup on that Context attempts to call a string and throws TypeError."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: no shared symbol is called in both codes",
+      "artifacts": null,
+      "durationMs": 32850,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 10462,
+        "outputTokens": 3619,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.114228
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Parse cache key concatenates template and tags with ':' separator, so distinct template/tags pairs (e.g. template 'foo' with tags ['bar:baz','qux'] vs template 'foo:bar' with tags ['baz','qux']) produce the same key and return wrong cached tokens.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 512,
+          "path": "mustache.js",
+          "snippet": "  var cacheKey = template + ':' + (tags || mustache.tags).join(':');",
+          "startLine": 512
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Ambiguous template cache key collides"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 512-512 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The key at mustache.js:512 is built as template + ':' + (tags || mustache.tags).join(':') with no escaping or length prefix, so 'foo' with ['bar:baz','qux'] and 'foo:bar' with ['baz','qux'] both produce 'foo:bar:baz:qux', and mustache.js:514-518 returns the cached tokens on a hit without re-parsing."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: no shared symbol is called in both codes",
+      "artifacts": null,
+      "durationMs": 25209,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 10475,
+        "outputTokens": 2484,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.09158
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]
