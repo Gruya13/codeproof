@@ -1,0 +1,5 @@
+--- a/helpers/combineURLs.js
++++ b/helpers/combineURLs.js
+@@ -22,1 +22,1 @@
+-  return baseURL.slice(0, end) + relativeURL.replace(/^\/+/, '');
++  return baseURL.slice(0, end) + '/' + relativeURL.replace(/^\/+/, '');

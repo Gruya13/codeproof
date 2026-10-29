@@ -1,0 +1,84 @@
+{
+  "status": "patch-proven",
+  "rationale": "combineURLs strips trailing slashes from baseURL and leading slashes from relativeURL but concatenates without a separator, so 'http://a/b'+'c' becomes 'http://a/bc'. Inserting '/' between the stripped parts restores the separator; the empty-relativeURL early return preserves the control case.",
+  "warnings": [],
+  "searchBlockSha256": "96e36ec59b2c24b8a47678348fc4cc0d2ae2978b56a5c77d4d8cd08d54bec0b5",
+  "replaceBlockSha256": "aa93b974497adbebc9528e932a05b9cbcf02fcb9d820af92ba04a66180f7a413",
+  "attempts": {
+    "control": {
+      "classification": "passed",
+      "attempts": [
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 61,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 59,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 61,
+          "classification": "passed"
+        }
+      ],
+      "deterministic": true
+    },
+    "trigger": {
+      "classification": "passed",
+      "attempts": [
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 60,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 58,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 65,
+          "classification": "passed"
+        }
+      ],
+      "deterministic": true
+    }
+  },
+  "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+  "model": "muse-wonder-1.0",
+  "costUsd": 0.058844
+}

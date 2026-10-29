@@ -1,0 +1,807 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "The cancel guard is inverted: on first cancel token.reason is falsy so `if (!token.reason) return` exits early and never sets reason or resolves the promise, so cancellation never takes effect.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "endLine": 62,
+          "path": "cancel/CancelToken.js",
+          "snippet": "    executor(function cancel(message, config, request) {\n      if (!token.reason) {\n        // Cancellation has already been requested\n        return;\n      }\n\n      token.reason = new CanceledError(message, config, request);\n      resolvePromise(token.reason);\n    });",
+          "startLine": 54
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "Inverted cancellation guard prevents CancelToken from ever cancelling"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 54-62 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The guard at cancel/CancelToken.js:55 returns when token.reason is falsy, which is its initial unset state, so the assignments at cancel/CancelToken.js:60-61 are unreachable on first and subsequent cancels."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol",
+      "artifacts": null,
+      "durationMs": 61853,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2188,
+        "outputTokens": 4363,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.096012
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "settle resolves any status <500 even when validateStatus returns false, so custom validateStatus and default 4xx rejection never reject.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 17,
+          "path": "core/settle.js",
+          "snippet": "export default function settle(resolve, reject, response) {\n  const validateStatus = response.config.validateStatus;\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\n    resolve(response);",
+          "startLine": 14
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "settle ignores validateStatus for status <500"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 14-17 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The condition at core/settle.js:16 includes '|| response.status < 500' as an independent disjunct before resolve(response) at core/settle.js:17, so any status below 500 resolves regardless of validateStatus(response.status) returning false, leaving rejection at core/settle.js:19 reachable only for status >=500."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol",
+      "artifacts": null,
+      "durationMs": 37863,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1479,
+        "outputTokens": 3509,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.076096
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "forEach invokes fn(null) for ejected interceptors instead of skipping null, causing TypeError on interceptor.runWhen/fulfilled access in Axios request chain.",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "endLine": 169,
+          "path": "core/InterceptorManager.js",
+          "snippet": "      utils.forEach(this.handlers, function forEachHandler(h) {\n        fn(h);\n      });",
+          "startLine": 167
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "high",
+      "title": "InterceptorManager.forEach missing null guard"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 167-169 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Eject sets this.handlers[entry.index] = null at core/InterceptorManager.js:127, while forEach unconditionally invokes fn(h) at core/InterceptorManager.js:167-169 without an h !== null check, contradicting its documented null-skipping purpose at core/InterceptorManager.js:152-154."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 25999,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2647,
+        "outputTokens": 2762,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.065828
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "spread passes the whole array as a single argument instead of spreading it, so spread(fn)([1,2,3]) calls fn([1,2,3]) not fn(1,2,3).",
+      "confidence": 1,
+      "evidence": [
+        {
+          "endLine": 27,
+          "path": "helpers/spread.js",
+          "snippet": "export default function spread(callback) {\n  return function wrap(arr) {\n    return callback.apply(null, [arr]);\n  };",
+          "startLine": 24
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "spread does not spread array arguments"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 24-27 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at helpers/spread.js:26 wraps arr in an extra array via callback.apply(null, [arr]), so apply receives [[1,2,3]] and invokes the callback with the whole array as its single argument instead of spreading its elements."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 34452,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1459,
+        "outputTokens": 3011,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.066056
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "combineURLs strips trailing slashes from baseURL and leading slashes from relativeURL then concatenates without adding '/', producing e.g. 'http://a/b'+'c'='http://a/bc' instead of 'http://a/b/c'.",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "endLine": 22,
+          "path": "helpers/combineURLs.js",
+          "snippet": "  let end = baseURL.length;\n\n  while (end > 0 && baseURL.charCodeAt(end - 1) === 47) {\n    end--;\n  }\n\n  return baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '');",
+          "startLine": 16
+        }
+      ],
+      "id": "F-005",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "combineURLs missing separator slash"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 16-22 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at helpers/combineURLs.js:22 returns baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '') with no '/' separator, while helpers/combineURLs.js:18-20 strips trailing slashes, so 'http://a/b' + 'c' yields 'http://a/bc'."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'http://a/bc'\n- 'http://a/b/c'\n             ^\n\n    at file:///tmp/codeproof-repro-9irsmK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'http://a/bc',\n  expected: 'http://a/b/c',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 64,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'http://a/bc'\n- 'http://a/b/c'\n             ^\n\n    at file:///tmp/codeproof-repro-9irsmK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'http://a/bc',\n  expected: 'http://a/b/c',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 60,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'http://a/bc'\n- 'http://a/b/c'\n             ^\n\n    at file:///tmp/codeproof-repro-9irsmK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'http://a/bc',\n  expected: 'http://a/b/c',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 60,
+          "classification": "assertion-failure"
+        }
+      ],
+      "attemptCount": 3,
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport combineURLs from './helpers/combineURLs.js';\nconst result = combineURLs('http://a/b', 'c');\nassert.equal(result, 'http://a/b/c');\n",
+      "expectedBehavior": "combineURLs joins baseURL and relativeURL with a single '/' separator, and returns baseURL unchanged when relativeURL is empty.",
+      "rationale": "Control passes because empty relativeURL returns baseURL unchanged. Trigger fails because trailing/leading slashes are stripped and concatenated without '/', yielding 'http://a/bc' instead of 'http://a/b/c'.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from 'node:assert/strict';\nimport combineURLs from './helpers/combineURLs.js';\nconst result = combineURLs('https://example.com/api', '');\nassert.equal(result, 'https://example.com/api');\n",
+      "control": {
+        "code": "import assert from 'node:assert/strict';\nimport combineURLs from './helpers/combineURLs.js';\nconst result = combineURLs('https://example.com/api', '');\nassert.equal(result, 'https://example.com/api');\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 57,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 63,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 63,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from 'node:assert/strict';\nimport combineURLs from './helpers/combineURLs.js';\nconst result = combineURLs('http://a/b', 'c');\nassert.equal(result, 'http://a/b/c');\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'http://a/bc'\n- 'http://a/b/c'\n             ^\n\n    at file:///tmp/codeproof-repro-9irsmK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'http://a/bc',\n  expected: 'http://a/b/c',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 64,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'http://a/bc'\n- 'http://a/b/c'\n             ^\n\n    at file:///tmp/codeproof-repro-9irsmK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'http://a/bc',\n  expected: 'http://a/b/c',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 60,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'http://a/bc'\n- 'http://a/b/c'\n             ^\n\n    at file:///tmp/codeproof-repro-9irsmK/snapshot/.codeproof-repro.test.mjs:4:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'http://a/bc',\n  expected: 'http://a/b/c',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 60,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "helpers/combineURLs.js",
+        "targetFiles": [
+          "helpers/combineURLs.js"
+        ],
+        "symbols": [
+          "combineURLs"
+        ],
+        "method": "symbol",
+        "executed": {
+          "combineURLs": 1
+        },
+        "detail": null
+      },
+      "durationMs": 26847,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1454,
+        "outputTokens": 2393,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.053676
+    },
+    "patch": {
+      "status": "patch-proven",
+      "diff": "--- a/helpers/combineURLs.js\n+++ b/helpers/combineURLs.js\n@@ -22,1 +22,1 @@\n-  return baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '');\n+  return baseURL.slice(0, end) + '/' + relativeURL.replace(/^\\/+/, '');",
+      "targetFile": "helpers/combineURLs.js",
+      "searchBlock": "  return baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '');",
+      "replaceBlock": "  return baseURL.slice(0, end) + '/' + relativeURL.replace(/^\\/+/, '');",
+      "searchBlockSha256": "96e36ec59b2c24b8a47678348fc4cc0d2ae2978b56a5c77d4d8cd08d54bec0b5",
+      "replaceBlockSha256": "aa93b974497adbebc9528e932a05b9cbcf02fcb9d820af92ba04a66180f7a413",
+      "rationale": "combineURLs strips trailing slashes from baseURL and leading slashes from relativeURL but concatenates without a separator, so 'http://a/b'+'c' becomes 'http://a/bc'. Inserting '/' between the stripped parts restores the separator; the empty-relativeURL early return preserves the control case.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 61,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 59,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 61,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 60,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 58,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 65,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        }
+      },
+      "warnings": [],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 8181,
+        "outputTokens": 1306,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.058844,
+      "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+      "durationMs": 13186
+    },
+    "evidenceLevel": "patch-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "isAxiosError uses !== false so any object with undefined isAxiosError (i.e. every plain object) is reported as an AxiosError; it should check === true.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 14,
+          "path": "helpers/isAxiosError.js",
+          "snippet": "export default function isAxiosError(payload) {\n  return utils.isObject(payload) && payload.isAxiosError !== false;\n}",
+          "startLine": 12
+        }
+      ],
+      "id": "F-006",
+      "kind": "direct",
+      "severity": "high",
+      "title": "isAxiosError returns true for any object"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-003"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 12-14 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at helpers/isAxiosError.js:13 returns utils.isObject(payload) && payload.isAxiosError !== false, so a plain object with no isAxiosError property satisfies undefined !== false and is reported as an AxiosError."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: unsupported response must not include testCode; unsupported response must not include controlCode; unsupportedReason is too short",
+      "artifacts": null,
+      "durationMs": 14157,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1329,
+        "outputTokens": 1588,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.037076
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "buildURL keeps the '#' when stripping the fragment (slice to hashmarkIndex+1), yielding URLs like 'path#?a=1' with the query after the fragment instead of before it.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 65,
+          "path": "helpers/buildURL.js",
+          "snippet": "    const hashmarkIndex = url.indexOf('#');\n\n    if (hashmarkIndex !== -1) {\n      url = url.slice(0, hashmarkIndex + 1);\n    }\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;",
+          "startLine": 60
+        }
+      ],
+      "id": "F-007",
+      "kind": "direct",
+      "severity": "high",
+      "title": "buildURL retains hash when appending params"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-004"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 60-65 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at helpers/buildURL.js:63 slices to hashmarkIndex + 1, retaining '#', and helpers/buildURL.js:65 then appends '?'+serializedParams after it, producing 'path#?a=1' as claimed."
+    },
+    "repro": {
+      "status": "control-failed",
+      "classification": "invalid-test",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'form-data' imported from /tmp/codeproof-repro-5Dc9eS/snapshot/platform/node/classes/FormData.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'form-data' imported from /tmp/codeproof-repro-5Dc9eS/snapshot/platform/node/classes/FormData.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 65,
+          "classification": "invalid-test"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'form-data' imported from /tmp/codeproof-repro-5Dc9eS/snapshot/platform/node/classes/FormData.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 66,
+          "classification": "invalid-test"
+        }
+      ],
+      "attemptCount": 3,
+      "deterministic": false,
+      "testCode": "import assert from 'node:assert/strict';\nimport buildURL from './helpers/buildURL.js';\nconst result = buildURL('https://example.com/path#section', { b: 2 });\nassert.equal(result, 'https://example.com/path?b=2');\n",
+      "expectedBehavior": "buildURL strips any fragment (including '#') before appending serialized params, so the query string is not placed after a fragment.",
+      "rationale": "Control uses a URL without a fragment and passes; trigger uses a URL with '#section' and expects the fragment removed before '?b=2' is appended, which fails on the buggy slice(hashmarkIndex+1).",
+      "reason": "control did not pass 3/3 on the analyzed commit (classification: invalid-test); the trigger was not run",
+      "artifacts": null,
+      "controlCode": "import assert from 'node:assert/strict';\nimport buildURL from './helpers/buildURL.js';\nconst result = buildURL('https://example.com/path', { a: 1 });\nassert.equal(result, 'https://example.com/path?a=1');\n",
+      "control": {
+        "code": "import assert from 'node:assert/strict';\nimport buildURL from './helpers/buildURL.js';\nconst result = buildURL('https://example.com/path', { a: 1 });\nassert.equal(result, 'https://example.com/path?a=1');\n",
+        "classification": "invalid-test",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'form-data' imported from /tmp/codeproof-repro-5Dc9eS/snapshot/platform/node/classes/FormData.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 63,
+            "classification": "invalid-test"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'form-data' imported from /tmp/codeproof-repro-5Dc9eS/snapshot/platform/node/classes/FormData.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 65,
+            "classification": "invalid-test"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/package_json_reader:331\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'form-data' imported from /tmp/codeproof-repro-5Dc9eS/snapshot/platform/node/classes/FormData.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:331:9)\n    at packageResolve (node:internal/modules/esm/resolve:784:25)\n    at moduleResolve (node:internal/modules/esm/resolve:873:18)\n    at defaultResolve (node:internal/modules/esm/resolve:1006:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)\n    at #resolve (node:internal/modules/esm/loader:690:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 66,
+            "classification": "invalid-test"
+          }
+        ],
+        "deterministic": false
+      },
+      "durationMs": 11591,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1894,
+        "outputTokens": 1465,
+        "cachedTokens": 500
+      },
+      "costUsd": 0.034976
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "createScheduler.start overwrites this.timer with a new setInterval without clearing an existing interval, leaking the previous timer on repeated start calls.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 8,
+          "path": "helpers/scheduler.js",
+          "snippet": "    start(callback, intervalMs) {\n      this.timer = setInterval(callback, intervalMs);\n    },",
+          "startLine": 6
+        }
+      ],
+      "id": "F-009",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "scheduler start replaces interval without clearing"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-006"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 6-8 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "helpers/scheduler.js:6-8 assigns this.timer = setInterval(callback, intervalMs) with no clearInterval or guard, while helpers/scheduler.js:9-12 stop() only clears the current this.timer, so a repeated start orphans the previous interval."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 62097,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1285,
+        "outputTokens": 4860,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.10234
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "cookies.read splits on '; ' only, so a cookie string serialized with bare ';' (no space) is not split and cookies after the first separator are missed.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 50,
+          "path": "helpers/cookies.js",
+          "snippet": "        const cookies = cookieString.split('; ');\n        for (let i = 0; i < cookies.length; i++) {\n          const cookie = cookies[i].replace(/^\\s+/, '');",
+          "startLine": 48
+        }
+      ],
+      "id": "F-010",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "cookie parsing fails on semicolon without space"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-007"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 48-50 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: helpers/cookies.js:48 splits only on '; ' and helpers/cookies.js:51-52 compares only the text before the first '=' in each piece, so a bare-';' string like 'a=1;b=2' remains one piece and lookup for 'b' returns null."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode must bind at least one symbol from the repository import; controlCode assertion is not tied to a call of an imported symbol; testCode must bind at least one symbol from the repository import; testCode assertion is not tied to a call of an imported symbol",
+      "artifacts": null,
+      "durationMs": 70756,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2043,
+        "outputTokens": 5629,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.120752
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

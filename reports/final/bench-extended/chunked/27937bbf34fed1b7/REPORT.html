@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeProof report - 27937bbf34fed1b7</title>
+<style>:root { color-scheme: dark; --bg: #0f1115; --panel: #171a21; --line: #2a2f3a; --text: #e6e8ee; --muted: #9aa3b2; --ok: #2f9e6f; --warn: #b8862f; --bad: #b04a4a; --blue: #3b6ea5; }
+body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 28px 0 10px; }
+h3 { font-size: 16px; margin: 0 0 6px; }
+.meta, .muted { color: var(--muted); font-size: 13px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; }
+td, th { text-align: left; padding: 3px 10px 3px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.funnel { display: flex; gap: 10px; flex-wrap: wrap; }
+.step { background: #11151c; border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; min-width: 120px; }
+.step .n { font-size: 22px; font-weight: 700; }
+.finding { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.badge { display: inline-block; border-radius: 4px; padding: 1px 8px; font-size: 12px; margin: 0 6px 6px 0; border: 1px solid var(--line); }
+.badge.ok { border-color: var(--ok); } .badge.warn { border-color: var(--warn); } .badge.bad { border-color: var(--bad); } .badge.info { border-color: var(--blue); }
+pre { background: #0b0e13; border: 1px solid var(--line); border-radius: 6px; padding: 10px; overflow-x: auto; font-size: 13px; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+details { margin: 8px 0; } summary { cursor: pointer; color: var(--muted); }
+.cite { color: var(--muted); font-size: 13px; }
+footer { margin-top: 34px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; }
+a { color: #8ab4f8; }</style>
+</head>
+<body>
+<h1>CodeProof report</h1>
+<p class="meta">run-id: 27937bbf34fed1b7 | mode: smoke | commit: b2c8f4c90801b6c2260a43ce7550c22868a0fb82 | config: e7e28a8d0d3535a6ef537cc0f7bf62d34e57f882f3f4b14665cc0d313d5a836e</p>
+<p class="meta">models: scanner-correctness=muse-spark-1.3, verifier=muse-wonder-1.0, repro=muse-wonder-1.0 | codeproof 0.2.2 | node v26.8.2</p>
+<h2>Evidence funnel</h2>
+<div class="panel"><div class="funnel"><div class="step"><div class="n">10</div><div class="muted">proposed</div></div><div class="step"><div class="n">1</div><div class="muted">L1 rejected</div></div><div class="step"><div class="n">9</div><div class="muted">verified</div></div><div class="step"><div class="n">1</div><div class="muted">execution-proven</div></div><div class="step"><div class="n">1</div><div class="muted">patch-proven</div></div></div></div>
+<h2>Summary</h2>
+<div class="panel"><table><tr><td>Files / LOC</td><td>74 / 9564</td></tr><tr><td>Files in scanner prompt</td><td>74 / 74</td></tr><tr><td>Findings proposed</td><td>10</td></tr><tr><td>Rejected at L1 (bad citation)</td><td>1</td></tr><tr><td>Verified</td><td>9</td></tr><tr><td>Execution-proven (L3)</td><td>1</td></tr><tr><td>Patch-proven (L4)</td><td>1</td></tr><tr><td>Moderate / refuted / uncertain</td><td>0 / 0 / 0</td></tr><tr><td>Calls / retries</td><td>27 / 0</td></tr><tr><td>Tokens in / out</td><td>188028 / 79738</td></tr><tr><td>Cached input tokens</td><td>1000</td></tr><tr><td>Cost</td><td>$1.5038</td></tr></table></div>
+<h2>Verified findings</h2>
+<article class="finding"><h3>F-001 - critical - Inverted cancellation guard prevents CancelToken from ever cancelling</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> The cancel guard is inverted: on first cancel token.reason is falsy so `if (!token.reason) return` exits early and never sets reason or resolves the promise, so cancellation never takes effect.</p><p class="cite">cancel/CancelToken.js:54-62</p><pre><code>    executor(function cancel(message, config, request) {
+      if (!token.reason) {
+        // Cancellation has already been requested
+        return;
+      }
+
+      token.reason = new CanceledError(message, config, request);
+      resolvePromise(token.reason);
+    });</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The guard at cancel/CancelToken.js:55 returns when token.reason is falsy, which is its initial unset state, so the assignments at cancel/CancelToken.js:60-61 are unreachable on first and subsequent cancels.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol</p></article>
+<article class="finding"><h3>F-002 - critical - settle ignores validateStatus for status &lt;500</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> settle resolves any status &lt;500 even when validateStatus returns false, so custom validateStatus and default 4xx rejection never reject.</p><p class="cite">core/settle.js:14-17</p><pre><code>export default function settle(resolve, reject, response) {
+  const validateStatus = response.config.validateStatus;
+  if (!response.status || !validateStatus || validateStatus(response.status) || response.status &lt; 500) {
+    resolve(response);</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The condition at core/settle.js:16 includes &#39;|| response.status &lt; 500&#39; as an independent disjunct before resolve(response) at core/settle.js:17, so any status below 500 resolves regardless of validateStatus(response.status) returning false, leaving rejection at core/settle.js:19 reachable only for status &gt;=500.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol</p></article>
+<article class="finding"><h3>F-003 - high - InterceptorManager.forEach missing null guard</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> forEach invokes fn(null) for ejected interceptors instead of skipping null, causing TypeError on interceptor.runWhen/fulfilled access in Axios request chain.</p><p class="cite">core/InterceptorManager.js:167-169</p><pre><code>      utils.forEach(this.handlers, function forEachHandler(h) {
+        fn(h);
+      });</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - Eject sets this.handlers[entry.index] = null at core/InterceptorManager.js:127, while forEach unconditionally invokes fn(h) at core/InterceptorManager.js:167-169 without an h !== null check, contradicting its documented null-skipping purpose at core/InterceptorManager.js:152-154.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments</p></article>
+<article class="finding"><h3>F-004 - critical - spread does not spread array arguments</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> spread passes the whole array as a single argument instead of spreading it, so spread(fn)([1,2,3]) calls fn([1,2,3]) not fn(1,2,3).</p><p class="cite">helpers/spread.js:24-27</p><pre><code>export default function spread(callback) {
+  return function wrap(arr) {
+    return callback.apply(null, [arr]);
+  };</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The code at helpers/spread.js:26 wraps arr in an extra array via callback.apply(null, [arr]), so apply receives [[1,2,3]] and invokes the callback with the whole array as its single argument instead of spreading its elements.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments</p></article>
+<article class="finding"><h3>F-005 - critical - combineURLs missing separator slash</h3><span class="badge ok">verified / patch-proven</span><p><strong>Claim:</strong> combineURLs strips trailing slashes from baseURL and leading slashes from relativeURL then concatenates without adding &#39;/&#39;, producing e.g. &#39;http://a/b&#39;+&#39;c&#39;=&#39;http://a/bc&#39; instead of &#39;http://a/b/c&#39;.</p><p class="cite">helpers/combineURLs.js:16-22</p><pre><code>  let end = baseURL.length;
+
+  while (end &gt; 0 &amp;&amp; baseURL.charCodeAt(end - 1) === 47) {
+    end--;
+  }
+
+  return baseURL.slice(0, end) + relativeURL.replace(/^\/+/, &#39;&#39;);</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The code at helpers/combineURLs.js:22 returns baseURL.slice(0, end) + relativeURL.replace(/^\/+/, &#39;&#39;) with no &#39;/&#39; separator, while helpers/combineURLs.js:18-20 strips trailing slashes, so &#39;http://a/b&#39; + &#39;c&#39; yields &#39;http://a/bc&#39;.</p><span class="badge ok">repro reproduced</span><span class="badge info">3 runs</span><p class="muted">control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit</p><details><summary>[CONTROL] code (must pass)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import combineURLs from &#39;./helpers/combineURLs.js&#39;;
+const result = combineURLs(&#39;https://example.com/api&#39;, &#39;&#39;);
+assert.equal(result, &#39;https://example.com/api&#39;);
+</code></pre></details><details><summary>[TRIGGER] code (must fail on the analyzed commit)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import combineURLs from &#39;./helpers/combineURLs.js&#39;;
+const result = combineURLs(&#39;http://a/b&#39;, &#39;c&#39;);
+assert.equal(result, &#39;http://a/b/c&#39;);
+</code></pre></details><span class="badge ok">linkcheck proven (symbol)</span><span class="badge ok">patch patch-proven</span><p class="cite">target: helpers/combineURLs.js</p><p class="muted">control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)</p><details><summary>searchBlock</summary><pre><code>  return baseURL.slice(0, end) + relativeURL.replace(/^\/+/, &#39;&#39;);</code></pre></details><details><summary>replaceBlock</summary><pre><code>  return baseURL.slice(0, end) + &#39;/&#39; + relativeURL.replace(/^\/+/, &#39;&#39;);</code></pre></details><details><summary>patch diff</summary><pre><code>--- a/helpers/combineURLs.js
++++ b/helpers/combineURLs.js
+@@ -22,1 +22,1 @@
+-  return baseURL.slice(0, end) + relativeURL.replace(/^\/+/, &#39;&#39;);
++  return baseURL.slice(0, end) + &#39;/&#39; + relativeURL.replace(/^\/+/, &#39;&#39;);</code></pre></details></article>
+<article class="finding"><h3>F-006 - high - isAxiosError returns true for any object</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> isAxiosError uses !== false so any object with undefined isAxiosError (i.e. every plain object) is reported as an AxiosError; it should check === true.</p><p class="cite">helpers/isAxiosError.js:12-14</p><pre><code>export default function isAxiosError(payload) {
+  return utils.isObject(payload) &amp;&amp; payload.isAxiosError !== false;
+}</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The code at helpers/isAxiosError.js:13 returns utils.isObject(payload) &amp;&amp; payload.isAxiosError !== false, so a plain object with no isAxiosError property satisfies undefined !== false and is reported as an AxiosError.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: unsupported response must not include testCode; unsupported response must not include controlCode; unsupportedReason is too short</p></article>
+<article class="finding"><h3>F-007 - high - buildURL retains hash when appending params</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> buildURL keeps the &#39;#&#39; when stripping the fragment (slice to hashmarkIndex+1), yielding URLs like &#39;path#?a=1&#39; with the query after the fragment instead of before it.</p><p class="cite">helpers/buildURL.js:60-65</p><pre><code>    const hashmarkIndex = url.indexOf(&#39;#&#39;);
+
+    if (hashmarkIndex !== -1) {
+      url = url.slice(0, hashmarkIndex + 1);
+    }
+    url += (url.indexOf(&#39;?&#39;) === -1 ? &#39;?&#39; : &#39;&amp;&#39;) + serializedParams;</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The code at helpers/buildURL.js:63 slices to hashmarkIndex + 1, retaining &#39;#&#39;, and helpers/buildURL.js:65 then appends &#39;?&#39;+serializedParams after it, producing &#39;path#?a=1&#39; as claimed.</p><span class="badge warn">repro control-failed</span><span class="badge info">3 runs</span><p class="muted">control did not pass 3/3 on the analyzed commit (classification: invalid-test); the trigger was not run</p><details><summary>[CONTROL] code (must pass)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import buildURL from &#39;./helpers/buildURL.js&#39;;
+const result = buildURL(&#39;https://example.com/path&#39;, { a: 1 });
+assert.equal(result, &#39;https://example.com/path?a=1&#39;);
+</code></pre></details><details><summary>[TRIGGER] code (must fail on the analyzed commit)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import buildURL from &#39;./helpers/buildURL.js&#39;;
+const result = buildURL(&#39;https://example.com/path#section&#39;, { b: 2 });
+assert.equal(result, &#39;https://example.com/path?b=2&#39;);
+</code></pre></details></article>
+<article class="finding"><h3>F-009 - medium - scheduler start replaces interval without clearing</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> createScheduler.start overwrites this.timer with a new setInterval without clearing an existing interval, leaking the previous timer on repeated start calls.</p><p class="cite">helpers/scheduler.js:6-8</p><pre><code>    start(callback, intervalMs) {
+      this.timer = setInterval(callback, intervalMs);
+    },</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - helpers/scheduler.js:6-8 assigns this.timer = setInterval(callback, intervalMs) with no clearInterval or guard, while helpers/scheduler.js:9-12 stop() only clears the current this.timer, so a repeated start orphans the previous interval.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments</p></article>
+<article class="finding"><h3>F-010 - medium - cookie parsing fails on semicolon without space</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> cookies.read splits on &#39;; &#39; only, so a cookie string serialized with bare &#39;;&#39; (no space) is not split and cookies after the first separator are missed.</p><p class="cite">helpers/cookies.js:48-50</p><pre><code>        const cookies = cookieString.split(&#39;; &#39;);
+        for (let i = 0; i &lt; cookies.length; i++) {
+          const cookie = cookies[i].replace(/^\s+/, &#39;&#39;);</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - Confirmed: helpers/cookies.js:48 splits only on &#39;; &#39; and helpers/cookies.js:51-52 compares only the text before the first &#39;=&#39; in each piece, so a bare-&#39;;&#39; string like &#39;a=1;b=2&#39; remains one piece and lookup for &#39;b&#39; returns null.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: controlCode must bind at least one symbol from the repository import; controlCode assertion is not tied to a call of an imported symbol; testCode must bind at least one symbol from the repository import; testCode assertion is not tied to a call of an imported symbol</p></article>
+<h2>Rejected and unresolved</h2>
+<details><summary>Other published findings: 0 (refuted / moderate / uncertain)</summary></details><details><summary>Rejected candidates (audit trail): 4</summary><p class="cite">F-001 - pending - by spark</p><p class="cite">F-001 - pending - by spark</p><p class="cite">F-002 - pending - by spark</p><p class="cite">F-005 - l1-rejected - by spark - citation range expects 12 non-blank lines but snippet has 11</p></details>
+<footer>
+<p>This page is a static view of the recorded evidence; it re-runs nothing. Levels: citation-proven = L1 (provenance, not a semantic judge); verified = L1 + L2 (a model judgment); execution-proven = L3 (two-phase reproducer + LinkCheck under the Node permission model); patch-proven = L4 (differential result on a copy of the snapshot, not a root-cause fix; the repository's own test suite is never run). Offline replay verifies the artifacts and mechanical gates; it does not re-execute the semantic L2 verdict.</p>
+<p>Artifacts: <a href="./findings.json">findings.json</a> | <a href="./rejected.md">rejected.md</a> | <a href="./REPORT.md">REPORT.md</a> | <a href="./run.json">run.json</a>. Every artifact of this run, including this file, is hashed in <code>run.json.attestation</code>.</p>
+<p>Findings proposed: 10 | verified: 9 | execution-proven: 1 | patch-proven: 1</p>
+</footer>
+</body>
+</html>
