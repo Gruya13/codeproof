@@ -1,0 +1,83 @@
+{
+  "plan": "reports/final/PREREG.md",
+  "amendment": "reports/final/PREREG-AMENDMENT-1.md",
+  "version": "1.5",
+  "status": "LOCKED + REVIEWED (v1.0 + A1..A4; oba recenzenta AGREE)",
+  "lockedAtUtc": "2026-10-29T12:55:00Z",
+  "lockedAtLocal": "2026-10-29 13:55 CET",
+  "lockedBy": "dsh-orkestrator",
+  "gitHead": "dde6e58888673362fbafd03ada5fceabaca37057",
+  "gitBranch": "main",
+  "sha256": {
+    "prereg": "209b1318f5c3e9709217fdb79fbca0719d09ce7e82099582e87f86b6d2f8fed9",
+    "amendment1": "695b8033b677d735aad0ea8971ea229c6363495744f9d91b19d7b959fa3a45c3",
+    "amendment2": "00d9fa56461de9174ca8bdfdf4d3823df3c8fb1263b4e79410980aa3b4956dc4",
+    "amendment3": "cf7946911209405b58496fa87e59fc914230af7c2879b684251721689a125b2d",
+    "amendment4": "8af68e1d9b27ab0c29dbe4062a21c0e5fec0b52c61006f618922fad1b2d2c8ed"
+  },
+  "bytes": {
+    "prereg": 15392,
+    "amendment1": 7058,
+    "amendment2": 6259
+  },
+  "hashScope": "ceo fajl; ovaj lock ne ulazi u hash",
+  "userApproval": {
+    "date": "2026-10-29",
+    "decisions": [
+      "1 - golden ostaje zamrznut; novi runovi u reports/final/",
+      "2 - dogfood: chunked + single",
+      "3 - real world: 5 novih repoa + 2 regresiona (picomatch, jsesc)",
+      "4 - dual-scan ukljucen: kalibracioni bench x1 + jsesc x1",
+      "5 - cilj $35, hard cap $40",
+      "6 - snimanje: sirovo tokom runde (posle freeze-a), finalni scenario posle runde",
+      "7 - plan recenziraju agy i codex; dogovor do 5 rundi; codex nedostupan -> alarm i nastavak posle reset-a kvote"
+    ]
+  },
+  "review": {
+    "roundsUsed": 6,
+    "maxRounds": 10,
+    "bline": "slepi ulaz; recenzenti nisu dobijali reasoning orkestratora",
+    "round6": {
+      "codex": "AGREE - P0 iz runde 5 zatvoren; nema novih P0/P1; spreman za start posle odobrenja (preciziranja testova: costUsd 0/measured:false, NaN/Infinity na validatoru)",
+      "agy": "AGREE - P0 zatvoren; nema novih P0/P1; 100% spremno za start posle odobrenja"
+    },
+    "consensus": "POSTIGNUT - oba recenzenta potpisala v1.4 (A4) u rundi 6",
+    "calls": "codex 6, agy 7 (jedan prekinut u r1 pa ponovljen) = 13 poziva"
+  },
+  "baseline": {
+    "deterministicTests": "241/241 (Node 26.8.2, 2026-10-29)",
+    "integrity": "PASS 22 checks (baseline 2040aa9)",
+    "replay": "9/9",
+    "goldenScore": "PASS",
+    "workingTree": "clean (pre lock-a: M .gitignore, ?? reports/final/ - ocekivano)",
+    "staleDocs": "README navodi 234/234, stvarno 241/241 - popraviti u Fazi 5"
+  },
+  "apiSpend": {
+    "totalLocalDedupUsd": 55.897,
+    "gitTrackedDedupUsd": 50.3643,
+    "method": "suma usage.costUsd iz svih run.json, dedup po sha256 sadrzaja fajla",
+    "correction": "lock v1.0 je naveo $42.4571 - pogresno (dedup po runId spajao je razlicite pokusaje); ispravljeno u amendmentu §3"
+  },
+  "budget": {
+    "targetUsd": 35,
+    "hardCapUsd": 40,
+    "blockCaps": {
+      "F1-dogfood": 6,
+      "F3-calibration-single": 4,
+      "F3-calibration-dual": 3,
+      "F3-extended": 5,
+      "F3-heldout": 1,
+      "F4-realworld-new": 10,
+      "F4-regression": 2,
+      "F4-dual-jsesc": 2,
+      "core": 33,
+      "options": 2,
+      "reserve": 5
+    },
+    "sumOfCapsUsd": 40,
+    "control": "reports/final/ATTEMPTS.jsonl + scripts/final-budget.mjs check --next-max + scripts/final-run.sh; provera pre svakog runa (uslov 7)"
+  },
+  "execution": "SPREMAN ZA START. Ceka samo eksplicitno odobrenje korisnika. Prvi korak: commit PREREG + A1-A4 + lock + REVIEW, pa Faza 0 (deterministicki, $0); prvi API poziv tek posle implementacije budzetskog wrappera i testova iz A4.",
+  "amendmentPolicy": "Posle lock-a v1.1 izmene samo kroz PREREG-AMENDMENT-<n>.md + novi lock hash; originalni fajlovi se ne prepisuju.",
+  "reviewDocuments": "reports/final/PREREG-REVIEW.md"
+}
