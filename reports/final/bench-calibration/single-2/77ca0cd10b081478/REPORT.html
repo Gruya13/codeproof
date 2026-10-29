@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeProof report - 77ca0cd10b081478</title>
+<style>:root { color-scheme: dark; --bg: #0f1115; --panel: #171a21; --line: #2a2f3a; --text: #e6e8ee; --muted: #9aa3b2; --ok: #2f9e6f; --warn: #b8862f; --bad: #b04a4a; --blue: #3b6ea5; }
+body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 28px 0 10px; }
+h3 { font-size: 16px; margin: 0 0 6px; }
+.meta, .muted { color: var(--muted); font-size: 13px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; }
+td, th { text-align: left; padding: 3px 10px 3px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.funnel { display: flex; gap: 10px; flex-wrap: wrap; }
+.step { background: #11151c; border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; min-width: 120px; }
+.step .n { font-size: 22px; font-weight: 700; }
+.finding { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.badge { display: inline-block; border-radius: 4px; padding: 1px 8px; font-size: 12px; margin: 0 6px 6px 0; border: 1px solid var(--line); }
+.badge.ok { border-color: var(--ok); } .badge.warn { border-color: var(--warn); } .badge.bad { border-color: var(--bad); } .badge.info { border-color: var(--blue); }
+pre { background: #0b0e13; border: 1px solid var(--line); border-radius: 6px; padding: 10px; overflow-x: auto; font-size: 13px; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+details { margin: 8px 0; } summary { cursor: pointer; color: var(--muted); }
+.cite { color: var(--muted); font-size: 13px; }
+footer { margin-top: 34px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; }
+a { color: #8ab4f8; }</style>
+</head>
+<body>
+<h1>CodeProof report</h1>
+<p class="meta">run-id: 77ca0cd10b081478 | mode: bench | commit: c67d6b9207ffe2904291e16ee139b09f39661c1a | config: 69089554e8fa4b32a102e27d39c46736555c3ce01429c37eda37bcb5d19a4298</p>
+<p class="meta">models: scanner-correctness=muse-spark-1.3, verifier=muse-wonder-1.0, repro=muse-wonder-1.0 | codeproof 0.2.2 | node v26.8.2</p>
+<h2>Evidence funnel</h2>
+<div class="panel"><div class="funnel"><div class="step"><div class="n">9</div><div class="muted">proposed</div></div><div class="step"><div class="n">1</div><div class="muted">L1 rejected</div></div><div class="step"><div class="n">8</div><div class="muted">verified</div></div><div class="step"><div class="n">7</div><div class="muted">execution-proven</div></div><div class="step"><div class="n">7</div><div class="muted">patch-proven</div></div></div></div>
+<h2>Summary</h2>
+<div class="panel"><table><tr><td>Files / LOC</td><td>15 / 229</td></tr><tr><td>Files in scanner prompt</td><td>15 / 15</td></tr><tr><td>Findings proposed</td><td>9</td></tr><tr><td>Rejected at L1 (bad citation)</td><td>1</td></tr><tr><td>Verified</td><td>8</td></tr><tr><td>Execution-proven (L3)</td><td>7</td></tr><tr><td>Patch-proven (L4)</td><td>7</td></tr><tr><td>Moderate / refuted / uncertain</td><td>0 / 0 / 0</td></tr><tr><td>Calls / retries</td><td>25 / 0</td></tr><tr><td>Tokens in / out</td><td>39335 / 53094</td></tr><tr><td>Cached input tokens</td><td>5464</td></tr><tr><td>Cost</td><td>$1.1073</td></tr></table></div>
+<h2>Verified findings</h2>
+<article class="finding"><h3>F-001 - critical - async forEach without await returns empty results</h3><span class="badge ok">verified / patch-proven</span><p><strong>Claim:</strong> collect uses forEach with an async callback and returns results without awaiting, so it always returns an empty array and try/catch cannot catch task rejections.</p><p class="cite">src/analytics.ts:3-13</p><pre><code>export async function collect(tasks: Task[]): Promise&lt;number[]&gt; {
+  const results: number[] = [];
+  try {
+    tasks.forEach(async (task) =&gt; {
+      results.push(await task());
+    });
+  } catch (error) {
+    console.error(&quot;analytics collection failed&quot;, error);
+  }
+  return results;
+}</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The code at src/analytics.ts:6 uses tasks.forEach with an async callback that awaits task() at src/analytics.ts:7, while src/analytics.ts:12 returns results synchronously after forEach without awaiting those callbacks, so no push can complete before return and async rejections escape the try/catch at src/analytics.ts:5.</p><span class="badge ok">repro reproduced</span><span class="badge info">3 runs</span><p class="muted">control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit</p><details><summary>[CONTROL] code (must pass)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { collect } from &#39;./src/analytics.ts&#39;;
+
+const results = await collect([]);
+assert.deepEqual(results, []);
+</code></pre></details><details><summary>[TRIGGER] code (must fail on the analyzed commit)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { collect } from &#39;./src/analytics.ts&#39;;
+
+const task = (value) =&gt; async () =&gt; {
+  await new Promise((resolve) =&gt; setTimeout(resolve, 10));
+  return value;
+};
+const results = await collect([task(10), task(20)]);
+assert.deepEqual(results, [10, 20]);
+</code></pre></details><span class="badge ok">linkcheck proven (symbol)</span><span class="badge ok">patch patch-proven</span><p class="cite">target: src/analytics.ts</p><p class="muted">control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)</p><details><summary>searchBlock</summary><pre><code>  try {
+    tasks.forEach(async (task) =&gt; {
+      results.push(await task());
+    });
+  } catch (error) {</code></pre></details><details><summary>replaceBlock</summary><pre><code>  try {
+    results.push(...(await Promise.all(tasks.map((task) =&gt; task()))));
+  } catch (error) {</code></pre></details><details><summary>patch diff</summary><pre><code>--- a/src/analytics.ts
++++ b/src/analytics.ts
+@@ -6,3 +6,1 @@
+-    tasks.forEach(async (task) =&gt; {
+-      results.push(await task());
+-    });
++    results.push(...(await Promise.all(tasks.map((task) =&gt; task()))));</code></pre></details></article>
+<article class="finding"><h3>F-002 - critical - OR instead of AND makes validation always fail</h3><span class="badge ok">verified / patch-proven</span><p><strong>Claim:</strong> validate uses || instead of &amp;&amp; so each condition is always true and it always reports both fields as missing.</p><p class="cite">src/validation.ts:6-15</p><pre><code>export function validate(payload: Payload): string[] {
+  const errors: string[] = [];
+  if (payload.id !== undefined || payload.id !== null) {
+    errors.push(&quot;id is required&quot;);
+  }
+  if (payload.value !== undefined || payload.value !== null) {
+    errors.push(&quot;value is required&quot;);
+  }
+  return errors;
+}</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The conditions at src/validation.ts:8 and src/validation.ts:11 use `!== undefined || !== null`, which is true for every possible value (undefined, null, or present), so validate always pushes both errors.</p><span class="badge ok">repro reproduced</span><span class="badge info">3 runs</span><p class="muted">control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit</p><details><summary>[CONTROL] code (must pass)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { validate } from &#39;./src/validation.ts&#39;;
+const errors = validate({});
+assert.equal(errors.length, 2);
+assert.deepEqual(errors, [&#39;id is required&#39;, &#39;value is required&#39;]);
+</code></pre></details><details><summary>[TRIGGER] code (must fail on the analyzed commit)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { validate } from &#39;./src/validation.ts&#39;;
+const errors = validate({ id: &#39;abc&#39;, value: 42 });
+assert.equal(errors.length, 0);
+assert.deepEqual(errors, []);
+</code></pre></details><span class="badge ok">linkcheck proven (symbol)</span><span class="badge ok">patch patch-proven</span><p class="cite">target: src/validation.ts</p><p class="muted">control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)</p><details><summary>searchBlock</summary><pre><code>  if (payload.id !== undefined || payload.id !== null) {
+    errors.push(&quot;id is required&quot;);
+  }
+  if (payload.value !== undefined || payload.value !== null) {
+    errors.push(&quot;value is required&quot;);
+  }</code></pre></details><details><summary>replaceBlock</summary><pre><code>  if (payload.id === undefined || payload.id === null) {
+    errors.push(&quot;id is required&quot;);
+  }
+  if (payload.value === undefined || payload.value === null) {
+    errors.push(&quot;value is required&quot;);
+  }</code></pre></details><details><summary>patch diff</summary><pre><code>--- a/src/validation.ts
++++ b/src/validation.ts
+@@ -8,4 +8,4 @@
+-  if (payload.id !== undefined || payload.id !== null) {
+-    errors.push(&quot;id is required&quot;);
+-  }
+-  if (payload.value !== undefined || payload.value !== null) {
++  if (payload.id === undefined || payload.id === null) {
++    errors.push(&quot;id is required&quot;);
++  }
++  if (payload.value === undefined || payload.value === null) {</code></pre></details></article>
+<article class="finding"><h3>F-003 - critical - missing await on save before get</h3><span class="badge ok">verified / patch-proven</span><p><strong>Claim:</strong> rotateToken does not await store.save before calling store.get, so the read can race the write and return the old token.</p><p class="cite">src/session.ts:6-13</p><pre><code>export async function rotateToken(
+  store: SessionStore,
+  userId: string,
+  token: string,
+): Promise&lt;string | undefined&gt; {
+  store.save(userId, token);
+  return store.get(userId);
+}</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - At src/session.ts:2 save returns Promise&lt;void&gt;, but src/session.ts:11 calls store.save(userId, token) without await before src/session.ts:12 immediately returns store.get(userId), so the read can race the unfinished write.</p><span class="badge ok">repro reproduced</span><span class="badge info">3 runs</span><p class="muted">control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit</p><details><summary>[CONTROL] code (must pass)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { rotateToken } from &#39;./src/session.ts&#39;;
+
+const data = new Map([[&#39;alice&#39;, &#39;old-control&#39;]]);
+const store = {
+  async save(userId, token) { data.set(userId, token); },
+  async get(userId) { return data.get(userId); },
+};
+const result = await rotateToken(store, &#39;alice&#39;, &#39;new-control&#39;);
+assert.equal(result, &#39;new-control&#39;);
+</code></pre></details><details><summary>[TRIGGER] code (must fail on the analyzed commit)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { rotateToken } from &#39;./src/session.ts&#39;;
+
+const data = new Map([[&#39;bob&#39;, &#39;old-trigger&#39;]]);
+const store = {
+  async save(userId, token) {
+    await new Promise((resolve) =&gt; setTimeout(resolve, 20));
+    data.set(userId, token);
+  },
+  async get(userId) { return data.get(userId); },
+};
+const result = await rotateToken(store, &#39;bob&#39;, &#39;new-trigger&#39;);
+assert.equal(result, &#39;new-trigger&#39;);
+</code></pre></details><span class="badge ok">linkcheck proven (symbol)</span><span class="badge ok">patch patch-proven</span><p class="cite">target: src/session.ts</p><p class="muted">control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)</p><details><summary>searchBlock</summary><pre><code>  store.save(userId, token);
+  return store.get(userId);</code></pre></details><details><summary>replaceBlock</summary><pre><code>  await store.save(userId, token);
+  return store.get(userId);</code></pre></details><details><summary>patch diff</summary><pre><code>--- a/src/session.ts
++++ b/src/session.ts
+@@ -11,1 +11,1 @@
+-  store.save(userId, token);
++  await store.save(userId, token);</code></pre></details></article>
+<article class="finding"><h3>F-004 - high - module accumulator makes buildSummary double-count</h3><span class="badge ok">verified / patch-proven</span><p><strong>Claim:</strong> buildSummary appends to module-level totals on every call and then summarizes totals, so a second call double-counts prior entries.</p><p class="cite">src/ledger.ts:6-19</p><pre><code>const totals: Entry[] = [];
+
+export function post(entries: Entry[]): void {
+  for (const entry of entries) totals.push(entry);
+}
+
+export function buildSummary(entries: Entry[]): string {
+  post(entries);
+  const byAccount = new Map&lt;string, number&gt;();
+  for (const entry of totals) {
+    byAccount.set(entry.account, (byAccount.get(entry.account) ?? 0) + entry.cents);
+  }
+  return [...byAccount.entries()].map(([account, cents]) =&gt; account + &quot;=&quot; + cents).join(&quot;,&quot;);
+}</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - buildSummary at src/ledger.ts:12-15 calls post, which pushes onto the module-level totals array at src/ledger.ts:6-9, and then iterates all of totals without any reset, so a second call re-includes and re-sums prior entries.</p><span class="badge ok">repro reproduced</span><span class="badge info">3 runs</span><p class="muted">control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit</p><details><summary>[CONTROL] code (must pass)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { buildSummary, resetTotals } from &#39;./src/ledger.ts&#39;;
+resetTotals();
+const result = buildSummary([{ account: &#39;alice&#39;, cents: 100 }]);
+assert.equal(result, &#39;alice=100&#39;);
+</code></pre></details><details><summary>[TRIGGER] code (must fail on the analyzed commit)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { buildSummary, resetTotals } from &#39;./src/ledger.ts&#39;;
+resetTotals();
+const first = buildSummary([{ account: &#39;bob&#39;, cents: 50 }]);
+assert.equal(first, &#39;bob=50&#39;);
+const second = buildSummary([{ account: &#39;bob&#39;, cents: 30 }]);
+assert.equal(second, &#39;bob=30&#39;);
+</code></pre></details><span class="badge ok">linkcheck proven (symbol)</span><span class="badge ok">patch patch-proven</span><p class="cite">target: src/ledger.ts</p><p class="muted">control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)</p><details><summary>searchBlock</summary><pre><code>export function buildSummary(entries: Entry[]): string {
+  post(entries);
+  const byAccount = new Map&lt;string, number&gt;();
+  for (const entry of totals) {</code></pre></details><details><summary>replaceBlock</summary><pre><code>export function buildSummary(entries: Entry[]): string {
+  const byAccount = new Map&lt;string, number&gt;();
+  for (const entry of entries) {</code></pre></details><details><summary>patch diff</summary><pre><code>--- a/src/ledger.ts
++++ b/src/ledger.ts
+@@ -13,3 +13,2 @@
+-  post(entries);
+-  const byAccount = new Map&lt;string, number&gt;();
+-  for (const entry of totals) {
++  const byAccount = new Map&lt;string, number&gt;();
++  for (const entry of entries) {</code></pre></details></article>
+<article class="finding"><h3>F-005 - high - timer handle replaced without clearing existing interval</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> start overwrites this.timer with a new setInterval without clearing an existing interval, leaking the prior handle and running duplicate tick loops.</p><p class="cite">src/scheduler.ts:7-11</p><pre><code>  start(intervalMs: number): void {
+    this.timer = setInterval(() =&gt; {
+      for (const tick of this.ticks) tick();
+    }, intervalMs);
+  }</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The start method at src/scheduler.ts:7-11 unconditionally assigns this.timer = setInterval(...) with no clearInterval or existing-timer guard, so a second call orphans the prior handle and leaves both intervals running.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments</p></article>
+<article class="finding"><h3>F-006 - high - off-by-one slice returns extra element</h3><span class="badge ok">verified / patch-proven</span><p><strong>Claim:</strong> pageSlice uses slice(start, end + 1) while end is already start+size, returning one extra element per page.</p><p class="cite">src/paging.ts:6-11</p><pre><code>export function pageSlice&lt;T&gt;(items: T[], request: PageRequest): T[] {
+  const size = Math.max(1, request.size);
+  const start = Math.max(0, request.page) * size;
+  const end = start + size;
+  return items.slice(start, end + 1);
+}</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - pageSlice at src/paging.ts:9 sets end = start + size and at src/paging.ts:10 returns items.slice(start, end + 1), which because slice&#39;s end index is exclusive yields size+1 elements when available.</p><span class="badge ok">repro reproduced</span><span class="badge info">3 runs</span><p class="muted">control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit</p><details><summary>[CONTROL] code (must pass)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { pageSlice } from &#39;./src/paging.ts&#39;;
+const result = pageSlice([1, 2], { page: 0, size: 2 });
+assert.equal(result.length, 2);
+assert.deepEqual(result, [1, 2]);
+</code></pre></details><details><summary>[TRIGGER] code (must fail on the analyzed commit)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { pageSlice } from &#39;./src/paging.ts&#39;;
+const result = pageSlice([1, 2, 3, 4], { page: 0, size: 2 });
+assert.equal(result.length, 2);
+assert.deepEqual(result, [1, 2]);
+</code></pre></details><span class="badge ok">linkcheck proven (symbol)</span><span class="badge ok">patch patch-proven</span><p class="cite">target: src/paging.ts</p><p class="muted">control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)</p><details><summary>searchBlock</summary><pre><code>  return items.slice(start, end + 1);</code></pre></details><details><summary>replaceBlock</summary><pre><code>  return items.slice(start, end);</code></pre></details><details><summary>patch diff</summary><pre><code>--- a/src/paging.ts
++++ b/src/paging.ts
+@@ -10,1 +10,1 @@
+-  return items.slice(start, end + 1);
++  return items.slice(start, end);</code></pre></details></article>
+<article class="finding"><h3>F-007 - high - numeric sort without comparator</h3><span class="badge ok">verified / patch-proven</span><p><strong>Claim:</strong> sort without a numeric comparator sorts numbers lexicographically, so topScore can return the wrong maximum.</p><p class="cite">src/scores.ts:1-3</p><pre><code>export function sortScores(scores: number[]): number[] {
+  return scores.slice().sort();
+}</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - sortScores at src/scores.ts:2 calls scores.slice().sort() with no comparator, so JavaScript lexicographic string ordering applies, and topScore at src/scores.ts:7 returns the last element which need not be the numeric maximum.</p><span class="badge ok">repro reproduced</span><span class="badge info">3 runs</span><p class="muted">control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit</p><details><summary>[CONTROL] code (must pass)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { topScore } from &#39;./src/scores.ts&#39;;
+const result = topScore([1, 2, 3]);
+assert.equal(result, 3);
+</code></pre></details><details><summary>[TRIGGER] code (must fail on the analyzed commit)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { topScore } from &#39;./src/scores.ts&#39;;
+const result = topScore([9, 10, 100]);
+assert.equal(result, 100);
+</code></pre></details><span class="badge ok">linkcheck proven (symbol)</span><span class="badge ok">patch patch-proven</span><p class="cite">target: src/scores.ts</p><p class="muted">control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)</p><details><summary>searchBlock</summary><pre><code>export function sortScores(scores: number[]): number[] {
+  return scores.slice().sort();
+}</code></pre></details><details><summary>replaceBlock</summary><pre><code>export function sortScores(scores: number[]): number[] {
+  return scores.slice().sort((a, b) =&gt; a - b);
+}</code></pre></details><details><summary>patch diff</summary><pre><code>--- a/src/scores.ts
++++ b/src/scores.ts
+@@ -2,1 +2,1 @@
+-  return scores.slice().sort();
++  return scores.slice().sort((a, b) =&gt; a - b);</code></pre></details></article>
+<article class="finding"><h3>F-009 - medium - falsy fallback discards legitimate zero</h3><span class="badge ok">verified / patch-proven</span><p><strong>Claim:</strong> normalizeSettings uses || fallbacks so legitimate 0 values are replaced with defaults instead of preserved.</p><p class="cite">src/settings.ts:11-16</p><pre><code>export function normalizeSettings(raw: RawSettings): Settings {
+  return {
+    pageSize: raw.pageSize || 20,
+    budgetCents: raw.budgetCents || 1000,
+  };
+}</code></pre><p class="cite">src/settings.ts:18-18</p><pre><code>// Optional values are read from settings where 0 is a legitimate value.</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The code at src/settings.ts:13-14 uses raw.pageSize || 20 and raw.budgetCents || 1000, so 0 evaluates as falsy and is replaced by the default, contradicting the stated principle at src/settings.ts:18 that 0 is a legitimate value for settings.</p><span class="badge ok">repro reproduced</span><span class="badge info">3 runs</span><p class="muted">control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit</p><details><summary>[CONTROL] code (must pass)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { normalizeSettings } from &#39;./src/settings.ts&#39;;
+const result = normalizeSettings({ pageSize: 10, budgetCents: 500 });
+assert.equal(result.pageSize, 10);
+assert.equal(result.budgetCents, 500);
+const defaults = normalizeSettings({});
+assert.equal(defaults.pageSize, 20);
+assert.equal(defaults.budgetCents, 1000);
+</code></pre></details><details><summary>[TRIGGER] code (must fail on the analyzed commit)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import { normalizeSettings } from &#39;./src/settings.ts&#39;;
+const result = normalizeSettings({ pageSize: 0, budgetCents: 0 });
+assert.equal(result.pageSize, 0);
+assert.equal(result.budgetCents, 0);
+</code></pre></details><span class="badge ok">linkcheck proven (symbol)</span><span class="badge ok">patch patch-proven</span><p class="cite">target: src/settings.ts</p><p class="muted">control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)</p><details><summary>searchBlock</summary><pre><code>export function normalizeSettings(raw: RawSettings): Settings {
+  return {
+    pageSize: raw.pageSize || 20,
+    budgetCents: raw.budgetCents || 1000,
+  };
+}</code></pre></details><details><summary>replaceBlock</summary><pre><code>export function normalizeSettings(raw: RawSettings): Settings {
+  return {
+    pageSize: raw.pageSize ?? 20,
+    budgetCents: raw.budgetCents ?? 1000,
+  };
+}</code></pre></details><details><summary>patch diff</summary><pre><code>--- a/src/settings.ts
++++ b/src/settings.ts
+@@ -13,2 +13,2 @@
+-    pageSize: raw.pageSize || 20,
+-    budgetCents: raw.budgetCents || 1000,
++    pageSize: raw.pageSize ?? 20,
++    budgetCents: raw.budgetCents ?? 1000,</code></pre></details></article>
+<h2>Rejected and unresolved</h2>
+<details><summary>Other published findings: 0 (refuted / moderate / uncertain)</summary></details><details><summary>Rejected candidates (audit trail): 1</summary><p class="cite">F-008 - l1-rejected - by spark - citation range expects 6 non-blank lines but snippet has 7</p></details>
+<footer>
+<p>This page is a static view of the recorded evidence; it re-runs nothing. Levels: citation-proven = L1 (provenance, not a semantic judge); verified = L1 + L2 (a model judgment); execution-proven = L3 (two-phase reproducer + LinkCheck under the Node permission model); patch-proven = L4 (differential result on a copy of the snapshot, not a root-cause fix; the repository's own test suite is never run). Offline replay verifies the artifacts and mechanical gates; it does not re-execute the semantic L2 verdict.</p>
+<p>Artifacts: <a href="./findings.json">findings.json</a> | <a href="./rejected.md">rejected.md</a> | <a href="./REPORT.md">REPORT.md</a> | <a href="./run.json">run.json</a>. Every artifact of this run, including this file, is hashed in <code>run.json.attestation</code>.</p>
+<p>Findings proposed: 9 | verified: 8 | execution-proven: 7 | patch-proven: 7</p>
+</footer>
+</body>
+</html>

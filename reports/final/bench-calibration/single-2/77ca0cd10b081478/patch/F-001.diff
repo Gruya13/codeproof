@@ -1,0 +1,7 @@
+--- a/src/analytics.ts
++++ b/src/analytics.ts
+@@ -6,3 +6,1 @@
+-    tasks.forEach(async (task) => {
+-      results.push(await task());
+-    });
++    results.push(...(await Promise.all(tasks.map((task) => task()))));

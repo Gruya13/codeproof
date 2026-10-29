@@ -1,0 +1,7 @@
+--- a/src/settings.ts
++++ b/src/settings.ts
+@@ -13,2 +13,2 @@
+-    pageSize: raw.pageSize || 20,
+-    budgetCents: raw.budgetCents || 1000,
++    pageSize: raw.pageSize ?? 20,
++    budgetCents: raw.budgetCents ?? 1000,

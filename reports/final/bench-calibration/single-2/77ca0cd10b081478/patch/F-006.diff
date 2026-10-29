@@ -1,0 +1,5 @@
+--- a/src/paging.ts
++++ b/src/paging.ts
+@@ -10,1 +10,1 @@
+-  return items.slice(start, end + 1);
++  return items.slice(start, end);
