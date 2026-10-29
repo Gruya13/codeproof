@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "casesSha256": "b2d437a4f9398077a258bb1aa253bdaedcdb5255330a339f776b04ba69cb3b63",
-  "gitRevision": "b41f2569d73d72ddca235cf4a47d952c7a9a200a",
+  "casesSha256": "e1aef9fcc7308fd958e6783d70c16ba708fef9b0060fb6dfb9c689f83e1a1c67",
+  "gitRevision": "1cd0572720e6d8435f004796673e3412aba8ef7b",
   "gitRel": "tests/candidates.test.mjs",
   "by": "dsh-orkestrator",
-  "at": "2026-10-28T19:21:42.056Z",
+  "at": "2026-10-29T06:24:12.161Z",
   "relocks": [
     {
       "by": "dsh-orkestrator",
@@ -12,6 +12,13 @@
       "reason": "hardening C: scanner diagnostics moved from process cwd to the --out directory; expectations updated to assert the new location",
       "previousSha256": "da9e29f151c6cf14ef0e0ab5117eafe1858fdaac36cad175e411943b0fbbaf54",
       "previousGitRevision": "ea6e54bb798aecad901f0d83103d8c4b0c6e6116"
+    },
+    {
+      "by": "dsh-orkestrator",
+      "at": "2026-10-29T06:24:12.161Z",
+      "reason": "hardening E: writing into the analyzed repository now requires --allow-output-in-target, so tests that intentionally use --out inside the analyzed target pass the explicit flag",
+      "previousSha256": "b2d437a4f9398077a258bb1aa253bdaedcdb5255330a339f776b04ba69cb3b63",
+      "previousGitRevision": "b41f2569d73d72ddca235cf4a47d952c7a9a200a"
     }
   ]
 }

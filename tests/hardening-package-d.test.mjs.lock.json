@@ -1,9 +1,17 @@
 {
   "schemaVersion": 1,
-  "casesSha256": "7efe8c78ad5c2e54212430aec5694b4681cea1ffca31a7dbea3d8981d0a43e55",
-  "gitRevision": "afde01a3f1d64c58e81da02c5f773b1d48bba192",
+  "casesSha256": "9242493cf44245589a19b15a0f28f3aa4112cc079e216fc84dd749f0101bd8c4",
+  "gitRevision": "1cd0572720e6d8435f004796673e3412aba8ef7b",
   "gitRel": "tests/hardening-package-d.test.mjs",
   "by": "dsh-orkestrator",
-  "at": "2026-10-28T21:55:49.562Z",
-  "relocks": []
+  "at": "2026-10-29T06:24:12.141Z",
+  "relocks": [
+    {
+      "by": "dsh-orkestrator",
+      "at": "2026-10-29T06:24:12.141Z",
+      "reason": "hardening E: writing into the analyzed repository now requires --allow-output-in-target, so tests that intentionally use --out inside the analyzed target pass the explicit flag",
+      "previousSha256": "7efe8c78ad5c2e54212430aec5694b4681cea1ffca31a7dbea3d8981d0a43e55",
+      "previousGitRevision": "afde01a3f1d64c58e81da02c5f773b1d48bba192"
+    }
+  ]
 }
