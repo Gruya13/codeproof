@@ -1,0 +1,47 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Context lookup uses cache.hasOwnProperty(name) then does cache[name]=value, so a lookup for 'hasOwnProperty' overwrites the method on the cache object and the next lookup on the same Context throws TypeError.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 398, \"path\": \"mustache.js\", \"snippet\": \"  if (cache.hasOwnProperty(name)) {\\n    value = cache[name];\", \"startLine\": 397}, {\"endLine\": 467, \"path\": \"mustache.js\", \"snippet\": \"    cache[name] = value;\", \"startLine\": 467}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Context cache breaks when looking up hasOwnProperty\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Context lookup uses cache.hasOwnProperty(name) then does cache[name]=value, so a lookup for 'hasOwnProperty' overwrites the method on the cache object and the next lookup on the same Context throws TypeError.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 398,
+            "path": "mustache.js",
+            "snippet": "  if (cache.hasOwnProperty(name)) {\n    value = cache[name];",
+            "startLine": 397
+          },
+          {
+            "endLine": 467,
+            "path": "mustache.js",
+            "snippet": "    cache[name] = value;",
+            "startLine": 467
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Context cache breaks when looking up hasOwnProperty"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 397-398 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The cache is a plain object at mustache.js:377, lookup calls cache.hasOwnProperty(name) at mustache.js:397, and the miss path unconditionally assigns cache[name]=value at mustache.js:467, so caching a non-function 'hasOwnProperty' value shadows the inherited method and the next lookup on that Context throws."
+      }
+    }
+  ]
+}

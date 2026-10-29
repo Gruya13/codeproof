@@ -1,0 +1,293 @@
+{
+  "runId": "4d11c6d684b65418",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "9c0a3c84bda394b8fe6fb15bae1abceb03bd87d9fca2c076ebe61277ed0ed191",
+  "configHashVersion": 2,
+  "config": {
+    "hashVersion": 2,
+    "payload": {
+      "mode": "smoke",
+      "scannerModel": "muse-spark-1.3",
+      "verifierModel": "muse-wonder-1.0",
+      "temperature": 0,
+      "maxFindings": 8,
+      "citationMaxLines": 15,
+      "scannerMaxTokens": 16000,
+      "verifierMaxTokens": 4000,
+      "verifierContextChars": 24000,
+      "reproEnabled": true,
+      "reproModel": "muse-wonder-1.0",
+      "reproMaxTokens": 8000,
+      "reproTimeoutMs": 2000,
+      "reproAttempts": 3,
+      "hardBudget": true,
+      "dualScan": false,
+      "chunkedScan": false,
+      "secondaryScannerModel": "muse-wonder-1.0",
+      "dualScanMaxLoc": 0,
+      "baseUrl": "https://api.meta.ai/v1",
+      "budgetUsd": 4,
+      "maxRetries": 4,
+      "mock": false,
+      "promptSha256": {
+        "scanner": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd",
+        "verifier": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf",
+        "repro": "fa0844b0f030a2b871a669d43a9ef283c02fde2b8549ed77cca7dfe1bf8944db",
+        "patch": "fc6adbe6c6f7b40f50b263da3f1d9cca7c41e2b81474e4beef9eeaaa01088838"
+      },
+      "patchEnabled": true,
+      "patchModel": "muse-wonder-1.0",
+      "patchMaxTokens": 6000,
+      "patchMaxCandidates": 3,
+      "verifyEscalate": false,
+      "mockPipeline": false
+    }
+  },
+  "repo": {
+    "source": "commit",
+    "path": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/mustache/_repo",
+    "commit": "972fd2b27a036888acfcb60d6119317744fac7ee",
+    "dirty": false,
+    "loc": 2402,
+    "files": 80
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    },
+    {
+      "role": "repro",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+    }
+  ],
+  "usage": {
+    "inputTokens": 53192,
+    "outputTokens": 24418,
+    "cachedTokens": 7668,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 1,
+        "inputTokens": 27348,
+        "outputTokens": 12068,
+        "cachedTokens": 0,
+        "costUsd": 0.085474
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 2,
+        "inputTokens": 15342,
+        "outputTokens": 9260,
+        "cachedTokens": 7668,
+        "costUsd": 0.2174296
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "calls": 1,
+        "inputTokens": 10502,
+        "outputTokens": 3090,
+        "cachedTokens": 0,
+        "costUsd": 0.103808
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 27348,
+        "outputTokens": 12068,
+        "cachedTokens": 0,
+        "costUsd": 0.085474,
+        "durationMs": 53907,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 1,
+        "inputTokens": 7671,
+        "outputTokens": 4000,
+        "cachedTokens": 0,
+        "costUsd": 0.110684,
+        "durationMs": 41627,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 7671,
+        "outputTokens": 5260,
+        "cachedTokens": 7668,
+        "costUsd": 0.10674560000000001,
+        "durationMs": 61914,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 3,
+        "inputTokens": 10502,
+        "outputTokens": 3090,
+        "cachedTokens": 0,
+        "costUsd": 0.103808,
+        "durationMs": 28869,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      }
+    ],
+    "costUsd": 0.4067116,
+    "measured": true
+  },
+  "calls": 4,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-29T21:07:18.822Z",
+    "durationMs": 186730
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 338
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 53909
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 132449
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 15
+    }
+  ],
+  "budget": {
+    "limitUsd": 4,
+    "spentUsd": 0.406712,
+    "measured": true,
+    "exceeded": false,
+    "hard": true,
+    "aborted": false,
+    "abortReason": null,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 1,
+    "byScanner": {
+      "spark": 1,
+      "wonder": 0,
+      "secondary": 0,
+      "both": 0,
+      "controlled": 0
+    },
+    "duplicates": 0,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 0,
+    "verified": 1,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "reproduced": 0,
+    "patched": 0
+  },
+  "scanCoverage": {
+    "filesInPrompt": 80,
+    "filesTotal": 80,
+    "chars": 90646,
+    "cap": 400000,
+    "truncated": false
+  },
+  "scanners": [
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 1,
+      "rejectedAtL0": 0,
+      "costUsd": 0.085474,
+      "durationMs": 53908,
+      "group": null,
+      "coverage": null,
+      "reason": null
+    }
+  ],
+  "dualScan": false,
+  "chunkedScan": false,
+  "patch": {
+    "enabled": true,
+    "model": "muse-wonder-1.0"
+  },
+  "repro": {
+    "enabled": true,
+    "model": "muse-wonder-1.0",
+    "timeoutMs": 2000,
+    "attempts": 3,
+    "counts": {
+      "reproduced": 0,
+      "notReproduced": 0,
+      "unavailable": 0,
+      "inconclusive": 1
+    }
+  },
+  "outputs": {
+    "report": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/mustache/4d11c6d684b65418-2/REPORT.md",
+    "findings": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/mustache/4d11c6d684b65418-2/findings.json",
+    "rejected": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/mustache/4d11c6d684b65418-2/rejected.md",
+    "html": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/mustache/4d11c6d684b65418-2/REPORT.html"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.2.2"
+  },
+  "attestation": {
+    "schemaVersion": 2,
+    "findingsSha256": "2d4911c1fcdf5d821ff163939c0446a3c63e9f7074668a057b4424a61a27d9b4",
+    "artifacts": {
+      "REPORT.html": "5d78a5bc50b811fc6d56ddc2a786de2949ba0cdc0c0d578f4ab7c471bafc011f",
+      "REPORT.md": "6db41fd91548269a6e15b68ce51e319e82d245c0de9571b624f0c72affda46bd",
+      "candidates.json": "8d6ce8d8ebd959f31f6efb26502aacb4efb3b597a6dd0756214fbd4d5cbba1cd",
+      "findings.json": "2d4911c1fcdf5d821ff163939c0446a3c63e9f7074668a057b4424a61a27d9b4",
+      "rejected.md": "b777d435934d285b3648fdea8dac1ece6ce5ec1790071335470f081811cc2e22",
+      "repro/F-001/result.json": "819dfa29cdb1884ff551c6737cf14554dc52a8c0348e5350a715329a9d607fbe"
+    }
+  }
+}
