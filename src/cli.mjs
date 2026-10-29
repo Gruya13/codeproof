@@ -34,7 +34,7 @@ function loadDotEnv(path) {
 }
 
 function parseArgs(argv) {
-  const args = { command: argv[0], target: null, mock: false, out: "reports", candidates: null, mode: null };
+  const args = { command: argv[0], target: null, mock: false, out: "reports", candidates: null, mode: null, allowOutputInTarget: false };
   const rest = argv.slice(1);
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
@@ -49,6 +49,8 @@ function parseArgs(argv) {
     } else if (arg === "--mode") {
       args.mode = rest[index + 1];
       index += 1;
+    } else if (arg === "--allow-output-in-target") {
+      args.allowOutputInTarget = true;
     } else if (args.target === null) {
       args.target = arg;
     } else {
@@ -128,7 +130,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const controlled = args.candidates !== null;
   if (args.command !== "analyze" && args.command !== "controlled-verifier") {
-    console.log("usage: node src/cli.mjs analyze <path> [--mock] [--out <dir>] [--mode demo|bench|smoke]");
+    console.log("usage: node src/cli.mjs analyze <path> [--mock] [--out <dir>] [--mode demo|bench|smoke] [--allow-output-in-target]");
     console.log("       node src/cli.mjs controlled-verifier <path> --candidates <file> [--out <dir>]");
     process.exitCode = 2;
     return;
@@ -167,7 +169,13 @@ async function main() {
   const targetResolved = resolve(target);
   const outputRoot = resolve(args.out);
   if (outputRoot === targetResolved || outputRoot.startsWith(targetResolved + sep)) {
-    console.warn("  WARN output directory is inside the analyzed repository (" + outputRoot + "); pass --out <path outside the repository> to leave the analyzed repository unchanged");
+    // Writing reports into the analyzed repository would change the bytes a later run analyses and
+    // contradicts the "nothing is written to the analyzed repository" claim. Refuse unless the
+    // caller accepts it explicitly.
+    if (!args.allowOutputInTarget) {
+      throw new Error("output directory is inside the analyzed repository (" + outputRoot + "); pass --out <path outside the repository>, or --allow-output-in-target to accept writing into the analyzed repository");
+    }
+    console.warn("  WARN output directory is inside the analyzed repository (" + outputRoot + "); writing because --allow-output-in-target is set");
   }
   const dirty = !(await repoIsClean(target));
   if (mode === "bench" && dirty) {

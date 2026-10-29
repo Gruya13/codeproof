@@ -29,7 +29,7 @@ test("F2/F7: a successful mock run retains raw text and per-candidate decisions"
     const result = await new Promise(function (resolve, reject) {
       const logPath = join(dir, "cli.log");
       const log = openSync(logPath, "w");
-      const child = spawn(process.execPath, [cliPath, "analyze", dir, "--mock", "--mode", "demo", "--out", join(dir, "out")], {
+      const child = spawn(process.execPath, [cliPath, "analyze", dir, "--mock", "--mode", "demo", "--out", join(dir, "out"), "--allow-output-in-target"], {
         cwd: dir, env: { ...process.env, BUDGET_USD: "2" }, timeout: 60000, stdio: ["ignore", log, log]
       });
       closeSync(log);

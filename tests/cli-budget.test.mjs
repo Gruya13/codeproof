@@ -26,7 +26,7 @@ function runCli(dir) {
   return new Promise(function (resolve, reject) {
     const logPath = join(dir, "cli.log");
     const log = openSync(logPath, "w");
-    const child = spawn(process.execPath, [cliPath, "analyze", dir, "--mock", "--mode", "demo", "--out", join(dir, "out")], {
+    const child = spawn(process.execPath, [cliPath, "analyze", dir, "--mock", "--mode", "demo", "--out", join(dir, "out"), "--allow-output-in-target"], {
       cwd: dir,
       env: { ...process.env, BUDGET_USD: "2", MOCK_PIPELINE: "0" },
       timeout: 60000,

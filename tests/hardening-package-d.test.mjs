@@ -117,15 +117,19 @@ test("D2 ingest fails closed when a requested commit cannot be read in a git rep
   assert.equal(fallback.files.length, 1, "a non-git target keeps the documented working-tree fallback");
 });
 
-test("D4 warns when --out points inside the analyzed repository", function (t) {
+test("D4 refuses --out inside the analyzed repository unless explicitly allowed", function (t) {
   const dir = tempDir(t, "codeproof-d4-");
   const fixture = join(dir, "fixture");
   cpSync(join(repoRoot, "fixtures/mini-repo"), fixture, { recursive: true });
   const cliPath = join(repoRoot, "src/cli.mjs");
   const env = Object.assign({}, process.env, { USE_MOCK: "1" });
   const inside = spawnSync(process.execPath, [cliPath, "analyze", fixture, "--mock", "--mode", "demo", "--out", join(fixture, "reports")], { cwd: repoRoot, timeout: 120000, env: env, encoding: "utf8" });
-  assert.equal(inside.status, 0, inside.stdout + inside.stderr);
+  assert.notEqual(inside.status, 0, "writing into the analyzed repository must be refused by default");
   assert.match(inside.stdout + inside.stderr, /output directory is inside the analyzed repository/);
+  assert.match(inside.stdout + inside.stderr, /allow-output-in-target/);
+  const allowed = spawnSync(process.execPath, [cliPath, "analyze", fixture, "--mock", "--mode", "demo", "--out", join(fixture, "reports"), "--allow-output-in-target"], { cwd: repoRoot, timeout: 120000, env: env, encoding: "utf8" });
+  assert.equal(allowed.status, 0, allowed.stdout + allowed.stderr);
+  assert.match(allowed.stdout + allowed.stderr, /--allow-output-in-target is set/);
   const outside = spawnSync(process.execPath, [cliPath, "analyze", fixture, "--mock", "--mode", "demo", "--out", join(dir, "out")], { cwd: repoRoot, timeout: 120000, env: env, encoding: "utf8" });
   assert.equal(outside.status, 0, outside.stdout + outside.stderr);
   assert.doesNotMatch(outside.stdout + outside.stderr, /inside the analyzed repository/);
