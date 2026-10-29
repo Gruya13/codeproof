@@ -1,0 +1,43 @@
+{
+  "lockedAt": "2026-10-29T21:50:00Z",
+  "lockedBy": "dsh-orkestrator",
+  "basis": "PREREG-AMENDMENT-1 uslov 6; PREREG §4.5",
+  "criteria": {
+    "language": "CJS or ESM with explicit extensions (L3/L4 executable)",
+    "runtimeDependencies": "none",
+    "loc": "300-3000",
+    "commit": "public pinned commit",
+    "novelty": "not used in any earlier round"
+  },
+  "dryRuns": [
+    { "name": "mustache", "repo": "https://github.com/janl/mustache.js", "commit": "972fd2b27a036888acfcb60d6119317744fac7ee", "scope": ".", "files": 80, "loc": 2402, "importEdges": 11, "promptChars": 90646, "promptComplete": true, "selected": true },
+    { "name": "sax", "repo": "https://github.com/isaacs/sax-js", "commit": "961ceeefcc5186005466f2085aeb36f31b161e37", "scope": "lib", "files": 1, "loc": 1866, "importEdges": 0, "promptChars": 62796, "promptComplete": true, "selected": true },
+    { "name": "fast-json-patch", "repo": "https://github.com/Starcounter-Jack/JSON-Patch", "commit": "9d313ac01916e525e9204074f06e5295edec491b", "scope": "commonjs", "files": 3, "loc": 803, "importEdges": 3, "promptChars": 37777, "promptComplete": true, "selected": true },
+    { "name": "bcryptjs", "repo": "https://github.com/dcodeIO/bcrypt.js", "commit": "1211e9a2213e0b3ee232a204b3ce899beebce31a", "scope": ".", "files": 11, "loc": 1666, "importEdges": 3, "promptChars": 67232, "promptComplete": true, "selected": true },
+    { "name": "dateformat", "repo": "https://github.com/felixge/node-dateformat", "commit": "e6800aa902fcbd523d5ea06a9a79050878cfa48e", "scope": ".", "files": 43, "loc": 2085, "importEdges": 1, "promptChars": 71640, "promptComplete": true, "selected": true },
+    { "name": "argparse", "repo": "https://github.com/nodeca/argparse", "commit": "7a1380ca85630b86c70f280d2b20893f6d994386", "scope": "lib", "files": 6, "loc": 4892, "importEdges": 4, "promptChars": 203220, "promptComplete": true, "selected": false, "rejectReason": "LOC 4892 > 3000 (PREREG §4.5)" },
+    { "name": "accounting", "repo": "https://github.com/openexchangerates/accounting.js", "commit": "74a2b12800f0483ffeebf05c00ea52f8dde3ac07", "scope": ".", "files": 14, "loc": 6483, "importEdges": 0, "promptChars": 390418, "promptComplete": true, "selected": false, "rejectReason": "LOC 6483 > 3000 (PREREG §4.5)" },
+    { "name": "uuid", "repo": "https://github.com/uuidjs/uuid", "commit": "8eed10acf6b1a43778bb70ea3ed3f40e8a7a6d7b", "scope": "src", "files": null, "loc": null, "selected": false, "rejectReason": "src is TypeScript; no committed JS distribution to analyze (PREREG §4.5 requires directly executable CJS/ESM)" }
+  ],
+  "selected": ["mustache", "sax", "fast-json-patch", "bcryptjs", "dateformat"],
+  "replacements": {
+    "argparse": "dateformat",
+    "accounting": "(not needed)",
+    "uuid": "(not needed)"
+  },
+  "runPlan": {
+    "newRepos": [
+      { "name": "mustache", "runs": 2 },
+      { "name": "sax", "runs": 2 },
+      { "name": "fast-json-patch", "runs": 2 },
+      { "name": "bcryptjs", "runs": 2 },
+      { "name": "dateformat", "runs": 2 }
+    ],
+    "regression": [
+      { "name": "picomatch", "workdir": "../real-world/picomatch", "expectedHead": "6bb40679c218cefba5d4e9662408c5fdf699a8bb", "scope": "lib", "runs": 1 },
+      { "name": "jsesc", "workdir": "../real-world/jsesc", "expectedHead": "e3349b542eaaf55239cb60519991b80097cee24b", "scope": "analysis-target", "runs": 1 },
+      { "name": "jsesc-dual", "workdir": "../real-world/jsesc", "expectedHead": "e3349b542eaaf55239cb60519991b80097cee24b", "scope": "analysis-target", "runs": 1, "dualScan": true }
+    ]
+  },
+  "note": "Every repo runs twice, one attempt per final-run.sh call (A1 §7). All dry-run outcomes, including rejected candidates, are recorded here before the first paid F4 call."
+}

@@ -1,0 +1,18 @@
+{
+  "repo": "https://github.com/dcodeIO/bcrypt.js",
+  "commit": "1211e9a2213e0b3ee232a204b3ce899beebce31a",
+  "scope": ".",
+  "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/bcryptjs/_repo",
+  "clean": true,
+  "files": 11,
+  "loc": 1666,
+  "importEdges": 3,
+  "cycles": 0,
+  "digestChars": 520,
+  "promptChars": 67232,
+  "promptFiles": 11,
+  "promptComplete": true,
+  "promptCap": 400000,
+  "estimatedInputTokens": 18676,
+  "dryRun": true
+}

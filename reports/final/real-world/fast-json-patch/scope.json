@@ -1,0 +1,18 @@
+{
+  "repo": "https://github.com/Starcounter-Jack/JSON-Patch",
+  "commit": "9d313ac01916e525e9204074f06e5295edec491b",
+  "scope": "commonjs",
+  "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/fast-json-patch/_repo/commonjs",
+  "clean": true,
+  "files": 3,
+  "loc": 803,
+  "importEdges": 3,
+  "cycles": 0,
+  "digestChars": 212,
+  "promptChars": 37777,
+  "promptFiles": 3,
+  "promptComplete": true,
+  "promptCap": 400000,
+  "estimatedInputTokens": 10494,
+  "dryRun": true
+}

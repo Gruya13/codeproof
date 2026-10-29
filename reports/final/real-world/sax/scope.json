@@ -1,0 +1,18 @@
+{
+  "repo": "https://github.com/isaacs/sax-js",
+  "commit": "961ceeefcc5186005466f2085aeb36f31b161e37",
+  "scope": "lib",
+  "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/sax/_repo/lib",
+  "clean": true,
+  "files": 1,
+  "loc": 1866,
+  "importEdges": 0,
+  "cycles": 0,
+  "digestChars": 91,
+  "promptChars": 62796,
+  "promptFiles": 1,
+  "promptComplete": true,
+  "promptCap": 400000,
+  "estimatedInputTokens": 17443,
+  "dryRun": true
+}

@@ -1,0 +1,18 @@
+{
+  "repo": "https://github.com/nodeca/argparse",
+  "commit": "7a1380ca85630b86c70f280d2b20893f6d994386",
+  "scope": "lib",
+  "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/argparse/_repo/lib",
+  "clean": true,
+  "files": 6,
+  "loc": 4892,
+  "importEdges": 4,
+  "cycles": 0,
+  "digestChars": 332,
+  "promptChars": 203220,
+  "promptFiles": 6,
+  "promptComplete": true,
+  "promptCap": 400000,
+  "estimatedInputTokens": 56450,
+  "dryRun": true
+}

@@ -1,0 +1,18 @@
+{
+  "repo": "https://github.com/janl/mustache.js",
+  "commit": "972fd2b27a036888acfcb60d6119317744fac7ee",
+  "scope": ".",
+  "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/mustache/_repo",
+  "clean": true,
+  "files": 80,
+  "loc": 2402,
+  "importEdges": 11,
+  "cycles": 0,
+  "digestChars": 3948,
+  "promptChars": 90646,
+  "promptFiles": 80,
+  "promptComplete": true,
+  "promptCap": 400000,
+  "estimatedInputTokens": 25179,
+  "dryRun": true
+}

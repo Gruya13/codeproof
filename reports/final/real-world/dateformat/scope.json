@@ -1,0 +1,18 @@
+{
+  "repo": "https://github.com/felixge/node-dateformat",
+  "commit": "e6800aa902fcbd523d5ea06a9a79050878cfa48e",
+  "scope": ".",
+  "scopePath": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/dateformat/_repo",
+  "clean": true,
+  "files": 43,
+  "loc": 2085,
+  "importEdges": 1,
+  "cycles": 0,
+  "digestChars": 1633,
+  "promptChars": 71640,
+  "promptFiles": 43,
+  "promptComplete": true,
+  "promptCap": 400000,
+  "estimatedInputTokens": 19900,
+  "dryRun": true
+}
