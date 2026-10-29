@@ -63,6 +63,7 @@ The pipeline runs end-to-end on the mock adapter (`make demo`) and live against 
 - **Real repositories** (qualitative, each hand-checked and published with both runs): unjs/ofetch, sindresorhus/execa, preactjs/preact, moment/luxon - see [Real-repository run](#real-repository-run-qualitative). The real-API probe round (axios real + injected, fastify, prompt-cache TTL, safety, parallel calls) is under [reports/probes/](reports/probes/).
 - **Controlled verifier test**: two true findings confirmed and one deliberately false claim **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`); the committed run cost **$0.103** and served 3280 of 4065 input tokens from prompt cache. Recorded as `mode: controlled-verifier`, never as scanner output.
 - **Historical recall**: 2/9 known fixes found (both verified); one of the organic refutations is published in the record.
+- **Upstream impact (29 Oct 2026)**: three findings from the v0.2.2 sample were filed as upstream issues ([picomatch #243](https://github.com/micromatch/picomatch/issues/243), [#242](https://github.com/micromatch/picomatch/issues/242), [jsesc #79](https://github.com/mathiasbynens/jsesc/issues/79)); other contributors opened a fix PR for all three within 24 hours - all PRs are **open and unmerged** - see [Upstream impact](#upstream-impact-qualitative).
 
 Numbers are only published when measured - `run.json` says `measured: false` when they are not. Every evidence directory keeps its raw run artifacts.
 
@@ -212,6 +213,7 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 | Safety / prompt-cache TTL / parallel probes | [reports/probes/](reports/probes/) | no content_filter on inert payloads; cache served at +2/+5/+10 min; 6/6 small parallel calls OK, shared prefix cache on 2/3 | single-run probes; no completeness or stability claim |
 | Controlled verifier | [reports/controlled-verifier/](reports/controlled-verifier/) | a strong refutation carries a machine-checked counter-citation | a scanner output - candidates are injected |
 | Historical recall (n=9) | [reports/historical/](reports/historical/) | 2/9 known fixes found; 7 known fixes missed | a benchmark metric; n=9, single directory per test |
+| Upstream impact (3 filed findings) | [picomatch #243](https://github.com/micromatch/picomatch/issues/243), [picomatch #242](https://github.com/micromatch/picomatch/issues/242), [jsesc #79](https://github.com/mathiasbynens/jsesc/issues/79) | three findings from the v0.2.2 sample were filed as upstream issues (28 Oct 2026); other contributors opened a fix PR for all three within 24 hours | they are **open and unmerged** as of 29 Oct 2026; a case study (n = 3), not a benchmark metric - see [Upstream impact](#upstream-impact-qualitative) |
 
 `run.json` keeps the local path of the analyzed checkout; it is provenance, not required for reproduction.
 
@@ -330,6 +332,20 @@ The full L0-L4 chain was run on ten real repositories with **zero runtime depend
 - **Fail-closed is measured:** the process-signal domain (commander) and ESM/TypeScript targets without a build step (marked, dayjs) stay `verified`; none was promoted to an execution proof by force.
 - **Hand adjudication:** the 17 unique verified findings were read against the code (and executed where the clone was executable): 17 confirmed, 0 refuted; 9 are machine-proven. This is a sample statement, not a precision metric.
 - **v0.2.2 verification runs (P1/P2):** after the patcher retry was added, picomatch runs 4-5 and the third jsesc run recovered **three previously lost `patch-proven` proofs** (the `prevIndex` token, `noext` and the jsesc negative-number literal); picomatch run 4 records 4 patcher calls for 2 patch proofs, which is the retry visible in `run.json`. The reproducer-prompt change (P2) **did not** remove the L0 rejections in this sample - the model still failed to tie assertions to a call - so it remains a prompt-level improvement, not a demonstrated fix. Cost of the verification runs: $2.7680.
+
+## Upstream impact (qualitative)
+
+The v0.2.2 sample was also filed back into the projects it analyzed. Three findings were reported in the public trackers on 28 Oct 2026; within 24 hours, **other contributors opened a fix PR for all three**, each linking the report and changing the code the pipeline had cited.
+
+| Finding (as published) | Project | Filed report | External fix PR | Status, 29 Oct 2026 |
+|---|---|---|---|---|
+| an unmatched `)` drives `state.parens` to -1 and corrupts later groups | [micromatch/picomatch](https://github.com/micromatch/picomatch) | [#243](https://github.com/micromatch/picomatch/issues/243) | [#245](https://github.com/micromatch/picomatch/pull/245) by Ekko82 - applies the guard proposed in the report verbatim and names the reporter | open |
+| `noext: true` also clears `isGlob`, so plain globs are reported as non-globs | micromatch/picomatch | [#242](https://github.com/micromatch/picomatch/issues/242) | [#244](https://github.com/micromatch/picomatch/pull/244) by junaidkhan80121 - `Closes #242` | open |
+| radix `numbers` modes emit invalid JavaScript literals for negative, fractional and non-finite values | [mathiasbynens/jsesc](https://github.com/mathiasbynens/jsesc) | [#79](https://github.com/mathiasbynens/jsesc/issues/79) | [#80](https://github.com/mathiasbynens/jsesc/pull/80) by fly1d - "Keep non-integer numbers valid in radix modes"; covers the fractional and non-finite part, the negative-integer sign stays with #73/#76 | open |
+
+- **What this shows:** the findings are real defects that other developers considered worth fixing, and the reports - including their one-line guards - were actionable enough to be reused. PR #245 applies the guard proposed in the report and cites the reporter by name.
+- **What this does not show:** the PRs are **open and unmerged**, with no maintainer response yet, so the correct status is "filed and picked up", not "accepted upstream". It is not a novel-discovery claim: the analyzed commits are public and the jsesc topic already had upstream PRs ([#73](https://github.com/mathiasbynens/jsesc/pull/73), [#76](https://github.com/mathiasbynens/jsesc/pull/76)) before the report, and the two picomatch reports have no earlier issue for those exact lines as far as the public tracker was checked. It is a case study (n = 3), not a recall, precision or cost measurement.
+- **Evidence chain:** the upstream posts are external links, not run artifacts; the in-repository evidence that these findings were published as reported is the committed runs under [reports/v0.2.0/real-world/](reports/v0.2.0/real-world/) - the two filed picomatch findings and the jsesc finding are `patch-proven` in the v0.2.2 table above, i.e. the proposed fix was already in the artifacts when the reports were filed.
 
 ## Historical recall test (qualitative)
 
