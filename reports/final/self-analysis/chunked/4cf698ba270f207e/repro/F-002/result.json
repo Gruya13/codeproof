@@ -1,0 +1,20 @@
+{
+  "status": "unavailable",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "attemptCount": 0,
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "byScanner is a non-exported local constant computed inline inside main() in cli.mjs (lines 433-438); cli.mjs exports only evidenceLevelFor and buildRunBanner, neither of which accepts proposedEntries or computes scanner counts. mergeScannerRuns in scan/merge.mjs only preserves proposedBy labels and does not compute byScanner, so calling it cannot expose the drop. Faithfully exercising the defect requires a full dual-scan analyze run through unexported main(), including loadConfig environment, a target repository, scanner agents/model or mock pipeline, equal scanner/secondary model configuration, and filesystem report output, which cannot be invoked through an imported exported symbol under the stated constraints.",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 12449,
+    "outputTokens": 3407,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.117936
+}

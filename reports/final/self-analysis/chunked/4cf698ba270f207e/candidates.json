@@ -1,0 +1,193 @@
+{
+  "raw": "{\n  \"chunked\": true,\n  \"groups\": [\n    {\n      \"group\": \"(root)\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"Dual-scan cross-verification only triggers for proposedBy \\\\\\\"wonder\\\\\\\" and misses the \\\\\\\"secondary\\\\\\\" label used when secondaryScannerModel equals scannerModel, so those findings use the wrong verifier.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 376, \\\"path\\\": \\\"cli.mjs\\\", \\\"snippet\\\": \\\"      const secondaryLabel = config.secondaryScannerModel === config.scannerModel ? \\\\\\\"secondary\\\\\\\" : \\\\\\\"wonder\\\\\\\";\\\", \\\"startLine\\\": 376}, {\\\"endLine\\\": 473, \\\"path\\\": \\\"cli.mjs\\\", \\\"snippet\\\": \\\"    const crossVerifier = config.dualScan && entry.proposedBy.length === 1 && entry.proposedBy[0] === \\\\\\\"wonder\\\\\\\"\\\\n      ? { complete: function (request) { return agents.complete(Object.assign({}, request, { role: \\\\\\\"verifier-secondary\\\\\\\" })); } }\\\\n      : agents;\\\", \\\"startLine\\\": 471}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"Cross-verifier misses secondary label\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"byScanner accounting only counts \\\\\\\"spark\\\\\\\"/\\\\\\\"wonder\\\\\\\"/\\\\\\\"both\\\\\\\" and drops findings proposed as \\\\\\\"secondary\\\\\\\" when models are equal, so secondary-only findings are invisible in counts and logs.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 376, \\\"path\\\": \\\"cli.mjs\\\", \\\"snippet\\\": \\\"      const secondaryLabel = config.secondaryScannerModel === config.scannerModel ? \\\\\\\"secondary\\\\\\\" : \\\\\\\"wonder\\\\\\\";\\\", \\\"startLine\\\": 376}, {\\\"endLine\\\": 438, \\\"path\\\": \\\"cli.mjs\\\", \\\"snippet\\\": \\\"  const byScanner = {\\\\n    spark: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\\\\\\\"spark\\\\\\\") !== -1; }).length,\\\\n    wonder: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\\\\\\\"wonder\\\\\\\") !== -1; }).length,\\\\n    both: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\\\\\\\"spark\\\\\\\") !== -1 && entry.proposedBy.indexOf(\\\\\\\"wonder\\\\\\\") !== -1; }).length,\\\\n    controlled: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\\\\\\\"controlled\\\\\\\") !== -1; }).length\\\\n  };\\\", \\\"startLine\\\": 433}], \\\"id\\\": \\\"F-002\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"byScanner counts ignore secondary label\\\"}]}\"\n    },\n    {\n      \"group\": \"agents\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"ingest\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"mcp\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"patch\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"repro\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"wordRegex uses a plain {} as cache and tests __idRegexCache[name] directly, so inherited properties like toString, constructor, hasOwnProperty or __proto__ return a non-RegExp value and subsequent .test crashes instead of creating a fresh RegExp.\\\", \\\"confidence\\\": 0.95, \\\"evidence\\\": [{\\\"endLine\\\": 13, \\\"path\\\": \\\"repro/static-checks.mjs\\\", \\\"snippet\\\": \\\"var __idRegexCache = {};\\\\nfunction wordRegex(name) {\\\\n  if (!__idRegexCache[name]) {\\\\n    __idRegexCache[name] = new RegExp(\\\\\\\"\\\\\\\\\\\\\\\\b\\\\\\\" + name.replace(/[.*+?^${}()|[\\\\\\\\]\\\\\\\\\\\\\\\\]/g, \\\\\\\"\\\\\\\\\\\\\\\\$&\\\\\\\") + \\\\\\\"\\\\\\\\\\\\\\\\b\\\\\\\");\\\\n  }\\\\n  return __idRegexCache[name];\\\\n}\\\", \\\"startLine\\\": 7}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"Prototype-polluted regex cache returns inherited value\\\"}, {\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"hasTautology tests self-comparison against the whole file instead of assert segments, so any x===x outside an assertion is reported as a tautological assertion and causes valid reproducers to be rejected.\\\", \\\"confidence\\\": 0.88, \\\"evidence\\\": [{\\\"endLine\\\": 114, \\\"path\\\": \\\"repro/static-checks.mjs\\\", \\\"snippet\\\": \\\"export function hasTautology(code) {\\\\n  const selfCompare = new RegExp(\\\\\\\"\\\\\\\\\\\\\\\\b(\\\\\\\" + IDENT + \\\\\\\")\\\\\\\\\\\\\\\\s*(?:===|!==|==|!=)\\\\\\\\\\\\\\\\s*\\\\\\\\\\\\\\\\1\\\\\\\\\\\\\\\\b\\\\\\\");\\\\n  if (selfCompare.test(code)) return \\\\\\\"self-comparison\\\\\\\";\\\", \\\"startLine\\\": 112}], \\\"id\\\": \\\"F-002\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"Self-comparison checked on whole file not assertions\\\"}]}\"\n    },\n    {\n      \"group\": \"run\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"firstJsonObject treats backslash as an escape even when not inside a string, so the character after an outside-string backslash is skipped and cannot toggle inString or update brace depth, corrupting object boundary detection.\\\", \\\"confidence\\\": 0.85, \\\"evidence\\\": [{\\\"endLine\\\": 59, \\\"path\\\": \\\"run/json.mjs\\\", \\\"snippet\\\": \\\"      const char = source[index];\\\\n      if (escape) { escape = false; continue; }\\\\n      if (char === \\\\\\\"\\\\\\\\\\\\\\\\\\\\\\\") { escape = true; continue; }\\\\n      if (char === '\\\\\\\"') { inString = !inString; continue; }\\\\n      if (inString) continue;\\\", \\\"startLine\\\": 55}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"medium\\\", \\\"title\\\": \\\"Escape flag set outside string literals corrupts JSON scanning\\\"}]}\"\n    },\n    {\n      \"group\": \"scan\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"synthesize\",\n      \"raw\": \"{\\\"findings\\\": [{\\\"category\\\": \\\"correctness\\\", \\\"claim\\\": \\\"proof suffix claims the imported symbol executed for any LinkCheck status except 'unproven', so statuses like failed/error/timeout are still reported as executed proof.\\\", \\\"confidence\\\": 0.9, \\\"evidence\\\": [{\\\"endLine\\\": 192, \\\"path\\\": \\\"synthesize/index.mjs\\\", \\\"snippet\\\": \\\"        const proof = linkcheck.status === \\\\\\\"proven\\\\\\\" && linkcheck.method === \\\\\\\"file\\\\\\\"\\\\n          ? \\\\\\\" - the cited file executed under inspector coverage.\\\\\\\"\\\\n          : \\\\\\\" - the imported symbol executed under inspector coverage.\\\\\\\";\\\\n        lines.push(\\\\\\\"**LinkCheck:** \\\\\\\" + linkcheck.status + method + (linkcheck.detail ? \\\\\\\" (\\\\\\\" + linkcheck.detail + \\\\\\\")\\\\\\\" : \\\\\\\"\\\\\\\") + (linkcheck.status === \\\\\\\"unproven\\\\\\\" ? \\\\\\\" - reported as verified, not execution-proven.\\\\\\\" : proof));\\\", \\\"startLine\\\": 189}], \\\"id\\\": \\\"F-001\\\", \\\"kind\\\": \\\"direct\\\", \\\"severity\\\": \\\"high\\\", \\\"title\\\": \\\"LinkCheck proof text emitted for non-proven statuses\\\"}]}\"\n    },\n    {\n      \"group\": \"verify\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    }\n  ]\n}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Dual-scan cross-verification only triggers for proposedBy \"wonder\" and misses the \"secondary\" label used when secondaryScannerModel equals scannerModel, so those findings use the wrong verifier.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 376,
+            "path": "cli.mjs",
+            "snippet": "      const secondaryLabel = config.secondaryScannerModel === config.scannerModel ? \"secondary\" : \"wonder\";",
+            "startLine": 376
+          },
+          {
+            "endLine": 473,
+            "path": "cli.mjs",
+            "snippet": "    const crossVerifier = config.dualScan && entry.proposedBy.length === 1 && entry.proposedBy[0] === \"wonder\"\n      ? { complete: function (request) { return agents.complete(Object.assign({}, request, { role: \"verifier-secondary\" })); } }\n      : agents;",
+            "startLine": 471
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Cross-verifier misses secondary label"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 189-192 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The ternary at synthesize/index.mjs:192 appends the proof suffix for every status other than 'unproven', and 'error' is a real non-proven status produced at repro/linkcheck.mjs:93 and repro/linkcheck.mjs:101, so an error LinkCheck would be printed as 'the imported symbol executed under inspector coverage.'"
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "byScanner accounting only counts \"spark\"/\"wonder\"/\"both\" and drops findings proposed as \"secondary\" when models are equal, so secondary-only findings are invisible in counts and logs.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 376,
+            "path": "cli.mjs",
+            "snippet": "      const secondaryLabel = config.secondaryScannerModel === config.scannerModel ? \"secondary\" : \"wonder\";",
+            "startLine": 376
+          },
+          {
+            "endLine": 438,
+            "path": "cli.mjs",
+            "snippet": "  const byScanner = {\n    spark: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\"spark\") !== -1; }).length,\n    wonder: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\"wonder\") !== -1; }).length,\n    both: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\"spark\") !== -1 && entry.proposedBy.indexOf(\"wonder\") !== -1; }).length,\n    controlled: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\"controlled\") !== -1; }).length\n  };",
+            "startLine": 433
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "byScanner counts ignore secondary label"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 112-114 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "At repro/static-checks.mjs:112-114 hasTautology tests the selfCompare regex against the whole unscoped code argument and returns \"self-comparison\" before extractAssertSegments is only invoked at repro/static-checks.mjs:115 for the later checks, so any x===x outside an assert segment triggers the tautology rejection."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "wordRegex uses a plain {} as cache and tests __idRegexCache[name] directly, so inherited properties like toString, constructor, hasOwnProperty or __proto__ return a non-RegExp value and subsequent .test crashes instead of creating a fresh RegExp.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 13,
+            "path": "repro/static-checks.mjs",
+            "snippet": "var __idRegexCache = {};\nfunction wordRegex(name) {\n  if (!__idRegexCache[name]) {\n    __idRegexCache[name] = new RegExp(\"\\\\b\" + name.replace(/[.*+?^${}()|[\\]\\\\]/g, \"\\\\$&\") + \"\\\\b\");\n  }\n  return __idRegexCache[name];\n}",
+            "startLine": 7
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Prototype-polluted regex cache returns inherited value"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "hasTautology tests self-comparison against the whole file instead of assert segments, so any x===x outside an assertion is reported as a tautological assertion and causes valid reproducers to be rejected.",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "endLine": 114,
+            "path": "repro/static-checks.mjs",
+            "snippet": "export function hasTautology(code) {\n  const selfCompare = new RegExp(\"\\\\b(\" + IDENT + \")\\\\s*(?:===|!==|==|!=)\\\\s*\\\\1\\\\b\");\n  if (selfCompare.test(code)) return \"self-comparison\";",
+            "startLine": 112
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Self-comparison checked on whole file not assertions"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "firstJsonObject treats backslash as an escape even when not inside a string, so the character after an outside-string backslash is skipped and cannot toggle inString or update brace depth, corrupting object boundary detection.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 59,
+            "path": "run/json.mjs",
+            "snippet": "      const char = source[index];\n      if (escape) { escape = false; continue; }\n      if (char === \"\\\\\") { escape = true; continue; }\n      if (char === '\"') { inString = !inString; continue; }\n      if (inString) continue;",
+            "startLine": 55
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Escape flag set outside string literals corrupts JSON scanning"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "proof suffix claims the imported symbol executed for any LinkCheck status except 'unproven', so statuses like failed/error/timeout are still reported as executed proof.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 192,
+            "path": "synthesize/index.mjs",
+            "snippet": "        const proof = linkcheck.status === \"proven\" && linkcheck.method === \"file\"\n          ? \" - the cited file executed under inspector coverage.\"\n          : \" - the imported symbol executed under inspector coverage.\";\n        lines.push(\"**LinkCheck:** \" + linkcheck.status + method + (linkcheck.detail ? \" (\" + linkcheck.detail + \")\" : \"\") + (linkcheck.status === \"unproven\" ? \" - reported as verified, not execution-proven.\" : proof));",
+            "startLine": 189
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "LinkCheck proof text emitted for non-proven statuses"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "pending"
+    }
+  ]
+}

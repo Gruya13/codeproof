@@ -1,0 +1,561 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Dual-scan cross-verification only triggers for proposedBy \"wonder\" and misses the \"secondary\" label used when secondaryScannerModel equals scannerModel, so those findings use the wrong verifier.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 376,
+          "path": "cli.mjs",
+          "snippet": "      const secondaryLabel = config.secondaryScannerModel === config.scannerModel ? \"secondary\" : \"wonder\";",
+          "startLine": 376
+        },
+        {
+          "endLine": 473,
+          "path": "cli.mjs",
+          "snippet": "    const crossVerifier = config.dualScan && entry.proposedBy.length === 1 && entry.proposedBy[0] === \"wonder\"\n      ? { complete: function (request) { return agents.complete(Object.assign({}, request, { role: \"verifier-secondary\" })); } }\n      : agents;",
+          "startLine": 471
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Cross-verifier misses secondary label"
+    },
+    "status": "uncertain",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 376-376 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "uncertain",
+      "reason": "verifier output was not parseable JSON (empty model output), finish_reason=length"
+    },
+    "repro": null,
+    "patch": null,
+    "evidenceLevel": null
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "byScanner accounting only counts \"spark\"/\"wonder\"/\"both\" and drops findings proposed as \"secondary\" when models are equal, so secondary-only findings are invisible in counts and logs.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 376,
+          "path": "cli.mjs",
+          "snippet": "      const secondaryLabel = config.secondaryScannerModel === config.scannerModel ? \"secondary\" : \"wonder\";",
+          "startLine": 376
+        },
+        {
+          "endLine": 438,
+          "path": "cli.mjs",
+          "snippet": "  const byScanner = {\n    spark: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\"spark\") !== -1; }).length,\n    wonder: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\"wonder\") !== -1; }).length,\n    both: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\"spark\") !== -1 && entry.proposedBy.indexOf(\"wonder\") !== -1; }).length,\n    controlled: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf(\"controlled\") !== -1; }).length\n  };",
+          "startLine": 433
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "byScanner counts ignore secondary label"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 376-376 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: cli.mjs:376 assigns proposedBy \"secondary\" when the scanner models are equal, while cli.mjs:433-438 byScanner only counts \"spark\", \"wonder\", \"both\", and \"controlled\", and cli.mjs:440-444 logs only that breakdown, so secondary-only entries contribute to no byScanner count."
+    },
+    "repro": {
+      "status": "unavailable",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "byScanner is a non-exported local constant computed inline inside main() in cli.mjs (lines 433-438); cli.mjs exports only evidenceLevelFor and buildRunBanner, neither of which accepts proposedEntries or computes scanner counts. mergeScannerRuns in scan/merge.mjs only preserves proposedBy labels and does not compute byScanner, so calling it cannot expose the drop. Faithfully exercising the defect requires a full dual-scan analyze run through unexported main(), including loadConfig environment, a target repository, scanner agents/model or mock pipeline, equal scanner/secondary model configuration, and filesystem report output, which cannot be invoked through an imported exported symbol under the stated constraints.",
+      "artifacts": null,
+      "controlCode": "",
+      "durationMs": 39312,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 12449,
+        "outputTokens": 3407,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.117936
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "wordRegex uses a plain {} as cache and tests __idRegexCache[name] directly, so inherited properties like toString, constructor, hasOwnProperty or __proto__ return a non-RegExp value and subsequent .test crashes instead of creating a fresh RegExp.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 13,
+          "path": "repro/static-checks.mjs",
+          "snippet": "var __idRegexCache = {};\nfunction wordRegex(name) {\n  if (!__idRegexCache[name]) {\n    __idRegexCache[name] = new RegExp(\"\\\\b\" + name.replace(/[.*+?^${}()|[\\]\\\\]/g, \"\\\\$&\") + \"\\\\b\");\n  }\n  return __idRegexCache[name];\n}",
+          "startLine": 7
+        }
+      ],
+      "id": "F-003",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Prototype-polluted regex cache returns inherited value"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 7-13 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The cache is a plain object at repro/static-checks.mjs:7 with only a truthiness guard at repro/static-checks.mjs:9, so inherited truthy properties such as toString or __proto__ bypass RegExp creation and are returned at repro/static-checks.mjs:12, after which callers invoke .test at repro/static-checks.mjs:137 and repro/static-checks.mjs:140."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-sIwW93/snapshot/.codeproof-repro.test.mjs:10:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 60,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-sIwW93/snapshot/.codeproof-repro.test.mjs:10:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 69,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-sIwW93/snapshot/.codeproof-repro.test.mjs:10:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 58,
+          "classification": "assertion-failure"
+        }
+      ],
+      "attemptCount": 3,
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport { assertionTiedToSymbols } from './repro/static-checks.mjs';\nlet caught = null;\nvar result = null;\ntry {\n  var result = assertionTiedToSymbols(\"assert.equal(toString(value), 'x');\", [\"toString\"]);\n} catch (error) {\n  caught = error;\n}\nassert.equal(result !== null && caught === null, true);\nassert.equal(result?.ok, true);\nassert.equal(result?.via, \"direct\");\nassert.equal(result?.symbol, \"toString\");\n",
+      "expectedBehavior": "assertionTiedToSymbols returns {ok:true, via:'direct', symbol:<name>} when an assert segment mentions the given symbol as a word, creating a fresh RegExp for that name.",
+      "rationale": "Control uses ordinary name 'page' which misses the plain-object cache and gets a fresh RegExp, so it passes. Trigger uses inherited property name 'toString': __idRegexCache['toString'] is Object.prototype.toString (truthy, non-RegExp), so wordRegex returns it and .test crashes; the crash is caught and turned into an assertion failure on result/caught.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from 'node:assert/strict';\nimport { assertionTiedToSymbols } from './repro/static-checks.mjs';\nconst result = assertionTiedToSymbols(\"assert.equal(page(items), 1);\", [\"page\"]);\nassert.equal(result.ok, true);\nassert.equal(result.via, \"direct\");\nassert.equal(result.symbol, \"page\");\n",
+      "control": {
+        "code": "import assert from 'node:assert/strict';\nimport { assertionTiedToSymbols } from './repro/static-checks.mjs';\nconst result = assertionTiedToSymbols(\"assert.equal(page(items), 1);\", [\"page\"]);\nassert.equal(result.ok, true);\nassert.equal(result.via, \"direct\");\nassert.equal(result.symbol, \"page\");\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 64,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 60,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 63,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from 'node:assert/strict';\nimport { assertionTiedToSymbols } from './repro/static-checks.mjs';\nlet caught = null;\nvar result = null;\ntry {\n  var result = assertionTiedToSymbols(\"assert.equal(toString(value), 'x');\", [\"toString\"]);\n} catch (error) {\n  caught = error;\n}\nassert.equal(result !== null && caught === null, true);\nassert.equal(result?.ok, true);\nassert.equal(result?.via, \"direct\");\nassert.equal(result?.symbol, \"toString\");\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-sIwW93/snapshot/.codeproof-repro.test.mjs:10:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 60,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-sIwW93/snapshot/.codeproof-repro.test.mjs:10:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 69,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at file:///tmp/codeproof-repro-sIwW93/snapshot/.codeproof-repro.test.mjs:10:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 58,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "repro/static-checks.mjs",
+        "targetFiles": [
+          "repro/static-checks.mjs"
+        ],
+        "symbols": [
+          "assertionTiedToSymbols"
+        ],
+        "method": "symbol",
+        "executed": {
+          "wordRegex": 1,
+          "extractAssertSegments": 1,
+          "extractAssignedFromCall": 1,
+          "assertionTiedToSymbols": 1
+        },
+        "detail": null
+      },
+      "durationMs": 139028,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 6048,
+        "outputTokens": 16481,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.353812
+    },
+    "patch": {
+      "status": "patch-proven",
+      "diff": "--- a/repro/static-checks.mjs\n+++ b/repro/static-checks.mjs\n@@ -7,1 +7,1 @@\n-var __idRegexCache = {};\n+var __idRegexCache = Object.create(null);",
+      "targetFile": "repro/static-checks.mjs",
+      "searchBlock": "var __idRegexCache = {};",
+      "replaceBlock": "var __idRegexCache = Object.create(null);",
+      "searchBlockSha256": "48f23a5f1145f353b2d74ad96a5030507a3fdf280d4acaf935dbfcf8d4422fb4",
+      "replaceBlockSha256": "ab10a04497643da222591266e0cb5ae80b0d00b264a63c8ff87a1b172e06c66e",
+      "rationale": "Use a null-prototype cache so inherited Object.prototype members like toString are not mistaken for cached RegExps.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 65,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 63,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 62,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 61,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 59,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 61,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        }
+      },
+      "warnings": [],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 6838,
+        "outputTokens": 1290,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.053152,
+      "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+      "durationMs": 10493
+    },
+    "evidenceLevel": "patch-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "hasTautology tests self-comparison against the whole file instead of assert segments, so any x===x outside an assertion is reported as a tautological assertion and causes valid reproducers to be rejected.",
+      "confidence": 0.88,
+      "evidence": [
+        {
+          "endLine": 114,
+          "path": "repro/static-checks.mjs",
+          "snippet": "export function hasTautology(code) {\n  const selfCompare = new RegExp(\"\\\\b(\" + IDENT + \")\\\\s*(?:===|!==|==|!=)\\\\s*\\\\1\\\\b\");\n  if (selfCompare.test(code)) return \"self-comparison\";",
+          "startLine": 112
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Self-comparison checked on whole file not assertions"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 112-114 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At repro/static-checks.mjs:112-114 hasTautology tests the selfCompare regex against the whole unscoped code argument and returns \"self-comparison\" before extractAssertSegments is only invoked at repro/static-checks.mjs:115 for the later checks, so any x===x outside an assert segment triggers the tautology rejection."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: unsupported response must not include testCode; unsupported response must not include controlCode; unsupportedReason is too short",
+      "artifacts": null,
+      "durationMs": 31266,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2990,
+        "outputTokens": 3772,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.0874
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "firstJsonObject treats backslash as an escape even when not inside a string, so the character after an outside-string backslash is skipped and cannot toggle inString or update brace depth, corrupting object boundary detection.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 59,
+          "path": "run/json.mjs",
+          "snippet": "      const char = source[index];\n      if (escape) { escape = false; continue; }\n      if (char === \"\\\\\") { escape = true; continue; }\n      if (char === '\"') { inString = !inString; continue; }\n      if (inString) continue;",
+          "startLine": 55
+        }
+      ],
+      "id": "F-005",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Escape flag set outside string literals corrupts JSON scanning"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 55-59 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The code at run/json.mjs:56-57 unconditionally consumes the next character and sets escape on any backslash before the quote toggle at run/json.mjs:58 and brace-depth handling at run/json.mjs:60-62, so an outside-string backslash does skip a quote or brace and corrupt boundary detection."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "empty model output",
+      "artifacts": null,
+      "durationMs": 258013,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 3742,
+        "outputTokens": 24000,
+        "cachedTokens": 1000
+      },
+      "costUsd": 0.491168
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "proof suffix claims the imported symbol executed for any LinkCheck status except 'unproven', so statuses like failed/error/timeout are still reported as executed proof.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 192,
+          "path": "synthesize/index.mjs",
+          "snippet": "        const proof = linkcheck.status === \"proven\" && linkcheck.method === \"file\"\n          ? \" - the cited file executed under inspector coverage.\"\n          : \" - the imported symbol executed under inspector coverage.\";\n        lines.push(\"**LinkCheck:** \" + linkcheck.status + method + (linkcheck.detail ? \" (\" + linkcheck.detail + \")\" : \"\") + (linkcheck.status === \"unproven\" ? \" - reported as verified, not execution-proven.\" : proof));",
+          "startLine": 189
+        }
+      ],
+      "id": "F-006",
+      "kind": "direct",
+      "severity": "high",
+      "title": "LinkCheck proof text emitted for non-proven statuses"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 189-192 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The ternary at synthesize/index.mjs:192 appends the proof suffix for every status other than 'unproven', and 'error' is a real non-proven status produced at repro/linkcheck.mjs:93 and repro/linkcheck.mjs:101, so an error LinkCheck would be printed as 'the imported symbol executed under inspector coverage.'"
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol",
+      "artifacts": null,
+      "durationMs": 47520,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 6413,
+        "outputTokens": 5856,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.142772
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

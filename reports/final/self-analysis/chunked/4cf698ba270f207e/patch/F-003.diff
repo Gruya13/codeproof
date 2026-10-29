@@ -1,0 +1,5 @@
+--- a/repro/static-checks.mjs
++++ b/repro/static-checks.mjs
+@@ -7,1 +7,1 @@
+-var __idRegexCache = {};
++var __idRegexCache = Object.create(null);

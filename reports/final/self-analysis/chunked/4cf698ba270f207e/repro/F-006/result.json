@@ -1,0 +1,20 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "attemptCount": 0,
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 6413,
+    "outputTokens": 5856,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.142772
+}

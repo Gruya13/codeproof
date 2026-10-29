@@ -1,1 +1,1 @@
-{"attemptNo":1,"block":"F1","label":"dogfood-chunked","startedAt":"2026-10-29T19:24:57.709Z","endedAt":null,"status":"reserved","reservedUsd":4,"costUsd":null,"runDir":null,"note":null}
+{"attemptNo":1,"block":"F1","label":"dogfood-chunked","startedAt":"2026-10-29T19:24:57.709Z","endedAt":"2026-10-29T19:44:52.583Z","status":"ok","reservedUsd":4,"costUsd":2.2968625,"runDir":"reports/final/self-analysis/chunked/4cf698ba270f207e","note":null}
