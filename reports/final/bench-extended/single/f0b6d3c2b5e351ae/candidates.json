@@ -1,0 +1,263 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Cancel guard is inverted: when no cancellation has been requested (!token.reason) it returns early without setting reason, so cancel() never creates a CanceledError.\", \"confidence\": 1.0, \"evidence\": [{\"endLine\": 62, \"path\": \"cancel/CancelToken.js\", \"snippet\": \"    executor(function cancel(message, config, request) {\\n      if (!token.reason) {\\n        // Cancellation has already been requested\\n        return;\\n      }\\n\\n      token.reason = new CanceledError(message, config, request);\\n      resolvePromise(token.reason);\\n    });\", \"startLine\": 54}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"CancelToken cancel never sets reason due to inverted check\"}, {\"category\": \"correctness\", \"claim\": \"settle resolves any response with status <500 even when validateStatus returns false, so 4xx errors incorrectly resolve instead of rejecting.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 18, \"path\": \"core/settle.js\", \"snippet\": \"export default function settle(resolve, reject, response) {\\n  const validateStatus = response.config.validateStatus;\\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\\n    resolve(response);\", \"startLine\": 14}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"critical\", \"title\": \"settle OR with status<500 bypasses validateStatus\"}, {\"category\": \"correctness\", \"claim\": \"spread wraps array as single argument [arr] instead of spreading arr, so f(x,y,z) receives the whole array as x.\", \"confidence\": 1.0, \"evidence\": [{\"endLine\": 28, \"path\": \"helpers/spread.js\", \"snippet\": \"export default function spread(callback) {\\n  return function wrap(arr) {\\n    return callback.apply(null, [arr]);\\n  };\", \"startLine\": 24}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"spread does not expand array arguments\"}, {\"category\": \"correctness\", \"claim\": \"combineURLs strips trailing slashes from base and leading slashes from relative then concatenates without inserting '/', producing e.g. base+relative without separator.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 23, \"path\": \"helpers/combineURLs.js\", \"snippet\": \"export default function combineURLs(baseURL, relativeURL) {\\n  if (!relativeURL) {\\n    return baseURL;\\n  }\\n\\n  let end = baseURL.length;\\n\\n  while (end > 0 && baseURL.charCodeAt(end - 1) === 47) {\\n    end--;\\n  }\\n\\n  return baseURL.slice(0, end) + relativeURL.replace(/^\\\\/+/, '');\", \"startLine\": 11}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"combineURLs missing slash separator\"}, {\"category\": \"correctness\", \"claim\": \"isAxiosError uses !== false so any object without isAxiosError (undefined !== false) returns true, misidentifying plain objects as Axios errors.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 14, \"path\": \"helpers/isAxiosError.js\", \"snippet\": \"export default function isAxiosError(payload) {\\n  return utils.isObject(payload) && payload.isAxiosError !== false;\\n}\", \"startLine\": 12}], \"id\": \"F-005\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"isAxiosError returns true for non-Axios objects\"}, {\"category\": \"correctness\", \"claim\": \"buildURL keeps '#' via slice(0,hashmarkIndex+1) then appends query after fragment, placing serialized params inside fragment instead of query string.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 66, \"path\": \"helpers/buildURL.js\", \"snippet\": \"  if (serializedParams) {\\n    const hashmarkIndex = url.indexOf('#');\\n\\n    if (hashmarkIndex !== -1) {\\n      url = url.slice(0, hashmarkIndex + 1);\\n    }\\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;\", \"startLine\": 59}], \"id\": \"F-006\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"buildURL appends query after hash fragment\"}, {\"category\": \"correctness\", \"claim\": \"throttle timer callback invokes stale closure args instead of lastArgs, so coalesced calls report first args rather than latest.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 37, \"path\": \"helpers/throttle.js\", \"snippet\": \"  const throttled = (...args) => {\\n    const now = Date.now();\\n    const passed = now - timestamp;\\n    if (passed >= threshold) {\\n      invoke(args, now);\\n    } else {\\n      lastArgs = args;\\n      if (!timer) {\\n        timer = setTimeout(() => {\\n          timer = null;\\n          invoke(args);\\n        }, threshold - passed);\", \"startLine\": 23}], \"id\": \"F-007\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"throttle replays stale args instead of lastArgs\"}, {\"category\": \"correctness\", \"claim\": \"start() overwrites this.timer with new setInterval without clearing existing handle, leaking prior interval on repeated start.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 12, \"path\": \"helpers/scheduler.js\", \"snippet\": \"  return {\\n    timer: null,\\n    start(callback, intervalMs) {\\n      this.timer = setInterval(callback, intervalMs);\\n    },\\n    stop() {\\n      clearInterval(this.timer);\\n      this.timer = null;\\n    }\", \"startLine\": 4}], \"id\": \"F-008\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"scheduler start replaces timer without clearing\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Cancel guard is inverted: when no cancellation has been requested (!token.reason) it returns early without setting reason, so cancel() never creates a CanceledError.",
+        "confidence": 1,
+        "evidence": [
+          {
+            "endLine": 62,
+            "path": "cancel/CancelToken.js",
+            "snippet": "    executor(function cancel(message, config, request) {\n      if (!token.reason) {\n        // Cancellation has already been requested\n        return;\n      }\n\n      token.reason = new CanceledError(message, config, request);\n      resolvePromise(token.reason);\n    });",
+            "startLine": 54
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "CancelToken cancel never sets reason due to inverted check"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 54-62 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The guard at cancel/CancelToken.js:55 returns early when token.reason is falsy (its initial state), so the assignment at cancel/CancelToken.js:60 is unreachable on first cancel and no CanceledError is created."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "settle resolves any response with status <500 even when validateStatus returns false, so 4xx errors incorrectly resolve instead of rejecting.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 18,
+            "path": "core/settle.js",
+            "snippet": "export default function settle(resolve, reject, response) {\n  const validateStatus = response.config.validateStatus;\n  if (!response.status || !validateStatus || validateStatus(response.status) || response.status < 500) {\n    resolve(response);",
+            "startLine": 14
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "critical",
+        "title": "settle OR with status<500 bypasses validateStatus"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 5 non-blank lines but snippet has 4"
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "spread wraps array as single argument [arr] instead of spreading arr, so f(x,y,z) receives the whole array as x.",
+        "confidence": 1,
+        "evidence": [
+          {
+            "endLine": 28,
+            "path": "helpers/spread.js",
+            "snippet": "export default function spread(callback) {\n  return function wrap(arr) {\n    return callback.apply(null, [arr]);\n  };",
+            "startLine": 24
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "high",
+        "title": "spread does not expand array arguments"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 5 non-blank lines but snippet has 4"
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "combineURLs strips trailing slashes from base and leading slashes from relative then concatenates without inserting '/', producing e.g. base+relative without separator.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 23,
+            "path": "helpers/combineURLs.js",
+            "snippet": "export default function combineURLs(baseURL, relativeURL) {\n  if (!relativeURL) {\n    return baseURL;\n  }\n\n  let end = baseURL.length;\n\n  while (end > 0 && baseURL.charCodeAt(end - 1) === 47) {\n    end--;\n  }\n\n  return baseURL.slice(0, end) + relativeURL.replace(/^\\/+/, '');",
+            "startLine": 11
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "high",
+        "title": "combineURLs missing slash separator"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 13 non-blank lines but snippet has 12"
+      }
+    },
+    {
+      "index": 4,
+      "candidate": {
+        "category": "correctness",
+        "claim": "isAxiosError uses !== false so any object without isAxiosError (undefined !== false) returns true, misidentifying plain objects as Axios errors.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 14,
+            "path": "helpers/isAxiosError.js",
+            "snippet": "export default function isAxiosError(payload) {\n  return utils.isObject(payload) && payload.isAxiosError !== false;\n}",
+            "startLine": 12
+          }
+        ],
+        "id": "F-005",
+        "kind": "direct",
+        "severity": "high",
+        "title": "isAxiosError returns true for non-Axios objects"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 12-14 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The function at helpers/isAxiosError.js:13 returns utils.isObject(payload) && payload.isAxiosError !== false, so a plain object lacking the property yields undefined !== false and is classified as an Axios error."
+      }
+    },
+    {
+      "index": 5,
+      "candidate": {
+        "category": "correctness",
+        "claim": "buildURL keeps '#' via slice(0,hashmarkIndex+1) then appends query after fragment, placing serialized params inside fragment instead of query string.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 66,
+            "path": "helpers/buildURL.js",
+            "snippet": "  if (serializedParams) {\n    const hashmarkIndex = url.indexOf('#');\n\n    if (hashmarkIndex !== -1) {\n      url = url.slice(0, hashmarkIndex + 1);\n    }\n    url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;",
+            "startLine": 59
+          }
+        ],
+        "id": "F-006",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "buildURL appends query after hash fragment"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 8 non-blank lines but snippet has 7"
+      }
+    },
+    {
+      "index": 6,
+      "candidate": {
+        "category": "correctness",
+        "claim": "throttle timer callback invokes stale closure args instead of lastArgs, so coalesced calls report first args rather than latest.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 37,
+            "path": "helpers/throttle.js",
+            "snippet": "  const throttled = (...args) => {\n    const now = Date.now();\n    const passed = now - timestamp;\n    if (passed >= threshold) {\n      invoke(args, now);\n    } else {\n      lastArgs = args;\n      if (!timer) {\n        timer = setTimeout(() => {\n          timer = null;\n          invoke(args);\n        }, threshold - passed);",
+            "startLine": 23
+          }
+        ],
+        "id": "F-007",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "throttle replays stale args instead of lastArgs"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 15 non-blank lines but snippet has 12"
+      }
+    },
+    {
+      "index": 7,
+      "candidate": {
+        "category": "correctness",
+        "claim": "start() overwrites this.timer with new setInterval without clearing existing handle, leaking prior interval on repeated start.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 12,
+            "path": "helpers/scheduler.js",
+            "snippet": "  return {\n    timer: null,\n    start(callback, intervalMs) {\n      this.timer = setInterval(callback, intervalMs);\n    },\n    stop() {\n      clearInterval(this.timer);\n      this.timer = null;\n    }",
+            "startLine": 4
+          }
+        ],
+        "id": "F-008",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "scheduler start replaces timer without clearing"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 4-12 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "start() at helpers/scheduler.js:7 assigns this.timer = setInterval(callback, intervalMs) without any preceding clearInterval, so a repeated start orphans the prior handle and stop() at helpers/scheduler.js:10 can only clear the latest one."
+      }
+    }
+  ]
+}

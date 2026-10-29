@@ -1,0 +1,5 @@
+--- a/helpers/isAxiosError.js
++++ b/helpers/isAxiosError.js
+@@ -13,1 +13,1 @@
+-  return utils.isObject(payload) && payload.isAxiosError !== false;
++  return utils.isObject(payload) && payload.isAxiosError === true;

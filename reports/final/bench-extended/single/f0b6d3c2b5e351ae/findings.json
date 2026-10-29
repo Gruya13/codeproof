@@ -1,0 +1,390 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Cancel guard is inverted: when no cancellation has been requested (!token.reason) it returns early without setting reason, so cancel() never creates a CanceledError.",
+      "confidence": 1,
+      "evidence": [
+        {
+          "endLine": 62,
+          "path": "cancel/CancelToken.js",
+          "snippet": "    executor(function cancel(message, config, request) {\n      if (!token.reason) {\n        // Cancellation has already been requested\n        return;\n      }\n\n      token.reason = new CanceledError(message, config, request);\n      resolvePromise(token.reason);\n    });",
+          "startLine": 54
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "critical",
+      "title": "CancelToken cancel never sets reason due to inverted check"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 54-62 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The guard at cancel/CancelToken.js:55 returns early when token.reason is falsy (its initial state), so the assignment at cancel/CancelToken.js:60 is unreachable on first cancel and no CanceledError is created."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol",
+      "artifacts": null,
+      "durationMs": 62054,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2179,
+        "outputTokens": 6082,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.130356
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "isAxiosError uses !== false so any object without isAxiosError (undefined !== false) returns true, misidentifying plain objects as Axios errors.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 14,
+          "path": "helpers/isAxiosError.js",
+          "snippet": "export default function isAxiosError(payload) {\n  return utils.isObject(payload) && payload.isAxiosError !== false;\n}",
+          "startLine": 12
+        }
+      ],
+      "id": "F-005",
+      "kind": "direct",
+      "severity": "high",
+      "title": "isAxiosError returns true for non-Axios objects"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-005"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 12-14 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The function at helpers/isAxiosError.js:13 returns utils.isObject(payload) && payload.isAxiosError !== false, so a plain object lacking the property yields undefined !== false and is classified as an Axios error."
+    },
+    "repro": {
+      "status": "reproduced",
+      "classification": "assertion-failure",
+      "attempts": [
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-zdyh9Z/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 62,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-zdyh9Z/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 63,
+          "classification": "assertion-failure"
+        },
+        {
+          "exitCode": 1,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-zdyh9Z/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+          "durationMs": 58,
+          "classification": "assertion-failure"
+        }
+      ],
+      "attemptCount": 3,
+      "deterministic": true,
+      "testCode": "import assert from 'node:assert/strict';\nimport isAxiosError from './helpers/isAxiosError.js';\n\nconst result = isAxiosError({ message: 'plain object' });\nassert.equal(result, false);\n",
+      "expectedBehavior": "isAxiosError returns false for objects that are not Axios errors and true only for Axios errors.",
+      "rationale": "Control passes because an explicit isAxiosError:false is respected, while a plain object without the flag is incorrectly returned as true due to undefined !== false.",
+      "reason": "control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit",
+      "artifacts": null,
+      "controlCode": "import assert from 'node:assert/strict';\nimport isAxiosError from './helpers/isAxiosError.js';\n\nconst result = isAxiosError({ isAxiosError: false });\nassert.equal(result, false);\n",
+      "control": {
+        "code": "import assert from 'node:assert/strict';\nimport isAxiosError from './helpers/isAxiosError.js';\n\nconst result = isAxiosError({ isAxiosError: false });\nassert.equal(result, false);\n",
+        "classification": "passed",
+        "attempts": [
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 56,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 59,
+            "classification": "passed"
+          },
+          {
+            "exitCode": 0,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "",
+            "durationMs": 58,
+            "classification": "passed"
+          }
+        ],
+        "deterministic": true
+      },
+      "trigger": {
+        "code": "import assert from 'node:assert/strict';\nimport isAxiosError from './helpers/isAxiosError.js';\n\nconst result = isAxiosError({ message: 'plain object' });\nassert.equal(result, false);\n",
+        "classification": "assertion-failure",
+        "attempts": [
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-zdyh9Z/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 62,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-zdyh9Z/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 63,
+            "classification": "assertion-failure"
+          },
+          {
+            "exitCode": 1,
+            "signal": null,
+            "killed": false,
+            "errorCode": null,
+            "stdout": "",
+            "stderr": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///tmp/codeproof-repro-zdyh9Z/snapshot/.codeproof-repro.test.mjs:5:8\n    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: true,\n  expected: false,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v26.8.2\n",
+            "durationMs": 58,
+            "classification": "assertion-failure"
+          }
+        ],
+        "deterministic": true
+      },
+      "linkcheck": {
+        "status": "proven",
+        "targetFile": "helpers/isAxiosError.js",
+        "targetFiles": [
+          "helpers/isAxiosError.js"
+        ],
+        "symbols": [
+          "isAxiosError"
+        ],
+        "method": "symbol",
+        "executed": {
+          "isAxiosError": 1
+        },
+        "detail": null
+      },
+      "durationMs": 23944,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1327,
+        "outputTokens": 2449,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.054288
+    },
+    "patch": {
+      "status": "patch-proven",
+      "diff": "--- a/helpers/isAxiosError.js\n+++ b/helpers/isAxiosError.js\n@@ -13,1 +13,1 @@\n-  return utils.isObject(payload) && payload.isAxiosError !== false;\n+  return utils.isObject(payload) && payload.isAxiosError === true;",
+      "targetFile": "helpers/isAxiosError.js",
+      "searchBlock": "export default function isAxiosError(payload) {\n  return utils.isObject(payload) && payload.isAxiosError !== false;\n}",
+      "replaceBlock": "export default function isAxiosError(payload) {\n  return utils.isObject(payload) && payload.isAxiosError === true;\n}",
+      "searchBlockSha256": "6d569df61ed1ae96a406e5d608e012aeb8d05f7baa2da776e5ec3fd842975876",
+      "replaceBlockSha256": "501d71e61c348b15e1e50f9e3f384c3ffa6d3346e5723962e5547cb2e8f44211",
+      "rationale": "Plain objects lack isAxiosError, so !== false incorrectly returns true; requiring === true preserves the false control case.",
+      "attempts": {
+        "control": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 67,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 64,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 63,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        },
+        "trigger": {
+          "classification": "passed",
+          "attempts": [
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 75,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 68,
+              "classification": "passed"
+            },
+            {
+              "exitCode": 0,
+              "signal": null,
+              "killed": false,
+              "errorCode": null,
+              "stdout": "",
+              "stderr": "",
+              "durationMs": 64,
+              "classification": "passed"
+            }
+          ],
+          "deterministic": true
+        }
+      },
+      "warnings": [],
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 7358,
+        "outputTokens": 1277,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.054972,
+      "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+      "durationMs": 14667
+    },
+    "evidenceLevel": "patch-proven"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "start() overwrites this.timer with new setInterval without clearing existing handle, leaking prior interval on repeated start.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 12,
+          "path": "helpers/scheduler.js",
+          "snippet": "  return {\n    timer: null,\n    start(callback, intervalMs) {\n      this.timer = setInterval(callback, intervalMs);\n    },\n    stop() {\n      clearInterval(this.timer);\n      this.timer = null;\n    }",
+          "startLine": 4
+        }
+      ],
+      "id": "F-008",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "scheduler start replaces timer without clearing"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-008"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 4-12 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "start() at helpers/scheduler.js:7 assigns this.timer = setInterval(callback, intervalMs) without any preceding clearInterval, so a repeated start orphans the prior handle and stop() at helpers/scheduler.js:10 can only clear the latest one."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 36282,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 1313,
+        "outputTokens": 2876,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.062772
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

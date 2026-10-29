@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeProof report - f0b6d3c2b5e351ae</title>
+<style>:root { color-scheme: dark; --bg: #0f1115; --panel: #171a21; --line: #2a2f3a; --text: #e6e8ee; --muted: #9aa3b2; --ok: #2f9e6f; --warn: #b8862f; --bad: #b04a4a; --blue: #3b6ea5; }
+body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 28px 0 10px; }
+h3 { font-size: 16px; margin: 0 0 6px; }
+.meta, .muted { color: var(--muted); font-size: 13px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; }
+td, th { text-align: left; padding: 3px 10px 3px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.funnel { display: flex; gap: 10px; flex-wrap: wrap; }
+.step { background: #11151c; border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; min-width: 120px; }
+.step .n { font-size: 22px; font-weight: 700; }
+.finding { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.badge { display: inline-block; border-radius: 4px; padding: 1px 8px; font-size: 12px; margin: 0 6px 6px 0; border: 1px solid var(--line); }
+.badge.ok { border-color: var(--ok); } .badge.warn { border-color: var(--warn); } .badge.bad { border-color: var(--bad); } .badge.info { border-color: var(--blue); }
+pre { background: #0b0e13; border: 1px solid var(--line); border-radius: 6px; padding: 10px; overflow-x: auto; font-size: 13px; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+details { margin: 8px 0; } summary { cursor: pointer; color: var(--muted); }
+.cite { color: var(--muted); font-size: 13px; }
+footer { margin-top: 34px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; }
+a { color: #8ab4f8; }</style>
+</head>
+<body>
+<h1>CodeProof report</h1>
+<p class="meta">run-id: f0b6d3c2b5e351ae | mode: smoke | commit: b2c8f4c90801b6c2260a43ce7550c22868a0fb82 | config: 9c0a3c84bda394b8fe6fb15bae1abceb03bd87d9fca2c076ebe61277ed0ed191</p>
+<p class="meta">models: scanner-correctness=muse-spark-1.3, verifier=muse-wonder-1.0, repro=muse-wonder-1.0 | codeproof 0.2.2 | node v26.8.2</p>
+<h2>Evidence funnel</h2>
+<div class="panel"><div class="funnel"><div class="step"><div class="n">8</div><div class="muted">proposed</div></div><div class="step"><div class="n">5</div><div class="muted">L1 rejected</div></div><div class="step"><div class="n">3</div><div class="muted">verified</div></div><div class="step"><div class="n">1</div><div class="muted">execution-proven</div></div><div class="step"><div class="n">1</div><div class="muted">patch-proven</div></div></div></div>
+<h2>Summary</h2>
+<div class="panel"><table><tr><td>Files / LOC</td><td>74 / 9564</td></tr><tr><td>Files in scanner prompt</td><td>74 / 74</td></tr><tr><td>Findings proposed</td><td>8</td></tr><tr><td>Rejected at L1 (bad citation)</td><td>5</td></tr><tr><td>Verified</td><td>3</td></tr><tr><td>Execution-proven (L3)</td><td>1</td></tr><tr><td>Patch-proven (L4)</td><td>1</td></tr><tr><td>Moderate / refuted / uncertain</td><td>0 / 0 / 0</td></tr><tr><td>Calls / retries</td><td>8 / 0</td></tr><tr><td>Tokens in / out</td><td>127854 / 20801</td></tr><tr><td>Cached input tokens</td><td>0</td></tr><tr><td>Cost</td><td>$0.6068</td></tr></table></div>
+<h2>Verified findings</h2>
+<article class="finding"><h3>F-001 - critical - CancelToken cancel never sets reason due to inverted check</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> Cancel guard is inverted: when no cancellation has been requested (!token.reason) it returns early without setting reason, so cancel() never creates a CanceledError.</p><p class="cite">cancel/CancelToken.js:54-62</p><pre><code>    executor(function cancel(message, config, request) {
+      if (!token.reason) {
+        // Cancellation has already been requested
+        return;
+      }
+
+      token.reason = new CanceledError(message, config, request);
+      resolvePromise(token.reason);
+    });</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The guard at cancel/CancelToken.js:55 returns early when token.reason is falsy (its initial state), so the assignment at cancel/CancelToken.js:60 is unreachable on first cancel and no CanceledError is created.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol</p></article>
+<article class="finding"><h3>F-005 - high - isAxiosError returns true for non-Axios objects</h3><span class="badge ok">verified / patch-proven</span><p><strong>Claim:</strong> isAxiosError uses !== false so any object without isAxiosError (undefined !== false) returns true, misidentifying plain objects as Axios errors.</p><p class="cite">helpers/isAxiosError.js:12-14</p><pre><code>export default function isAxiosError(payload) {
+  return utils.isObject(payload) &amp;&amp; payload.isAxiosError !== false;
+}</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The function at helpers/isAxiosError.js:13 returns utils.isObject(payload) &amp;&amp; payload.isAxiosError !== false, so a plain object lacking the property yields undefined !== false and is classified as an Axios error.</p><span class="badge ok">repro reproduced</span><span class="badge info">3 runs</span><p class="muted">control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit</p><details><summary>[CONTROL] code (must pass)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import isAxiosError from &#39;./helpers/isAxiosError.js&#39;;
+
+const result = isAxiosError({ isAxiosError: false });
+assert.equal(result, false);
+</code></pre></details><details><summary>[TRIGGER] code (must fail on the analyzed commit)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import isAxiosError from &#39;./helpers/isAxiosError.js&#39;;
+
+const result = isAxiosError({ message: &#39;plain object&#39; });
+assert.equal(result, false);
+</code></pre></details><span class="badge ok">linkcheck proven (symbol)</span><span class="badge ok">patch patch-proven</span><p class="cite">target: helpers/isAxiosError.js</p><p class="muted">control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)</p><details><summary>searchBlock</summary><pre><code>export default function isAxiosError(payload) {
+  return utils.isObject(payload) &amp;&amp; payload.isAxiosError !== false;
+}</code></pre></details><details><summary>replaceBlock</summary><pre><code>export default function isAxiosError(payload) {
+  return utils.isObject(payload) &amp;&amp; payload.isAxiosError === true;
+}</code></pre></details><details><summary>patch diff</summary><pre><code>--- a/helpers/isAxiosError.js
++++ b/helpers/isAxiosError.js
+@@ -13,1 +13,1 @@
+-  return utils.isObject(payload) &amp;&amp; payload.isAxiosError !== false;
++  return utils.isObject(payload) &amp;&amp; payload.isAxiosError === true;</code></pre></details></article>
+<article class="finding"><h3>F-008 - medium - scheduler start replaces timer without clearing</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> start() overwrites this.timer with new setInterval without clearing existing handle, leaking prior interval on repeated start.</p><p class="cite">helpers/scheduler.js:4-12</p><pre><code>  return {
+    timer: null,
+    start(callback, intervalMs) {
+      this.timer = setInterval(callback, intervalMs);
+    },
+    stop() {
+      clearInterval(this.timer);
+      this.timer = null;
+    }</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - start() at helpers/scheduler.js:7 assigns this.timer = setInterval(callback, intervalMs) without any preceding clearInterval, so a repeated start orphans the prior handle and stop() at helpers/scheduler.js:10 can only clear the latest one.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments</p></article>
+<h2>Rejected and unresolved</h2>
+<details><summary>Other published findings: 0 (refuted / moderate / uncertain)</summary></details><details><summary>Rejected candidates (audit trail): 5</summary><p class="cite">F-002 - l1-rejected - by spark - citation range expects 5 non-blank lines but snippet has 4</p><p class="cite">F-003 - l1-rejected - by spark - citation range expects 5 non-blank lines but snippet has 4</p><p class="cite">F-004 - l1-rejected - by spark - citation range expects 13 non-blank lines but snippet has 12</p><p class="cite">F-006 - l1-rejected - by spark - citation range expects 8 non-blank lines but snippet has 7</p><p class="cite">F-007 - l1-rejected - by spark - citation range expects 15 non-blank lines but snippet has 12</p></details>
+<footer>
+<p>This page is a static view of the recorded evidence; it re-runs nothing. Levels: citation-proven = L1 (provenance, not a semantic judge); verified = L1 + L2 (a model judgment); execution-proven = L3 (two-phase reproducer + LinkCheck under the Node permission model); patch-proven = L4 (differential result on a copy of the snapshot, not a root-cause fix; the repository's own test suite is never run). Offline replay verifies the artifacts and mechanical gates; it does not re-execute the semantic L2 verdict.</p>
+<p>Artifacts: <a href="./findings.json">findings.json</a> | <a href="./rejected.md">rejected.md</a> | <a href="./REPORT.md">REPORT.md</a> | <a href="./run.json">run.json</a>. Every artifact of this run, including this file, is hashed in <code>run.json.attestation</code>.</p>
+<p>Findings proposed: 8 | verified: 3 | execution-proven: 1 | patch-proven: 1</p>
+</footer>
+</body>
+</html>
