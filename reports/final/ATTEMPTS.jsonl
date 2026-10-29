@@ -4,3 +4,4 @@
 {"attemptNo":4,"block":"F1","label":"dogfood-single-r2","startedAt":"2026-10-29T19:59:59.902Z","endedAt":"2026-10-29T20:00:41.243Z","status":"ok","reservedUsd":3,"costUsd":0.1213785,"runDir":"reports/final/self-analysis/single-r2/8f1a9861e591b2d7","note":null}
 {"attemptNo":5,"block":"F3","label":"bench-single-1","startedAt":"2026-10-29T20:09:14.543Z","endedAt":"2026-10-29T20:17:16.265Z","status":"ok","reservedUsd":2.5,"costUsd":0.9425631499999998,"runDir":"reports/final/bench-calibration/single-1/ae354d4fdabfded1","note":null}
 {"attemptNo":6,"block":"F3","label":"bench-single-2","startedAt":"2026-10-29T20:17:21.981Z","endedAt":"2026-10-29T20:26:56.668Z","status":"ok","reservedUsd":2.5,"costUsd":1.10730755,"runDir":"reports/final/bench-calibration/single-2/77ca0cd10b081478","note":null}
+{"attemptNo":7,"block":"F3","label":"bench-dual","startedAt":"2026-10-29T20:27:01.491Z","endedAt":null,"status":"reserved","reservedUsd":4,"costUsd":null,"runDir":null,"note":null}
