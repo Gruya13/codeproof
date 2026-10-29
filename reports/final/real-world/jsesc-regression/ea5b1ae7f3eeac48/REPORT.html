@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeProof report - ea5b1ae7f3eeac48</title>
+<style>:root { color-scheme: dark; --bg: #0f1115; --panel: #171a21; --line: #2a2f3a; --text: #e6e8ee; --muted: #9aa3b2; --ok: #2f9e6f; --warn: #b8862f; --bad: #b04a4a; --blue: #3b6ea5; }
+body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 28px 0 10px; }
+h3 { font-size: 16px; margin: 0 0 6px; }
+.meta, .muted { color: var(--muted); font-size: 13px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; }
+td, th { text-align: left; padding: 3px 10px 3px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.funnel { display: flex; gap: 10px; flex-wrap: wrap; }
+.step { background: #11151c; border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; min-width: 120px; }
+.step .n { font-size: 22px; font-weight: 700; }
+.finding { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.badge { display: inline-block; border-radius: 4px; padding: 1px 8px; font-size: 12px; margin: 0 6px 6px 0; border: 1px solid var(--line); }
+.badge.ok { border-color: var(--ok); } .badge.warn { border-color: var(--warn); } .badge.bad { border-color: var(--bad); } .badge.info { border-color: var(--blue); }
+pre { background: #0b0e13; border: 1px solid var(--line); border-radius: 6px; padding: 10px; overflow-x: auto; font-size: 13px; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+details { margin: 8px 0; } summary { cursor: pointer; color: var(--muted); }
+.cite { color: var(--muted); font-size: 13px; }
+footer { margin-top: 34px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; }
+a { color: #8ab4f8; }</style>
+</head>
+<body>
+<h1>CodeProof report</h1>
+<p class="meta">run-id: ea5b1ae7f3eeac48 | mode: smoke | commit: e3349b542eaaf55239cb60519991b80097cee24b | config: 9c0a3c84bda394b8fe6fb15bae1abceb03bd87d9fca2c076ebe61277ed0ed191</p>
+<p class="meta">models: scanner-correctness=muse-spark-1.3, verifier=muse-wonder-1.0, repro=muse-wonder-1.0 | codeproof 0.2.2 | node v26.8.2</p>
+<h2>Evidence funnel</h2>
+<div class="panel"><div class="funnel"><div class="step"><div class="n">3</div><div class="muted">proposed</div></div><div class="step"><div class="n">0</div><div class="muted">L1 rejected</div></div><div class="step"><div class="n">2</div><div class="muted">verified</div></div><div class="step"><div class="n">1</div><div class="muted">execution-proven</div></div><div class="step"><div class="n">1</div><div class="muted">patch-proven</div></div></div></div>
+<h2>Summary</h2>
+<div class="panel"><table><tr><td>Files / LOC</td><td>1 / 337</td></tr><tr><td>Files in scanner prompt</td><td>1 / 1</td></tr><tr><td>Findings proposed</td><td>3</td></tr><tr><td>Rejected at L1 (bad citation)</td><td>0</td></tr><tr><td>Verified</td><td>2</td></tr><tr><td>Execution-proven (L3)</td><td>1</td></tr><tr><td>Patch-proven (L4)</td><td>1</td></tr><tr><td>Moderate / refuted / uncertain</td><td>0 / 0 / 1</td></tr><tr><td>Calls / retries</td><td>9 / 0</td></tr><tr><td>Tokens in / out</td><td>28798 / 33736</td></tr><tr><td>Cached input tokens</td><td>0</td></tr><tr><td>Cost</td><td>$0.6289</td></tr></table></div>
+<h2>Verified findings</h2>
+<article class="finding"><h3>F-001 - high - Negative hex/bin/oct number prefix produces invalid literal</h3><span class="badge ok">verified / patch-proven</span><p><strong>Claim:</strong> Negative numbers formatted as hexadecimal/binary/octal produce invalid literals like 0x-A instead of -0xA because the sign from toString(radix) is kept after the prefix.</p><p class="cite">jsesc.js:216-225</p><pre><code>			} else if (useHexNumbers) {
+				let hexadecimal = argument.toString(16);
+				if (!lowercaseHex) {
+					hexadecimal = hexadecimal.toUpperCase();
+				}
+				result = &#39;0x&#39; + hexadecimal;
+			} else if (useBinNumbers) {
+				result = &#39;0b&#39; + argument.toString(2);
+			} else if (useOctNumbers) {
+				result = &#39;0o&#39; + argument.toString(8);</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The branch at jsesc.js:216-225 builds &#39;0x&#39; + argument.toString(16), &#39;0b&#39; + argument.toString(2), and &#39;0o&#39; + argument.toString(8) without moving the leading &#39;-&#39; before the prefix, so e.g. (-10).toString(16)=&#39;-a&#39; yields &#39;0x-a&#39;/&#39;0x-A&#39;, and the result is returned directly at jsesc.js:228-231.</p><span class="badge ok">repro reproduced</span><span class="badge info">3 runs</span><p class="muted">control passed 3/3 and the trigger failed 3/3 with an assertion error on the analyzed commit</p><details><summary>[CONTROL] code (must pass)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import jsesc from &#39;./jsesc.js&#39;;
+const hexResult = jsesc(255, { numbers: &#39;hexadecimal&#39; });
+assert.equal(hexResult, &#39;0xFF&#39;);
+const binResult = jsesc(10, { numbers: &#39;binary&#39; });
+assert.equal(binResult, &#39;0b1010&#39;);
+</code></pre></details><details><summary>[TRIGGER] code (must fail on the analyzed commit)</summary><pre><code>import assert from &#39;node:assert/strict&#39;;
+import jsesc from &#39;./jsesc.js&#39;;
+const hexResult = jsesc(-10, { numbers: &#39;hexadecimal&#39; });
+assert.equal(hexResult, &#39;-0xA&#39;);
+const binResult = jsesc(-10, { numbers: &#39;binary&#39; });
+assert.equal(binResult, &#39;-0b1010&#39;);
+const octResult = jsesc(-10, { numbers: &#39;octal&#39; });
+assert.equal(octResult, &#39;-0o12&#39;);
+</code></pre></details><span class="badge ok">linkcheck proven (symbol)</span><span class="badge ok">patch patch-proven</span><p class="cite">target: jsesc.js</p><p class="muted">control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)</p><details><summary>searchBlock</summary><pre><code>			} else if (useHexNumbers) {
+				let hexadecimal = argument.toString(16);
+				if (!lowercaseHex) {
+					hexadecimal = hexadecimal.toUpperCase();
+				}
+				result = &#39;0x&#39; + hexadecimal;
+			} else if (useBinNumbers) {
+				result = &#39;0b&#39; + argument.toString(2);
+			} else if (useOctNumbers) {
+				result = &#39;0o&#39; + argument.toString(8);</code></pre></details><details><summary>replaceBlock</summary><pre><code>			} else if (useHexNumbers) {
+				let hexadecimal = argument.toString(16);
+				if (!lowercaseHex) {
+					hexadecimal = hexadecimal.toUpperCase();
+				}
+				result = hexadecimal.startsWith(&#39;-&#39;) ? &#39;-0x&#39; + hexadecimal.slice(1) : &#39;0x&#39; + hexadecimal;
+			} else if (useBinNumbers) {
+				const binary = argument.toString(2);
+				result = binary.startsWith(&#39;-&#39;) ? &#39;-0b&#39; + binary.slice(1) : &#39;0b&#39; + binary;
+			} else if (useOctNumbers) {
+				const octal = argument.toString(8);
+				result = octal.startsWith(&#39;-&#39;) ? &#39;-0o&#39; + octal.slice(1) : &#39;0o&#39; + octal;</code></pre></details><details><summary>patch diff</summary><pre><code>--- a/jsesc.js
++++ b/jsesc.js
+@@ -221,5 +221,7 @@
+-				result = &#39;0x&#39; + hexadecimal;
+-			} else if (useBinNumbers) {
+-				result = &#39;0b&#39; + argument.toString(2);
+-			} else if (useOctNumbers) {
+-				result = &#39;0o&#39; + argument.toString(8);
++				result = hexadecimal.startsWith(&#39;-&#39;) ? &#39;-0x&#39; + hexadecimal.slice(1) : &#39;0x&#39; + hexadecimal;
++			} else if (useBinNumbers) {
++				const binary = argument.toString(2);
++				result = binary.startsWith(&#39;-&#39;) ? &#39;-0b&#39; + binary.slice(1) : &#39;0b&#39; + binary;
++			} else if (useOctNumbers) {
++				const octal = argument.toString(8);
++				result = octal.startsWith(&#39;-&#39;) ? &#39;-0o&#39; + octal.slice(1) : &#39;0o&#39; + octal;</code></pre></details></article>
+<article class="finding"><h3>F-003 - low - Unreachable BigInt branch after combined number check</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> The second isBigInt branch can never execute because the preceding branch already matches isNumber OR isBigInt, making it dead code.</p><p class="cite">jsesc.js:203-203</p><pre><code>		} else if (isNumber(argument) || isBigInt(argument)) {</code></pre><p class="cite">jsesc.js:232-232</p><pre><code>		} else if (isBigInt(argument)) {</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The else-if at jsesc.js:203 matches isNumber(argument) || isBigInt(argument), so reaching jsesc.js:232 requires that condition to be false and therefore isBigInt(argument) to be false with no intervening code, making the second isBigInt branch unreachable.</p><span class="badge warn">repro unavailable</span><p class="muted">Dead code has no observable behavioral effect: the branch at line 203 (isNumber || isBigInt) already handles every BigInt input, including JSON conversion and decimal/hexadecimal/binary/octal formatting with the &#39;n&#39; suffix at lines 228-230, identically or more correctly than the unreachable branch at line 232. No input can produce different correct output by reaching the second branch, so a faithful execution test asserting correct BigInt behavior would pass on this commit; demonstrating the finding requires static reachability analysis, not a runtime reproducer.</p></article>
+<h2>Rejected and unresolved</h2>
+<details><summary>Other published findings: 1 (refuted / moderate / uncertain)</summary><div class="panel"><h3>F-002 - Unknown numbers option returns undefined instead of string</h3><span class="badge warn">uncertain</span><p><strong>Claim:</strong> If options.numbers is not decimal/hexadecimal/binary/octal, inner result stays undefined and the function returns undefined (or &#39;undefinedn&#39; for BigInt) instead of a string.</p><p class="cite">verifier: uncertain - The excerpt at jsesc.js:213-231 shows a conditional chain with no else and a subsequent return of the inner result, but the definitions of useDecNumbers/useHexNumbers/useBinNumbers/useOctNumbers and any defaulting or validation of options.numbers are not in the provided excerpts, so it cannot be settled whether an unknown numbers value makes all four flags false.</p></div></details><details><summary>Rejected candidates (audit trail): 1</summary><p class="cite">F-002 - uncertain - by spark - citation matches lines 214-226 (+/-1 line tolerance)</p></details>
+<footer>
+<p>This page is a static view of the recorded evidence; it re-runs nothing. Levels: citation-proven = L1 (provenance, not a semantic judge); verified = L1 + L2 (a model judgment); execution-proven = L3 (two-phase reproducer + LinkCheck under the Node permission model); patch-proven = L4 (differential result on a copy of the snapshot, not a root-cause fix; the repository's own test suite is never run). Offline replay verifies the artifacts and mechanical gates; it does not re-execute the semantic L2 verdict.</p>
+<p>Artifacts: <a href="./findings.json">findings.json</a> | <a href="./rejected.md">rejected.md</a> | <a href="./REPORT.md">REPORT.md</a> | <a href="./run.json">run.json</a>. Every artifact of this run, including this file, is hashed in <code>run.json.attestation</code>.</p>
+<p>Findings proposed: 3 | verified: 2 | execution-proven: 1 | patch-proven: 1</p>
+</footer>
+</body>
+</html>

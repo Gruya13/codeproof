@@ -1,0 +1,125 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Negative numbers formatted as hexadecimal/binary/octal produce invalid literals like 0x-A instead of -0xA because the sign from toString(radix) is kept after the prefix.\", \"confidence\": 0.9, \"evidence\": [{\"endLine\": 225, \"path\": \"jsesc.js\", \"snippet\": \"\\t\\t\\t} else if (useHexNumbers) {\\n\\t\\t\\t\\tlet hexadecimal = argument.toString(16);\\n\\t\\t\\t\\tif (!lowercaseHex) {\\n\\t\\t\\t\\t\\thexadecimal = hexadecimal.toUpperCase();\\n\\t\\t\\t\\t}\\n\\t\\t\\t\\tresult = '0x' + hexadecimal;\\n\\t\\t\\t} else if (useBinNumbers) {\\n\\t\\t\\t\\tresult = '0b' + argument.toString(2);\\n\\t\\t\\t} else if (useOctNumbers) {\\n\\t\\t\\t\\tresult = '0o' + argument.toString(8);\", \"startLine\": 216}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Negative hex/bin/oct number prefix produces invalid literal\"}, {\"category\": \"correctness\", \"claim\": \"If options.numbers is not decimal/hexadecimal/binary/octal, inner result stays undefined and the function returns undefined (or 'undefinedn' for BigInt) instead of a string.\", \"confidence\": 0.85, \"evidence\": [{\"endLine\": 226, \"path\": \"jsesc.js\", \"snippet\": \"\\t\\t\\tif (useDecNumbers) {\\n\\t\\t\\t\\tresult = String(argument);\\n\\t\\t\\t} else if (useHexNumbers) {\\n\\t\\t\\t\\tlet hexadecimal = argument.toString(16);\\n\\t\\t\\t\\tif (!lowercaseHex) {\\n\\t\\t\\t\\t\\thexadecimal = hexadecimal.toUpperCase();\\n\\t\\t\\t\\t}\\n\\t\\t\\t\\tresult = '0x' + hexadecimal;\\n\\t\\t\\t} else if (useBinNumbers) {\\n\\t\\t\\t\\tresult = '0b' + argument.toString(2);\\n\\t\\t\\t} else if (useOctNumbers) {\\n\\t\\t\\t\\tresult = '0o' + argument.toString(8);\\n\\t\\t\\t}\", \"startLine\": 214}, {\"endLine\": 231, \"path\": \"jsesc.js\", \"snippet\": \"      if (isBigInt(argument)) {\\n        return result + 'n';\\n      }\\n      return result;\", \"startLine\": 228}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Unknown numbers option returns undefined instead of string\"}, {\"category\": \"correctness\", \"claim\": \"The second isBigInt branch can never execute because the preceding branch already matches isNumber OR isBigInt, making it dead code.\", \"confidence\": 1.0, \"evidence\": [{\"endLine\": 203, \"path\": \"jsesc.js\", \"snippet\": \"\\t\\t} else if (isNumber(argument) || isBigInt(argument)) {\", \"startLine\": 203}, {\"endLine\": 232, \"path\": \"jsesc.js\", \"snippet\": \"\\t\\t} else if (isBigInt(argument)) {\", \"startLine\": 232}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"low\", \"title\": \"Unreachable BigInt branch after combined number check\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Negative numbers formatted as hexadecimal/binary/octal produce invalid literals like 0x-A instead of -0xA because the sign from toString(radix) is kept after the prefix.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 225,
+            "path": "jsesc.js",
+            "snippet": "\t\t\t} else if (useHexNumbers) {\n\t\t\t\tlet hexadecimal = argument.toString(16);\n\t\t\t\tif (!lowercaseHex) {\n\t\t\t\t\thexadecimal = hexadecimal.toUpperCase();\n\t\t\t\t}\n\t\t\t\tresult = '0x' + hexadecimal;\n\t\t\t} else if (useBinNumbers) {\n\t\t\t\tresult = '0b' + argument.toString(2);\n\t\t\t} else if (useOctNumbers) {\n\t\t\t\tresult = '0o' + argument.toString(8);",
+            "startLine": 216
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Negative hex/bin/oct number prefix produces invalid literal"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 216-225 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The branch at jsesc.js:216-225 builds '0x' + argument.toString(16), '0b' + argument.toString(2), and '0o' + argument.toString(8) without moving the leading '-' before the prefix, so e.g. (-10).toString(16)='-a' yields '0x-a'/'0x-A', and the result is returned directly at jsesc.js:228-231."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "If options.numbers is not decimal/hexadecimal/binary/octal, inner result stays undefined and the function returns undefined (or 'undefinedn' for BigInt) instead of a string.",
+        "confidence": 0.85,
+        "evidence": [
+          {
+            "endLine": 226,
+            "path": "jsesc.js",
+            "snippet": "\t\t\tif (useDecNumbers) {\n\t\t\t\tresult = String(argument);\n\t\t\t} else if (useHexNumbers) {\n\t\t\t\tlet hexadecimal = argument.toString(16);\n\t\t\t\tif (!lowercaseHex) {\n\t\t\t\t\thexadecimal = hexadecimal.toUpperCase();\n\t\t\t\t}\n\t\t\t\tresult = '0x' + hexadecimal;\n\t\t\t} else if (useBinNumbers) {\n\t\t\t\tresult = '0b' + argument.toString(2);\n\t\t\t} else if (useOctNumbers) {\n\t\t\t\tresult = '0o' + argument.toString(8);\n\t\t\t}",
+            "startLine": 214
+          },
+          {
+            "endLine": 231,
+            "path": "jsesc.js",
+            "snippet": "      if (isBigInt(argument)) {\n        return result + 'n';\n      }\n      return result;",
+            "startLine": 228
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Unknown numbers option returns undefined instead of string"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "uncertain",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 214-226 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "uncertain",
+        "reason": "The excerpt at jsesc.js:213-231 shows a conditional chain with no else and a subsequent return of the inner result, but the definitions of useDecNumbers/useHexNumbers/useBinNumbers/useOctNumbers and any defaulting or validation of options.numbers are not in the provided excerpts, so it cannot be settled whether an unknown numbers value makes all four flags false."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "The second isBigInt branch can never execute because the preceding branch already matches isNumber OR isBigInt, making it dead code.",
+        "confidence": 1,
+        "evidence": [
+          {
+            "endLine": 203,
+            "path": "jsesc.js",
+            "snippet": "\t\t} else if (isNumber(argument) || isBigInt(argument)) {",
+            "startLine": 203
+          },
+          {
+            "endLine": 232,
+            "path": "jsesc.js",
+            "snippet": "\t\t} else if (isBigInt(argument)) {",
+            "startLine": 232
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "low",
+        "title": "Unreachable BigInt branch after combined number check"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 203-203 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The else-if at jsesc.js:203 matches isNumber(argument) || isBigInt(argument), so reaching jsesc.js:232 requires that condition to be false and therefore isBigInt(argument) to be false with no intervening code, making the second isBigInt branch unreachable."
+      }
+    }
+  ]
+}

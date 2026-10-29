@@ -1,0 +1,86 @@
+{
+  "status": "patch-proven",
+  "rationale": "Move the minus sign before the 0x/0b/0o prefix for negative numbers and BigInts so the output is a valid literal.",
+  "warnings": [
+    "replaceBlock contains literals that also appear in the generated test (possible overfitting): 1, 2, 1"
+  ],
+  "searchBlockSha256": "aeddfea33ec62205df3f808e49a4e8ac7edece60fbb63f1fc3bcb6017432539f",
+  "replaceBlockSha256": "36122f603550ac24bd9e98a5274af4b9ca75df262bbcbadb698aaecd77722cda",
+  "attempts": {
+    "control": {
+      "classification": "passed",
+      "attempts": [
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 65,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 67,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 68,
+          "classification": "passed"
+        }
+      ],
+      "deterministic": true
+    },
+    "trigger": {
+      "classification": "passed",
+      "attempts": [
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 67,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 68,
+          "classification": "passed"
+        },
+        {
+          "exitCode": 0,
+          "signal": null,
+          "killed": false,
+          "errorCode": null,
+          "stdout": "",
+          "stderr": "",
+          "durationMs": 68,
+          "classification": "passed"
+        }
+      ],
+      "deterministic": true
+    }
+  },
+  "reason": "control passed 3/3 and the trigger passed 3/3 after the patch (differential proof)",
+  "model": "muse-wonder-1.0",
+  "costUsd": 0.222124
+}

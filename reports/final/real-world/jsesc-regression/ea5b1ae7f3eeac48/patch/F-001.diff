@@ -1,0 +1,15 @@
+--- a/jsesc.js
++++ b/jsesc.js
+@@ -221,5 +221,7 @@
+-				result = '0x' + hexadecimal;
+-			} else if (useBinNumbers) {
+-				result = '0b' + argument.toString(2);
+-			} else if (useOctNumbers) {
+-				result = '0o' + argument.toString(8);
++				result = hexadecimal.startsWith('-') ? '-0x' + hexadecimal.slice(1) : '0x' + hexadecimal;
++			} else if (useBinNumbers) {
++				const binary = argument.toString(2);
++				result = binary.startsWith('-') ? '-0b' + binary.slice(1) : '0b' + binary;
++			} else if (useOctNumbers) {
++				const octal = argument.toString(8);
++				result = octal.startsWith('-') ? '-0o' + octal.slice(1) : '0o' + octal;

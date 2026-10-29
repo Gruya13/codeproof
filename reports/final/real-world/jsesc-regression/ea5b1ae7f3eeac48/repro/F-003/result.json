@@ -1,0 +1,20 @@
+{
+  "status": "unavailable",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "attemptCount": 0,
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "Dead code has no observable behavioral effect: the branch at line 203 (isNumber || isBigInt) already handles every BigInt input, including JSON conversion and decimal/hexadecimal/binary/octal formatting with the 'n' suffix at lines 228-230, identically or more correctly than the unreachable branch at line 232. No input can produce different correct output by reaching the second branch, so a faithful execution test asserting correct BigInt behavior would pass on this commit; demonstrating the finding requires static reachability analysis, not a runtime reproducer.",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 4149,
+    "outputTokens": 2728,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.071156
+}
