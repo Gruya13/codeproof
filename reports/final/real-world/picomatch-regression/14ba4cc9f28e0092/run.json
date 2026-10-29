@@ -1,0 +1,332 @@
+{
+  "runId": "14ba4cc9f28e0092",
+  "mode": "smoke",
+  "mock": false,
+  "configSha256": "9c0a3c84bda394b8fe6fb15bae1abceb03bd87d9fca2c076ebe61277ed0ed191",
+  "configHashVersion": 2,
+  "config": {
+    "hashVersion": 2,
+    "payload": {
+      "mode": "smoke",
+      "scannerModel": "muse-spark-1.3",
+      "verifierModel": "muse-wonder-1.0",
+      "temperature": 0,
+      "maxFindings": 8,
+      "citationMaxLines": 15,
+      "scannerMaxTokens": 16000,
+      "verifierMaxTokens": 4000,
+      "verifierContextChars": 24000,
+      "reproEnabled": true,
+      "reproModel": "muse-wonder-1.0",
+      "reproMaxTokens": 8000,
+      "reproTimeoutMs": 2000,
+      "reproAttempts": 3,
+      "hardBudget": true,
+      "dualScan": false,
+      "chunkedScan": false,
+      "secondaryScannerModel": "muse-wonder-1.0",
+      "dualScanMaxLoc": 0,
+      "baseUrl": "https://api.meta.ai/v1",
+      "budgetUsd": 4,
+      "maxRetries": 4,
+      "mock": false,
+      "promptSha256": {
+        "scanner": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd",
+        "verifier": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf",
+        "repro": "fa0844b0f030a2b871a669d43a9ef283c02fde2b8549ed77cca7dfe1bf8944db",
+        "patch": "fc6adbe6c6f7b40f50b263da3f1d9cca7c41e2b81474e4beef9eeaaa01088838"
+      },
+      "patchEnabled": true,
+      "patchModel": "muse-wonder-1.0",
+      "patchMaxTokens": 6000,
+      "patchMaxCandidates": 3,
+      "verifyEscalate": false,
+      "mockPipeline": false
+    }
+  },
+  "repo": {
+    "source": "commit",
+    "path": "/home/gru/Projects/Meta hakatron/real-world/picomatch/lib",
+    "commit": "6bb40679c218cefba5d4e9662408c5fdf699a8bb",
+    "dirty": false,
+    "loc": 2445,
+    "files": 5
+  },
+  "models": [
+    {
+      "role": "scanner-correctness",
+      "id": "muse-spark-1.3"
+    },
+    {
+      "role": "verifier",
+      "id": "muse-wonder-1.0"
+    },
+    {
+      "role": "repro",
+      "id": "muse-wonder-1.0"
+    }
+  ],
+  "prompts": [
+    {
+      "role": "scanner-correctness",
+      "version": "v3",
+      "sha256": "e0b10604b50fb46104073da176937727cf19192a1dab3659c0aeab41655873fd"
+    },
+    {
+      "role": "verifier",
+      "version": "v1",
+      "sha256": "e2e6c4a4ddbef14b23be4dece9eeaecb3c9c766048bf73c714abcbf2fe2c4aaf"
+    }
+  ],
+  "usage": {
+    "inputTokens": 74570,
+    "outputTokens": 41542,
+    "cachedTokens": 23281,
+    "byRole": [
+      {
+        "role": "scanner-correctness",
+        "model": "muse-spark-1.3",
+        "calls": 2,
+        "inputTokens": 46702,
+        "outputTokens": 27213,
+        "cachedTokens": 23281,
+        "costUsd": 0.14842365000000002
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "calls": 2,
+        "inputTokens": 15956,
+        "outputTokens": 10363,
+        "cachedTokens": 0,
+        "costUsd": 0.271084
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "calls": 1,
+        "inputTokens": 4188,
+        "outputTokens": 2292,
+        "cachedTokens": 0,
+        "costUsd": 0.062592
+      },
+      {
+        "role": "patcher",
+        "model": "muse-wonder-1.0",
+        "calls": 1,
+        "inputTokens": 7724,
+        "outputTokens": 1674,
+        "cachedTokens": 0,
+        "costUsd": 0.064376
+      }
+    ],
+    "callLog": [
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 0,
+        "inputTokens": 23351,
+        "outputTokens": 16000,
+        "cachedTokens": 0,
+        "costUsd": 0.09718875,
+        "durationMs": 80263,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "scanner",
+        "model": "muse-spark-1.3",
+        "index": 1,
+        "inputTokens": 23351,
+        "outputTokens": 11213,
+        "cachedTokens": 23281,
+        "costUsd": 0.0512349,
+        "durationMs": 51792,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 2,
+        "inputTokens": 7978,
+        "outputTokens": 4000,
+        "cachedTokens": 0,
+        "costUsd": 0.111912,
+        "durationMs": 41741,
+        "retries": 0,
+        "finishReason": "length",
+        "httpStatus": 200
+      },
+      {
+        "role": "verifier",
+        "model": "muse-wonder-1.0",
+        "index": 3,
+        "inputTokens": 7978,
+        "outputTokens": 6363,
+        "cachedTokens": 0,
+        "costUsd": 0.159172,
+        "durationMs": 69983,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "repro",
+        "model": "muse-wonder-1.0",
+        "index": 4,
+        "inputTokens": 4188,
+        "outputTokens": 2292,
+        "cachedTokens": 0,
+        "costUsd": 0.062592,
+        "durationMs": 23904,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      },
+      {
+        "role": "patcher",
+        "model": "muse-wonder-1.0",
+        "index": 5,
+        "inputTokens": 7724,
+        "outputTokens": 1674,
+        "cachedTokens": 0,
+        "costUsd": 0.064376,
+        "durationMs": 17655,
+        "retries": 0,
+        "finishReason": "stop",
+        "httpStatus": 200
+      }
+    ],
+    "costUsd": 0.54647565,
+    "measured": true
+  },
+  "calls": 6,
+  "retries": 0,
+  "timings": {
+    "startedAt": "2026-10-29T21:36:10.028Z",
+    "durationMs": 286363
+  },
+  "phases": [
+    {
+      "name": "ingest",
+      "status": "ok",
+      "durationMs": 35
+    },
+    {
+      "name": "scan",
+      "status": "ok",
+      "durationMs": 132057
+    },
+    {
+      "name": "verify",
+      "status": "ok",
+      "durationMs": 154241
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "durationMs": 9
+    }
+  ],
+  "budget": {
+    "limitUsd": 4,
+    "spentUsd": 0.546476,
+    "measured": true,
+    "exceeded": false,
+    "hard": true,
+    "aborted": false,
+    "abortReason": null,
+    "skippedFindings": []
+  },
+  "findings": {
+    "proposed": 1,
+    "byScanner": {
+      "spark": 1,
+      "wonder": 0,
+      "secondary": 0,
+      "both": 0,
+      "controlled": 0
+    },
+    "duplicates": 0,
+    "l0Rejected": {
+      "count": 0,
+      "items": []
+    },
+    "l1Rejected": 0,
+    "verified": 1,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "reproduced": 1,
+    "patched": 1
+  },
+  "scanCoverage": {
+    "filesInPrompt": 5,
+    "filesTotal": 5,
+    "chars": 76613,
+    "cap": 400000,
+    "truncated": false
+  },
+  "scanners": [
+    {
+      "role": "scanner",
+      "proposedBy": "spark",
+      "model": "muse-spark-1.3",
+      "status": "ok",
+      "candidates": 1,
+      "rejectedAtL0": 0,
+      "costUsd": 0.0512349,
+      "durationMs": 132056,
+      "group": null,
+      "coverage": null,
+      "reason": null
+    }
+  ],
+  "dualScan": false,
+  "chunkedScan": false,
+  "patch": {
+    "enabled": true,
+    "model": "muse-wonder-1.0"
+  },
+  "repro": {
+    "enabled": true,
+    "model": "muse-wonder-1.0",
+    "timeoutMs": 2000,
+    "attempts": 3,
+    "counts": {
+      "reproduced": 1,
+      "notReproduced": 0,
+      "unavailable": 0,
+      "inconclusive": 0
+    }
+  },
+  "outputs": {
+    "report": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/picomatch-regression/14ba4cc9f28e0092/REPORT.md",
+    "findings": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/picomatch-regression/14ba4cc9f28e0092/findings.json",
+    "rejected": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/picomatch-regression/14ba4cc9f28e0092/rejected.md",
+    "html": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/picomatch-regression/14ba4cc9f28e0092/REPORT.html"
+  },
+  "versions": {
+    "node": "v26.8.2",
+    "codeproof": "0.2.2"
+  },
+  "attestation": {
+    "schemaVersion": 2,
+    "findingsSha256": "9e4d5318f0893b617d5219ac99358571ceec896c9b6bc270104ff12e903adc68",
+    "artifacts": {
+      "REPORT.html": "a53dae2628c5ef3b067ed34ef10056cd73fc4685e0ed44a00eb2e38775fb3ea0",
+      "REPORT.md": "9d58dc78ac960e395615bb48ae12ea2228975b7070a80afe24636eaf7f9b5ec6",
+      "candidates.json": "e915e0d683825938ab375838b0556f3929579cd06b93dbc26e8874ebae915525",
+      "findings.json": "9e4d5318f0893b617d5219ac99358571ceec896c9b6bc270104ff12e903adc68",
+      "patch/F-001.diff": "57c40cc051a6ecd546a23be26602d080dd6eb98386275a03c02191dc5a69e5e1",
+      "patch/F-001.json": "abdd8865bdf178f9137dee84381ed17d27a4e076eab3a353c23ab7382e2db63c",
+      "rejected.md": "46cb7ab29d10fe02215225385a2b30b00dc4676d1d9280252091e98c3522c1f8",
+      "repro/F-001/control.mjs": "0fff7196d256f0cb540b88296f8850b03afe71d1d57b3fe5fcb1ecb1e6216ac3",
+      "repro/F-001/result.json": "17c3a631bcafb58bdd48d8df4ad2f1ac48177c8cc348da272dd9d1891396de05",
+      "repro/F-001/test.mjs": "89991e788cc20a10d88dbaccac7b77d9359e8d375c5a56aa7da3bbc2767d6ff2"
+    }
+  }
+}

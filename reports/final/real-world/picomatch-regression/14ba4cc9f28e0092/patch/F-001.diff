@@ -1,0 +1,5 @@
+--- a/scan.js
++++ b/scan.js
+@@ -390,1 +390,1 @@
+-    if (opts.tokens && prevIndex && prevIndex + 1 < input.length) {
++    if (opts.tokens && prevIndex !== undefined && prevIndex + 1 < input.length) {

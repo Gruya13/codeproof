@@ -1,0 +1,156 @@
+{
+  "tool": "probe-repo",
+  "createdAt": "2026-10-29T21:40:56.403Z",
+  "stats": {
+    "repo": "/home/gru/Projects/Meta hakatron/real-world/picomatch",
+    "commit": "6bb40679c218cefba5d4e9662408c5fdf699a8bb",
+    "scope": "lib",
+    "scopePath": "/home/gru/Projects/Meta hakatron/real-world/picomatch/lib",
+    "clean": true,
+    "files": 5,
+    "loc": 2445,
+    "importEdges": 9,
+    "cycles": 0,
+    "digestChars": 427,
+    "promptChars": 76613,
+    "promptFiles": 5,
+    "promptComplete": true,
+    "promptCap": 400000,
+    "estimatedInputTokens": 21281
+  },
+  "runs": [
+    {
+      "index": 1,
+      "runId": "14ba4cc9f28e0092",
+      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/picomatch-regression/14ba4cc9f28e0092",
+      "exitCode": 0,
+      "elapsedMs": 286425,
+      "mode": "smoke",
+      "mock": false,
+      "repo": {
+        "source": "commit",
+        "path": "/home/gru/Projects/Meta hakatron/real-world/picomatch/lib",
+        "commit": "6bb40679c218cefba5d4e9662408c5fdf699a8bb",
+        "dirty": false,
+        "loc": 2445,
+        "files": 5
+      },
+      "usage": {
+        "inputTokens": 74570,
+        "outputTokens": 41542,
+        "cachedTokens": 23281,
+        "byRole": [
+          {
+            "role": "scanner-correctness",
+            "model": "muse-spark-1.3",
+            "calls": 2,
+            "inputTokens": 46702,
+            "outputTokens": 27213,
+            "cachedTokens": 23281,
+            "costUsd": 0.14842365000000002
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "calls": 2,
+            "inputTokens": 15956,
+            "outputTokens": 10363,
+            "cachedTokens": 0,
+            "costUsd": 0.271084
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "calls": 1,
+            "inputTokens": 4188,
+            "outputTokens": 2292,
+            "cachedTokens": 0,
+            "costUsd": 0.062592
+          },
+          {
+            "role": "patcher",
+            "model": "muse-wonder-1.0",
+            "calls": 1,
+            "inputTokens": 7724,
+            "outputTokens": 1674,
+            "cachedTokens": 0,
+            "costUsd": 0.064376
+          }
+        ]
+      },
+      "costUsd": 0.54647565,
+      "measured": true,
+      "calls": 6,
+      "retries": 0,
+      "budget": {
+        "limitUsd": 4,
+        "spentUsd": 0.546476,
+        "measured": true,
+        "exceeded": false,
+        "hard": true,
+        "aborted": false,
+        "abortReason": null,
+        "skippedFindings": []
+      },
+      "findings": {
+        "proposed": 1,
+        "byScanner": {
+          "spark": 1,
+          "wonder": 0,
+          "secondary": 0,
+          "both": 0,
+          "controlled": 0
+        },
+        "duplicates": 0,
+        "l0Rejected": {
+          "count": 0,
+          "items": []
+        },
+        "l1Rejected": 0,
+        "verified": 1,
+        "moderate": 0,
+        "refuted": 0,
+        "uncertain": 0,
+        "reproduced": 1,
+        "patched": 1
+      },
+      "l1PassRate": 1,
+      "l1Checked": 1,
+      "phases": [
+        {
+          "name": "ingest",
+          "status": "ok",
+          "durationMs": 35
+        },
+        {
+          "name": "scan",
+          "status": "ok",
+          "durationMs": 132057
+        },
+        {
+          "name": "verify",
+          "status": "ok",
+          "durationMs": 154241
+        },
+        {
+          "name": "publish",
+          "status": "ok",
+          "durationMs": 9
+        }
+      ],
+      "durationMs": 286363
+    }
+  ],
+  "summary": {
+    "runs": 1,
+    "totalCostUsd": 0.546476,
+    "costBeforeUsd": 0,
+    "avgL1PassRate": 1,
+    "verified": 1,
+    "moderate": 0,
+    "refuted": 0,
+    "uncertain": 0,
+    "l1Rejected": 0,
+    "promptComplete": true
+  }
+}
