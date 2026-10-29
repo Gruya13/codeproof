@@ -1,0 +1,66 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "yyyy uses pad(y(),4) without handling negative years, so String(-1).padStart(4,'0') produces '00-1' with the minus sign in the middle instead of a sign-prefixed zero-padded year. yy correctly uses Math.abs but yyyy does not.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 99,
+          "path": "src/dateformat.js",
+          "snippet": "    yy: () => pad(Math.abs(y()), 2).slice(-2),\n    yyyy: () => pad(y(), 4),",
+          "startLine": 98
+        },
+        {
+          "endLine": 221,
+          "path": "src/dateformat.js",
+          "snippet": "const pad = (val, len = 2) => String(val).padStart(len, '0');",
+          "startLine": 221
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "yyyy token mis-formats negative years"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 98-99 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: src/dateformat.js:99 defines yyyy as pad(y(),4) without Math.abs unlike yy at src/dateformat.js:98, and pad at src/dateformat.js:221 is String(val).padStart(len,'0'), so a negative year from getFullYear at src/dateformat.js:65 such as -1 yields '00-1'."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode: forbidden non-deterministic Date construction (use fixed values instead); testCode: forbidden non-deterministic Date construction (use fixed values instead); control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 21733,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 4658,
+        "outputTokens": 1596,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.050552
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

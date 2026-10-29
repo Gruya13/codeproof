@@ -1,6 +1,6 @@
 {
   "tool": "probe-repo",
-  "createdAt": "2026-10-29T21:34:21.841Z",
+  "createdAt": "2026-10-29T21:36:02.923Z",
   "stats": {
     "repo": "https://github.com/felixge/node-dateformat",
     "commit": "e6800aa902fcbd523d5ea06a9a79050878cfa48e",
@@ -22,9 +22,9 @@
     {
       "index": 1,
       "runId": "fead8f9fa0544305",
-      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/dateformat/fead8f9fa0544305",
+      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/dateformat/fead8f9fa0544305-2",
       "exitCode": 0,
-      "elapsedMs": 40673,
+      "elapsedMs": 99529,
       "mode": "smoke",
       "mock": false,
       "repo": {
@@ -36,8 +36,8 @@
         "files": 43
       },
       "usage": {
-        "inputTokens": 24698,
-        "outputTokens": 9599,
+        "inputTokens": 38437,
+        "outputTokens": 16392,
         "cachedTokens": 0,
         "byRole": [
           {
@@ -45,19 +45,37 @@
             "model": "muse-spark-1.3",
             "calls": 1,
             "inputTokens": 24698,
-            "outputTokens": 9599,
+            "outputTokens": 13915,
             "cachedTokens": 0,
-            "costUsd": 0.07166825
+            "costUsd": 0.09001125
+          },
+          {
+            "role": "verifier",
+            "model": "muse-wonder-1.0",
+            "calls": 1,
+            "inputTokens": 9081,
+            "outputTokens": 881,
+            "cachedTokens": 0,
+            "costUsd": 0.053944
+          },
+          {
+            "role": "repro",
+            "model": "muse-wonder-1.0",
+            "calls": 1,
+            "inputTokens": 4658,
+            "outputTokens": 1596,
+            "cachedTokens": 0,
+            "costUsd": 0.050552
           }
         ]
       },
-      "costUsd": 0.07166825,
+      "costUsd": 0.19450725000000002,
       "measured": true,
-      "calls": 1,
+      "calls": 3,
       "retries": 0,
       "budget": {
         "limitUsd": 4,
-        "spentUsd": 0.071668,
+        "spentUsd": 0.194507,
         "measured": true,
         "exceeded": false,
         "hard": true,
@@ -66,9 +84,9 @@
         "skippedFindings": []
       },
       "findings": {
-        "proposed": 0,
+        "proposed": 1,
         "byScanner": {
-          "spark": 0,
+          "spark": 1,
           "wonder": 0,
           "secondary": 0,
           "both": 0,
@@ -80,15 +98,15 @@
           "items": []
         },
         "l1Rejected": 0,
-        "verified": 0,
+        "verified": 1,
         "moderate": 0,
         "refuted": 0,
         "uncertain": 0,
         "reproduced": 0,
         "patched": 0
       },
-      "l1PassRate": null,
-      "l1Checked": 0,
+      "l1PassRate": 1,
+      "l1Checked": 1,
       "phases": [
         {
           "name": "ingest",
@@ -98,28 +116,28 @@
         {
           "name": "scan",
           "status": "ok",
-          "durationMs": 40401
+          "durationMs": 64321
         },
         {
           "name": "verify",
           "status": "ok",
-          "durationMs": 0
+          "durationMs": 34920
         },
         {
           "name": "publish",
           "status": "ok",
-          "durationMs": 2
+          "durationMs": 13
         }
       ],
-      "durationMs": 40612
+      "durationMs": 99464
     }
   ],
   "summary": {
     "runs": 1,
-    "totalCostUsd": 0.071668,
-    "costBeforeUsd": 0,
-    "avgL1PassRate": null,
-    "verified": 0,
+    "totalCostUsd": 0.194507,
+    "costBeforeUsd": 0.071668,
+    "avgL1PassRate": 1,
+    "verified": 1,
     "moderate": 0,
     "refuted": 0,
     "uncertain": 0,
