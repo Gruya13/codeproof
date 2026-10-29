@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "a902c8e3473be7db7d7570f771eace5f3bc43f5e41331c39d9e4d1ffcbe2082e",
+  "gitRevision": "3a3ceccc94a1557f1cfe4a13d93bb1537a72887b",
+  "gitRel": "tests/html-report.test.mjs",
+  "by": "dsh-orkestrator",
+  "at": "2026-10-29T08:06:11.231Z",
+  "relocks": []
+}
