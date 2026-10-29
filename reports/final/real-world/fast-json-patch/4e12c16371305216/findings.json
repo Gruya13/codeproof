@@ -1,0 +1,60 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "_generate dereferences obj.toJSON without a null check, so compare/generate with a null new value throws TypeError instead of producing a replace patch.",
+      "confidence": 0.92,
+      "evidence": [
+        {
+          "endLine": 123,
+          "path": "duplex.js",
+          "snippet": "function _generate(mirror, obj, patches, path, invertible) {\n    if (obj === mirror) {\n        return;\n    }\n    if (typeof obj.toJSON === \"function\") {\n        obj = obj.toJSON();\n    }",
+          "startLine": 117
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Null dereference on obj.toJSON in _generate"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 117-123 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "At duplex.js:121 _generate accesses typeof obj.toJSON with only the identity guard at duplex.js:118, and compare at duplex.js:178 passes tree2 directly without validation, so a non-identical null new value throws TypeError before any replace patch is generated."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: controlCode assertion is not tied to a call of an imported symbol; testCode assertion is not tied to a call of an imported symbol; control and trigger must use a different input: no shared symbol is called in both codes",
+      "artifacts": null,
+      "durationMs": 48480,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2664,
+        "outputTokens": 4620,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.103056
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

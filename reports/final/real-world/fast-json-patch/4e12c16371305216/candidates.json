@@ -1,0 +1,137 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"_generate dereferences obj.toJSON without a null check, so compare/generate with a null new value throws TypeError instead of producing a replace patch.\", \"confidence\": 0.92, \"evidence\": [{\"endLine\": 123, \"path\": \"duplex.js\", \"snippet\": \"function _generate(mirror, obj, patches, path, invertible) {\\n    if (obj === mirror) {\\n        return;\\n    }\\n    if (typeof obj.toJSON === \\\"function\\\") {\\n        obj = obj.toJSON();\\n    }\", \"startLine\": 117}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Null dereference on obj.toJSON in _generate\"}, {\"category\": \"correctness\", \"claim\": \"getPath returns pointer with trailing slash because _getPathRecursive appends '/' and getPath prepends '/' without stripping it, producing e.g. \\\"/a/b/\\\" instead of \\\"/a/b\\\".\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 109, \"path\": \"helpers.js\", \"snippet\": \"            if (root[key] === obj) {\\n                return escapePathComponent(key) + '/';\\n            }\\n            else if (typeof root[key] === 'object') {\\n                found = _getPathRecursive(root[key], obj);\\n                if (found != '') {\\n                    return escapePathComponent(key) + '/' + found;\", \"startLine\": 103}, {\"endLine\": 126, \"path\": \"helpers.js\", \"snippet\": \"function getPath(root, obj) {\\n    if (root === obj) {\\n        return '/';\\n    }\\n    var path = _getPathRecursive(root, obj);\\n    if (path === '') {\\n        throw new Error(\\\"Object not found in root\\\");\\n    }\\n    return \\\"/\\\" + path;\", \"startLine\": 117}], \"id\": \"F-002\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"getPath emits JSON pointer with trailing slash\"}, {\"category\": \"correctness\", \"claim\": \"isInteger returns true for empty string because zero-length input skips the digit loop and falls through to return true, misclassifying \\\"\\\" as an array index.\", \"confidence\": 0.98, \"evidence\": [{\"endLine\": 77, \"path\": \"helpers.js\", \"snippet\": \"function isInteger(str) {\\n    var i = 0;\\n    var len = str.length;\\n    var charCode;\\n    while (i < len) {\\n        charCode = str.charCodeAt(i);\\n        if (charCode >= 48 && charCode <= 57) {\\n            i++;\\n            continue;\\n        }\\n        return false;\\n    }\\n    return true;\", \"startLine\": 64}], \"id\": \"F-003\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"isInteger treats empty string as integer\"}, {\"category\": \"correctness\", \"claim\": \"Array index conversion uses ~~key which truncates to 32-bit signed int, so indices >= 2147483648 wrap to negative/wrong values instead of the intended index.\", \"confidence\": 0.88, \"evidence\": [{\"endLine\": 221, \"path\": \"core.js\", \"snippet\": \"                else {\\n                    if (validateOperation && !helpers_js_1.isInteger(key)) {\\n                        throw new exports.JsonPatchError(\\\"Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index\\\", \\\"OPERATION_PATH_ILLEGAL_ARRAY_INDEX\\\", index, operation, document);\\n                    } // only parse key when it's an integer for `arr.prop` to work\\n                    else if (helpers_js_1.isInteger(key)) {\\n                        key = ~~key;\\n                    }\", \"startLine\": 214}], \"id\": \"F-004\", \"kind\": \"direct\", \"severity\": \"medium\", \"title\": \"Array index truncated by double-bitwise-NOT\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "_generate dereferences obj.toJSON without a null check, so compare/generate with a null new value throws TypeError instead of producing a replace patch.",
+        "confidence": 0.92,
+        "evidence": [
+          {
+            "endLine": 123,
+            "path": "duplex.js",
+            "snippet": "function _generate(mirror, obj, patches, path, invertible) {\n    if (obj === mirror) {\n        return;\n    }\n    if (typeof obj.toJSON === \"function\") {\n        obj = obj.toJSON();\n    }",
+            "startLine": 117
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Null dereference on obj.toJSON in _generate"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 117-123 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "At duplex.js:121 _generate accesses typeof obj.toJSON with only the identity guard at duplex.js:118, and compare at duplex.js:178 passes tree2 directly without validation, so a non-identical null new value throws TypeError before any replace patch is generated."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "getPath returns pointer with trailing slash because _getPathRecursive appends '/' and getPath prepends '/' without stripping it, producing e.g. \"/a/b/\" instead of \"/a/b\".",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 109,
+            "path": "helpers.js",
+            "snippet": "            if (root[key] === obj) {\n                return escapePathComponent(key) + '/';\n            }\n            else if (typeof root[key] === 'object') {\n                found = _getPathRecursive(root[key], obj);\n                if (found != '') {\n                    return escapePathComponent(key) + '/' + found;",
+            "startLine": 103
+          },
+          {
+            "endLine": 126,
+            "path": "helpers.js",
+            "snippet": "function getPath(root, obj) {\n    if (root === obj) {\n        return '/';\n    }\n    var path = _getPathRecursive(root, obj);\n    if (path === '') {\n        throw new Error(\"Object not found in root\");\n    }\n    return \"/\" + path;",
+            "startLine": 117
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "getPath emits JSON pointer with trailing slash"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 10 non-blank lines but snippet has 9"
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "isInteger returns true for empty string because zero-length input skips the digit loop and falls through to return true, misclassifying \"\" as an array index.",
+        "confidence": 0.98,
+        "evidence": [
+          {
+            "endLine": 77,
+            "path": "helpers.js",
+            "snippet": "function isInteger(str) {\n    var i = 0;\n    var len = str.length;\n    var charCode;\n    while (i < len) {\n        charCode = str.charCodeAt(i);\n        if (charCode >= 48 && charCode <= 57) {\n            i++;\n            continue;\n        }\n        return false;\n    }\n    return true;",
+            "startLine": 64
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "isInteger treats empty string as integer"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 14 non-blank lines but snippet has 13"
+      }
+    },
+    {
+      "index": 3,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Array index conversion uses ~~key which truncates to 32-bit signed int, so indices >= 2147483648 wrap to negative/wrong values instead of the intended index.",
+        "confidence": 0.88,
+        "evidence": [
+          {
+            "endLine": 221,
+            "path": "core.js",
+            "snippet": "                else {\n                    if (validateOperation && !helpers_js_1.isInteger(key)) {\n                        throw new exports.JsonPatchError(\"Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index\", \"OPERATION_PATH_ILLEGAL_ARRAY_INDEX\", index, operation, document);\n                    } // only parse key when it's an integer for `arr.prop` to work\n                    else if (helpers_js_1.isInteger(key)) {\n                        key = ~~key;\n                    }",
+            "startLine": 214
+          }
+        ],
+        "id": "F-004",
+        "kind": "direct",
+        "severity": "medium",
+        "title": "Array index truncated by double-bitwise-NOT"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "l1-rejected",
+      "l1": {
+        "passed": false,
+        "reason": "citation range expects 8 non-blank lines but snippet has 7"
+      }
+    }
+  ]
+}
