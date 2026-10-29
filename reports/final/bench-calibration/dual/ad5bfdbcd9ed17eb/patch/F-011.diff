@@ -1,0 +1,8 @@
+--- a/src/ledger.ts
++++ b/src/ledger.ts
+@@ -13,3 +13,2 @@
+-  post(entries);
+-  const byAccount = new Map<string, number>();
+-  for (const entry of totals) {
++  const byAccount = new Map<string, number>();
++  for (const entry of entries) {

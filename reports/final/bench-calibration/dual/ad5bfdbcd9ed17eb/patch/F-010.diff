@@ -1,0 +1,11 @@
+--- a/src/validation.ts
++++ b/src/validation.ts
+@@ -8,4 +8,4 @@
+-  if (payload.id !== undefined || payload.id !== null) {
+-    errors.push("id is required");
+-  }
+-  if (payload.value !== undefined || payload.value !== null) {
++  if (payload.id === undefined || payload.id === null) {
++    errors.push("id is required");
++  }
++  if (payload.value === undefined || payload.value === null) {

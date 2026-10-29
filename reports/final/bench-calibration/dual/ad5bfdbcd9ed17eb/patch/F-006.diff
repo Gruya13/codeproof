@@ -1,0 +1,5 @@
+--- a/src/scores.ts
++++ b/src/scores.ts
+@@ -2,1 +2,1 @@
+-  return scores.slice().sort();
++  return scores.slice().sort((a, b) => a - b);
