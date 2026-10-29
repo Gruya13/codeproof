@@ -10,3 +10,4 @@
 {"attemptNo":10,"block":"F3","label":"extended-chunked","startedAt":"2026-10-29T20:40:53.016Z","endedAt":"2026-10-29T20:52:25.392Z","status":"ok","reservedUsd":5,"costUsd":1.5038462499999998,"runDir":"reports/final/bench-extended/chunked/27937bbf34fed1b7","note":null}
 {"attemptNo":11,"block":"F3","label":"heldout-ablation","startedAt":"2026-10-29T20:52:32.061Z","endedAt":"2026-10-29T20:52:32.163Z","status":"unknown-cost","reservedUsd":2,"costUsd":null,"runDir":null,"note":"run produced no artifact"}
 {"attemptNo":12,"block":"F3","label":"heldout-ablation","startedAt":"2026-10-29T20:52:41.365Z","endedAt":"2026-10-29T20:56:29.551Z","status":"ok","reservedUsd":2,"costUsd":0.406924,"runDir":"reports/final/bench-heldout/held-out-ec04852","note":null}
+{"attemptNo":13,"block":"F4","label":"mustache-run1","startedAt":"2026-10-29T21:03:56.145Z","endedAt":null,"status":"reserved","reservedUsd":4,"costUsd":null,"runDir":null,"note":null}
