@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "1cb9fecbe95edc9ac087a6cd97e4bc50e3b3d51d07a2cf0e1c902f8094cacc57",
+  "gitRevision": "0cc08497e25ef1bec04f6c1cb03b11a11613d015",
+  "gitRel": "tests/dogfood-fixes.test.mjs",
+  "by": "codex",
+  "at": "2026-10-29T19:53:43.789Z",
+  "relocks": []
+}
