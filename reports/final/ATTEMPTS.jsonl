@@ -1,2 +1,2 @@
 {"attemptNo":1,"block":"F1","label":"dogfood-chunked","startedAt":"2026-10-29T19:24:57.709Z","endedAt":"2026-10-29T19:44:52.583Z","status":"ok","reservedUsd":4,"costUsd":2.2968625,"runDir":"reports/final/self-analysis/chunked/4cf698ba270f207e","note":null}
-{"attemptNo":2,"block":"F1","label":"dogfood-single","startedAt":"2026-10-29T19:44:58.153Z","endedAt":null,"status":"reserved","reservedUsd":3,"costUsd":null,"runDir":null,"note":null}
+{"attemptNo":2,"block":"F1","label":"dogfood-single","startedAt":"2026-10-29T19:44:58.153Z","endedAt":"2026-10-29T19:46:12.432Z","status":"ok","reservedUsd":3,"costUsd":0.14948975,"runDir":"reports/final/self-analysis/single/3ccffc296ca227aa","note":null}
