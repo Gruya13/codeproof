@@ -1,0 +1,89 @@
+{
+  "raw": "{\"findings\": [{\"category\": \"correctness\", \"claim\": \"Hexadecimal/binary/octal number formatting prefixes '0x'/'0b'/'0o' directly to argument.toString(radix). For negative values this yields '0x-A' / '0b-1010' / '0o-12' instead of '-0xA' etc., and for Infinity/NaN/fractions it yields syntactically invalid literals, so the returned JS cannot be evaluated.\", \"confidence\": 0.95, \"evidence\": [{\"endLine\": 221, \"path\": \"jsesc.js\", \"snippet\": \"result = '0x' + hexadecimal;\", \"startLine\": 221}, {\"endLine\": 223, \"path\": \"jsesc.js\", \"snippet\": \"result = '0b' + argument.toString(2);\", \"startLine\": 223}, {\"endLine\": 225, \"path\": \"jsesc.js\", \"snippet\": \"result = '0o' + argument.toString(8);\", \"startLine\": 225}], \"id\": \"F-001\", \"kind\": \"direct\", \"severity\": \"high\", \"title\": \"Negative numbers produce invalid hex/binary/octal literals\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Hexadecimal/binary/octal number formatting prefixes '0x'/'0b'/'0o' directly to argument.toString(radix). For negative values this yields '0x-A' / '0b-1010' / '0o-12' instead of '-0xA' etc., and for Infinity/NaN/fractions it yields syntactically invalid literals, so the returned JS cannot be evaluated.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 221,
+            "path": "jsesc.js",
+            "snippet": "result = '0x' + hexadecimal;",
+            "startLine": 221
+          },
+          {
+            "endLine": 223,
+            "path": "jsesc.js",
+            "snippet": "result = '0b' + argument.toString(2);",
+            "startLine": 223
+          },
+          {
+            "endLine": 225,
+            "path": "jsesc.js",
+            "snippet": "result = '0o' + argument.toString(8);",
+            "startLine": 225
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Negative numbers produce invalid hex/binary/octal literals"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 221-221 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The code at jsesc.js:217-225 directly prefixes '0x'/'0b'/'0o' to argument.toString(radix) with no handling for a leading '-' or for Infinity/NaN/fractional values, so -10 yields '0x-A' and Infinity yields '0xInfinity', both invalid literals, before the plain return at jsesc.js:228-231."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Radix number conversion places the radix prefix before the sign, producing invalid literals for negative numbers and BigInts.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 225,
+            "path": "jsesc.js",
+            "snippet": "\t\t\t} else if (useHexNumbers) {\n\t\t\t\tlet hexadecimal = argument.toString(16);\n\t\t\t\tif (!lowercaseHex) {\n\t\t\t\t\thexadecimal = hexadecimal.toUpperCase();\n\t\t\t\t}\n\t\t\t\tresult = '0x' + hexadecimal;\n\t\t\t} else if (useBinNumbers) {\n\t\t\t\tresult = '0b' + argument.toString(2);\n\t\t\t} else if (useOctNumbers) {\n\t\t\t\tresult = '0o' + argument.toString(8);",
+            "startLine": 216
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Negative numbers produce invalid radix literals"
+      },
+      "proposedBy": "wonder",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 216-225 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-spark-1.3",
+        "verdict": "confirm",
+        "reason": "jsesc.js:221 prefixes '0x' to argument.toString(16) from jsesc.js:217 which retains a leading '-' for negatives, producing '0x-...', with the same prefix-before-sign pattern at jsesc.js:223 and jsesc.js:225 and BigInt 'n' suffix at jsesc.js:229 preserving the invalid literal."
+      }
+    }
+  ]
+}

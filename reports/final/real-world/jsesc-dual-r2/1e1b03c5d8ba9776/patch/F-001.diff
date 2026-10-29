@@ -1,0 +1,5 @@
+--- a/jsesc.js
++++ b/jsesc.js
+@@ -221,1 +221,1 @@
+-				result = '0x' + hexadecimal;
++				result = (typeof argument == 'number' && (!Number.isFinite(argument) || !Number.isInteger(argument))) ? String(argument) : hexadecimal.startsWith('-') ? '-0x' + hexadecimal.slice(1) : '0x' + hexadecimal;
