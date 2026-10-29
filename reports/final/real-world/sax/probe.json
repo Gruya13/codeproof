@@ -1,6 +1,6 @@
 {
   "tool": "probe-repo",
-  "createdAt": "2026-10-29T21:12:57.447Z",
+  "createdAt": "2026-10-29T21:18:59.965Z",
   "stats": {
     "repo": "https://github.com/isaacs/sax-js",
     "commit": "961ceeefcc5186005466f2085aeb36f31b161e37",
@@ -22,9 +22,9 @@
     {
       "index": 1,
       "runId": "86ed5667b2ec15cc",
-      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/sax/86ed5667b2ec15cc",
+      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/sax/86ed5667b2ec15cc-2",
       "exitCode": 0,
-      "elapsedMs": 145783,
+      "elapsedMs": 361014,
       "mode": "smoke",
       "mock": false,
       "repo": {
@@ -36,46 +36,46 @@
         "files": 1
       },
       "usage": {
-        "inputTokens": 40405,
-        "outputTokens": 20358,
-        "cachedTokens": 0,
+        "inputTokens": 103397,
+        "outputTokens": 47650,
+        "cachedTokens": 18673,
         "byRole": [
           {
             "role": "scanner-correctness",
             "model": "muse-spark-1.3",
-            "calls": 1,
-            "inputTokens": 18699,
-            "outputTokens": 12758,
-            "cachedTokens": 0,
-            "costUsd": 0.07759525
+            "calls": 2,
+            "inputTokens": 37398,
+            "outputTokens": 28092,
+            "cachedTokens": 18673,
+            "costUsd": 0.1455982
           },
           {
             "role": "verifier",
             "model": "muse-wonder-1.0",
-            "calls": 1,
-            "inputTokens": 2693,
-            "outputTokens": 2323,
+            "calls": 3,
+            "inputTokens": 9025,
+            "outputTokens": 5302,
             "cachedTokens": 0,
-            "costUsd": 0.057232
+            "costUsd": 0.14214
           },
           {
             "role": "repro",
             "model": "muse-wonder-1.0",
-            "calls": 1,
-            "inputTokens": 19013,
-            "outputTokens": 5277,
+            "calls": 3,
+            "inputTokens": 56974,
+            "outputTokens": 14256,
             "cachedTokens": 0,
-            "costUsd": 0.181592
+            "costUsd": 0.513016
           }
         ]
       },
-      "costUsd": 0.31641925000000004,
+      "costUsd": 0.8007542,
       "measured": true,
-      "calls": 3,
+      "calls": 8,
       "retries": 0,
       "budget": {
         "limitUsd": 4,
-        "spentUsd": 0.316419,
+        "spentUsd": 0.800754,
         "measured": true,
         "exceeded": false,
         "hard": true,
@@ -84,9 +84,9 @@
         "skippedFindings": []
       },
       "findings": {
-        "proposed": 4,
+        "proposed": 3,
         "byScanner": {
-          "spark": 4,
+          "spark": 3,
           "wonder": 0,
           "secondary": 0,
           "both": 0,
@@ -97,51 +97,51 @@
           "count": 0,
           "items": []
         },
-        "l1Rejected": 3,
-        "verified": 1,
+        "l1Rejected": 0,
+        "verified": 3,
         "moderate": 0,
         "refuted": 0,
         "uncertain": 0,
         "reproduced": 0,
         "patched": 0
       },
-      "l1PassRate": 0.25,
-      "l1Checked": 4,
+      "l1PassRate": 1,
+      "l1Checked": 3,
       "phases": [
         {
           "name": "ingest",
           "status": "ok",
-          "durationMs": 21
+          "durationMs": 22
         },
         {
           "name": "scan",
           "status": "ok",
-          "durationMs": 56279
+          "durationMs": 130748
         },
         {
           "name": "verify",
           "status": "ok",
-          "durationMs": 89395
+          "durationMs": 230140
         },
         {
           "name": "publish",
           "status": "ok",
-          "durationMs": 10
+          "durationMs": 28
         }
       ],
-      "durationMs": 145724
+      "durationMs": 360954
     }
   ],
   "summary": {
     "runs": 1,
-    "totalCostUsd": 0.316419,
-    "costBeforeUsd": 0,
-    "avgL1PassRate": 0.25,
-    "verified": 1,
+    "totalCostUsd": 0.800754,
+    "costBeforeUsd": 0.316419,
+    "avgL1PassRate": 1,
+    "verified": 3,
     "moderate": 0,
     "refuted": 0,
     "uncertain": 0,
-    "l1Rejected": 3,
+    "l1Rejected": 0,
     "promptComplete": true
   }
 }

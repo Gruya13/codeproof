@@ -1,0 +1,125 @@
+{
+  "raw": "{\"findings\":[{\"category\":\"correctness\",\"claim\":\"S.SGML_DECL_QUOTED is entered without setting parser.q, so the exit test `c === parser.q` can never succeed and quoted SGML declarations never terminate.\",\"confidence\":0.95,\"evidence\":[{\"endLine\":1359,\"path\":\"sax.js\",\"snippet\":\"          } else if (isQuote(c)) {\\n            parser.state = S.SGML_DECL_QUOTED\\n            parser.sgmlDecl += c\",\"startLine\":1357},{\"endLine\":1371,\"path\":\"sax.js\",\"snippet\":\"        case S.SGML_DECL_QUOTED:\\n          if (c === parser.q) {\\n            parser.state = S.SGML_DECL\\n            parser.q = ''\\n          }\\n          parser.sgmlDecl += c\\n          continue\",\"startLine\":1365}],\"id\":\"F-001\",\"kind\":\"direct\",\"severity\":\"high\",\"title\":\"SGML_DECL_QUOTED never exits: parser.q never set\"},{\"category\":\"correctness\",\"claim\":\"Valueless attribute path in ATTRIB_NAME_SAW_WHITE directly assigns parser.tag.attributes and emits onattribute, bypassing the xmlns deferred attribList/namespace handling used by attrib().\",\"confidence\":0.9,\"evidence\":[{\"endLine\":1615,\"path\":\"sax.js\",\"snippet\":\"            strictFail(parser, 'Attribute without value')\\n            parser.tag.attributes[parser.attribName] = ''\\n            parser.attribValue = ''\\n            emitNode(parser, 'onattribute', {\\n              name: parser.attribName,\\n              value: '',\\n            })\",\"startLine\":1609},{\"endLine\":944,\"path\":\"sax.js\",\"snippet\":\"      // so deferred events can be emitted in document order\\n      parser.attribList.push([parser.attribName, parser.attribValue])\",\"startLine\":943}],\"id\":\"F-002\",\"kind\":\"direct\",\"severity\":\"high\",\"title\":\"Valueless attribute bypasses xmlns handling\"},{\"category\":\"correctness\",\"claim\":\"Default state handler constructs Error with parser object as message instead of message string, losing the unknown-state diagnostic.\",\"confidence\":0.9,\"evidence\":[{\"endLine\":1799,\"path\":\"sax.js\",\"snippet\":\"        default: /* istanbul ignore next */ {\\n          throw new Error(parser, 'Unknown state: ' + parser.state)\\n        }\",\"startLine\":1797}],\"id\":\"F-003\",\"kind\":\"direct\",\"severity\":\"low\",\"title\":\"Error constructed with parser object as message\"}]}",
+  "candidates": [
+    {
+      "index": 0,
+      "candidate": {
+        "category": "correctness",
+        "claim": "S.SGML_DECL_QUOTED is entered without setting parser.q, so the exit test `c === parser.q` can never succeed and quoted SGML declarations never terminate.",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "endLine": 1359,
+            "path": "sax.js",
+            "snippet": "          } else if (isQuote(c)) {\n            parser.state = S.SGML_DECL_QUOTED\n            parser.sgmlDecl += c",
+            "startLine": 1357
+          },
+          {
+            "endLine": 1371,
+            "path": "sax.js",
+            "snippet": "        case S.SGML_DECL_QUOTED:\n          if (c === parser.q) {\n            parser.state = S.SGML_DECL\n            parser.q = ''\n          }\n          parser.sgmlDecl += c\n          continue",
+            "startLine": 1365
+          }
+        ],
+        "id": "F-001",
+        "kind": "direct",
+        "severity": "high",
+        "title": "SGML_DECL_QUOTED never exits: parser.q never set"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 1357-1359 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "Entry at sax.js:1357-1359 transitions to S.SGML_DECL_QUOTED without assigning parser.q, while the exit at sax.js:1365-1368 requires c === parser.q, unlike the DOCTYPE path at sax.js:1382-1385 which correctly sets parser.q = c."
+      }
+    },
+    {
+      "index": 1,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Valueless attribute path in ATTRIB_NAME_SAW_WHITE directly assigns parser.tag.attributes and emits onattribute, bypassing the xmlns deferred attribList/namespace handling used by attrib().",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 1615,
+            "path": "sax.js",
+            "snippet": "            strictFail(parser, 'Attribute without value')\n            parser.tag.attributes[parser.attribName] = ''\n            parser.attribValue = ''\n            emitNode(parser, 'onattribute', {\n              name: parser.attribName,\n              value: '',\n            })",
+            "startLine": 1609
+          },
+          {
+            "endLine": 944,
+            "path": "sax.js",
+            "snippet": "      // so deferred events can be emitted in document order\n      parser.attribList.push([parser.attribName, parser.attribValue])",
+            "startLine": 943
+          }
+        ],
+        "id": "F-002",
+        "kind": "direct",
+        "severity": "high",
+        "title": "Valueless attribute bypasses xmlns handling"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 1609-1615 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The ATTRIB_NAME_SAW_WHITE branch at sax.js:1609-1615 directly assigns parser.tag.attributes and emits onattribute without calling attrib(), whereas attrib() at sax.js:903-944 performs xmlns binding handling and defers attributes via parser.attribList.push when parser.opt.xmlns is set."
+      }
+    },
+    {
+      "index": 2,
+      "candidate": {
+        "category": "correctness",
+        "claim": "Default state handler constructs Error with parser object as message instead of message string, losing the unknown-state diagnostic.",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "endLine": 1799,
+            "path": "sax.js",
+            "snippet": "        default: /* istanbul ignore next */ {\n          throw new Error(parser, 'Unknown state: ' + parser.state)\n        }",
+            "startLine": 1797
+          }
+        ],
+        "id": "F-003",
+        "kind": "direct",
+        "severity": "low",
+        "title": "Error constructed with parser object as message"
+      },
+      "proposedBy": "spark",
+      "l0": {
+        "ok": true,
+        "reasons": []
+      },
+      "status": "verified",
+      "l1": {
+        "passed": true,
+        "reason": "citation matches lines 1797-1799 (+/-1 line tolerance)",
+        "lineTolerance": 0
+      },
+      "verifier": {
+        "model": "muse-wonder-1.0",
+        "verdict": "confirm",
+        "reason": "The cited line at sax.js:1798 passes parser as the first Error argument and the diagnostic string as the ignored second argument, so the Error message will be the stringified parser object rather than 'Unknown state: ...'."
+      }
+    }
+  ]
+}
