@@ -12,6 +12,7 @@ import { mergeScannerRuns } from "./scan/merge.mjs";
 import { verifyOne, VERIFIER_SYSTEM_PROMPT } from "./verify/index.mjs";
 import { buildVerifierContext } from "./verify/context.mjs";
 import { buildReport, buildRejected } from "./synthesize/index.mjs";
+import { buildHtmlReport } from "./synthesize/html.mjs";
 import { parseDirtyJson } from "./run/json.mjs";
 import { computeRunId, sha256Hex, gitCommit, repoIsClean, Budget } from "./run/index.mjs";
 import { createAgents, aggregateUsage } from "./agents/index.mjs";
@@ -702,7 +703,8 @@ async function main() {
     outputs: {
       report: outLabel + "/REPORT.md",
       findings: outLabel + "/findings.json",
-      rejected: outLabel + "/rejected.md"
+      rejected: outLabel + "/rejected.md",
+      html: outLabel + "/REPORT.html"
     },
     versions: { node: process.version, codeproof: VERSION }
   };
@@ -714,6 +716,9 @@ async function main() {
     if (item.repro) writeReproArtifacts(outDir, item.finding.id, item.repro);
     if (item.patch) writePatchArtifacts(outDir, item.finding.id, item.patch);
   }
+  // Per-run static HTML report (paket F). Written before buildAttestation so the file is covered
+  // by the attestation and replay verifies it; it is a view of the evidence, not a new proof.
+  writeFileSync(join(outDir, "REPORT.html"), buildHtmlReport({ run: runJson, published: published, candidates: candidateAudit, mock: mock, controlled: controlled }));
   phases.push({ name: "publish", status: "ok", durationMs: Date.now() - publishStarted });
   runJson.timings.durationMs = Date.now() - startedAtMs;
   // v0.2.0 attestation: hashes of every committed artifact of this run (run.json excluded).
@@ -724,6 +729,7 @@ async function main() {
   console.log("  Report:   " + join(outDir, "REPORT.md"));
   console.log("  Rejected: " + join(outDir, "rejected.md"));
   console.log("  Findings: " + join(outDir, "findings.json"));
+  console.log("  HTML:     " + join(outDir, "REPORT.html"));
   console.log("  Run:      " + join(outDir, "run.json"));
   console.log("  Cost:     " + (measured ? "$" + totalCost.toFixed(4) : "not measured (mock)"));
   console.log("  Cache:    " + totalCached + " of " + totalInput + " input tokens served from cache");
