@@ -1,0 +1,4 @@
+{
+  "raw": "{\n  \"chunked\": true,\n  \"groups\": [\n    {\n      \"group\": \"(root)\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"agents\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"ingest\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"mcp\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"patch\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"repro\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"run\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"scan\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"synthesize\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    },\n    {\n      \"group\": \"verify\",\n      \"raw\": \"{\\\"findings\\\": []}\"\n    }\n  ]\n}",
+  "candidates": []
+}
