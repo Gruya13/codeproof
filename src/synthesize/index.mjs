@@ -186,10 +186,16 @@ export function buildReport(options) {
         const linkcheck = itemRepro.linkcheck;
         const method = linkcheck.status === "proven" && linkcheck.method === "file" ? " (file coverage)"
           : linkcheck.status === "proven" && linkcheck.method === "symbol" ? " (symbol)" : "";
-        const proof = linkcheck.status === "proven" && linkcheck.method === "file"
-          ? " - the cited file executed under inspector coverage."
-          : " - the imported symbol executed under inspector coverage.";
-        lines.push("**LinkCheck:** " + linkcheck.status + method + (linkcheck.detail ? " (" + linkcheck.detail + ")" : "") + (linkcheck.status === "unproven" ? " - reported as verified, not execution-proven." : proof));
+        // Only a proven LinkCheck may claim execution: failed/error/timeout must not inherit the
+        // "the imported symbol executed" suffix (dogfood F-006).
+        const proof = linkcheck.status !== "proven"
+          ? (linkcheck.status === "unproven"
+            ? " - reported as verified, not execution-proven."
+            : " - LinkCheck did not award an execution proof; the finding is not reported as execution-proven.")
+          : linkcheck.method === "file"
+            ? " - the cited file executed under inspector coverage."
+            : " - the imported symbol executed under inspector coverage.";
+        lines.push("**LinkCheck:** " + linkcheck.status + method + (linkcheck.detail ? " (" + linkcheck.detail + ")" : "") + proof);
         lines.push("");
       }
       const attempts = Array.isArray(itemRepro.attempts) ? itemRepro.attempts : [];

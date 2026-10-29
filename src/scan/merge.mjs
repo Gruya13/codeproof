@@ -108,6 +108,24 @@ export function mergeScannerRuns(runs) {
   return { candidates: candidates, duplicates: duplicates };
 }
 
+// Scanner accounting for logs and run.json.findings.byScanner. "secondary" is the label used when
+// the secondary scanner runs the same model as the primary one; counting only spark/wonder/both
+// made those findings invisible in the counts (dogfood F-002, final round).
+export function countByScanner(entries) {
+  const count = function (labels) {
+    return entries.filter(function (entry) {
+      return labels.every(function (label) { return entry.proposedBy.indexOf(label) !== -1; });
+    }).length;
+  };
+  return {
+    spark: count(["spark"]),
+    wonder: count(["wonder"]),
+    secondary: count(["secondary"]),
+    both: count(["spark", "wonder"]),
+    controlled: count(["controlled"])
+  };
+}
+
 // The verifier that did not propose the finding tries to refute it (cross-examination by model).
 export function verifierRoleFor(proposedBy, options = {}) {
   const primary = options.primary || "spark";

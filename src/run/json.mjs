@@ -53,10 +53,15 @@ function firstJsonObject(source) {
     let escape = false;
     for (let index = start; index < source.length; index += 1) {
       const char = source[index];
-      if (escape) { escape = false; continue; }
-      if (char === "\\") { escape = true; continue; }
-      if (char === '"') { inString = !inString; continue; }
-      if (inString) continue;
+      // A backslash escapes the next character only inside a string literal: treating it as an
+      // escape outside a string skipped quotes and braces and corrupted object boundaries (F-005).
+      if (inString) {
+        if (escape) { escape = false; continue; }
+        if (char === "\\") { escape = true; continue; }
+        if (char === '"') inString = false;
+        continue;
+      }
+      if (char === '"') { inString = true; continue; }
       if (char === "{") depth += 1;
       else if (char === "}") {
         depth -= 1;

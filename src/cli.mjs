@@ -8,7 +8,7 @@ import { buildAttestation } from "./run/attest.mjs";
 import { prepareSnapshot } from "./repro/index.mjs";
 import { attemptPatch, writePatchArtifacts } from "./patch/index.mjs";
 import { buildScannerMessages, buildScannerResponseFormat, scannerSystemPrompt, validateFindingsL0 } from "./scan/index.mjs";
-import { mergeScannerRuns } from "./scan/merge.mjs";
+import { countByScanner, mergeScannerRuns } from "./scan/merge.mjs";
 import { verifyOne, VERIFIER_SYSTEM_PROMPT } from "./verify/index.mjs";
 import { buildVerifierContext } from "./verify/context.mjs";
 import { buildReport, buildRejected } from "./synthesize/index.mjs";
@@ -430,12 +430,7 @@ async function main() {
     });
     if (auditItem) auditItem.status = "duplicate-of " + duplicate.mergedInto;
   }
-  const byScanner = {
-    spark: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf("spark") !== -1; }).length,
-    wonder: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf("wonder") !== -1; }).length,
-    both: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf("spark") !== -1 && entry.proposedBy.indexOf("wonder") !== -1; }).length,
-    controlled: proposedEntries.filter(function (entry) { return entry.proposedBy.indexOf("controlled") !== -1; }).length
-  };
+  const byScanner = countByScanner(proposedEntries);
   if (!controlled) {
     console.log("  scan     " + String(Date.now() - scanStarted).padStart(4) + " ms  " +
       proposed.length + " unique proposed" +

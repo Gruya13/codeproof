@@ -4,7 +4,9 @@
 
 const IDENT = "[A-Za-z_$][A-Za-z0-9_$]*";
 
-var __idRegexCache = {};
+// A prototype-less cache: a plain {} exposes inherited members (toString, constructor, __proto__),
+// so wordRegex("toString") returned a function instead of a RegExp and .test crashed (dogfood F-003).
+var __idRegexCache = Object.create(null);
 function wordRegex(name) {
   if (!__idRegexCache[name]) {
     __idRegexCache[name] = new RegExp("\\b" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b");
@@ -110,9 +112,13 @@ export function hasExplicitThrow(code) {
 
 // Tautological assertions: comparing an identifier with itself, or a literal with the same literal.
 export function hasTautology(code) {
-  const selfCompare = new RegExp("\\b(" + IDENT + ")\\s*(?:===|!==|==|!=)\\s*\\1\\b");
-  if (selfCompare.test(code)) return "self-comparison";
   const segments = extractAssertSegments(code);
+  // Only assertion text counts: a self-comparison outside an assert statement is not a tautological
+  // assertion, and the old whole-file test rejected valid reproducers (dogfood F-004).
+  const selfCompare = new RegExp("\\b(" + IDENT + ")\\s*(?:===|!==|==|!=)\\s*\\1\\b");
+  for (const segment of segments) {
+    if (selfCompare.test(segment.text)) return "self-comparison";
+  }
   for (const segment of segments) {
     const body = segment.text;
     if (/\bassert\s*\.\s*ok\s*\(\s*true\s*[,)]/.test(body)) return "assert.ok(true)";
