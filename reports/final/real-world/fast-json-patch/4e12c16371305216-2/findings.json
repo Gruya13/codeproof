@@ -1,0 +1,176 @@
+[
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "isInteger returns true for empty string, so array index '' is treated as integer 0 instead of invalid.",
+      "confidence": 0.95,
+      "evidence": [
+        {
+          "endLine": 77,
+          "path": "helpers.js",
+          "snippet": "function isInteger(str) {\n    var i = 0;\n    var len = str.length;\n    var charCode;\n    while (i < len) {\n        charCode = str.charCodeAt(i);\n        if (charCode >= 48 && charCode <= 57) {\n            i++;\n            continue;\n        }\n        return false;\n    }\n    return true;\n}",
+          "startLine": 64
+        }
+      ],
+      "id": "F-001",
+      "kind": "direct",
+      "severity": "high",
+      "title": "isInteger accepts empty string as integer"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-001"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 64-77 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "isInteger at helpers.js:64-77 returns true for '' because the while loop never executes when len is 0, and core.js:215-219 then fails to throw OPERATION_PATH_ILLEGAL_ARRAY_INDEX and converts the key via ~~key, where ~~'' is 0."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: unsupported response must not include testCode; unsupported response must not include controlCode; unsupportedReason is too short",
+      "artifacts": null,
+      "durationMs": 23536,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2607,
+        "outputTokens": 1701,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.044448
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "observe overwrites shared mirror.value on every new callback, discarding un-generated changes for existing observers of the same object.",
+      "confidence": 0.9,
+      "evidence": [
+        {
+          "endLine": 59,
+          "path": "duplex.js",
+          "snippet": "    var mirror = getMirror(obj);\n    if (!mirror) {\n        mirror = new Mirror(obj);\n        beforeDict.set(obj, mirror);\n    }\n    else {\n        var observerInfo = getObserverFromMirror(mirror, callback);\n        observer = observerInfo && observerInfo.observer;\n    }\n    if (observer) {\n        return observer;\n    }\n    observer = {};\n    mirror.value = helpers_js_1._deepClone(obj);",
+          "startLine": 46
+        }
+      ],
+      "id": "F-002",
+      "kind": "direct",
+      "severity": "high",
+      "title": "Second observe clobbers shared mirror baseline"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-002"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 46-59 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "Confirmed: observe at duplex.js:46 reuses the shared mirror, returns early only for the same callback at duplex.js:55-57, otherwise unconditionally resets mirror.value at duplex.js:59, while generate at duplex.js:101-102 diffs against that shared mirror.value, so a second observer discards the first observer's un-generated diff."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+      "artifacts": null,
+      "durationMs": 29467,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 2704,
+        "outputTokens": 2771,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.066236
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  },
+  {
+    "finding": {
+      "category": "correctness",
+      "claim": "Array index conversion uses ~~key which truncates to 32-bit signed int, so large indices wrap and bypass bounds checks / address wrong element.",
+      "confidence": 0.85,
+      "evidence": [
+        {
+          "endLine": 220,
+          "path": "core.js",
+          "snippet": "                else {\n                    if (validateOperation && !helpers_js_1.isInteger(key)) {\n                        throw new exports.JsonPatchError(\"Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index\", \"OPERATION_PATH_ILLEGAL_ARRAY_INDEX\", index, operation, document);\n                    } // only parse key when it's an integer for `arr.prop` to work\n                    else if (helpers_js_1.isInteger(key)) {\n                        key = ~~key;\n                    }",
+          "startLine": 214
+        }
+      ],
+      "id": "F-004",
+      "kind": "direct",
+      "severity": "medium",
+      "title": "Array index truncated with double-bitwise-NOT"
+    },
+    "status": "verified",
+    "proposedBy": [
+      "spark"
+    ],
+    "scannerIds": [
+      "F-004"
+    ],
+    "l1": {
+      "passed": true,
+      "reason": "citation matches lines 214-220 (+/-1 line tolerance)",
+      "lineTolerance": 0
+    },
+    "verifier": {
+      "model": "muse-wonder-1.0",
+      "verdict": "confirm",
+      "reason": "The conversion at core.js:219 uses ~~key, which performs ToInt32 truncation, and the add bounds check at core.js:223 compares the already-truncated key, so an index such as 4294967296 wraps to 0, evades that check, and addresses element 0 instead."
+    },
+    "repro": {
+      "status": "inconclusive",
+      "classification": null,
+      "attempts": [],
+      "attemptCount": 0,
+      "deterministic": false,
+      "testCode": "",
+      "expectedBehavior": "",
+      "rationale": "",
+      "reason": "reproducer failed L0: unsupported response must not include testCode; unsupported response must not include controlCode; unsupportedReason is too short",
+      "artifacts": null,
+      "durationMs": 55041,
+      "model": "muse-wonder-1.0",
+      "usage": {
+        "inputTokens": 6323,
+        "outputTokens": 4888,
+        "cachedTokens": 0
+      },
+      "costUsd": 0.123052
+    },
+    "patch": null,
+    "evidenceLevel": "citation+adversarial"
+  }
+]

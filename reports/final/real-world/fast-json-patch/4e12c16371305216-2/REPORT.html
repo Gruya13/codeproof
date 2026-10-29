@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeProof report - 4e12c16371305216</title>
+<style>:root { color-scheme: dark; --bg: #0f1115; --panel: #171a21; --line: #2a2f3a; --text: #e6e8ee; --muted: #9aa3b2; --ok: #2f9e6f; --warn: #b8862f; --bad: #b04a4a; --blue: #3b6ea5; }
+body { margin: 0; padding: 24px; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 28px 0 10px; }
+h3 { font-size: 16px; margin: 0 0 6px; }
+.meta, .muted { color: var(--muted); font-size: 13px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 14px 0; }
+table { border-collapse: collapse; width: 100%; }
+td, th { text-align: left; padding: 3px 10px 3px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.funnel { display: flex; gap: 10px; flex-wrap: wrap; }
+.step { background: #11151c; border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; min-width: 120px; }
+.step .n { font-size: 22px; font-weight: 700; }
+.finding { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 12px 0; }
+.badge { display: inline-block; border-radius: 4px; padding: 1px 8px; font-size: 12px; margin: 0 6px 6px 0; border: 1px solid var(--line); }
+.badge.ok { border-color: var(--ok); } .badge.warn { border-color: var(--warn); } .badge.bad { border-color: var(--bad); } .badge.info { border-color: var(--blue); }
+pre { background: #0b0e13; border: 1px solid var(--line); border-radius: 6px; padding: 10px; overflow-x: auto; font-size: 13px; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+details { margin: 8px 0; } summary { cursor: pointer; color: var(--muted); }
+.cite { color: var(--muted); font-size: 13px; }
+footer { margin-top: 34px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; }
+a { color: #8ab4f8; }</style>
+</head>
+<body>
+<h1>CodeProof report</h1>
+<p class="meta">run-id: 4e12c16371305216 | mode: smoke | commit: 9d313ac01916e525e9204074f06e5295edec491b | config: 9c0a3c84bda394b8fe6fb15bae1abceb03bd87d9fca2c076ebe61277ed0ed191</p>
+<p class="meta">models: scanner-correctness=muse-spark-1.3, verifier=muse-wonder-1.0, repro=muse-wonder-1.0 | codeproof 0.2.2 | node v26.8.2</p>
+<h2>Evidence funnel</h2>
+<div class="panel"><div class="funnel"><div class="step"><div class="n">4</div><div class="muted">proposed</div></div><div class="step"><div class="n">1</div><div class="muted">L1 rejected</div></div><div class="step"><div class="n">3</div><div class="muted">verified</div></div><div class="step"><div class="n">0</div><div class="muted">execution-proven</div></div><div class="step"><div class="n">0</div><div class="muted">patch-proven</div></div></div></div>
+<h2>Summary</h2>
+<div class="panel"><table><tr><td>Files / LOC</td><td>3 / 803</td></tr><tr><td>Files in scanner prompt</td><td>3 / 3</td></tr><tr><td>Findings proposed</td><td>4</td></tr><tr><td>Rejected at L1 (bad citation)</td><td>1</td></tr><tr><td>Verified</td><td>3</td></tr><tr><td>Execution-proven (L3)</td><td>0</td></tr><tr><td>Patch-proven (L4)</td><td>0</td></tr><tr><td>Moderate / refuted / uncertain</td><td>0 / 0 / 0</td></tr><tr><td>Calls / retries</td><td>7 / 0</td></tr><tr><td>Tokens in / out</td><td>38456 / 29759</td></tr><tr><td>Cached input tokens</td><td>500</td></tr><tr><td>Cost</td><td>$0.4997</td></tr></table></div>
+<h2>Verified findings</h2>
+<article class="finding"><h3>F-001 - high - isInteger accepts empty string as integer</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> isInteger returns true for empty string, so array index &#39;&#39; is treated as integer 0 instead of invalid.</p><p class="cite">helpers.js:64-77</p><pre><code>function isInteger(str) {
+    var i = 0;
+    var len = str.length;
+    var charCode;
+    while (i &lt; len) {
+        charCode = str.charCodeAt(i);
+        if (charCode &gt;= 48 &amp;&amp; charCode &lt;= 57) {
+            i++;
+            continue;
+        }
+        return false;
+    }
+    return true;
+}</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - isInteger at helpers.js:64-77 returns true for &#39;&#39; because the while loop never executes when len is 0, and core.js:215-219 then fails to throw OPERATION_PATH_ILLEGAL_ARRAY_INDEX and converts the key via ~~key, where ~~&#39;&#39; is 0.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: unsupported response must not include testCode; unsupported response must not include controlCode; unsupportedReason is too short</p></article>
+<article class="finding"><h3>F-002 - high - Second observe clobbers shared mirror baseline</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> observe overwrites shared mirror.value on every new callback, discarding un-generated changes for existing observers of the same object.</p><p class="cite">duplex.js:46-59</p><pre><code>    var mirror = getMirror(obj);
+    if (!mirror) {
+        mirror = new Mirror(obj);
+        beforeDict.set(obj, mirror);
+    }
+    else {
+        var observerInfo = getObserverFromMirror(mirror, callback);
+        observer = observerInfo &amp;&amp; observerInfo.observer;
+    }
+    if (observer) {
+        return observer;
+    }
+    observer = {};
+    mirror.value = helpers_js_1._deepClone(obj);</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - Confirmed: observe at duplex.js:46 reuses the shared mirror, returns early only for the same callback at duplex.js:55-57, otherwise unconditionally resets mirror.value at duplex.js:59, while generate at duplex.js:101-102 diffs against that shared mirror.value, so a second observer discards the first observer&#39;s un-generated diff.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments</p></article>
+<article class="finding"><h3>F-004 - medium - Array index truncated with double-bitwise-NOT</h3><span class="badge ok">verified / citation+adversarial</span><p><strong>Claim:</strong> Array index conversion uses ~~key which truncates to 32-bit signed int, so large indices wrap and bypass bounds checks / address wrong element.</p><p class="cite">core.js:214-220</p><pre><code>                else {
+                    if (validateOperation &amp;&amp; !helpers_js_1.isInteger(key)) {
+                        throw new exports.JsonPatchError(&quot;Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index&quot;, &quot;OPERATION_PATH_ILLEGAL_ARRAY_INDEX&quot;, index, operation, document);
+                    } // only parse key when it&#39;s an integer for `arr.prop` to work
+                    else if (helpers_js_1.isInteger(key)) {
+                        key = ~~key;
+                    }</code></pre><p class="cite">verifier muse-wonder-1.0: confirm - The conversion at core.js:219 uses ~~key, which performs ToInt32 truncation, and the add bounds check at core.js:223 compares the already-truncated key, so an index such as 4294967296 wraps to 0, evades that check, and addresses element 0 instead.</p><span class="badge warn">repro inconclusive</span><p class="muted">reproducer failed L0: unsupported response must not include testCode; unsupported response must not include controlCode; unsupportedReason is too short</p></article>
+<h2>Rejected and unresolved</h2>
+<details><summary>Other published findings: 0 (refuted / moderate / uncertain)</summary></details><details><summary>Rejected candidates (audit trail): 1</summary><p class="cite">F-003 - l1-rejected - by spark - citation range expects 10 non-blank lines but snippet has 9</p></details>
+<footer>
+<p>This page is a static view of the recorded evidence; it re-runs nothing. Levels: citation-proven = L1 (provenance, not a semantic judge); verified = L1 + L2 (a model judgment); execution-proven = L3 (two-phase reproducer + LinkCheck under the Node permission model); patch-proven = L4 (differential result on a copy of the snapshot, not a root-cause fix; the repository's own test suite is never run). Offline replay verifies the artifacts and mechanical gates; it does not re-execute the semantic L2 verdict.</p>
+<p>Artifacts: <a href="./findings.json">findings.json</a> | <a href="./rejected.md">rejected.md</a> | <a href="./REPORT.md">REPORT.md</a> | <a href="./run.json">run.json</a>. Every artifact of this run, including this file, is hashed in <code>run.json.attestation</code>.</p>
+<p>Findings proposed: 4 | verified: 3 | execution-proven: 0 | patch-proven: 0</p>
+</footer>
+</body>
+</html>

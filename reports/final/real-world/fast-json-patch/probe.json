@@ -1,6 +1,6 @@
 {
   "tool": "probe-repo",
-  "createdAt": "2026-10-29T21:21:23.429Z",
+  "createdAt": "2026-10-29T21:25:44.006Z",
   "stats": {
     "repo": "https://github.com/Starcounter-Jack/JSON-Patch",
     "commit": "9d313ac01916e525e9204074f06e5295edec491b",
@@ -22,9 +22,9 @@
     {
       "index": 1,
       "runId": "4e12c16371305216",
-      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/fast-json-patch/4e12c16371305216",
+      "runDir": "/home/gru/Projects/Meta hakatron/codeproof/reports/final/real-world/fast-json-patch/4e12c16371305216-2",
       "exitCode": 0,
-      "elapsedMs": 137303,
+      "elapsedMs": 259068,
       "mode": "smoke",
       "mock": false,
       "repo": {
@@ -36,46 +36,46 @@
         "files": 3
       },
       "usage": {
-        "inputTokens": 18333,
-        "outputTokens": 18518,
-        "cachedTokens": 0,
+        "inputTokens": 38456,
+        "outputTokens": 29759,
+        "cachedTokens": 500,
         "byRole": [
           {
             "role": "scanner-correctness",
             "model": "muse-spark-1.3",
             "calls": 1,
             "inputTokens": 9752,
-            "outputTokens": 10506,
+            "outputTokens": 14008,
             "cachedTokens": 0,
-            "costUsd": 0.0568405
+            "costUsd": 0.071724
           },
           {
             "role": "verifier",
             "model": "muse-wonder-1.0",
-            "calls": 1,
-            "inputTokens": 5917,
-            "outputTokens": 3392,
-            "cachedTokens": 0,
-            "costUsd": 0.091508
+            "calls": 3,
+            "inputTokens": 17070,
+            "outputTokens": 6391,
+            "cachedTokens": 500,
+            "costUsd": 0.19419999999999998
           },
           {
             "role": "repro",
             "model": "muse-wonder-1.0",
-            "calls": 1,
-            "inputTokens": 2664,
-            "outputTokens": 4620,
+            "calls": 3,
+            "inputTokens": 11634,
+            "outputTokens": 9360,
             "cachedTokens": 0,
-            "costUsd": 0.103056
+            "costUsd": 0.233736
           }
         ]
       },
-      "costUsd": 0.2514045,
+      "costUsd": 0.49966,
       "measured": true,
-      "calls": 3,
+      "calls": 7,
       "retries": 0,
       "budget": {
         "limitUsd": 4,
-        "spentUsd": 0.251404,
+        "spentUsd": 0.49966,
         "measured": true,
         "exceeded": false,
         "hard": true,
@@ -97,51 +97,51 @@
           "count": 0,
           "items": []
         },
-        "l1Rejected": 3,
-        "verified": 1,
+        "l1Rejected": 1,
+        "verified": 3,
         "moderate": 0,
         "refuted": 0,
         "uncertain": 0,
         "reproduced": 0,
         "patched": 0
       },
-      "l1PassRate": 0.25,
+      "l1PassRate": 0.75,
       "l1Checked": 4,
       "phases": [
         {
           "name": "ingest",
           "status": "ok",
-          "durationMs": 26
+          "durationMs": 28
         },
         {
           "name": "scan",
           "status": "ok",
-          "durationMs": 49937
+          "durationMs": 71638
         },
         {
           "name": "verify",
           "status": "ok",
-          "durationMs": 87254
+          "durationMs": 187305
         },
         {
           "name": "publish",
           "status": "ok",
-          "durationMs": 9
+          "durationMs": 17
         }
       ],
-      "durationMs": 137246
+      "durationMs": 259007
     }
   ],
   "summary": {
     "runs": 1,
-    "totalCostUsd": 0.251404,
-    "costBeforeUsd": 0,
-    "avgL1PassRate": 0.25,
-    "verified": 1,
+    "totalCostUsd": 0.49966,
+    "costBeforeUsd": 0.251404,
+    "avgL1PassRate": 0.75,
+    "verified": 3,
     "moderate": 0,
     "refuted": 0,
     "uncertain": 0,
-    "l1Rejected": 3,
+    "l1Rejected": 1,
     "promptComplete": true
   }
 }

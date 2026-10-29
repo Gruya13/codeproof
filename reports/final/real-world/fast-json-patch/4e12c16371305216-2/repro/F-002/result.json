@@ -1,0 +1,20 @@
+{
+  "status": "inconclusive",
+  "classification": null,
+  "deterministic": false,
+  "attempts": [],
+  "attemptCount": 0,
+  "control": null,
+  "trigger": null,
+  "linkcheck": null,
+  "expectedBehavior": "",
+  "rationale": "",
+  "reason": "reproducer failed L0: control and trigger must use a different input: control and trigger call the shared symbol(s) with identical arguments",
+  "model": "muse-wonder-1.0",
+  "usage": {
+    "inputTokens": 2704,
+    "outputTokens": 2771,
+    "cachedTokens": 0
+  },
+  "costUsd": 0.066236
+}
