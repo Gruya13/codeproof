@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "casesSha256": "786d96a5df71dee3a723951137524fc76849e6007ded503abb8221842ae1957b",
+  "gitRevision": "dcf1c8a53e0f4ec86e7c588d35e923f26269e075",
+  "gitRel": "tests/final-budget.test.mjs",
+  "by": "codex",
+  "at": "2026-10-29T19:13:51.303Z",
+  "relocks": []
+}
