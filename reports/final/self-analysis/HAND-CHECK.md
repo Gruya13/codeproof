@@ -23,7 +23,30 @@
 
 **Zaključak adjudikacije:** **5 stvarnih defekata** (F-002…F-006), **0 lažnih nalaza**, **1 nije defekt** (F-001) i **0 neadjudikovanih**. Svi stvarni idu u fix + regresioni test (test piše asistent, autor u commit poruci, test-lock), pa re-run dogfooda na popravljenom kodu (PREREG §4.2).
 
+## 2. Fixevi i re-run (posle adjudikacije)
+
+**Fixevi (autor DSH, commit `1b07caf`):** F-002 `countByScanner` (+ `secondary` kanta; `cli.mjs` ga koristi);
+F-003 prototype-less keš (`Object.create(null)`); F-004 self-comparison samo u assert segmentima;
+F-005 backslash je escape samo unutar stringa; F-006 proof sufiks samo za `proven` LinkCheck.
+
+**Regresioni testovi (autor codex):** `tests/dogfood-fixes.test.mjs` (5 testova, svaki padao pre fixa),
+commit testova `0cc0849`, test-lock `2f1c568`. Suita: **268/268** na Node 26 i Node 22, integrity PASS.
+
+**Re-run na popravljenom kodu (revizija `2f1c568`, kroz `final-run.sh`):**
+
+| Run | Dir | Rezultat | Cena | Trajanje |
+|---|---|---|---|---|
+| chunked-r2 | `chunked-r2/8adb643a9ac70162` | **0 proposed** | **$0,3793** | 363 s |
+| single-r2 | `single-r2/8f1a9861e591b2d7` | **0 proposed** | **$0,1214** | 42 s |
+
+**F1 ukupno:** 4 pokušaja = **$2,9470** (procena $4,5; cap bloka $6). Manifest: `reports/final/ATTEMPTS.jsonl` (attempt 1–4).
+
+**Tumačenje re-runa:** nijedan od pet popravljenih defekata se ne pojavljuje na popravljenom kodu, ali
+re-run je vratio 0 kandidata i u chunked i u single modu — model varijansa je velika (chunked r1: 6 proposed
+za $2,30; chunked r2: 0 za $0,38). Zato se ovo prijavljuje kao **pošten ishod**, a ne kao dokaz da u kodu
+nema drugih defekata: dokaz da su popravke ispravne su **fiksni kod + 5 regresionih testova**, a ne re-run.
+
 ## Šta nije urađeno
 
 - F-001 nije popravljan jer nije defekt; ako se ipak želi eksplicitno ponašanje, to je docs/komentar, ne kod.
-- Re-run dogfooda posle fixeva: **obavezan** (fixevi menjaju analizirani `src/`).
+- Re-run dogfooda je urađen i prijavljen gore (0 nalaza, pošteno).
