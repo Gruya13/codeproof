@@ -1,6 +1,6 @@
 # CodeProof
 
-**Every finding carries the level of proof it earned: a machine-checked citation, an adversarial confirmation, or a failing test.**
+**Every finding carries the level of proof it earned: machine-checked citation, adversarial confirmation, or a failing test.**
 
 CodeProof statically reviews a TypeScript/JavaScript repository. A producer model proposes findings with exact
 citations; a deterministic checker verifies every citation against the analyzed commit; a second model tries to
@@ -22,13 +22,13 @@ and the claim may still be false. Nothing in the output tells you which is which
 every published finding must earn a recorded level of proof, and the gate’s own output (including what it rejected)
 is part of the artifact.
 
-## How a finding earns its level
+## Evidence levels
 
 | Level | Check | Producer |
 |---|---|---|
 | **L1** | Every citation exists in the analyzed commit and matches the declared line range | deterministic, no model |
 | **L2** | A second model tries to refute the claim; a strong refutation needs a machine-checked counter-citation | Muse Wonder |
-| **L3** | A generated test fails on every run (at least three) against the analyzed commit, in a Node permission sandbox with no network | Muse Wonder writes the test |
+| **L3 - execution proof** | A generated test fails on every run (at least three) against the analyzed commit, in a Node permission sandbox with no network | Muse Wonder writes the test |
 | **L4** | A minimal patch flips the reproduced result (differential proof) | Muse Wonder writes the patch |
 
 Findings are published only up to the level they earned (`verified` → `execution-proven` → `patch-proven`);
