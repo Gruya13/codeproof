@@ -28,7 +28,7 @@ is part of the artifact.
 | Level | Check | Producer |
 |---|---|---|
 | **L1** | Every citation exists in the analyzed commit and matches the declared line range | deterministic, no model |
-| **L2** | A second model tries to refute the claim; a strong refutation needs a machine-checked counter-citation | Muse Wonder |
+| **L2** | A second model tries to refute the claim; a strong refutation needs a machine-checked counter-citation | Muse Wonder (in dual mode, Muse Spark verifies Wonder-proposed findings) |
 | **L3 - execution proof** | A generated test has two phases: the control case passes on every run (at least three) and the trigger case fails on every run, both against the analyzed commit in a Node permission sandbox with no network | Muse Wonder writes the test |
 | **L4** | A minimal patch flips the reproduced result (differential proof) | Muse Wonder writes the patch |
 
@@ -42,7 +42,7 @@ flowchart LR
   A["producer proposes finding with citation"] --> B["L1 citation check"]
   B -- fail --> R["rejected.md stays public"]
   B -- pass --> C["L2 adversarial refutation"]
-  C -- refuted --> R
+  C -- refuted / uncertain --> R
   C -- confirmed --> V["published as verified"]
   V -. reproducer feasible .-> D["L3 control passes, trigger fails"]
   D -- reproduced --> E["execution-proven"]
@@ -52,13 +52,13 @@ flowchart LR
 
 ## Measured results (frozen at `v0.2.3-final`)
 
-The final round was pre-registered, locked and reviewed blind-input by two independent models from other vendors (not by humans) before the first paid call; every paid run
+The final round was pre-registered, locked and reviewed blind-input by two independent models from other vendors — **OpenAI codex** and **Google agy**, not Meta models and not humans — before the first paid call, and the published numbers were then verified by the same two models in separate blind threads ([F5 verification](reports/final/F5-VERIFICATION.md)); every paid run
 went through a ledger that anchors the budget reservation in git before the money is spent. Plan, ledger and every
 attempt (including aborted ones) are in [reports/final/](reports/final/).
 
 | Block | Result | Cost |
 |---|---|---|
-| Calibration (n=8) | **7/8, 7/8** in two single runs, **8/8** in the dual run; 100% verified precision; 0/4 traps; 0 false refutations | $3.3467 |
+| Calibration (n=8, tuned set) | **7/8, 7/8** in two single runs, **8/8** in the dual run; 100% verified precision; 0/4 traps; 0 false refutations | $3.3467 |
 | Extended (axios `lib/`, 16 injected defects) | **9/16** with chunked scanning, **3/16** single-pass; 0/5 traps; 100% verified precision | $2.1106 |
 | Held-out (6 defects + 4 traps, never used for tuning) | **6/6** through L2, **5/6** through L3; 0 traps | $0.4069 |
 | Real world (5 new repositories × 2 runs) | **12 hand-confirmed defects** (one of them latent); **1 unique defect patch-proven in both runs** (bcryptjs); one more candidate was rejected on review; see upstream status below | $4.3263 |
@@ -124,8 +124,13 @@ a call before it is sent when its worst-case price does not fit into the remaini
 
 The first commit is tagged `hackathon-start`; the code, prompts and fixtures were written during the event, with no
 runtime dependencies and no imported project code. The git history is the evidence. The product runs on Meta Muse
-models. AI coding assistants (codex, agy) were used for planning, blind independent review and verification of the
-project itself — all code, data and decisions are the author's. Full project history (v0.2.0 → v0.2.3, earlier
+models.
+
+**AI assistance disclosure.** The author directed the work and owns the design decisions, the evidence and every
+published claim. The implementation — product code, prompts, fixtures, tests and this documentation — was written
+with an AI coding harness (DeepSeek Harness) under that direction; codex (OpenAI) and agy (Google) were used for
+independent analysis, blind review and verification, and the patches produced from their hardening findings were
+applied by the author's harness, not by the assistants directly. Full project history (v0.2.0 → v0.2.3, earlier
 rounds and hardening): [HISTORY.md](HISTORY.md).
 
 ## Documentation and evidence
