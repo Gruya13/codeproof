@@ -77,11 +77,14 @@ attempt (including aborted ones) are in [reports/final/](reports/final/).
 single run scored 3/16 (the pre-registered range was 4-7/16) — reported as measured, with no prompt or set change
 after the first run. All 22 published real-world entries (21 verified + 1 uncertain) were hand-checked; 20 were confirmed as real code states, 1 verified finding was rejected as a false positive (sax F-002), and the uncertain one was hand-confirmed real.
 
-**Upstream status.** Of the 12 defects in the five new repositories: **2 had already been reported upstream before the round**
-(mustache [#854](https://github.com/janl/mustache.js/pull/854), bcryptjs [#170](https://github.com/dcodeIO/bcrypt.js/pull/170))
-and are not claimed as new; **3 were filed by us on 30 Oct** (fast-json-patch [#337](https://github.com/Starcounter-Jack/JSON-Patch/issues/337),
+**Upstream status.** Of the 12 defects in the five new repositories: **3 had already been reported upstream before the round**
+(mustache [#854](https://github.com/janl/mustache.js/pull/854) open; mustache [#762](https://github.com/janl/mustache.js/issues/762),
+closed in 2021 as stale; bcryptjs [#170](https://github.com/dcodeIO/bcrypt.js/pull/170) open) and are not claimed as new;
+**3 were filed by us on 30 Oct** (fast-json-patch [#337](https://github.com/Starcounter-Jack/JSON-Patch/issues/337),
 dateformat [#196](https://github.com/felixge/node-dateformat/issues/196), sax-js [#303](https://github.com/isaacs/sax-js/issues/303));
-1 is a latent dead path and 1 is covered by a comment on an existing report; 5 are not reported.
+1 is a latent dead path, 1 is covered by a comment on an existing report, and **4 are not reported**. Two PR authors replied
+to our comments (#854 and fast-json-patch [#331](https://github.com/Starcounter-Jack/JSON-Patch/pull/331), whose author
+extended the fix for the empty-string case); no maintainer has responded and nothing is merged.
 **Six findings have been filed upstream in total**: three from the earlier v0.2.2 sample (picomatch
 [#242](https://github.com/micromatch/picomatch/issues/242), [#243](https://github.com/micromatch/picomatch/issues/243) and
 jsesc [#79](https://github.com/mathiasbynens/jsesc/issues/79)) and the three from this round listed above.

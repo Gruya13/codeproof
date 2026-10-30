@@ -71,16 +71,16 @@ Both single runs and the dual run are reported; the variance is not hidden. Deta
 
 | Repo | Pin | Findings (hand-confirmed) | Evidence | Cost |
 |---|---|---|---|---|
-| mustache | `972fd2b2` | 2 defects (F-001 is correct and already reported upstream — PR #854) | citation+adversarial | $0.8823 |
+| mustache | `972fd2b2` | 2 defects (F-001 already reported — PR #854; F-002 already reported in 2020 — #762, closed) | citation+adversarial | $0.8823 |
 | sax | `961ceeef` | 2 defects (1 latent) + 1 rejected by hand | citation+adversarial | $1.1172 |
 | fast-json-patch | `9d313ac0` | 4 defects | citation+adversarial | $0.7511 |
 | bcryptjs | `1211e9a2` | 3 defects, **1 unique defect patch-proven in both runs** | execution + patch | $1.3095 |
 | dateformat | `e6800aa9` | 1 defect (+ one 0-finding run) | citation+adversarial | $0.2662 |
 
 **New findings in F4: 12 unique defects** (mustache 2, sax 2, fast-json-patch 4, bcryptjs 3, dateformat 1).
-**Upstream status:** 2 had **already been reported** before our analysis (mustache PR #854, bcryptjs PR #170 — not new),
-**3 were reported on 30.10.** (fast-json-patch #337, dateformat #196, sax #303), 3 comments were left on existing
-reports, and 5 remain unreported — details in §4d. Hand-check: [mustache](real-world/mustache/HAND-CHECK.md) ·
+**Upstream status:** 3 had **already been reported** before our analysis (mustache PR #854; mustache #762, closed in 2021; bcryptjs PR #170 — not new),
+**3 were reported on 30.10.** (fast-json-patch #337, dateformat #196, sax #303), 1 comment was left on an existing PR (#331)
+plus comments on the two known reports, 1 latent finding was not reported and 4 remain unreported — details in §4d. Hand-check: [mustache](real-world/mustache/HAND-CHECK.md) ·
 [sax](real-world/sax/HAND-CHECK.md) · [fast-json-patch](real-world/fast-json-patch/HAND-CHECK.md) ·
 [bcryptjs](real-world/bcryptjs/HAND-CHECK.md) · [dateformat](real-world/dateformat/HAND-CHECK.md).
 
@@ -112,10 +112,10 @@ the same defects were found again and proven by execution. These findings are **
 
 | Upstream status | Findings |
 |---|---|
-| **Already reported before the analysis** (duplicates; disclosed honestly) | mustache F-001 → PR [#854](https://github.com/janl/mustache.js/pull/854) (+[#856](https://github.com/janl/mustache.js/issues/856)); bcryptjs F-003 → PR [#170](https://github.com/dcodeIO/bcrypt.js/pull/170) |
+| **Already reported before the analysis** (duplicates; disclosed honestly) | mustache F-001 → PR [#854](https://github.com/janl/mustache.js/pull/854) (+[#856](https://github.com/janl/mustache.js/issues/856)); mustache F-002 → issue [#762](https://github.com/janl/mustache.js/issues/762) (closed 2021 as stale); bcryptjs F-003 → PR [#170](https://github.com/dcodeIO/bcrypt.js/pull/170) |
 | **New issues opened on 30.10.** | fast-json-patch F-001 → [#337](https://github.com/Starcounter-Jack/JSON-Patch/issues/337); dateformat F-001 → [#196](https://github.com/felixge/node-dateformat/issues/196); sax F-001 → [#303](https://github.com/isaacs/sax-js/issues/303) |
 | **Comments on existing reports** | mustache #854 (independent confirmation), bcrypt PR #170 (patch-proven confirmation), fast-json-patch PR [#331](https://github.com/Starcounter-Jack/JSON-Patch/pull/331) (`isInteger("")` manifestation, same root) |
-| **Unreported** | mustache F-002, fast-json-patch F-002/F-004, bcryptjs F-001/F-002, sax F-003 (latent) |
+| **Unreported** | fast-json-patch F-002/F-004, bcryptjs F-001/F-002 (4 findings); sax F-003 (latent, deliberately not reported) |
 
 No finding was reported as a "new discovery" — the public commits predate the analysis; each report cites the exact pin.
 
@@ -129,7 +129,7 @@ No finding was reported as a "new discovery" — the public commits predate the 
 | 4 | extended chunked 9–10/16, single 4–7/16, 0/5 traps | ⚠️ chunked **9/16** ✅; single **3/16** (below range) |
 | 5 | held-out 5–6/6, 0 traps, 4 levels | ✅ 5/6 (L3), 6/6 (L2), 0 |
 | 6 | dogfood: 0 unadjudicated, all real ones fixed + test | ✅ |
-| 7 | real world: ≥1 execution/patch-proven on new repos; hand-check; 0 false | ✅ execution/patch: bcryptjs; hand-check 24/24; ⚠️ 1 rejected by hand (sax F-002) |
+| 7 | real world: ≥1 execution/patch-proven on new repos; hand-check; 0 false | ✅ execution/patch: bcryptjs; hand-check 22/22; ⚠️ 1 rejected by hand (sax F-002) |
 | 8 | agy-verify + codex WATCHDOG | see [F5-baseline](F5-baseline.md) and the verification records |
 | 9 | frozen artifacts untouched | ✅ integrity PASS |
 | 10 | README/STATUS without stale numbers | see the public README section "Final evaluation" |

@@ -47,12 +47,12 @@ Attempt 25 (`probe-repo.mjs` with `DUAL_SCAN=1` on jsesc) was **aborted after 90
 ## 4b. Upstream check and reports (30.10.2026)
 
 All 12 confirmed defects were checked in the public trackers and, where it made sense, reported.
-**2 of 12 were known upstream before our analysis** — they are not new findings and are presented as such.
+**3 of 12 were known upstream before our analysis** — they are not new findings and are presented as such.
 
 | # | Repo / defect | Upstream status |
 |---|---|---|
 | 1 | mustache — cache `hasOwnProperty` shadowing | **already reported**: PR [#854](https://github.com/janl/mustache.js/pull/854) (open; linked [#856](https://github.com/janl/mustache.js/issues/856)) — comment with independent confirmation |
-| 2 | mustache — cache key collision | unreported |
+| 2 | mustache — cache key collision | **already reported in 2020**: [#762](https://github.com/janl/mustache.js/issues/762) (closed in 2021 as stale) — not new |
 | 3 | sax — `SGML_DECL_QUOTED` without `parser.q` | **reported 30.10.**: [#303](https://github.com/isaacs/sax-js/issues/303) |
 | 4 | sax — `new Error(parser, …)` (latent) | not reported (unreachable branch, no impact) |
 | 5 | fast-json-patch — null deref `obj.toJSON` | **reported 30.10.**: [#337](https://github.com/Starcounter-Jack/JSON-Patch/issues/337) |
@@ -64,7 +64,7 @@ All 12 confirmed defects were checked in the public trackers and, where it made 
 | 11 | bcryptjs — `genSalt` throws synchronously | unreported |
 | 12 | dateformat — `yyyy` negative years | **reported 30.10.**: [#196](https://github.com/felixge/node-dateformat/issues/196) |
 
-**Summary:** **2 previously known upstream** (duplicates — disclosed honestly, not presented as new) · **3 new issues opened on 30.10.** · **3 comments** on existing reports (mustache #854, bcrypt PR #170, fjp PR #331) · **5 findings remain unreported** (low impact / inactive repo / design decision needed). None was reported as a "new discovery" — the public commits predate the analysis.
+**Summary:** **3 previously known upstream** (duplicates — disclosed honestly, not presented as new: mustache #854 open, mustache #762 closed in 2021, bcrypt #170 open) · **3 new issues opened on 30.10.** · **1 comment** on an existing PR (fjp #331) plus comments on the two known reports (#854, #170) · **1 latent finding deliberately not reported** · **4 findings remain unreported** (low impact / design decision needed). None was reported as a "new discovery" — the public commits predate the analysis.
 
 ## 4c. Hand-check correction (mustache F-001)
 
@@ -78,7 +78,7 @@ The original claim from the run is **correct**, and upstream PR #854 independent
 | Requirement | Result |
 |---|---|
 | ≥1 execution-proven and ≥1 patch-proven on new repos | ✅ **bcryptjs**: 1 unique defect, patch-proven in both runs (execution + patch, reproduced 3/3) |
-| all published hand-adjudicated | ✅ 24/24, HAND-CHECK per repo |
+| all published hand-adjudicated | ✅ 22/22, HAND-CHECK per repo |
 | 0 false after the hand-check | ⚠️ **1 rejected** (sax F-002) — reported, not hidden |
 | 0-finding repos reported as such | ✅ dateformat run1 (0 findings) |
 | the regression pair proves L3/L4 as before hardening | ✅ picomatch + jsesc patch-proven |

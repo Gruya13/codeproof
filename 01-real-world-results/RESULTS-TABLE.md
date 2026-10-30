@@ -80,14 +80,14 @@ changed during the measurement.
 ## 5. Upstream status (30 Oct 2026)
 
 Details and links: `../02-manual-validation/UPSTREAM-STATUS.md`. In short: **no report has been accepted or merged**;
-2 of the 12 defects were already known upstream before the analysis (mustache PR #854, bcryptjs PR #170),
-3 are new issues opened on 30 Oct (fast-json-patch #337, dateformat #196, sax #303), 3 are comments on
-existing reports, and 5 remain unreported.
+3 of the 12 defects were already known upstream before the analysis (mustache PR #854; mustache issue #762, closed in 2021; bcryptjs PR #170),
+3 are new issues opened on 30 Oct (fast-json-patch #337, dateformat #196, sax #303), 1 is a comment on an existing PR
+(#331) plus comments on the two known reports, 1 latent finding was deliberately not reported, and 4 remain unreported.
 
 ## 6. For honesty (limitations, as the documents themselves state them)
 
 - **n = 13 runs on 8 pins**: an anecdote, not a statistical measure; public commits → contamination is possible.
-- **2 of the 12** defects in the new repositories are **duplicates** — already reported before our analysis and labelled as such, not as new discoveries.
+- **3 of the 12** defects in the new repositories are **duplicates** — already reported before our analysis (two still open, one closed in 2021) and labelled as such, not as new discoveries.
 - **0 maintainer responses** on 30 Oct 2026: the status is "filed", not "accepted".
 - **dateformat run1** returned 0 findings — and that is published, not hidden.
 - **sax F-002** passed both gates and manual review rejected it as `by design` — 1 false positive in the set, reported in `02-manual-validation/`.

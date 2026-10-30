@@ -31,26 +31,26 @@ user-visible defect) and 1 **uncertain** finding (jsesc F-002) was manually conf
 
 | Repo | Pin | Runs | Verified entries | Manual outcome | Unique defects | Upstream |
 |---|---|---:|---:|---|---:|---|
-| mustache | `972fd2b2` | 2 | 3 | 2 confirmed defects (F-001 correct — verdict corrected; F-002 real) | 2 | F-001 **already reported** (PR #854), F-002 unreported |
+| mustache | `972fd2b2` | 2 | 3 | 2 confirmed defects (F-001 correct — verdict corrected; F-002 real) | 2 | F-001 **already reported** (PR #854), F-002 **already reported in 2020** (#762, closed) |
 | sax | `961ceeef` | 2 | 4 | 2 real (F-001, F-003 latent) + **1 rejected** (F-002, by design) | 2 | F-001 **new issue #303**; F-003 not reported (dead branch) |
 | fast-json-patch | `9d313ac0` | 2 | 4 | 4 real (F-001, F-002/"isInteger", F-002/observe, F-004 `~~key`) | 4 | F-001 **new issue #337**; isInteger → comment on PR #331; 2 unreported |
 | bcryptjs | `1211e9a2` | 2 | 4 | 3 real (F-003/base64 in both runs; F-001; F-002); 1 **patch-proven** | 3 | F-003 **already reported** (PR #170); 2 unreported |
 | dateformat | `e6800aa9` | 2 | 1 | 1 real (F-001, low impact); run1 = 0 findings | 1 | F-001 **new issue #196** |
-| **new repositories — total** | | **10** | **16** | **14 real entries + 1 latent + 1 rejected** | **12** | 2 duplicates + 3 new issues + 3 comments + 5 unreported |
+| **new repositories — total** | | **10** | **16** | **14 real entries + 1 latent + 1 rejected** | **12** | 3 duplicates + 3 new issues + 1 comment + 1 latent not reported + 4 unreported |
 | picomatch (regression) | `6bb40679` | 1 | 1 | 1 real, **patch-proven** (defect re-found from v0.2.2) | 1 | not reported in this round |
 | jsesc (regression) | `e3349b54` | 1 | 2 | 2 real (F-001 **patch-proven**, F-003 dead code) + 1 uncertain manually confirmed (F-002) | 2 (+1 dead code) | jsesc #79 (already reported), PR #80 partial |
 | jsesc dual (regression) | `e3349b54` | 1 | 2 | 2 patch-proven entries = **1 root cause** (duplicate reported honestly) | 1 | same (jsesc #79) |
 | **regression — total** | | **3** | **5 (+1 uncertain)** | **5 real** (2 root causes) | **3** | — |
 
 **Total:** 21 verified entries + 1 uncertain = **22 manually adjudicated entries**; **1 false positive**; **2 latent/dead-code**;
-**2 findings were known upstream before the round** (not presented as new discoveries).
+**3 findings were known upstream before the round** (not presented as new discoveries).
 
 ## 2. Detailed adjudication (all findings)
 
 | Repo | Finding (run/ID) | Citation | Claim (short) | Manual verdict | Severity | Evidence | Upstream |
 |---|---|---|---|---|---|---|---|
 | mustache | run1+run2 F-001 | `mustache.js:397` | `cache.hasOwnProperty(name)` — caching the name `hasOwnProperty` breaks the method and the second lookup throws `TypeError` | **REAL — correct** (first verdict wrong, corrected) | low-medium | static + independently confirmed upstream | **PR #854** (open) + comment |
-| mustache | run1 F-002 | `mustache.js:512` | cache key `template + ':' + tags.join(':')` collides for tags containing a colon | **REAL** | low | static | unreported |
+| mustache | run1 F-002 | `mustache.js:512` | cache key `template + ':' + tags.join(':')` collides for tags containing a colon | **REAL** | low | static | [#762](https://github.com/janl/mustache.js/issues/762) (closed 2020) |
 | sax | run1+run2 F-001 | `sax.js:1357-1371` | `SGML_DECL_QUOTED` is entered without setting `parser.q`, so a quoted SGML declaration never leaves the state | **REAL** | low-medium | static + state repro | **new issue #303** |
 | sax | run2 F-002 | `sax.js:1609-1615` | valueless attribute skips xmlns handling | **NOT A DEFECT (by design)** — **false positive** | — | reading the XML spec; the verifier confirmed it | — |
 | sax | run2 F-003 | `sax.js:1797-1799` | `new Error(parser, …)` in an unreachable branch | **LATENT** (dead code) | informational | static | not reported |
@@ -97,12 +97,12 @@ evidence (`../reports/final/F4-real-world.md` §4c, `../reports/final/F5-VERIFIC
 - 21 published entries, 1 false positive (4.8%), 0 unadjudicated; 1 finding is also execution-proven (bcryptjs, patch-proven in both runs).
 - The verifier in F4 **rejected no finding** (0 `refuted`), so this round has no false refutations — but it also has no evidence
   that L2 rejects false positives (the only false positive passed through it). For that, see the historical cases in `../reports/final/`.
-- 2 findings were known upstream before the analysis and are labelled as such; none is presented as a new discovery.
+- 3 findings were known upstream before the analysis and are labelled as such; none is presented as a new discovery.
 
 **Cannot:**
 - "0 false positives" — not true; there is **1**, and it is explicitly reported.
-- "accepted upstream" — no report has a maintainer response on 30 Oct 2026 (status: filed; 3 new issues open, 2 duplicates,
-  3 comments; several independently attracted fix PRs from other people, but none was merged).
+- "accepted upstream" — no report has a maintainer response on 30 Oct 2026 (status: filed; 3 new issues open, 3 duplicates,
+  1 comment on an existing PR; several independently attracted fix PRs from other people, but none was merged).
 - "measured accuracy" — n is small (21 entries, 8 pins); public commits → contamination possible. This is an anecdote with evidence, not a benchmark.
 
 ## 6. Historical context (outside the final round)
