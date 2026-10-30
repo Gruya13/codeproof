@@ -49,7 +49,7 @@ Built during the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026). 
 
 The pipeline runs end-to-end on the mock adapter (`make demo`) and live against the Meta Model API (`mode: smoke`), and the deterministic suite is green on Node 22 and Node 26:
 
-- **Deterministic tests** (`make test`): **234/234** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), commit-based ingestion (dirty working tree cannot change the analysis), L3 cases (reproducer must import and call repository code that exists in the snapshot, no non-determinism, no trivial assertions, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), agent layer (role/label/cost recording, mock and meta adapters, soft and hard budget gates), dirty-JSON and truncation handling, fault injection, config-hash determinism.
+- **Deterministic tests** (`make test`): **268/268** on Node 22 and Node 26 - L1/L2 gate cases (strict every-citation rule, exact snippet-range length), commit-based ingestion (dirty working tree cannot change the analysis), L3 cases (reproducer must import and call repository code that exists in the snapshot, no non-determinism, no trivial assertions, assertion failure, pass, timeout, network blocked, permission-model read denial, determinism), agent layer (role/label/cost recording, mock and meta adapters, soft and hard budget gates), dirty-JSON and truncation handling, fault injection, config-hash determinism.
 - **Clean clone**: `make clean-clone` (tmpfs + `env -i`) and the Docker variant `make clean-clone-docker` (node:22-alpine) pass `make test`, `make demo`, `make replay` and `make score RUN=reports/golden` on a fresh clone.
 - **Replay**: `make replay` re-runs L0/L1 over the committed golden artifacts with no model calls - **9/9 identical, 0 mismatches**.
 - **Calibration benchmark with L3**: **8/8** recall (100%), 100% precision, 0/4 traps proposed and 0/4 published, 0 false refutations, **9/9 published findings execution-proven** - automated scoring is a file + line spatial match; semantic correctness comes from the hand-checked adjudication - golden run and its generated reproducers are committed verbatim in [reports/golden/](reports/golden/) (n = 8, calibration set); see [Benchmark results](#benchmark-results).
@@ -64,8 +64,31 @@ The pipeline runs end-to-end on the mock adapter (`make demo`) and live against 
 - **Controlled verifier test**: two true findings confirmed and one deliberately false claim **refuted with a machine-checked counter-citation** (`src/batch.js:6`, verbatim `throw error;`); the committed run cost **$0.103** and served 3280 of 4065 input tokens from prompt cache. Recorded as `mode: controlled-verifier`, never as scanner output.
 - **Historical recall**: 2/9 known fixes found (both verified); one of the organic refutations is published in the record.
 - **Upstream impact (29 Oct 2026)**: three findings from the v0.2.2 sample were filed as upstream issues ([picomatch #243](https://github.com/micromatch/picomatch/issues/243), [#242](https://github.com/micromatch/picomatch/issues/242), [jsesc #79](https://github.com/mathiasbynens/jsesc/issues/79)); other contributors opened a fix PR for all three within 24 hours - all PRs are **open and unmerged** - see [Upstream impact](#upstream-impact-qualitative).
+- **Final evaluation (29-30 Oct 2026)**: a pre-registered, ledger-enforced round on the frozen tag `v0.2.3-final` - 268/268 tests, calibration 7/8, 7/8 and 8/8 (single/single/dual), extended 3/16 single and 9/16 chunked, held-out 5/6 through L3, 5 new real-world repositories with 12 hand-confirmed defects and 2 patch-proven findings, and the regression pair re-confirming previously published picomatch/jsesc defects. Total $15.7163 of the $40 cap; all attempts, including aborted ones, are published. See [Final evaluation](#final-evaluation-29-30-oct-2026-frozen-at-v023-final).
 
 Numbers are only published when measured - `run.json` says `measured: false` when they are not. Every evidence directory keeps its raw run artifacts.
+
+## Final evaluation (29-30 Oct 2026, frozen at `v0.2.3-final`)
+
+The final measurement round was **pre-registered, locked and reviewed by two independent Meta-model reviewers** before the first paid call ([PREREG](reports/final/PREREG.md) v1.5 + four amendments; both reviewers `AGREE` after six rounds, [review record](reports/final/PREREG-REVIEW.md)). Every paid run went through a ledger wrapper that anchors each reservation in git **before** the money is spent; all attempts - including three aborted ones that cost $0 - are in [reports/final/ATTEMPTS.jsonl](reports/final/ATTEMPTS.jsonl). The round ran on the frozen tag `v0.2.3-final` (`src` tree `f874d642`; every run records that tree hash).
+
+Deterministic baseline at the freeze: **268/268 tests** on Node 22/26, integrity PASS, replay 9/9, score PASS, clean clone and Docker clean clone PASS.
+
+| Block | What was measured | Result | Cost |
+|---|---|---|---|
+| Calibration (n=8) | two single runs + one dual run, all reported | **7/8, 7/8, 8/8**; 100% precision in all three; 0/4 traps; 0 false refutations | $3.3467 |
+| Extended (axios `lib/`, 16 injected) | single and chunked | **3/16** single, **9/16** chunked; 0/5 traps in both; 100% verified precision | $2.1106 |
+| Held-out (6 defects + 4 traps) | four ablation levels | **6/6** through L2, **5/6** through L3; 0 traps | $0.4069 |
+| Dogfood (own `src/`) | chunked + single, before and after fixes | 6 candidates -> 5 verified (1 patch-proven); **5 real defects fixed + 5 regression tests**; re-run after fixes: 0 findings | $2.9470 |
+| Real world (5 new repositories, 2 runs each) | repositories not used in any earlier round | **12 unique defects** hand-confirmed (1 rejected, 1 latent, 1 with a corrected mechanism); **2 patch-proven** on a new repository (bcryptjs) | $4.3263 |
+| Regression pair (picomatch, jsesc, jsesc dual) | same pins as the v0.2.2 sample | identical defects re-found and **patch-proven**; L3/L4 work as before the hardening | $2.5787 |
+| **Total** | | **$15.7163 of the $40 hard cap** (target was $35) | |
+
+**Already published, now re-confirmed - not new findings:** the picomatch trailing-token defect and the jsesc negative-radix-literal defect were published in the v0.2.2 sample (the jsesc one is upstream issue #79, PR #80 open); the regression runs re-found and re-proved them and are reported above as re-confirmation, not as new discoveries. The 12 defects from the five *new* repositories were **not reported upstream** in this round; they are hand-checked static findings (one of them execution+patch-proven).
+
+**Honest deltas from the pre-registered expectation:** both single calibration runs scored 7/8 (the expected 8/8 was not reached) and the extended single run scored 3/16 (the pre-registered range was 4-7/16). Both are reported as measured, with no prompt or set change after the first run. All 24 published real-world findings were hand-checked; **one was rejected as not-a-defect** (sax F-002) and is reported as such. This round produced no refuted (organically rejected) finding.
+
+Full tables, per-run artifacts and the DoD status: [reports/final/README.md](reports/final/README.md) · [F5-baseline.md](reports/final/F5-baseline.md).
 
 ## How it works
 
@@ -194,6 +217,7 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 
 | Evidence | Artifact | What it shows | What it does not show |
 |---|---|---|---|
+| Final evaluation (29-30 Oct 2026) | [reports/final/](reports/final/) | 268/268 tests; calibration 7/8 + 7/8 + dual 8/8 (100% precision, 0 traps); extended 3/16 single, 9/16 chunked; held-out 5/6 through L3; dogfood 5 defects fixed + 5 regression tests; 5 new real-world repositories x2 (12 hand-confirmed defects, 2 patch-proven, 1 rejected) + a regression pair re-confirming already-published picomatch/jsesc defects; every attempt in a git-anchored ledger | not a statistical claim (n=8 calibration, n=16 extended, small real-world sample); new real-world findings are not filed upstream; single calibration recall is 7/8, not the expected 8/8 |
 | Calibration benchmark (n=8) | [reports/golden/](reports/golden/) | 8/8 spatial recall (file + line match), 100% precision, 0/4 traps proposed and 0/4 published, 9/9 published findings execution-proven | a statistical or semantic claim; the set was used for calibration, and semantic correctness is the hand-checked adjudication |
 | Real repository (unjs/ofetch) | [reports/real-world/ofetch/](reports/real-world/ofetch/) | 4/4 verified, all four match open upstream issues/PRs | novel discovery - the commit and issues are public |
 | Real repository (unjs/ofetch) with L3 | [reports/real-world/ofetch/l3/](reports/real-world/ofetch/l3/) | one finding **execution-proven**: generated test reproduces the `isJSONSerializable(null)` TypeError on the analyzed commit (matches upstream issue #571) | one repository, n = 2 runs; the commit and issue are public |
@@ -219,7 +243,7 @@ The committed artifacts for the controlled test are in [reports/controlled-verif
 
 ## Benchmark results
 
-Scored on the **calibration set**: frozen synthetic fixture with 8 injected defects, 4 traps and 2 pre-registered extra defects - 15 files / 229 LOC. Artifacts of the current run are committed verbatim in [reports/golden/](reports/golden/) (`run.json`, `findings.json`, `REPORT.md`, `rejected.md`, and `repro/<findingId>/` with every generated test and its runner result).
+**Historical run (26-27 Oct 2026).** The numbers below are the frozen golden calibration run; the final round re-measured the same set on the frozen code - see [Final evaluation](#final-evaluation-29-30-oct-2026-frozen-at-v023-final). Scored on the **calibration set**: frozen synthetic fixture with 8 injected defects, 4 traps and 2 pre-registered extra defects - 15 files / 229 LOC. Artifacts of the current run are committed verbatim in [reports/golden/](reports/golden/) (`run.json`, `findings.json`, `REPORT.md`, `rejected.md`, and `repro/<findingId>/` with every generated test and its runner result).
 
 | Metric | Current (strict L1 + L3, golden `de7a1ccf`) | Previous run (`231fc717`, no L3) | Threshold |
 |---|---|---|---|
@@ -244,7 +268,7 @@ This is a calibration set: prompts are tuned on the same fixture, so the numbers
 
 ### Extended evaluation — injected defects in real code
 
-The calibration fixture is deliberately small and synthetic. To measure the same pipeline on **real production code**, a second set was frozen before its first run: **axios `lib/` at `790b5ba`, 74 files / 9,564 LOC (as ingested), 16 injected correctness defects + 5 traps** ([bench/extended/](bench/extended/), generated by [scripts/make-injected.mjs](scripts/make-injected.mjs), scorer [scripts/score-injected.mjs](scripts/score-injected.mjs)). Its prompt was never tuned on this set.
+**Historical runs (26-28 Oct 2026).** The calibration fixture is deliberately small and synthetic. To measure the same pipeline on **real production code**, a second set was frozen before its first run: **axios `lib/` at `790b5ba`, 74 files / 9,564 LOC (as ingested), 16 injected correctness defects + 5 traps** ([bench/extended/](bench/extended/), generated by [scripts/make-injected.mjs](scripts/make-injected.mjs), scorer [scripts/score-injected.mjs](scripts/score-injected.mjs)). Its prompt was never tuned on this set.
 
 | Run | Candidates | Defects verified | Precision | Traps leaked | Execution proofs | Cost |
 |---|---:|---:|---:|---:|---:|---:|
@@ -259,7 +283,7 @@ Mean verified recall **6.0/16 (37.5%)** at $0.76 per run; **no trap was publishe
 
 ## Held-out generalization (qualitative)
 
-A separate small fixture in [bench/held-out/](bench/held-out/) contains **6 defects and 4 traps** that look suspicious but are correct. It was written **after** the scanner prompt was frozen and was never used for tuning. `make ablation` pushes one candidate set through four gate levels.
+**Historical run (26-28 Oct 2026).** A separate small fixture in [bench/held-out/](bench/held-out/) contains **6 defects and 4 traps** that look suspicious but are correct. It was written **after** the scanner prompt was frozen and was never used for tuning. `make ablation` pushes one candidate set through four gate levels.
 
 | Configuration | Published | True positives | False positives | Trap leaks | Recall | Precision |
 |---|---:|---:|---:|---:|---:|---:|
@@ -346,6 +370,7 @@ The v0.2.2 sample was also filed back into the projects it analyzed. Three findi
 - **What this shows:** the findings are real defects that other developers considered worth fixing, and the reports - including their one-line guards - were actionable enough to be reused. PR #245 applies the guard proposed in the report and cites the reporter by name.
 - **What this does not show:** the PRs are **open and unmerged**, with no maintainer response yet, so the correct status is "filed and picked up", not "accepted upstream". It is not a novel-discovery claim: the analyzed commits are public and the jsesc topic already had upstream PRs ([#73](https://github.com/mathiasbynens/jsesc/pull/73), [#76](https://github.com/mathiasbynens/jsesc/pull/76)) before the report, and the two picomatch reports have no earlier issue for those exact lines as far as the public tracker was checked. It is a case study (n = 3), not a recall, precision or cost measurement.
 - **Evidence chain:** the upstream posts are external links, not run artifacts; the in-repository evidence that these findings were published as reported is the committed runs under [reports/v0.2.0/real-world/](reports/v0.2.0/real-world/) - the two filed picomatch findings and the jsesc finding are `patch-proven` in the v0.2.2 table above, i.e. the proposed fix was already in the artifacts when the reports were filed.
+- **Final round (29-30 Oct 2026): no new upstream reports were filed.** The regression pair re-found and re-proved two already-published defects (picomatch trailing token, jsesc negative radix literal - the latter is the subject of #79 above); the five new real-world repositories produced 12 hand-confirmed but **not yet reported** findings. Nothing in this round is claimed as accepted, merged or a novel discovery.
 
 ## Historical recall test (qualitative)
 
