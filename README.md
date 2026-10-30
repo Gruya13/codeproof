@@ -4,16 +4,17 @@
 
 CodeProof statically reviews a TypeScript/JavaScript repository. A producer model proposes findings with exact
 citations; a deterministic checker verifies every citation against the analyzed commit; a second model tries to
-refute each claim; and where a reproducer is feasible, a generated test must fail on the analyzed commit before
-anything is published. Rejected findings stay visible instead of being silently filtered.
+refute each claim. Findings are published at the level of proof they earned: a claim that passes the citation and
+refutation gates is published as `verified`, and a generated test is required only for the stronger
+`execution-proven` / `patch-proven` labels. Rejected candidates stay visible instead of being silently filtered.
 
 **Meta Global AI Developer Hackathon 2026** · Indie Dev track · Push the Frontier · written from scratch during the
 event, zero runtime dependencies.
 
-| **268/268** deterministic tests (Node 22 & 26) | **12** hand-confirmed defects in 5 new OSS repositories (**1 unique defect patch-proven in both runs**) | **3** findings filed upstream | **$15.7163** measured for the final round |
+| **268/268** deterministic tests (Node 22 & 26) | **12** hand-confirmed defects in 5 new OSS repositories (**1 unique defect patch-proven in both runs**) | **6** findings filed upstream (3 in the earlier sample + 3 in this round) | **$15.7163** measured for the final round |
 |---|---|---|---|
 
-**Video (2:48):** linked here after upload on 3 Nov 2026. · **Try it now, offline:** `make demo` (mock pipeline, no API key, no network).
+**Try it now, offline:** `make demo` (mock pipeline, no API key, no network).
 
 ## The problem
 
@@ -31,22 +32,27 @@ is part of the artifact.
 | **L3 - execution proof** | A generated test has two phases: the control case passes on every run (at least three) and the trigger case fails on every run, both against the analyzed commit in a Node permission sandbox with no network | Muse Wonder writes the test |
 | **L4** | A minimal patch flips the reproduced result (differential proof) | Muse Wonder writes the patch |
 
-Findings are published only up to the level they earned (`verified` → `execution-proven` → `patch-proven`);
-refuted and uncertain candidates stay in `rejected.md`. Scan and verify are static — only the generated test runs,
-on a `git archive` snapshot.
+L1 and L2 decide publication: a claim that passes both is published as `verified` even when no reproducer
+exists. L3 and L4 are upgrades that a finding earns only when a reproducer is feasible
+(`verified` → `execution-proven` → `patch-proven`). Refuted and uncertain candidates stay in `rejected.md`;
+scan and verify are static — only the generated test runs, on a `git archive` snapshot.
 
 ```mermaid
 flowchart LR
-  A["producer proposes finding with citation"] --> B["L1 citation check against the commit"]
-  B --> C["L2 adversarial refutation attempt"]
-  C --> D["L3 generated test must fail on the commit"]
-  D --> E["L4 patch must flip the result"]
-  B -. rejected .-> R["rejected.md stays public"]
+  A["producer proposes finding with citation"] --> B["L1 citation check"]
+  B -- fail --> R["rejected.md stays public"]
+  B -- pass --> C["L2 adversarial refutation"]
+  C -- refuted --> R
+  C -- confirmed --> V["published as verified"]
+  V -. reproducer feasible .-> D["L3 control passes, trigger fails"]
+  D -- reproduced --> E["execution-proven"]
+  E -.-> F["L4 patch flips the result"]
+  F -- patched --> P["patch-proven"]
 ```
 
 ## Measured results (frozen at `v0.2.3-final`)
 
-The final round was pre-registered, locked and independently reviewed before the first paid call; every paid run
+The final round was pre-registered, locked and reviewed blind-input by two independent models from other vendors (not by humans) before the first paid call; every paid run
 went through a ledger that anchors the budget reservation in git before the money is spent. Plan, ledger and every
 attempt (including aborted ones) are in [reports/final/](reports/final/).
 
@@ -69,6 +75,9 @@ after the first run. All 24 published real-world findings were hand-checked; one
 and are not claimed as new; **3 were filed by us on 30 Oct** (fast-json-patch [#337](https://github.com/Starcounter-Jack/JSON-Patch/issues/337),
 dateformat [#196](https://github.com/felixge/node-dateformat/issues/196), sax-js [#303](https://github.com/isaacs/sax-js/issues/303));
 1 is a latent dead path and 1 is covered by a comment on an existing report; 5 are not reported.
+**Six findings have been filed upstream in total**: three from the earlier v0.2.2 sample (picomatch
+[#242](https://github.com/micromatch/picomatch/issues/242), [#243](https://github.com/micromatch/picomatch/issues/243) and
+jsesc [#79](https://github.com/mathiasbynens/jsesc/issues/79)) and the three from this round listed above.
 Per-run artifacts and hand-checks: [reports/final/README.md](reports/final/README.md).
 
 ## Where the Meta models are
@@ -98,24 +107,26 @@ export MODEL_API_KEY=...
 BUDGET_USD=2 node src/cli.mjs analyze path/to/repo --mode smoke --out reports/run
 ```
 
-A smoke run on a small repository costs cents to a dollar; the hard budget gate refuses a call before it is sent
-when its worst-case price does not fit into the remaining cap.
+A smoke run costs cents on a small repository and up to a few dollars on ~4k+ LOC; the hard budget gate refuses
+a call before it is sent when its worst-case price does not fit into the remaining cap.
 
 ## What CodeProof does not claim
 
-- No completeness: it publishes what passed the gate, not everything that exists in a repository.
-- No statistical claim: the calibration set is n=8, the extended set n=16, and real-world runs are anecdotes.
-- Recall on injected defects in real-world code is lower than the calibration numbers: 56.3% (chunked) and 18.8% (single) on the extended set,
-  with 100% verified precision and 0/5 traps published.
-- Execution/patch proofs require Node 26.8.2; TypeScript trees that need their own build step stay at L2.
-- Real-world findings are hand-checked anecdotes, not a precision metric; latent and partial findings are labelled.
-- Nothing here is claimed as accepted, merged or a novel discovery; analyzed commits are public.
+- **The sandbox is process-level, not OS-level.** L3 executes a generated test that imports the analyzed repository's code under the Node permission model (no network, no writes) — it is not a VM.
+- **The tie between a failing test and the claim is a human review, not a machine proof.** The same model (Muse Wonder) that confirms a claim also writes its test, so the machine checks execution, not the semantic link.
+- **Both models are from the same vendor family** — role separation (producer vs adversary) is not provenance separation.
+- **Large repositories are analysed partially**: the scanner prompt is capped at 400,000 characters, so above roughly 15–20k LOC only an alphabetical prefix reaches the model (recorded in `run.json.scanCoverage`).
+- **Historical recall is 2/9** known fix commits — the weakest number in the project, published first here.
+- **Recall on injected defects in real-world code is 3–7/16 single and 9–10/16 chunked** (19–44% / 56–63%) with 100% verified precision and 0/5 traps published; it is not organic-bug recall.
+- **No statistical and no completeness claim**: calibration is n=8, extended n=16, real-world runs are hand-checked anecdotes; L3/L4 need Node 26.8.2; TypeScript trees that need their own build step stay at L2; nothing here is claimed as accepted, merged or a novel discovery.
 
 ## Built during the hackathon
 
-The first commit is tagged `hackathon-start`; every line of code, prompt and fixture was written during the event,
-with no runtime dependencies and no imported project code. The git history is the evidence. Full project history
-(v0.2.0 → v0.2.3, earlier rounds and hardening): [HISTORY.md](HISTORY.md).
+The first commit is tagged `hackathon-start`; the code, prompts and fixtures were written during the event, with no
+runtime dependencies and no imported project code. The git history is the evidence. The product runs on Meta Muse
+models. AI coding assistants (codex, agy) were used for planning, blind independent review and verification of the
+project itself — all code, data and decisions are the author's. Full project history (v0.2.0 → v0.2.3, earlier
+rounds and hardening): [HISTORY.md](HISTORY.md).
 
 ## Documentation and evidence
 

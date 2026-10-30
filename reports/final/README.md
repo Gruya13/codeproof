@@ -108,6 +108,8 @@ isti defekti su ponovo pronađeni i izvršno dokazani. Ovi nalazi se **ne objavl
 
 ## 4d. Upstream provera i prijave (30.10.2026)
 
+**Ukupno podneto 6 prijava:** tri iz v0.2.2 sample-a (picomatch [#242](https://github.com/micromatch/picomatch/issues/242), [#243](https://github.com/micromatch/picomatch/issues/243), jsesc [#79](https://github.com/mathiasbynens/jsesc/issues/79), 28.10.) i tri iz ove runde (30.10.).
+
 | Upstream status | Nalazi |
 |---|---|
 | **Već prijavljeno pre analize** (duplikati; pošteno navedeni) | mustache F-001 → PR [#854](https://github.com/janl/mustache.js/pull/854) (+[#856](https://github.com/janl/mustache.js/issues/856)); bcryptjs F-003 → PR [#170](https://github.com/dcodeIO/bcrypt.js/pull/170) |
