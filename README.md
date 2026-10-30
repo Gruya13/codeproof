@@ -66,9 +66,16 @@ attempt (including aborted ones) are in [reports/final/](reports/final/).
 | Regression pair (picomatch, jsesc) | previously published defects re-found and **patch-proven**; L3/L4 work as before the hardening | $2.5787 |
 | **Total** | | **$15.7163** of the $40 hard cap |
 
+**Real-world evidence in numbers (F4 — 13 paid runs: 5 new repositories × 2 + 3 regression runs).**
+
+- **13 runs · 29 candidates · 7 L1 rejects · 21 verified** (L1 citation + L2 adversarial confirmation; of 22 published, 0 refuted, 1 uncertain) · **20 of 21 hand-confirmed · 1 false positive** (sax F-002).
+- **6 reproduced · 6 patched** (L3/L4 execution proofs, recorded per run — a separate axis from `verified`, 3 unique defects) · **0 merged upstream** · cost **$6.9050**.
+
+[Run-by-run results](01-rezultati-pravi-repoi/REZULTATI-TABELA.md) · [Manual validation](02-rucna-validacija/RUCNO-VALIDACIJA-PREGLED.md) · [Upstream status](02-rucna-validacija/UPSTREAM-STATUS.md)
+
 **Honest deltas.** Both single calibration runs scored 7/8 (the expected 8/8 was not reached) and the extended
 single run scored 3/16 (the pre-registered range was 4-7/16) — reported as measured, with no prompt or set change
-after the first run. All 24 published real-world findings were hand-checked; one was rejected as not-a-defect.
+after the first run. All 22 published real-world entries (21 verified + 1 uncertain) were hand-checked; 20 were confirmed as real code states, 1 verified finding was rejected as a false positive (sax F-002), and the uncertain one was hand-confirmed real.
 
 **Upstream status.** Of the 12 defects in the five new repositories: **2 had already been reported upstream before the round**
 (mustache [#854](https://github.com/janl/mustache.js/pull/854), bcryptjs [#170](https://github.com/dcodeIO/bcrypt.js/pull/170))

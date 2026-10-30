@@ -34,17 +34,15 @@ Attempt 25 (`probe-repo.mjs` sa `DUAL_SCAN=1` na jsesc-u) je **prekinut posle 90
 
 ## 4. Ručna adjudikacija (HAND-CHECK po repou)
 
-**24 published unosa ručno provereno, svaki sa statusom, težinom i načinom provere** (`<repo>/HAND-CHECK.md`):
+**22 published unosa ručno provereno** (21 `verified` + 1 `uncertain`: 20 potvrđenih, 1 lažni pozitiv, 2 latentna/mrtva koda; svaki sa statusom, težinom i načinom provere) (`<repo>/HAND-CHECK.md`, pregled u [RUCNO-VALIDACIJA-PREGLED.md](../../02-rucna-validacija/RUCNO-VALIDACIJA-PREGLED.md)):
 
 | Ishod | Broj | Detalj |
 |---|---:|---|
-| Potvrđen stvarni defekt | 20 unosa (~15 jedinstvenih) | svaki potvrđen čitanjem koda; patch-proven gde postoji izvršni dokaz |
-| Potvrđen — **adjudikacija ispravljena** | 1 | mustache F-001: prvobitna ocena je grešila; **TypeError je realan** (drugi lookup), tvrdnja iz runa je tačna |
-| **Odbačen — nije defekt** | **1** | sax F-002 (valueless atribut ne može biti xmlns deklaracija; by design) |
-| Latentan/dead-path (informational) | 2 | sax F-003 (nedostižna grana), jsesc F-003 (mrtav kod) |
-| Uncertain, ručno potvrđen | 1 | jsesc F-002 (nepoznata `numbers` opcija → `undefined`) |
+| Potvrđen stvarni defekt | **20** (od 21 `verified` unosa) | svaki potvrđen čitanjem koda; uključuje 2 latentna/mrtva koda (sax F-003 nedostižna grana, jsesc F-003 mrtav kod) i mustache F-001 (prvobitna ocena grešila — **TypeError je realan**, drugi lookup) |
+| **Odbačen — nije defekt** | **1** (od 21 `verified`) | sax F-002 (valueless atribut ne može biti xmlns deklaracija; by design) |
+| Uncertain, ručno potvrđen (nije `verified`) | **1** | jsesc F-002 (nepoznata `numbers` opcija → `undefined`) |
 
-**Pošteno prijavljeno:** 1 lažno pozitivan nalaz (sax F-002) u 24; 0-nalaza run prijavljen (dateformat run1). Nijedan nalaz nije skriven niti ulepšan.
+**Pošteno prijavljeno:** 1 lažno pozitivan nalaz (sax F-002) u 21 `verified` unosa (22 published ukupno); 0-nalaza run prijavljen (dateformat run1). Nijedan nalaz nije skriven niti ulepšan.
 
 ## 4b. Upstream provera i prijave (30.10.2026)
 
