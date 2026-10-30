@@ -67,7 +67,7 @@ Oba single runa i dual su prijavljeni; varijansa nije skrivena. Detalj: [F3-benc
 
 ## 4. F4 — real world (5 novih repoa + regresija)
 
-### 4a. NOVO u ovoj rundi (nije ranije objavljeno, nije prijavljeno upstream)
+### 4a. NOVO u ovoj rundi (nije objavljeno u ranijim rundama; upstream status u §4d)
 
 | Repo | Pin | Nalazi (ručno potvrđeno) | Dokaz | Cena |
 |---|---|---|---|---|
@@ -78,7 +78,9 @@ Oba single runa i dual su prijavljeni; varijansa nije skrivena. Detalj: [F3-benc
 | dateformat | `e6800aa9` | 1 defekt (+ jedan 0-nalaza run) | citation+adversarial | $0,2662 |
 
 **Novi nalazi u F4: 12 jedinstvenih defekata** (mustache 2, sax 2, fast-json-patch 4, bcryptjs 3, dateformat 1).
-**Nisu prijavljeni upstream** u ovoj rundi. Hand-check: [mustache](real-world/mustache/HAND-CHECK.md) ·
+**Upstream status:** 2 su **već bila prijavljena** pre naše analize (mustache PR #854, bcryptjs PR #170 — nisu novi),
+**3 su prijavljena 30.10.** (fast-json-patch #337, dateformat #196, sax #303), 3 komentara su ostavljena na postojeće
+prijave, a 5 ostaje neprijavljeno — detalj u §4d. Hand-check: [mustache](real-world/mustache/HAND-CHECK.md) ·
 [sax](real-world/sax/HAND-CHECK.md) · [fast-json-patch](real-world/fast-json-patch/HAND-CHECK.md) ·
 [bcryptjs](real-world/bcryptjs/HAND-CHECK.md) · [dateformat](real-world/dateformat/HAND-CHECK.md).
 
@@ -104,6 +106,17 @@ isti defekti su ponovo pronađeni i izvršno dokazani. Ovi nalazi se **ne objavl
 
 **F4 ukupno: $6,9050.**
 
+## 4d. Upstream provera i prijave (30.10.2026)
+
+| Upstream status | Nalazi |
+|---|---|
+| **Već prijavljeno pre analize** (duplikati; pošteno navedeni) | mustache F-001 → PR [#854](https://github.com/janl/mustache.js/pull/854) (+[#856](https://github.com/janl/mustache.js/issues/856)); bcryptjs F-003 → PR [#170](https://github.com/dcodeIO/bcrypt.js/pull/170) |
+| **Novi issue-i otvoreni 30.10.** | fast-json-patch F-001 → [#337](https://github.com/Starcounter-Jack/JSON-Patch/issues/337); dateformat F-001 → [#196](https://github.com/felixge/node-dateformat/issues/196); sax F-001 → [#303](https://github.com/isaacs/sax-js/issues/303) |
+| **Komentari na postojeće** | mustache #854 (nezavisna potvrda), bcrypt PR #170 (patch-proven potvrda), fast-json-patch PR [#331](https://github.com/Starcounter-Jack/JSON-Patch/pull/331) (`isInteger("")` manifestacija, isti root) |
+| **Neprijavljeno** | mustache F-002, fast-json-patch F-002/F-004, bcryptjs F-001/F-002, sax F-003 (latentan) |
+
+Nijedan nalaz nije prijavljen kao „novo otkriće“ — javni commitovi su stariji od analize; u prijavama je naveden tačan pin.
+
 ## 5. DoD status (PREREG §6)
 
 | # | Zahtev | Rezultat |
@@ -122,7 +135,7 @@ isti defekti su ponovo pronađeni i izvršno dokazani. Ovi nalazi se **ne objavl
 ## 6. Ograničenja
 
 - Kalibracioni set je n=8 i korišćen je za kalibraciju — nije statistička tvrdnja.
-- Real-world nalazi su anegdote (mali n, javni commitovi → kontaminacija moguća); **novi nalazi iz F4 nisu prijavljeni upstream**, pa nemaju spoljnu potvrdu.
+- Real-world nalazi su anegdote (mali n, javni commitovi → kontaminacija moguća). Upstream status: 2 od 12 su već bila prijavljena (duplikati), 3 prijavljena 30.10. — **nijedna prijava još nema odgovor maintainera**, pa nema spoljne potvrde.
 - Model izlaz nije bit-determinističan; broj pokušaja se uvek navodi.
 - `execution-proven`/`patch-proven` postoje samo na Node 26.8.2 (LinkCheck zahteva `--allow-inspector`).
 - `spentEffective` je **$25,7163** jer $10 čine `unknown-cost` rezervacije iz tri prekinuta/odbijena pokušaja (attempt 7, 11, 25; stvarni trošak $0 — CLI je odbio pre ijednog model poziva); settled trošak runde je **$15,7163**.

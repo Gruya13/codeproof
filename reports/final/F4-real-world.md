@@ -39,12 +39,41 @@ Attempt 25 (`probe-repo.mjs` sa `DUAL_SCAN=1` na jsesc-u) je **prekinut posle 90
 | Ishod | Broj | Detalj |
 |---|---:|---|
 | Potvrđen stvarni defekt | 20 unosa (~15 jedinstvenih) | svaki potvrđen čitanjem koda; patch-proven gde postoji izvršni dokaz |
-| Potvrđen, **ispravljena težina/mehanika** | 1 | mustache F-001: defekt postoji ali **nema TypeError-a** (nasleđena metoda se vrati umesto upisa) |
+| Potvrđen — **adjudikacija ispravljena** | 1 | mustache F-001: prvobitna ocena je grešila; **TypeError je realan** (drugi lookup), tvrdnja iz runa je tačna |
 | **Odbačen — nije defekt** | **1** | sax F-002 (valueless atribut ne može biti xmlns deklaracija; by design) |
 | Latentan/dead-path (informational) | 2 | sax F-003 (nedostižna grana), jsesc F-003 (mrtav kod) |
 | Uncertain, ručno potvrđen | 1 | jsesc F-002 (nepoznata `numbers` opcija → `undefined`) |
 
 **Pošteno prijavljeno:** 1 lažno pozitivan nalaz (sax F-002) u 24; 0-nalaza run prijavljen (dateformat run1). Nijedan nalaz nije skriven niti ulepšan.
+
+## 4b. Upstream provera i prijave (30.10.2026)
+
+Svih 12 potvrđenih defekata provereno je u javnim trackerima i, gde ima smisla, prijavljeno.
+**2 od 12 su bila poznata upstream pre naše analize** — nisu novi nalazi i tako su prikazani.
+
+| # | Repo / defekt | Upstream status |
+|---|---|---|
+| 1 | mustache — cache `hasOwnProperty` shadowing | **već prijavljeno**: PR [#854](https://github.com/janl/mustache.js/pull/854) (open; povezan [#856](https://github.com/janl/mustache.js/issues/856)) — komentar sa nezavisnom potvrdom |
+| 2 | mustache — kolizija keš ključa | neprijavljeno |
+| 3 | sax — `SGML_DECL_QUOTED` bez `parser.q` | **prijavljeno 30.10.**: [#303](https://github.com/isaacs/sax-js/issues/303) |
+| 4 | sax — `new Error(parser, …)` (latentan) | ne prijavljujemo (nedostižna grana, bez uticaja) |
+| 5 | fast-json-patch — null deref `obj.toJSON` | **prijavljeno 30.10.**: [#337](https://github.com/Starcounter-Jack/JSON-Patch/issues/337) |
+| 6 | fast-json-patch — `isInteger("")` | root pokriven PR-om [#331](https://github.com/Starcounter-Jack/JSON-Patch/pull/331) (leading zero) — komentar sa manifestacijom |
+| 7 | fast-json-patch — observe prepisuje mirror baseline | neprijavljeno (low) |
+| 8 | fast-json-patch — `~~key` truncation | neprijavljeno (low) |
+| 9 | bcryptjs — `base64_decode` c4 | **već prijavljeno**: PR [#170](https://github.com/dcodeIO/bcrypt.js/pull/170) (open) — komentar sa nezavisnom (patch-proven) potvrdom |
+| 10 | bcryptjs — hash ignoriše `genSalt` grešku | neprijavljeno |
+| 11 | bcryptjs — `genSalt` baca sinhrono | neprijavljeno |
+| 12 | dateformat — `yyyy` negativne godine | **prijavljeno 30.10.**: [#196](https://github.com/felixge/node-dateformat/issues/196) |
+
+**Rezime:** **2 prethodno poznata upstream** (duplikati — pošteno navedeni, ne predstavljaju se kao novi) · **3 nova issue-a otvorena 30.10.** · **3 komentara** na postojeće prijave (mustache #854, bcrypt PR #170, fjp PR #331) · **5 nalaza ostaje neprijavljeno** (low uticaj / neaktivni repo / potreban dogovor o dizajnu). Nijedan nije prijavljen kao „novo otkriće“ — javni commitovi su stariji od analize.
+
+## 4c. Ispravka hand-checka (mustache F-001)
+
+Prvobitna adjudikacija je pogrešno tvrdila da do upisa u keš ne dolazi i da nema TypeError-a.
+**Ispravljeno:** prvi lookup za `hasOwnProperty` pada u `else` granu (nasleđena metoda nije *own* property keša),
+pa se vrednost upiše u keš; **drugi** lookup istog imena baca `TypeError: cache.hasOwnProperty is not a function`.
+Originalna tvrdnja iz runa je **tačna**, a upstream PR #854 je nezavisno potvrđuje.
 
 ## 5. DoD 7 provera
 
@@ -56,6 +85,7 @@ Attempt 25 (`probe-repo.mjs` sa `DUAL_SCAN=1` na jsesc-u) je **prekinut posle 90
 | 0-nalaza repoi prijavljeni kao takvi | ✅ dateformat run1 (0 nalaza) |
 | regresioni par dokazuje L3/L4 kao pre hardeninga | ✅ picomatch + jsesc patch-proven |
 | ≥1 refuted / odbijeni nalaz za video (S5) | ⚠️ u F4 nema **refuted** nalaza (svi verified/uncertain); za S5 se koristi evidentiran označen controlled test ili ručno odbačen nalaz (sax F-002) — odluka u F5 |
+| upstream status svakog nalaza prijavljen | ✅ §4b: 2 već poznata (duplikati), 3 prijavljena 30.10., 3 komentara, 5 neprijavljenih — nijedan nije predstavljen kao novo otkriće |
 
 ## 6. Trošak i manifest
 

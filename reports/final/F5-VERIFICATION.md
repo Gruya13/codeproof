@@ -53,3 +53,12 @@ Dokaz (nezavisno izvršeno u codex verify worktree-u):
 | nezavisna **izvršna** verifikacija test seta | ⚠️ nije urađena od verifikatora (sandbox); izvršio orkestrator u F5-baseline — prijavljeno, ne skriveno |
 
 **Nijedan kontraprimer nije pronađen.** Verifikatori nisu menjali nijedan fajl.
+
+## 4. Ažuriranje posle verifikacije (30.10.2026)
+
+Nezavisna provera upstream trackera je posle verifikacije pokazala da su **2 od 12** F4 nalaza već bila
+prijavljena pre naše analize (mustache PR #854, bcryptjs PR #170) i da je **1 nalaz u hand-checku bio
+pogrešno ocenjen** (mustache F-001 — TypeError je realan). Dokumentacija je ispravljena u
+[F4-real-world.md](F4-real-world.md) §4b/§4c, [README.md](README.md) §4d, hand-checkovima i javnom README-u;
+**3 nova issue-a su otvorena** (fast-json-patch #337, dateformat #196, sax #303) i ostavljena su 3 komentara
+na postojeće prijave. Tvrdnja br. 9 iz agy nalaza (re-confirmed status) time je dopunjena — vidi §4b.
