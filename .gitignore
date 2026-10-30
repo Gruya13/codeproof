@@ -4,6 +4,7 @@ node_modules/
 !.env.example
 dist/
 reports/*
+!reports/README.md
 !reports/golden/
 !reports/golden/**
 !reports/real-world/
