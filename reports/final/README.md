@@ -71,10 +71,10 @@ Oba single runa i dual su prijavljeni; varijansa nije skrivena. Detalj: [F3-benc
 
 | Repo | Pin | Nalazi (ručno potvrđeno) | Dokaz | Cena |
 |---|---|---|---|---|
-| mustache | `972fd2b2` | 2 defekta (1 sa ispravljenom mehanikom — nema TypeError-a) | citation+adversarial | $0,8823 |
+| mustache | `972fd2b2` | 2 defekta (F-001 je tačan i već prijavljen upstream — PR #854) | citation+adversarial | $0,8823 |
 | sax | `961ceeef` | 2 defekta (1 latentan) + 1 odbačen ručno | citation+adversarial | $1,1172 |
 | fast-json-patch | `9d313ac0` | 4 defekta | citation+adversarial | $0,7511 |
-| bcryptjs | `1211e9a2` | 3 defekta, **2 patch-proven** | execution + patch | $1,3095 |
+| bcryptjs | `1211e9a2` | 3 defekta, **1 jedinstven defekt patch-proven u oba runa** | execution + patch | $1,3095 |
 | dateformat | `e6800aa9` | 1 defekt (+ jedan 0-nalaza run) | citation+adversarial | $0,2662 |
 
 **Novi nalazi u F4: 12 jedinstvenih defekata** (mustache 2, sax 2, fast-json-patch 4, bcryptjs 3, dateformat 1).

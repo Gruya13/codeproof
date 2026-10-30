@@ -13,7 +13,7 @@
 | mustache | `972fd2b2` | `. ` | 80 / 2402 | 3 verified unosa (**2 defekta**) | $0,8823 |
 | sax | `961ceeef` | `lib` | 1 / 1866 | 4 unosa (**2 stvarna**, 1 odbačen, 1 latentan) | $1,1172 |
 | fast-json-patch | `9d313ac0` | `commonjs` | 3 / 803 | 4 unosa (**4 defekta**) | $0,7511 |
-| bcryptjs | `1211e9a2` | `. ` | 11 / 1666 | 5 unosa (**3 defekta, 2 patch-proven**) | $1,3095 |
+| bcryptjs | `1211e9a2` | `. ` | 11 / 1666 | 5 unosa (**3 defekta, 1 jedinstven patch-proven u oba runa**) | $1,3095 |
 | dateformat | `e6800aa9` | `. ` | 43 / 2085 | 2 unosa (**1 defekt**; run1 0 nalaza) | $0,2662 |
 
 **Odbačeni dry-run kandidati (prijavljeni, $0):** argparse 4892 LOC i accounting 6483 LOC (>3000 po PREREG §4.5); uuid — TS izvor bez commitovanog JS izlaza. Zamena: **dateformat** (kandidat #4 po planu zamena).
@@ -79,7 +79,7 @@ Originalna tvrdnja iz runa je **tačna**, a upstream PR #854 je nezavisno potvr�
 
 | Zahtev | Rezultat |
 |---|---|
-| ≥1 execution-proven i ≥1 patch-proven na novim repoima | ✅ **bcryptjs**: 2× patch-proven (execution + patch, reprodukovano 3/3) |
+| ≥1 execution-proven i ≥1 patch-proven na novim repoima | ✅ **bcryptjs**: 1 jedinstven defekt, patch-proven u oba runa (execution + patch, reprodukovano 3/3) |
 | svi published ručno adjudikovani | ✅ 24/24, HAND-CHECK po repou |
 | 0 lažnih posle hand-checka | ⚠️ **1 odbačen** (sax F-002) — prijavljeno, ne skriveno |
 | 0-nalaza repoi prijavljeni kao takvi | ✅ dateformat run1 (0 nalaza) |

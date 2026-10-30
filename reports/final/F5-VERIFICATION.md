@@ -11,7 +11,7 @@ Provereno (statički, iz artefakata): tag `v0.2.3-final` → `490e302`, `srcTree
 posle taga ne dira `src/`; test-lock sidecari i autorski potpisi (3 nova test fajla); integrity 22 provere;
 kalibracija 7/8 + 7/8 + 8/8 (precision 1, 0/4 trapa, 0 FR, `mock:false`); extended 3/16 i 9/16 (0/5);
 held-out 6/6 kroz L2 i 5/6 kroz L3 (0 trapova); real-world published unosi (16 novih + regresija = 24),
-bcryptjs 2× patch-proven, 8 HAND-CHECK fajlova, sax F-002 označen kao odbačen; trošak iz `ATTEMPTS.jsonl`
+bcryptjs 1 jedinstven defekt patch-proven u oba runa, 8 HAND-CHECK fajlova, sax F-002 označen kao odbačen; trošak iz `ATTEMPTS.jsonl`
 = **$15,7162595** (zaokruženo $15,7163), attempts 1..26 bez rupa, 3 unknown-cost rezervacije = $10;
 pinovi picomatch/jsesc isti kao u v0.2.2 sample-u i dokumentacija ih deklariše kao **re-confirmed, not new**.
 
