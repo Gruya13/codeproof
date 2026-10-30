@@ -11,10 +11,10 @@ refutation gates is published as `verified`, and a generated test is required on
 **Meta Global AI Developer Hackathon 2026** · Indie Dev track · Push the Frontier · written from scratch during the
 event, zero runtime dependencies.
 
-| **268/268** deterministic tests (Node 22 & 26) | **12** hand-confirmed defects in 5 new OSS repositories (**1 unique defect patch-proven in both runs**) | **6** findings filed upstream (3 in the earlier sample + 3 in this round) | **$15.7163** measured for the final round |
+| **268/268** deterministic tests (Node 22 & 26) | **12** hand-confirmed defects in 5 new OSS repositories (**1 unique patch-proven, both runs**) | **6** findings filed upstream (3 in the earlier sample + 3 in this round) | **$15.7163** measured for the final round |
 |---|---|---|---|
 
-**Try it now, offline:** `make demo` (mock pipeline, no API key, no network).
+**Try it now, offline:** `make demo` (mock pipeline, no API key, no network). · **Demo video (2:48):** linked here with the submission on 3 Nov 2026.
 
 ## The problem
 
@@ -61,7 +61,7 @@ attempt (including aborted ones) are in [reports/final/](reports/final/).
 | Calibration (n=8, tuned set) | **7/8, 7/8** in two single runs, **8/8** in the dual run; 100% verified precision; 0/4 traps; 0 false refutations | $3.3467 |
 | Extended (axios `lib/`, 16 injected defects) | **9/16** with chunked scanning, **3/16** single-pass; 0/5 traps; 100% verified precision | $2.1106 |
 | Held-out (6 defects + 4 traps, never used for tuning) | **6/6** through L2, **5/6** through L3; 0 traps | $0.4069 |
-| Real world (5 new repositories × 2 runs) | **12 hand-confirmed defects** (one of them latent); **1 unique defect patch-proven in both runs** (bcryptjs); one more candidate was rejected on review; see upstream status below | $4.3263 |
+| Real world (5 new repositories × 2 runs) | **12 hand-confirmed defects** (one of them latent); **1 unique patch-proven (both runs)** (bcryptjs); one more candidate was rejected on review; see upstream status below | $4.3263 |
 | Dogfood (own `src/`) | 6 candidates → 5 verified, 1 patch-proven; **5 real defects fixed with 5 regression tests**; re-run after fixes: 0 findings | $2.9470 |
 | Regression pair (picomatch, jsesc) | previously published defects re-found and **patch-proven**; L3/L4 work as before the hardening | $2.5787 |
 | **Total** | | **$15.7163** of the $40 hard cap |
