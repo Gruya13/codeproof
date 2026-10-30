@@ -1,6 +1,6 @@
 # Final evaluation — reports/final (2026-10-29/30)
 
-Završna runda merenja na **zamrznutom kodu**: tag [`v0.2.3-final`](../FREEZE.json) (revizija `490e302`,
+Završna runda merenja na **zamrznutom kodu**: tag [`v0.2.3-final`](FREEZE.json) (revizija `490e302`,
 `src` tree `f874d642`). Svaki run je ušao kroz `scripts/final-run.sh` (rezervacija → git sidrenje → run →
 settle); svi pokušaji su u [`ATTEMPTS.jsonl`](ATTEMPTS.jsonl) i nijedan nije obrisan.
 **Ukupan trošak runde: $15,7163 od $40** (cilj $35 — nije dostignut; hard cap nije prekoračen).
