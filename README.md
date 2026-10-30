@@ -71,7 +71,7 @@ attempt (including aborted ones) are in [reports/final/](reports/final/).
 - **13 runs · 29 candidates · 7 L1 rejects · 21 verified** (L1 citation + L2 adversarial confirmation; of 22 published, 0 refuted, 1 uncertain) · **20 of 21 hand-confirmed · 1 false positive** (sax F-002).
 - **6 reproduced · 6 patched** (L3/L4 execution proofs, recorded per run — a separate axis from `verified`, 3 unique defects) · **0 merged upstream** · cost **$6.9050**.
 
-[Run-by-run results](01-rezultati-pravi-repoi/REZULTATI-TABELA.md) · [Manual validation](02-rucna-validacija/RUCNO-VALIDACIJA-PREGLED.md) · [Upstream status](02-rucna-validacija/UPSTREAM-STATUS.md)
+[Run-by-run results](01-real-world-results/RESULTS-TABLE.md) · [Manual validation](02-manual-validation/MANUAL-VALIDATION-OVERVIEW.md) · [Upstream status](02-manual-validation/UPSTREAM-STATUS.md)
 
 **Honest deltas.** Both single calibration runs scored 7/8 (the expected 8/8 was not reached) and the extended
 single run scored 3/16 (the pre-registered range was 4-7/16) — reported as measured, with no prompt or set change

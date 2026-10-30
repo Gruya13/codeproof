@@ -1,12 +1,12 @@
-# PREREG AMENDMENT 2 — zatvaranje nalaza iz runde 3
+# PREREG AMENDMENT 2 — closing the findings from round 3
 
-**Status: LOCKED v1.2** · datum 2026-10-29. · osnov: `PREREG.md` v1.0 + `PREREG-AMENDMENT-1.md` (v1.1)
-**Povod:** runda 3 potvrde amendmenta v1.1: **agy = AGREE** (nema nalaza), **codex = DISAGREE** sa 3 nalaza (R3-CX-A..C) i jednom dopunom (D). Ovaj amendment ih zatvara; dogovor iz runde 2 ostaje na snazi.
-**Odnos prema prethodnim fajlovima:** originalni plan i AMENDMENT-1 se **ne menjaju**; ovaj fajl je dopuna koja se čita zajedno sa njima.
+**Status: LOCKED v1.2** · date 2026-10-29. · basis: `PREREG.md` v1.0 + `PREREG-AMENDMENT-1.md` (v1.1)
+**Reason:** round 3 confirming amendment v1.1: **agy = AGREE** (no findings), **codex = DISAGREE** with 3 findings (R3-CX-A..C) and one addendum (D). This amendment closes them; the agreement from round 2 remains in force.
+**Relation to the previous files:** the original plan and AMENDMENT-1 are **not changed**; this file is a supplement that is read together with them.
 
-## 1. R3-CX-A (P1) — konkretne score komande (menja PREREG §4.4 i AMENDMENT-1 uslov 2)
+## 1. R3-CX-A (P1) — concrete score commands (changes PREREG §4.4 and AMENDMENT-1 condition 2)
 
-Komanda za skoriranje **nikad** ne dobija parent `--out` direktorijum i nikad ne bira „latest":
+The scoring command **never** gets the parent `--out` directory and never picks the "latest" one:
 
 ```bash
 score_run() {
@@ -21,7 +21,7 @@ score_run reports/final/bench-calibration/single-2
 score_run reports/final/bench-calibration/dual
 ```
 
-Extended (isti princip; run dir je `<out>/<runId>`):
+Extended (same principle; the run dir is `<out>/<runId>`):
 
 ```bash
 score_injected_dir() {
@@ -34,13 +34,13 @@ score_injected_dir reports/final/bench-extended/single
 score_injected_dir reports/final/bench-extended/chunked
 ```
 
-- Komanda `node bench/score.mjs --run reports/final/bench-calibration/single-1` iz PREREG §4.4 **je zamenjena** ovim pravilom.
-- Abort ako u `<out>` nije tačno jedan run direktorijum. Zabranjeni: „latest", `ls -t | head`, ručno biranje.
+- The command `node bench/score.mjs --run reports/final/bench-calibration/single-1` from PREREG §4.4 **is replaced** by this rule.
+- Abort if `<out>` does not hold exactly one run directory. Forbidden: "latest", `ls -t | head`, manual picking.
 
-## 2. R3-CX-B (P1) — jsesc rekonstrukcija sa commit korakom (menja AMENDMENT-1 uslov 4)
+## 2. R3-CX-B (P1) — jsesc reconstruction with a commit step (changes AMENDMENT-1 condition 4)
 
-- Javni izvor: `https://github.com/mathiasbynens/jsesc`, pin `819f534875fd87c9033bb72148ab6a6ad1219ca0` (v3.1.0).
-- **Scope za run je direktorijum `analysis-target`** (ne fajl). Rekonstrukcija mora da uključi commit, jer ingest čita sadržaj iz analiziranog commita (`src/ingest/index.mjs` — `readFileAtCommit`):
+- Public source: `https://github.com/mathiasbynens/jsesc`, pin `819f534875fd87c9033bb72148ab6a6ad1219ca0` (v3.1.0).
+- **The scope for the run is the `analysis-target` directory** (not a file). The reconstruction must include the commit, because ingest reads the content from the analyzed commit (`src/ingest/index.mjs` — `readFileAtCommit`):
 
 ```bash
 git clone https://github.com/mathiasbynens/jsesc.git jsesc-regression
@@ -49,44 +49,44 @@ mkdir -p jsesc-regression/analysis-target
 cp jsesc-regression/jsesc.js jsesc-regression/analysis-target/jsesc.js
 git -C jsesc-regression add analysis-target/jsesc.js
 git -C jsesc-regression -c user.name=codeproof -c user.email=codeproof@local commit -m "analysis scope: jsesc.js"
-git -C jsesc-regression rev-parse HEAD          # SHA se upisuje u REALWORLD-CANDIDATES.lock.json
+git -C jsesc-regression rev-parse HEAD          # SHA is written into REALWORLD-CANDIDATES.lock.json
 sha256sum jsesc-regression/analysis-target/jsesc.js
-# očekivano: 03c367cbd13dc753bb8fc6c8ec3a01078c3ee142ee3f747c0490d311bc80a3b3
+# expected: 03c367cbd13dc753bb8fc6c8ec3a01078c3ee142ee3f747c0490d311bc80a3b3
 ```
 
-- Pre svakog regresionog jsesc runa obavezne provere: `git -C <clone> rev-parse HEAD` = zabeleženi SHA **i** `git -C <clone> status --porcelain -- analysis-target` prazan (dirty=false).
-- Postojeći lokalni klon `real-world/jsesc` (commit `e3349b5`) je validan izvor **ako** te dve provere prođu; u suprotnom se koristi gornja rekonstrukcija.
-- Picomatch: `--repo https://github.com/micromatch/picomatch --commit 6bb40679c218cefba5d4e9662408c5fdf699a8bb --scope lib` — javni pin, bez lokalnih zavisnosti.
+- Before every regression jsesc run, mandatory checks: `git -C <clone> rev-parse HEAD` = the recorded SHA **and** `git -C <clone> status --porcelain -- analysis-target` empty (dirty=false).
+- The existing local clone `real-world/jsesc` (commit `e3349b5`) is a valid source **if** those two checks pass; otherwise the reconstruction above is used.
+- Picomatch: `--repo https://github.com/micromatch/picomatch --commit 6bb40679c218cefba5d4e9662408c5fdf699a8bb --scope lib` — public pin, no local dependencies.
 
-## 3. R3-CX-C (P0) — budžetska rezervacija za nepoznat trošak (menja AMENDMENT-1 uslove 7 i 8)
+## 3. R3-CX-C (P0) — budget reservation for unknown cost (changes AMENDMENT-1 conditions 7 and 8)
 
-**Problem:** ako API poziv naplati tokenе a run padne pre nego što napiše `run.json`, ledger koji sabira samo `run.json` ne vidi taj trošak → stvarni zbir može preći $40.
+**Problem:** if an API call bills tokens and the run dies before writing `run.json`, a ledger that sums only `run.json` does not see that cost → the actual total may exceed $40.
 
-**Rešenje — rezervacija pre poziva, settle posle:**
+**Solution — reserve before the call, settle after:**
 
-1. **Pre svakog API runa:** `node scripts/final-budget.mjs reserve --attempt <n> --max <BUDGET_USD>` upisuje u `ATTEMPTS.jsonl` red `{attemptNo, block, label, startedAt, status:"reserved", reservedUsd:<BUDGET_USD>, costUsd:null, runDir:null}`; pre upisa proverava `spentEffective + reservedUsd <= 40`, inače abort.
-2. **Posle runa:** `settle --attempt <n>`:
-   - ako je `run.json` nastao → `costUsd = run.json.usage.costUsd`, `status:"ok"|"failed"`, `runDir` popunjen;
-   - ako `run.json` **nije** nastao → `status:"unknown-cost"`, `costUsd:null`, **`reservedUsd` ostaje u obračunu** dok se stvarni trošak ne unese ručno iz API poziva/loga; nikad se ne briše i nikad se ne procenjuje na nulu.
-3. **`spentEffective = Σ costUsd (settled) + Σ reservedUsd (open/unknown-cost)** — ledger **nikad ne potcenjuje**.
-4. `check --next-max <usd>`: `spentEffective + next-max <= 40`, inače abort; ako `spentEffective >= 35` → stop runde (osim rezerve za re-run posle fixa, uz zapis u amendment).
-5. `run.json` i `ATTEMPTS.jsonl` se ne sabiraju dvaput: jedan pokušaj = jedan red u manifestu; `run.json` služi samo za settle tog reda.
+1. **Before every API run:** `node scripts/final-budget.mjs reserve --attempt <n> --max <BUDGET_USD>` writes into `ATTEMPTS.jsonl` the line `{attemptNo, block, label, startedAt, status:"reserved", reservedUsd:<BUDGET_USD>, costUsd:null, runDir:null}`; before writing it checks `spentEffective + reservedUsd <= 40`, otherwise abort.
+2. **After the run:** `settle --attempt <n>`:
+   - if `run.json` was created → `costUsd = run.json.usage.costUsd`, `status:"ok"|"failed"`, `runDir` filled;
+   - if `run.json` was **not** created → `status:"unknown-cost"`, `costUsd:null`, **`reservedUsd` stays in the calculation** until the actual cost is entered by hand from the API call/log; it is never deleted and never estimated at zero.
+3. **`spentEffective = Σ costUsd (settled) + Σ reservedUsd (open/unknown-cost)** — the ledger **never underestimates**.
+4. `check --next-max <usd>`: `spentEffective + next-max <= 40`, otherwise abort; if `spentEffective >= 35` → stop the round (except the reserve for a re-run after a fix, with a note in the amendment).
+5. `run.json` and `ATTEMPTS.jsonl` are not summed twice: one attempt = one line in the manifest; `run.json` only serves to settle that line.
 
-## 4. R3-CX-D (P1) — manifest pokušaja (menja AMENDMENT-1 uslov 8)
+## 4. R3-CX-D (P1) — manifest of attempts (changes AMENDMENT-1 condition 8)
 
-`reports/final/ATTEMPTS.jsonl`, jedan JSON objekat po redu, polja:
-`attemptNo` (inkrementalni 1,2,3… bez rupa), `block`, `label`, `startedAt`, `endedAt` (null dok traje), `status` (`reserved|started|ok|failed|aborted|unknown-cost`), `reservedUsd`, `costUsd` (null dok nepoznat), `runDir` (ili null), `note`.
-- Brisanje reda stvara rupu u numeraciji → verifikator prijavljuje FAIL.
-- `runId` nije ključ pokušaja (kolizija istog runId na istoj reviziji); dedup samo po sha256 sadržaja `run.json`.
-- Manifest je jedini izvor istine za zbir; `run.json` daje tačan iznos po pokušaju.
+`reports/final/ATTEMPTS.jsonl`, one JSON object per line, fields:
+`attemptNo` (incremental 1,2,3… without gaps), `block`, `label`, `startedAt`, `endedAt` (null while running), `status` (`reserved|started|ok|failed|aborted|unknown-cost`), `reservedUsd`, `costUsd` (null while unknown), `runDir` (or null), `note`.
+- Deleting a line creates a gap in the numbering → the verifier reports FAIL.
+- `runId` is not the key of an attempt (collision of the same runId on the same revision); dedup only by the content sha256 of `run.json`.
+- The manifest is the single source of truth for the total; `run.json` gives the exact amount per attempt.
 
-## 5. Ostalo
+## 5. Other
 
-- **agy (runda 3):** nema nalaza, `AGREE` — dogovor iz runde 2 nije oslabljen.
-- **Uređivačka ispravka:** referenca „Komande u §2" iz AMENDMENT-1 uslova 2 odnosi se na **§1 ovog amendmenta** (u AMENDMENT-1 §2 je budžetska tabela).
-- Implementacija `scripts/final-budget.mjs` i `scripts/final-run.sh` je deo Faze 0, **pre prvog API poziva**; njihov izlaz se commit-uje pre Faze 1.
+- **agy (round 3):** no findings, `AGREE` — the agreement from round 2 is not weakened.
+- **Editorial correction:** the reference "Commands in §2" from AMENDMENT-1 condition 2 refers to **§1 of this amendment** (in AMENDMENT-1 §2 there is the budget table).
+- The implementation of `scripts/final-budget.mjs` and `scripts/final-run.sh` is part of Phase 0, **before the first API call**; their output is committed before Phase 1.
 
-## 6. Lock v1.2 i runda 4
+## 6. Lock v1.2 and round 4
 
-- novi lock sadrži sha256 za `PREREG.md` (nepromenjen), `AMENDMENT-1` (nepromenjen) i ovaj fajl;
-- runda 4 potvrde: codex proverava da su R3-CX-A..D rešeni, agy proverava da dogovor nije oslabljen; ako oba daju `AGREE`, runda može da počne posle odobrenja korisnika.
+- the new lock contains the sha256 for `PREREG.md` (unchanged), `AMENDMENT-1` (unchanged) and this file;
+- round 4 of confirmation: codex checks that R3-CX-A..D are resolved, agy checks that the agreement is not weakened; if both give `AGREE`, the round can start after user approval.

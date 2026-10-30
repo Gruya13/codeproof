@@ -1,62 +1,62 @@
-# PREREG — poslednja runda testiranja (bench + dogfood + real world)
+# PREREG — final testing round (bench + dogfood + real world)
 
-**Status: LOCKED v1.0** · zaključan 2026-10-29. · autor: DSH orkestrator (uz odobrenje korisnika)
-**Lock zapis:** `reports/final/PREREG.lock.json` (sha256 ovog fajla, git HEAD, vreme, baseline).
-**Izvršenje: NIJE POČELO.** Runda startuje tek na eksplicitno odobrenje; prvi korak posle odobrenja je commit ovog fajla + lock-a (dokaz da je prereg pre prvog runa), pa Faza 0.
-**Jezik:** interni operativni dokument (srpski); javni dokazi i README ostaju na engleskom.
+**Status: LOCKED v1.0** · locked 2026-10-29. · author: DSH orchestrator (with user approval)
+**Lock record:** `reports/final/PREREG.lock.json` (sha256 of this file, git HEAD, time, baseline).
+**Execution: NOT STARTED.** The round starts only on explicit approval; the first step after approval is the commit of this file + the lock (proof that the prereg precedes the first run), then Phase 0.
+**Language:** English (this document and the public evidence are kept in English).
 
-## 0. Zaključane odluke korisnika (29.10.2026.)
+## 0. Locked user decisions (29.10.2026.)
 
-| # | Odluka |
+| # | Decision |
 |---|---|
-| 1 | Novi runovi idu u `reports/final/`; `reports/golden/` ostaje netaknut (frozen evidence, integrity baseline `2040aa9`). |
-| 2 | Dogfood: oba režima — chunked + single. |
-| 3 | Real world: 5 novih repoa + 2 regresiona (picomatch, jsesc). |
-| 4 | Dual-scan uključen: kalibracioni bench (1 run) + jsesc (1 run). |
-| 5 | Cilj **$35**, hard cap **$40**. |
-| 6 | Snimanje: sirovi materijal tokom runde (samo posle freeze-a), finalni scenario/naracija/montaža posle runde. |
+| 1 | New runs go to `reports/final/`; `reports/golden/` stays untouched (frozen evidence, integrity baseline `2040aa9`). |
+| 2 | Dogfood: both modes — chunked + single. |
+| 3 | Real world: 5 new repos + 2 regression (picomatch, jsesc). |
+| 4 | Dual-scan included: calibration bench (1 run) + jsesc (1 run). |
+| 5 | Target **$35**, hard cap **$40**. |
+| 6 | Recording: raw material during the round (only after the freeze), final scenario/narration/edit after the round. |
 
-## 1. Polazno stanje (provereno 29.10.2026. pre lock-a)
+## 1. Starting state (verified on 29.10.2026. before the lock)
 
-| Stavka | Vrednost | Dokaz |
+| Item | Value | Evidence |
 |---|---|---|
-| Revizija | `dde6e58` (v0.2.2 + paket F), `main = origin/main`, stablo čisto | `git status -sb` |
-| Deterministički | **241/241** (Node 26.8.2), 36 test fajlova | `make test` |
+| Revision | `dde6e58` (v0.2.2 + package F), `main = origin/main`, clean tree | `git status -sb` |
+| Deterministic | **241/241** (Node 26.8.2), 36 test files | `make test` |
 | Integrity | **PASS, 22 checks**, baseline `2040aa9`, test-lock OK | `node scripts/integrity.mjs` |
 | Replay / score | 9/9; golden PASS | `make replay`, `make score RUN=reports/golden` |
-| Javna dokumentacija | README tvrdi **234/234** → stale, stvarno 241/241 | `codeproof/README.md:52`, korenski `README.md` |
-| Do sada potrošeno | **≈$42,46** API (dedup 98 `run.json`) | suma `usage.costUsd` po `reports/**` |
-| Starost dokaza | golden 27.10. (pre v0.2.0), extended 28.10. (pre L4), dogfood `@25c2a26`, real-world sample 28.10. (pre hardeninga A–F); `REPORT.html` nijedan pravi run | `reports/v0.2.0/`, `reports/golden/` |
+| Public documentation | README claims **234/234** → stale, actual 241/241 | `codeproof/README.md:52`, root `README.md` |
+| Spent so far | **≈$42.46** API (dedup 98 `run.json`) | sum of `usage.costUsd` across `reports/**` |
+| Evidence age | golden 27.10. (pre v0.2.0), extended 28.10. (pre L4), dogfood `@25c2a26`, real-world sample 28.10. (pre hardening A–F); `REPORT.html` from no real run | `reports/v0.2.0/`, `reports/golden/` |
 
-**Cilj runde:** svi headline brojevi sveži, na finalnom kodu, sa istim, poštenim protokolom.
+**Round goal:** all headline numbers fresh, on the final code, with the same, honest protocol.
 
-## 2. Principi (obavezujući)
+## 2. Principles (binding)
 
-1. **Prereg.** Ovaj plan je zaključan pre prvog runa; izmene samo kroz amendment (§10.4).
-2. **Dogfood prvi.** Ako dogfood nađe stvarni defekt, popravka + regresioni test idu pre zamrzavanja i pre bench/real-world merenja.
-3. **Zamrzavanje pa merenje.** Sva bench/real-world merenja idu na tagovanu reviziju `v0.2.3-final`; posle zamrzavanja menja se samo dokumentacija (izuzetak: P0 bug u alatu, uz amendment i re-run pogođenih stavki).
-4. **Svi pokušaji se prijavljuju** — uključujući truncation/retry/abort/neuspele runove; nijedan run se ne odbacuje iz evidencije.
-5. **Brojevi samo iz `run.json`.** Nijedan broj se ručno ne prepisuje.
-6. **Hand-check svakog objavljenog real-world nalaza** (potvrđen/opovrgnut/latentan + težina + način provere).
-7. **Nezavisna verifikacija** pre upisa finalnih brojeva: agy-verify (slepi ulaz) + codex-verify (WATCHDOG: test-lock hash + git revizija).
-8. **Nema tuninga posle prvog runa** (ni promptova ni setova); kalibracija je već zamrznuta.
+1. **Prereg.** This plan is locked before the first run; changes only through an amendment (§10.4).
+2. **Dogfood first.** If dogfood finds a real defect, the fix + regression test come before the freeze and before the bench/real-world measurements.
+3. **Freeze, then measure.** All bench/real-world measurements run on the tagged revision `v0.2.3-final`; after the freeze only documentation changes (exception: a P0 bug in the tool, with an amendment and a re-run of the affected items).
+4. **All attempts are reported** — including truncation/retry/abort/failed runs; no run is dropped from the record.
+5. **Numbers only from `run.json`.** No number is copied by hand.
+6. **Hand-check of every published real-world finding** (confirmed/refuted/latent + severity + verification method).
+7. **Independent verification** before the final numbers are written: agy-verify (blind input) + codex-verify (WATCHDOG: test-lock hash + git revision).
+8. **No tuning after the first run** (neither prompts nor sets); calibration is already frozen.
 
-## 3. Redosled faza
+## 3. Phase order
 
-| Faza | Sadržaj | Zavisnost | API |
+| Phase | Content | Dependency | API |
 |---|---|---|---|
-| 0 | Deterministički kontrolni sloj (Node 22/26, integrity, replay, score, demo, clean-clone + docker) | — | $0 |
-| 1 | Dogfood (chunked + single) → adjudikacija → popravke + regresioni testovi | Faza 0 | ~$4,5 |
-| 2 | Zamrzavanje: commit + tag `v0.2.3-final`; zapis revizije | Faza 1 | $0 |
-| 3 | Bench: kalibracioni single ×2 + dual ×1; extended chunked + single; held-out ablacija | Faza 2 | ~$8,2 |
-| 4 | Real world: 5 novih ×2 + regresija (picomatch, jsesc) + dual jsesc; hand-check | Faza 2 | ~$10,0 |
-| 5 | Objava: `reports/final/README.md`, README/STATUS sync, verifikacija, push, snimci | Faza 3,4 | $0 |
+| 0 | Deterministic control layer (Node 22/26, integrity, replay, score, demo, clean-clone + docker) | — | $0 |
+| 1 | Dogfood (chunked + single) → adjudication → fixes + regression tests | Phase 0 | ~$4,5 |
+| 2 | Freeze: commit + tag `v0.2.3-final`; revision record | Phase 1 | $0 |
+| 3 | Bench: calibration single ×2 + dual ×1; extended chunked + single; held-out ablation | Phase 2 | ~$8,2 |
+| 4 | Real world: 5 new ×2 + regression (picomatch, jsesc) + dual jsesc; hand-check | Phase 2 | ~$10,0 |
+| 5 | Publication: `reports/final/README.md`, README/STATUS sync, verification, push, recordings | Phase 3,4 | $0 |
 
-## 4. Plan po fazama
+## 4. Plan per phase
 
-### 4.1 Faza 0 — deterministički kontrolni sloj ($0)
+### 4.1 Phase 0 — deterministic control layer ($0)
 
-Komande (redom, sve mora PASS), iz `codeproof/`:
+Commands (in order, everything must PASS), from `codeproof/`:
 
 ```
 make test                                   # Node 26: 241/241
@@ -69,30 +69,30 @@ make clean-clone                            # tmpfs + env -i
 make clean-clone-docker                     # node:22-alpine
 ```
 
-Izlaz: `reports/final/F0-baseline.md` (tačni brojevi, vremena, revizija).
+Output: `reports/final/F0-baseline.md` (exact numbers, times, revision).
 
-### 4.2 Faza 1 — dogfood (~$4,5)
+### 4.2 Phase 1 — dogfood (~$4,5)
 
-Cilj: CodeProof na sopstvenom `src/` (22 fajla / 4.879 LOC @ pre-popravke `dde6e58`).
+Goal: CodeProof on its own `src/` (22 files / 4.879 LOC @ pre-fix `dde6e58`).
 
 ```
 BUDGET_USD=4 CHUNKED_SCAN=1 node src/cli.mjs analyze src --mode smoke --out reports/final/self-analysis/chunked --allow-output-in-target
 BUDGET_USD=3 node src/cli.mjs analyze src --mode smoke --out reports/final/self-analysis/single --allow-output-in-target
 ```
 
-Proces: ručna adjudikacija svakog proposed nalaza (stvarno/latentno/namerno/lažno) → za svaki stvarni: fix + regresioni test (test-lock, autor u commit poruci) → ponovni `make test`/`integrity` → ponovni dogfood run ako je fix menjao analizirani kod (iz rezerve).
-Očekivanje (ne obaveza): istorijski chunked 11 proposed → 9 verified / 3 exec / 2 patch-proven; single 3/3.
-Izlaz: `reports/final/self-analysis/` + `HAND-CHECK.md` + popravke.
+Process: manual adjudication of every proposed finding (real/latent/intentional/false) → for each real one: fix + regression test (test-lock, author in the commit message) → re-run `make test`/`integrity` → re-run dogfood if the fix changed the analyzed code (from the reserve).
+Expectation (not a commitment): historical chunked 11 proposed → 9 verified / 3 exec / 2 patch-proven; single 3/3.
+Output: `reports/final/self-analysis/` + `HAND-CHECK.md` + fixes.
 
-### 4.3 Faza 2 — zamrzavanje
+### 4.3 Phase 2 — freeze
 
-- commit svih dogfood popravki i artefakata; tag `v0.2.3-final`;
-- `reports/final/FREEZE.json`: revizija, datum, `make test` broj, hash `src/`;
-- od ovog trenutka mere se bench i real-world; kod se ne menja do kraja runde.
+- commit all dogfood fixes and artifacts; tag `v0.2.3-final`;
+- `reports/final/FREEZE.json`: revision, date, `make test` count, hash of `src/`;
+- from this moment bench and real-world are measured; the code is not changed until the end of the round.
 
-### 4.4 Faza 3 — bench (~$8,2)
+### 4.4 Phase 3 — bench (~$8,2)
 
-**Kalibracioni** (`bench/seed-repo`, 15 f./229 LOC, 8+4, frozen):
+**Calibration** (`bench/seed-repo`, 15 files/229 LOC, 8+4, frozen):
 
 ```
 BUDGET_USD=2.5 MAX_FINDINGS=12 node src/cli.mjs analyze bench/seed-repo --mode bench --out reports/final/bench-calibration/single-1
@@ -101,9 +101,9 @@ BUDGET_USD=2.5 MAX_FINDINGS=12 node src/cli.mjs analyze bench/seed-repo --mode b
 BUDGET_USD=4 DUAL_SCAN=1 MAX_FINDINGS=12 node src/cli.mjs analyze bench/seed-repo --mode bench --out reports/final/bench-calibration/dual
 ```
 
-Prijavljuju se oba single runa i dual run (varijansa se ne skriva).
+Both single runs and the dual run are reported (the variance is not hidden).
 
-**Extended** (`bench/extended`, axios `lib/` 74 f./9.564 LOC, 16+5, frozen):
+**Extended** (`bench/extended`, axios `lib/` 74 files/9.564 LOC, 16+5, frozen):
 
 ```
 BUDGET_USD=4 node src/cli.mjs analyze reports/probes/real/axios-extended/_repo/lib --mode smoke --out reports/final/bench-extended/single
@@ -111,132 +111,132 @@ BUDGET_USD=5 CHUNKED_SCAN=1 node src/cli.mjs analyze reports/probes/real/axios-e
 node scripts/score-injected.mjs --expected bench/extended/expected.json --run <dir>
 ```
 
-(`_repo` postoji lokalno; ako nedostaje, rekonstruisati preko `scripts/make-injected.mjs` — mreža, bez API troška.)
+(`_repo` exists locally; if missing, reconstruct it via `scripts/make-injected.mjs` — network, no API cost.)
 
-**Held-out** (`bench/held-out`, 6+4, frozen; nije korišćen za tuning):
+**Held-out** (`bench/held-out`, 6+4, frozen; not used for tuning):
 
 ```
 BUDGET_USD=2 node scripts/ablation.mjs --repo bench/held-out --out reports/final/bench-heldout
 ```
 
-### 4.5 Faza 4 — real world (~$10)
+### 4.5 Phase 4 — real world (~$10)
 
-Kriterijumi za nove repoe: CJS ili ESM sa eksplicitnim ekstenzijama (L3/L4 izvršiv), **bez runtime zavisnosti**, 300–3.000 LOC, javni pinovan commit, nije korišćen u ranijim rundama.
-Kandidati (5 se bira posle dry-run-a; zamena kandidata ne menja obim ni cenu):
+Criteria for the new repos: CJS or ESM with explicit extensions (L3/L4 executable), **no runtime dependencies**, 300–3.000 LOC, public pinned commit, not used in earlier rounds.
+Candidates (5 are chosen after the dry run; swapping a candidate changes neither scope nor cost):
 `mustache`, `fast-json-patch`, `bcryptjs`, `sax`, `argparse` (fallback: `dateformat`, `accounting`, `uuid`).
 
-Pre trošenja: `node scripts/probe-repo.mjs --repo <url> --scope <dir> --dry-run` za svih 5 (meri fajlove/LOC/prompt cap; $0).
+Before spending: `node scripts/probe-repo.mjs --repo <url> --scope <dir> --dry-run` for all 5 (measures files/LOC/prompt cap; $0).
 
-Runovi (2 po repou):
+Runs (2 per repo):
 
 ```
 BUDGET_USD=4 node scripts/probe-repo.mjs --repo <url> --commit <sha> --scope <dir> --runs 2 --mode smoke --tag <name> --out reports/final/real-world/<name>
 ```
 
-Regresioni par (1 run svaki, isti pinovi kao v0.2.2):
+Regression pair (1 run each, same pins as v0.2.2):
 
 ```
 BUDGET_USD=4 node scripts/probe-repo.mjs --workdir ../real-world/picomatch --scope lib --runs 1 --mode smoke --tag picomatch --out reports/final/real-world/picomatch-regression
 BUDGET_USD=4 node scripts/probe-repo.mjs --workdir ../real-world/jsesc --scope analysis-target --runs 1 --mode smoke --tag jsesc --out reports/final/real-world/jsesc-regression
 ```
 
-Dual na malom realnom kodu:
+Dual on a small real codebase:
 
 ```
 BUDGET_USD=4 DUAL_SCAN=1 node scripts/probe-repo.mjs --workdir ../real-world/jsesc --scope analysis-target --runs 1 --mode smoke --tag jsesc-dual --out reports/final/real-world/jsesc-dual
 ```
 
-Hand-check: svaki published nalaz → `HAND-CHECK.md` u run direktorijumu (status, težina, način provere, upstream link ako postoji).
+Hand-check: every published finding → `HAND-CHECK.md` in the run directory (status, severity, verification method, upstream link if one exists).
 
-### 4.6 Faza 5 — objava ($0)
+### 4.6 Phase 5 — publication ($0)
 
-- `reports/final/README.md` — finalne tabele (bench, extended, held-out, dogfood, real-world, dual) sa run-id, cenom, brojem pokušaja;
-- `codeproof/README.md` + korenski `README.md`: sveži brojevi i test count (234 → 241+), sekcija "Final evaluation (2026-10-30)", golden opisan kao istorijski (27.10.) i netaknut;
-- `STATUS.md` unos za dan runde;
-- `make test`/`integrity`/`replay` finalno; `git status` čist; push;
-- snimci: sirovi materijal iz Faze 1–4 se arhivira u `reports/final/captures/` (tekstualni logovi) — video fajlovi ostaju van repoa.
+- `reports/final/README.md` — final tables (bench, extended, held-out, dogfood, real-world, dual) with run-id, cost, number of attempts;
+- `codeproof/README.md` + root `README.md`: fresh numbers and test count (234 → 241+), section "Final evaluation (2026-10-30)", golden described as historical (27.10.) and untouched;
+- `STATUS.md` entry for the day of the round;
+- `make test`/`integrity`/`replay` final; `git status` clean; push;
+- recordings: raw material from Phases 1–4 is archived in `reports/final/captures/` (text logs) — video files stay outside the repo.
 
-## 5. Budžet i kontrola
+## 5. Budget and control
 
-| Blok | Runova | Procena | Cap bloka |
+| Block | Runs | Estimate | Block cap |
 |---|---:|---:|---:|
-| F0 deterministički | 0 API | $0 | $0 |
+| F0 deterministic | 0 API | $0 | $0 |
 | F1 dogfood chunked + single | 2 | $4,5 | $6 |
-| F3 bench kalibracioni single ×2 | 2 | $2,2 | $4 |
-| F3 bench kalibracioni dual ×1 | 1 | $1,8 | $3 |
+| F3 bench calibration single ×2 | 2 | $2,2 | $4 |
+| F3 bench calibration dual ×1 | 1 | $1,8 | $3 |
 | F3 extended chunked + single | 2 | $3,8 | $5 |
 | F3 held-out | 1 | $0,4 | $1 |
 | F4 real world 5 × 2 | 10 | $7,5 | $10 |
-| F4 regresija picomatch + jsesc | 2 | $1,5 | $2 |
+| F4 regression picomatch + jsesc | 2 | $1,5 | $2 |
 | F4 dual jsesc | 1 | $1,0 | $2 |
 | **Core** | **21** | **$22,7** | **$33** |
-| Opcije (three-way, controlled, istorijski recall) | ~5 | $2,0 | $3 |
-| Rezerva (retry/truncation/re-run posle fixa) | — | $5,0 | $7 |
-| **Ukupno** | | **~$29,7** | — |
-| **Cilj / hard cap** | | **$35 / $40** | |
+| Options (three-way, controlled, historical recall) | ~5 | $2,0 | $3 |
+| Reserve (retry/truncation/re-run after a fix) | — | $5,0 | $7 |
+| **Total** | | **~$29,7** | — |
+| **Target / hard cap** | | **$35 / $40** | |
 
-Kontrola: per-run `BUDGET_USD` kako je navedeno; trošak se sabira iz `run.json` posle svake faze.
-**Stop-loss:** pre Faze 4 provera sume — ako je >$25, real world se svodi na 4 nova repoa (ne 5); ako ukupna suma dostigne **$35**, runda se zaustavlja (osim rezerve za re-run posle dogfood/freeze popravke, i to uz zapis u amendment-u). Hard cap **$40** se ne prelazi ni pod kojim uslovom.
+Control: per-run `BUDGET_USD` as specified; the cost is summed from `run.json` after each phase.
+**Stop-loss:** before Phase 4 check the sum — if it is >$25, real world shrinks to 4 new repos (not 5); if the total reaches **$35**, the round stops (except the reserve for a re-run after a dogfood/freeze fix, and only with a note in the amendment). The hard cap **$40** is never exceeded under any condition.
 
-## 6. Definicija uspeha (DoD)
+## 6. Definition of success (DoD)
 
-1. Svaki headline broj u README-u ima svež artefakt u `reports/final/` (revizija, datum, run-id, cena, broj pokušaja).
-2. Deterministički: ≥241/241 na Node 22/26, integrity PASS, replay 9/9, score PASS, demo, clean-clone (tmpfs + docker) — sveže posle freeze-a.
-3. Kalibracioni: 2 single runa prijavljena; očekivano 8/8 + 0/4 trapova + svi execution/patch-proven; dual run prijavljen sa per-scanner statusom i cross-verifikacijom. Ako brojevi padnu — prijaviti pošteno i navesti varijansu.
-4. Extended: chunked 9–10/16, single 4–7/16, 0/5 trapova; oba scored.
-5. Held-out: 5–6/6, 0 trapova, sva 4 nivoa ablacije.
-6. Dogfood: 0 neadjudikovanih nalaza; svi stvarni popravljeni sa regresionim testom; ako nema nalaza — i to je rezultat.
-7. Real world: ≥1 execution-proven i ≥1 patch-proven na novim repoima; svi published ručno adjudikovani; 0 lažnih posle hand-checka; 0-nalaza repoi prijavljeni kao takvi; regresioni par dokazuje da L3/L4 rade isto kao pre hardeninga.
-8. Nezavisna verifikacija: agy-verify slepo potvrdio sve brojeve; codex-verify **WATCHDOG OK** (hash + git revizija).
-9. `reports/golden/` i ostali frozen artefakti netaknuti (integrity PASS).
-10. README/STATUS bez stale brojeva; korenski i javni README sinhronizovani.
+1. Every headline number in the README has a fresh artifact in `reports/final/` (revision, date, run-id, cost, number of attempts).
+2. Deterministic: ≥241/241 on Node 22/26, integrity PASS, replay 9/9, score PASS, demo, clean-clone (tmpfs + docker) — fresh after the freeze.
+3. Calibration: 2 single runs reported; expected 8/8 + 0/4 traps + all execution/patch-proven; dual run reported with per-scanner status and cross-verification. If the numbers drop — report it honestly and state the variance.
+4. Extended: chunked 9–10/16, single 4–7/16, 0/5 traps; both scored.
+5. Held-out: 5–6/6, 0 traps, all 4 ablation levels.
+6. Dogfood: 0 unadjudicated findings; all real ones fixed with a regression test; if there are no findings — that is a result too.
+7. Real world: ≥1 execution-proven and ≥1 patch-proven on the new repos; all published ones hand-adjudicated; 0 false positives after hand-check; 0-finding repos reported as such; the regression pair proves that L3/L4 work the same as before hardening.
+8. Independent verification: agy-verify confirmed all numbers blindly; codex-verify **WATCHDOG OK** (hash + git revision).
+9. `reports/golden/` and the other frozen artifacts untouched (integrity PASS).
+10. README/STATUS without stale numbers; root and public README in sync.
 
-## 7. Rizici i kill-kriterijumi
+## 7. Risks and kill criteria
 
-| Rizik | Verovatnoća | Mitigacija |
+| Risk | Probability | Mitigation |
 |---|---|---|
-| dogfood nađe defekt → kašnjenje | srednja | faza je prva; rezerva $7 i 1 dan (do 1.11.) |
-| truncation/retry podigne cenu (videno: marked $2,18, picomatch $1,53) | srednja | procene +30%; per-run cap; stop-loss |
-| real-world 0 nalaza | srednja | pošteno prijaviti; regresioni par nosi dokaz L3/L4; promptovi se ne diraju |
-| dual degradira (Wonder scan ne stane) | niska na malim metama | dual samo na kalibracionom (229 LOC) i jsesc (337 LOC) |
-| L3/L4 padne posle hardeninga | niska | regresioni par + replay; ako padne → P0 fix + amendment + re-run iz rezerve |
-| prekoračenje vremena pre videa (2–3.11.) | niska | runda se zatvara 1.11.; video koristi gotove artefakte |
-| lažna ušteda — preskakanje runa | — | svaki preskočen run je eksplicitan u `reports/final/README.md` |
+| dogfood finds a defect → delay | medium | the phase comes first; reserve $7 and 1 day (until 1.11.) |
+| truncation/retry raises the cost (seen: marked $2.18, picomatch $1.53) | medium | estimates +30%; per-run cap; stop-loss |
+| real-world 0 findings | medium | report honestly; the regression pair carries the L3/L4 evidence; prompts are not touched |
+| dual degrades (Wonder scan does not fit) | low on small targets | dual only on the calibration (229 LOC) and jsesc (337 LOC) |
+| L3/L4 fails after hardening | low | regression pair + replay; if it fails → P0 fix + amendment + re-run from the reserve |
+| time overrun before the video (2–3.11.) | low | the round closes on 1.11.; the video uses the finished artifacts |
+| false saving — skipping runs | — | every skipped run is explicit in `reports/final/README.md` |
 
-## 8. Snimanje — hibridna politika
+## 8. Recording — hybrid policy
 
-- **Tokom runde (posle freeze-a):** sirovi materijal — terminal snimci runova (dogfood chunked, extended chunked, bench), `REPORT.html` u browseru, replay bez ključa, real-world nalaz. OBS/ffmpeg su dostupni; tekstualni logovi runova se arhiviraju u `reports/final/captures/`.
-- **Posle runde:** finalni scenario (3 min), selekcija kadrova, naracija, montaža, `ffprobe` ≤180 s. Scenario zavisi od finalnih brojeva i najjačeg nalaza — zato posle.
-- Pravila: snima se samo kod sa `v0.2.3-final`; maskirani `.env`/ključevi; svaki kadar nosi stvarni run-id iz `reports/final/`; mock kadar nikad kao stvarni run.
+- **During the round (after the freeze):** raw material — terminal recordings of runs (dogfood chunked, extended chunked, bench), `REPORT.html` in the browser, replay without a key, a real-world finding. OBS/ffmpeg are available; text logs of the runs are archived in `reports/final/captures/`.
+- **After the round:** final scenario (3 min), shot selection, narration, editing, `ffprobe` ≤180 s. The scenario depends on the final numbers and the strongest finding — hence afterwards.
+- Rules: only code at `v0.2.3-final` is recorded; `.env`/keys masked; every shot carries the real run-id from `reports/final/`; a mock shot never as a real run.
 
-## 9. Ograničenja — šta runda ne dokazuje
+## 9. Limitations — what the round does not prove
 
-- L3/L4 dokazi (`execution-proven`/`patch-proven`) postoje samo na Node 26.8.2 (LinkCheck zahteva `--allow-inspector`); na Node 22 isti run daje `link-unproven` i nalaz ostaje `verified`.
-- L3/L4 rade samo za kod koji je direktno izvršiv (CJS ili ESM sa eksplicitnim ekstenzijama, bez spoljnih zavisnosti); ostalo je `repro-unavailable`.
-- Izolacija je procesna (`node --permission`), ne OS-level.
-- Kalibracioni set je n=8 i korišćen je za kalibraciju — nije statistička tvrdnja.
-- Real-world rezultati su anegdote (mali n, javni commitovi → kontaminacija moguća).
-- Model izlaz nije bit-determinističan → broj pokušaja se uvek navodi.
-- Replay dokazuje da je zapis nepromenjen i da mehaničke kapije i dalje prolaze; ne dokazuje semantički sud L2.
+- L3/L4 evidence (`execution-proven`/`patch-proven`) exists only on Node 26.8.2 (LinkCheck requires `--allow-inspector`); on Node 22 the same run yields `link-unproven` and the finding stays `verified`.
+- L3/L4 work only for code that is directly executable (CJS or ESM with explicit extensions, no external dependencies); everything else is `repro-unavailable`.
+- Isolation is process-level (`node --permission`), not OS-level.
+- The calibration set is n=8 and was used for calibration — it is not a statistical claim.
+- Real-world results are anecdotes (small n, public commits → contamination possible).
+- Model output is not bit-deterministic → the number of attempts is always stated.
+- Replay proves that the record is unchanged and that the mechanical gates still pass; it does not prove the semantic L2 judgement.
 
-## 10. Protokol dokaza
+## 10. Evidence protocol
 
-### 10.1 Artefakti po runu
-Svaki run čuva verbatim: `run.json`, `findings.json`, `REPORT.md`, `REPORT.html`, `rejected.md`, `candidates.json`, `repro/`, `patch/`. Commit u `reports/final/<blok>/<run>`.
+### 10.1 Artifacts per run
+Every run stores verbatim: `run.json`, `findings.json`, `REPORT.md`, `REPORT.html`, `rejected.md`, `candidates.json`, `repro/`, `patch/`. Commit in `reports/final/<block>/<run>`.
 
 ### 10.2 Hand-check
-`HAND-CHECK.md` po real-world repou: za svaki published nalaz — status (potvrđen/opovrgnut/latentan/pogrešna težina), način provere (čitanje koda / izvršavanje malog repro-a / upstream issue), i konačna ocena.
+`HAND-CHECK.md` per real-world repo: for every published finding — status (confirmed/refuted/latent/wrong severity), verification method (reading the code / running a small repro / upstream issue), and the final rating.
 
-### 10.3 Nezavisna verifikacija
-- **agy-verify** (slepi ulaz: spec + artefakti + tvrdnje, bez mog reasoninga) proverava svaki finalni broj i da nema cherry-picka;
-- **codex-verify** radi watchdog: `git show <rev>:<rel>` hashovan u lock (`test-lock`), integrity PASS;
-- nijedan model ne verifikuje sopstveni rad.
+### 10.3 Independent verification
+- **agy-verify** (blind input: spec + artifacts + claims, without my reasoning) checks every final number and that there is no cherry-picking;
+- **codex-verify** runs the watchdog: `git show <rev>:<rel>` hashed into the lock (`test-lock`), integrity PASS;
+- no model verifies its own work.
 
-### 10.4 Izmene plana (amendment)
-Posle lock-a ovaj fajl se **ne menja**. Svaka izmena ide u `reports/final/PREREG-AMENDMENT-<n>.md` (datum, razlog, šta se menja, uticaj na budžet) i novi `PREREG.lock.json` hash. Original ostaje netaknut — isti princip kao test-lock.
+### 10.4 Plan changes (amendment)
+After the lock this file is **not changed**. Every change goes into `reports/final/PREREG-AMENDMENT-<n>.md` (date, reason, what changes, impact on the budget) and a new `PREREG.lock.json` hash. The original stays untouched — the same principle as test-lock.
 
-## 11. Lock zapis
+## 11. Lock record
 
-- `sha256` ovog fajla zapisan u `reports/final/PREREG.lock.json` zajedno sa vremenom, git HEAD-om (`dde6e58`), baseline brojevima i do-sada potrošenim iznosom;
-- lock je napravljen **pre prvog API poziva**; prvi commit posle odobrenja sadrži PREREG + lock (dokaz redosleda);
-- ako se hash ne poklapa → plan je menjan posle lock-a (UNPROVEN), runda se ne prihvata dok se ne razreši.
+- the `sha256` of this file is recorded in `reports/final/PREREG.lock.json` together with the time, the git HEAD (`dde6e58`), the baseline numbers and the amount spent so far;
+- the lock was created **before the first API call**; the first commit after approval contains PREREG + the lock (proof of ordering);
+- if the hash does not match → the plan was changed after the lock (UNPROVEN), the round is not accepted until it is resolved.

@@ -1,52 +1,49 @@
-# F1 dogfood — HAND-CHECK (CodeProof na sopstvenom src/)
+# F1 dogfood — HAND-CHECK (CodeProof on its own `src/`)
 
-**Datum:** 2026-10-29. · **Kod:** `2e7cf6d` (chunked; HEAD u trenutku pokretanja) · **Autor adjudikacije:** DSH orkestrator
-**Runovi (reports/final/self-analysis/):**
+**Date:** 2026-10-29. · **Code:** `2e7cf6d` (chunked; HEAD at run time) · **Adjudicator:** DSH orchestrator
+**Runs (reports/final/self-analysis/):**
 
-| Run | Dir | Modeli | Nalazi | Cena | Trajanje |
+| Run | Dir | Models | Findings | Cost | Duration |
 |---|---|---|---|---|---|
-| chunked | `chunked/4cf698ba270f207e` | spark 1.3 / wonder 1.0 | 6 proposed → **5 verified, 1 uncertain**, 0 refuted, 1 reproduced, 1 patch-proven | **$2,2969** | 1195 s |
-| single | `single/3ccffc296ca227aa` | spark 1.3 / wonder 1.0 | **0 proposed** | **$0,1495** | 74 s |
+| chunked | `chunked/4cf698ba270f207e` | spark 1.3 / wonder 1.0 | 6 proposed → **5 verified, 1 uncertain**, 0 refuted, 1 reproduced, 1 patch-proven | **$2.2969** | 1195 s |
+| single | `single/3ccffc296ca227aa` | spark 1.3 / wonder 1.0 | **0 proposed** | **$0.1495** | 74 s |
 
-**Ukupno F1: $2,4464** (procena $4,5; cap bloka $6). Pošten ishod: single scan na celom `src/` nije našao ništa, chunked je našao 6 — isti obrazac kao u ranijim rundama (chunked recall > single).
+**F1 total: $2.4464** (estimate $4.5; block cap $6). Honest outcome: the single scan of the whole `src/` found nothing, the chunked scan found 6 — the same pattern as in earlier rounds (chunked recall > single).
 
-## Adjudikacija svakog nalaza
+## Adjudication of every finding
 
-| ID | Status sistema | Tvrdnja (kratko) | Adjudikacija | Težina (ručno) | Dokaz / način provere |
+| ID | System status | Claim (short) | Adjudication | Severity (manual) | Evidence / method |
 |---|---|---|---|---|---|
-| F-001 | uncertain | Cross-verifikacija se aktivira samo za label `wonder`, ne i `secondary` (kad su modeli isti) | **nije defekt — namerno ponašanje** | — | `cli.mjs:471`: cross-verifier ima smisla samo kad postoji **drugi** model; `secondary` label nastaje upravo kad je sekundarni skener isti model (nema šta da se unakrsno proverava). Verifikator nije potvrdio (empty output, `finish_reason=length`). Nema fixa; pojašnjenje ide u kod/komentar (opciono). |
-| F-002 | verified | `byScanner` brojanje ignoriše `secondary` label | **stvaran** | low | `cli.mjs:433-438`: broje se `spark/wonder/both/controlled`; `secondary` unos ulazi u `proposed`, ali ne u ijednu brojačku kantu → pogrešan `run.json.findings.byScanner` i log. Ne menja nalaze, samo accounting. **Fix + regresioni test.** |
-| F-003 | verified (patch-proven) | `wordRegex` keš je `{}` → nasleđene osobine (`toString`, `constructor`, `__proto__`) vraćaju non-RegExp i `.test` puca | **stvaran** | medium | `repro/static-checks.mjs:7-12`: `__idRegexCache[name]` truthiness; nasleđena funkcija prolazi guard; poziva se na `:137`/`:140`. Reprodukovano 3/3 + patch-proven 3/3. **Fix + regresioni test.** |
-| F-004 | verified | `hasTautology` traži self-comparison u celom fajlu, ne u assert segmentima → lažno odbija validne repro-e | **stvaran** | medium | `repro/static-checks.mjs:112-114`: `selfCompare.test(code)` pre `extractAssertSegments`. `x === x` van assert-a obara klasifikaciju. **Fix + regresioni test.** |
-| F-005 | verified | `firstJsonObject`: backslash van stringa se tretira kao escape i preskače sledeći karakter → pogrešna granica objekta | **stvaran** | low | `run/json.mjs:55-59`: `escape` se postavlja bez obzira na `inString`. Robustnost dirty-JSON parsera; uticaj retry/parse. **Fix + regresioni test.** |
-| F-006 | verified | LinkCheck proof sufiks se emituje za svaki status ≠ `unproven`, pa `error`/failed izveštaj tvrdi „the imported symbol executed“ | **stvaran** | medium | `synthesize/index.mjs:189-192`; `error` status realno nastaje u `repro/linkcheck.mjs:93,101`. Lažna tvrdnja o izvršnom dokazu u javnom REPORT-u — ozbiljno za poštenje. **Fix + regresioni test.** |
+| F-001 | uncertain | Cross-verification is activated only for the `wonder` label, not for `secondary` (when the models are the same) | **not a defect — intentional behaviour** | — | `cli.mjs:471`: the cross-verifier makes sense only when there is a **second** model; the `secondary` label appears exactly when the secondary scanner is the same model (there is nothing to cross-check). The verifier did not confirm it (empty output, `finish_reason=length`). No fix; the clarification belongs in the code/comment (optional). |
+| F-002 | verified | `byScanner` counting ignores the `secondary` label | **real** | low | `cli.mjs:433-438`: `spark/wonder/both/controlled` are counted; a `secondary` entry goes into `proposed` but not into any counting bucket → wrong `run.json.findings.byScanner` and log. Does not change findings, only accounting. **Fix + regression test.** |
+| F-003 | verified (patch-proven) | The `wordRegex` cache is `{}` → inherited properties (`toString`, `constructor`, `__proto__`) return a non-RegExp and `.test` throws | **real** | medium | `repro/static-checks.mjs:7-12`: `__idRegexCache[name]` truthiness; an inherited function passes the guard; called at `:137`/`:140`. Reproduced 3/3 + patch-proven 3/3. **Fix + regression test.** |
+| F-004 | verified | `hasTautology` looks for self-comparison in the whole file, not in the assert segments → falsely rejects valid repros | **real** | medium | `repro/static-checks.mjs:112-114`: `selfCompare.test(code)` before `extractAssertSegments`. `x === x` outside an assert breaks the classification. **Fix + regression test.** |
+| F-005 | verified | `firstJsonObject`: a backslash outside a string is treated as an escape and skips the next character → wrong object boundary | **real** | low | `run/json.mjs:55-59`: `escape` is set regardless of `inString`. Robustness of the dirty-JSON parser; affects retry/parse. **Fix + regression test.** |
+| F-006 | verified | The LinkCheck proof suffix is emitted for every status != `unproven`, so an `error`/failed report claims "the imported symbol executed" | **real** | medium | `synthesize/index.mjs:189-192`; the `error` status really occurs in `repro/linkcheck.mjs:93,101`. A false claim about execution proof in the public REPORT — serious for honesty. **Fix + regression test.** |
 
-**Zaključak adjudikacije:** **5 stvarnih defekata** (F-002…F-006), **0 lažnih nalaza**, **1 nije defekt** (F-001) i **0 neadjudikovanih**. Svi stvarni idu u fix + regresioni test (test piše asistent, autor u commit poruci, test-lock), pa re-run dogfooda na popravljenom kodu (PREREG §4.2).
+**Adjudication conclusion:** **5 real defects** (F-002…F-006), **0 false findings**, **1 not a defect** (F-001) and **0 unadjudicated**. All real ones go to fix + regression test (the test is written by an assistant, the author is in the commit message, test-lock), then a re-run of dogfood on the fixed code (PREREG §4.2).
 
-## 2. Fixevi i re-run (posle adjudikacije)
+## 2. Fixes and re-run (after adjudication)
 
-**Fixevi (autor DSH, commit `1b07caf`):** F-002 `countByScanner` (+ `secondary` kanta; `cli.mjs` ga koristi);
-F-003 prototype-less keš (`Object.create(null)`); F-004 self-comparison samo u assert segmentima;
-F-005 backslash je escape samo unutar stringa; F-006 proof sufiks samo za `proven` LinkCheck.
+**Fixes (author DSH, commit `1b07caf`):** F-002 `countByScanner` (+ `secondary` bucket; `cli.mjs` uses it);
+F-003 prototype-less cache (`Object.create(null)`); F-004 self-comparison only in assert segments;
+F-005 backslash is an escape only inside a string; F-006 proof suffix only for `proven` LinkCheck.
 
-**Regresioni testovi (autor codex):** `tests/dogfood-fixes.test.mjs` (5 testova, svaki padao pre fixa),
-commit testova `0cc0849`, test-lock `2f1c568`. Suita: **268/268** na Node 26 i Node 22, integrity PASS.
+**Regression tests (author codex):** `tests/dogfood-fixes.test.mjs` (5 tests, each failed before the fix),
+test commit `0cc0849`, test-lock `2f1c568`. Suite: **268/268** on Node 26 and Node 22, integrity PASS.
 
-**Re-run na popravljenom kodu (revizija `2f1c568`, kroz `final-run.sh`):**
+**Re-run on the fixed code (revision `2f1c568`, through `final-run.sh`):**
 
-| Run | Dir | Rezultat | Cena | Trajanje |
+| Run | Dir | Result | Cost | Duration |
 |---|---|---|---|---|
-| chunked-r2 | `chunked-r2/8adb643a9ac70162` | **0 proposed** | **$0,3793** | 363 s |
-| single-r2 | `single-r2/8f1a9861e591b2d7` | **0 proposed** | **$0,1214** | 42 s |
+| chunked-r2 | `chunked-r2/8adb643a9ac70162` | **0 proposed** | **$0.3793** | 363 s |
+| single-r2 | `single-r2/8f1a9861e591b2d7` | **0 proposed** | **$0.1214** | 42 s |
 
-**F1 ukupno:** 4 pokušaja = **$2,9470** (procena $4,5; cap bloka $6). Manifest: `reports/final/ATTEMPTS.jsonl` (attempt 1–4).
+**F1 total:** 4 attempts = **$2.9470** (estimate $4.5; block cap $6). Manifest: `reports/final/ATTEMPTS.jsonl` (attempt 1–4).
 
-**Tumačenje re-runa:** nijedan od pet popravljenih defekata se ne pojavljuje na popravljenom kodu, ali
-re-run je vratio 0 kandidata i u chunked i u single modu — model varijansa je velika (chunked r1: 6 proposed
-za $2,30; chunked r2: 0 za $0,38). Zato se ovo prijavljuje kao **pošten ishod**, a ne kao dokaz da u kodu
-nema drugih defekata: dokaz da su popravke ispravne su **fiksni kod + 5 regresionih testova**, a ne re-run.
+**Reading of the re-run:** none of the five fixed defects appears on the fixed code, but the re-run returned 0 candidates in both chunked and single mode — model variance is large (chunked r1: 6 proposed for $2.30; chunked r2: 0 for $0.38). It is therefore reported as an **honest outcome**, not as proof that there are no other defects in the code: the proof that the fixes are correct is the **fixed code + 5 regression tests**, not the re-run.
 
-## Šta nije urađeno
+## What was not done
 
-- F-001 nije popravljan jer nije defekt; ako se ipak želi eksplicitno ponašanje, to je docs/komentar, ne kod.
-- Re-run dogfooda je urađen i prijavljen gore (0 nalaza, pošteno).
+- F-001 was not fixed because it is not a defect; if explicit behaviour is still wanted, that is docs/comment work, not code.
+- The dogfood re-run was done and reported above (0 findings, honestly).

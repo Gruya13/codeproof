@@ -1,96 +1,96 @@
-# F4 — real world (finalna runda)
+# F4 — real world (final round)
 
-**Datum:** 2026-10-29/30. (22:40–01:15 CET) · **Kod:** tag `v0.2.3-final` (`src` tree `f874d642`)
-**Izvršilac:** DSH orkestrator, svi runovi kroz `scripts/final-run.sh` (reserve → git sidrenje → run → settle).
-**Potrošeno F4:** **$6,9050** od planiranih $10.
+**Date:** 2026-10-29/30 (22:40–01:15 CET) · **Code:** tag `v0.2.3-final` (`src` tree `f874d642`)
+**Executor:** DSH orchestrator, all runs through `scripts/final-run.sh` (reserve → git anchoring → run → settle).
+**F4 spend:** **$6.9050** of the planned $10.
 
-## 1. Izbor kandidata (pre trošenja — `REALWORLD-CANDIDATES.lock.json`, commit `638f7bd`)
+## 1. Candidate selection (before spending — `REALWORLD-CANDIDATES.lock.json`, commit `638f7bd`)
 
-5 izabranih (od 8 dry-run kandidata), svi CJS/ESM, bez runtime zavisnosti, 300–3000 LOC, pinovan commit:
+5 selected (out of 8 dry-run candidates), all CJS/ESM, no runtime dependencies, 300–3000 LOC, pinned commit:
 
-| Repo | Pin | Scope | Fajlovi/LOC | Rezultat (2 runa) | Cena |
+| Repo | Pin | Scope | Files/LOC | Result (2 runs) | Cost |
 |---|---|---|---|---|---|
-| mustache | `972fd2b2` | `. ` | 80 / 2402 | 3 verified unosa (**2 defekta**) | $0,8823 |
-| sax | `961ceeef` | `lib` | 1 / 1866 | 4 unosa (**2 stvarna**, 1 odbačen, 1 latentan) | $1,1172 |
-| fast-json-patch | `9d313ac0` | `commonjs` | 3 / 803 | 4 unosa (**4 defekta**) | $0,7511 |
-| bcryptjs | `1211e9a2` | `. ` | 11 / 1666 | 5 unosa (**3 defekta, 1 jedinstven patch-proven u oba runa**) | $1,3095 |
-| dateformat | `e6800aa9` | `. ` | 43 / 2085 | 2 unosa (**1 defekt**; run1 0 nalaza) | $0,2662 |
+| mustache | `972fd2b2` | `. ` | 80 / 2402 | 3 verified entries (**2 defects**) | $0.8823 |
+| sax | `961ceeef` | `lib` | 1 / 1866 | 4 entries (**2 real**, 1 rejected, 1 latent) | $1.1172 |
+| fast-json-patch | `9d313ac0` | `commonjs` | 3 / 803 | 4 entries (**4 defects**) | $0.7511 |
+| bcryptjs | `1211e9a2` | `. ` | 11 / 1666 | 5 entries (**3 defects, 1 unique patch-proven in both runs**) | $1.3095 |
+| dateformat | `e6800aa9` | `. ` | 43 / 2085 | 2 entries (**1 defect**; run1 0 findings) | $0.2662 |
 
-**Odbačeni dry-run kandidati (prijavljeni, $0):** argparse 4892 LOC i accounting 6483 LOC (>3000 po PREREG §4.5); uuid — TS izvor bez commitovanog JS izlaza. Zamena: **dateformat** (kandidat #4 po planu zamena).
+**Rejected dry-run candidates (reported, $0):** argparse 4892 LOC and accounting 6483 LOC (>3000 per PREREG §4.5); uuid — TS source without committed JS output. Replacement: **dateformat** (candidate #4 per the replacement plan).
 
-## 2. Regresioni par (isti pinovi kao v0.2.2; A1 uslov 4 / A2 §2)
+## 2. Regression pair (same pins as v0.2.2; A1 condition 4 / A2 §2)
 
-| Meta | Pin | Run | Rezultat | Cena |
+| Target | Pin | Run | Result | Cost |
 |---|---|---|---|---|
-| picomatch | `6bb40679…` | `14ba4cc9` | 1 verified **patch-proven** | $0,5465 |
-| jsesc | `e3349b54…` (sha256 `03c367cb…`) | `ea5b1ae7` | 2 verified (**1 patch-proven**) + 1 verified (mrtav kod) + 1 uncertain | $0,6289 |
-| jsesc dual | isti | `1e1b03c5` | 2 verified **patch-proven** (1 root cause), spark 1 / wonder 1 | $1,4033 |
+| picomatch | `6bb40679…` | `14ba4cc9` | 1 verified **patch-proven** | $0.5465 |
+| jsesc | `e3349b54…` (sha256 `03c367cb…`) | `ea5b1ae7` | 2 verified (**1 patch-proven**) + 1 verified (dead code) + 1 uncertain | $0.6289 |
+| jsesc dual | same | `1e1b03c5` | 2 verified **patch-proven** (1 root cause), spark 1 / wonder 1 | $1.4033 |
 
-**Regresija potvrđena:** L3/L4 rade isto kao pre hardening-a; isti defekt (negativni radix literali) je nezavisno pronađen i izvršno dokazan.
+**Regression confirmed:** L3/L4 work the same as before hardening; the same defect (negative radix literals) was independently found and proven by execution.
 
-## 3. Dual-scan — prvi pokušaj pao (prijavljeno)
+## 3. Dual-scan — first attempt failed (reported)
 
-Attempt 25 (`probe-repo.mjs` sa `DUAL_SCAN=1` na jsesc-u) je **prekinut posle 900 s** — interni spawn cap probe harness-a, ne API greška. Stvarni trošak $0 (prekinut pre `run.json`), rezervacija $4 ostaje kao `unknown-cost` (A4). Uzrok: Wonder scanner truncation + retry (32k tokena) → dual run traje ~29 min. Ponovni pokušaj (attempt 26) izmeren **direktno CLI-jem** kroz `final-run.sh` (bez probe omotača) i uspeo za 1722 s.
+Attempt 25 (`probe-repo.mjs` with `DUAL_SCAN=1` on jsesc) was **aborted after 900 s** — the probe harness's internal spawn cap, not an API error. Actual cost $0 (aborted before `run.json`), the $4 reservation stays as `unknown-cost` (A4). Cause: Wonder scanner truncation + retry (32k tokens) → the dual run takes ~29 min. The retry (attempt 26) was measured **directly by the CLI** through `final-run.sh` (without the probe wrapper) and succeeded in 1722 s.
 
-## 4. Ručna adjudikacija (HAND-CHECK po repou)
+## 4. Manual adjudication (HAND-CHECK per repo)
 
-**22 published unosa ručno provereno** (21 `verified` + 1 `uncertain`: 20 potvrđenih, 1 lažni pozitiv, 2 latentna/mrtva koda; svaki sa statusom, težinom i načinom provere) (`<repo>/HAND-CHECK.md`, pregled u [RUCNO-VALIDACIJA-PREGLED.md](../../02-rucna-validacija/RUCNO-VALIDACIJA-PREGLED.md)):
+**22 published entries hand-checked** (21 `verified` + 1 `uncertain`: 20 confirmed, 1 false positive, 2 latent/dead code; each with status, severity and verification method) (`<repo>/HAND-CHECK.md`, overview in [MANUAL-VALIDATION-OVERVIEW.md](../../02-manual-validation/MANUAL-VALIDATION-OVERVIEW.md)):
 
-| Ishod | Broj | Detalj |
+| Outcome | Count | Detail |
 |---|---:|---|
-| Potvrđen stvarni defekt | **20** (od 21 `verified` unosa) | svaki potvrđen čitanjem koda; uključuje 2 latentna/mrtva koda (sax F-003 nedostižna grana, jsesc F-003 mrtav kod) i mustache F-001 (prvobitna ocena grešila — **TypeError je realan**, drugi lookup) |
-| **Odbačen — nije defekt** | **1** (od 21 `verified`) | sax F-002 (valueless atribut ne može biti xmlns deklaracija; by design) |
-| Uncertain, ručno potvrđen (nije `verified`) | **1** | jsesc F-002 (nepoznata `numbers` opcija → `undefined`) |
+| Confirmed real defect | **20** (of 21 `verified` entries) | each confirmed by reading the code; includes 2 latent/dead code (sax F-003 unreachable branch, jsesc F-003 dead code) and mustache F-001 (the original assessment was wrong — **the TypeError is real**, second lookup) |
+| **Rejected — not a defect** | **1** (of 21 `verified`) | sax F-002 (a valueless attribute cannot be an xmlns declaration; by design) |
+| Uncertain, hand-confirmed (not `verified`) | **1** | jsesc F-002 (unknown `numbers` option → `undefined`) |
 
-**Pošteno prijavljeno:** 1 lažno pozitivan nalaz (sax F-002) u 21 `verified` unosa (22 published ukupno); 0-nalaza run prijavljen (dateformat run1). Nijedan nalaz nije skriven niti ulepšan.
+**Honestly reported:** 1 false positive finding (sax F-002) among the 21 `verified` entries (22 published in total); the 0-finding run is reported (dateformat run1). No finding was hidden or embellished.
 
-## 4b. Upstream provera i prijave (30.10.2026)
+## 4b. Upstream check and reports (30.10.2026)
 
-Svih 12 potvrđenih defekata provereno je u javnim trackerima i, gde ima smisla, prijavljeno.
-**2 od 12 su bila poznata upstream pre naše analize** — nisu novi nalazi i tako su prikazani.
+All 12 confirmed defects were checked in the public trackers and, where it made sense, reported.
+**2 of 12 were known upstream before our analysis** — they are not new findings and are presented as such.
 
-| # | Repo / defekt | Upstream status |
+| # | Repo / defect | Upstream status |
 |---|---|---|
-| 1 | mustache — cache `hasOwnProperty` shadowing | **već prijavljeno**: PR [#854](https://github.com/janl/mustache.js/pull/854) (open; povezan [#856](https://github.com/janl/mustache.js/issues/856)) — komentar sa nezavisnom potvrdom |
-| 2 | mustache — kolizija keš ključa | neprijavljeno |
-| 3 | sax — `SGML_DECL_QUOTED` bez `parser.q` | **prijavljeno 30.10.**: [#303](https://github.com/isaacs/sax-js/issues/303) |
-| 4 | sax — `new Error(parser, …)` (latentan) | ne prijavljujemo (nedostižna grana, bez uticaja) |
-| 5 | fast-json-patch — null deref `obj.toJSON` | **prijavljeno 30.10.**: [#337](https://github.com/Starcounter-Jack/JSON-Patch/issues/337) |
-| 6 | fast-json-patch — `isInteger("")` | root pokriven PR-om [#331](https://github.com/Starcounter-Jack/JSON-Patch/pull/331) (leading zero) — komentar sa manifestacijom |
-| 7 | fast-json-patch — observe prepisuje mirror baseline | neprijavljeno (low) |
-| 8 | fast-json-patch — `~~key` truncation | neprijavljeno (low) |
-| 9 | bcryptjs — `base64_decode` c4 | **već prijavljeno**: PR [#170](https://github.com/dcodeIO/bcrypt.js/pull/170) (open) — komentar sa nezavisnom (patch-proven) potvrdom |
-| 10 | bcryptjs — hash ignoriše `genSalt` grešku | neprijavljeno |
-| 11 | bcryptjs — `genSalt` baca sinhrono | neprijavljeno |
-| 12 | dateformat — `yyyy` negativne godine | **prijavljeno 30.10.**: [#196](https://github.com/felixge/node-dateformat/issues/196) |
+| 1 | mustache — cache `hasOwnProperty` shadowing | **already reported**: PR [#854](https://github.com/janl/mustache.js/pull/854) (open; linked [#856](https://github.com/janl/mustache.js/issues/856)) — comment with independent confirmation |
+| 2 | mustache — cache key collision | unreported |
+| 3 | sax — `SGML_DECL_QUOTED` without `parser.q` | **reported 30.10.**: [#303](https://github.com/isaacs/sax-js/issues/303) |
+| 4 | sax — `new Error(parser, …)` (latent) | not reported (unreachable branch, no impact) |
+| 5 | fast-json-patch — null deref `obj.toJSON` | **reported 30.10.**: [#337](https://github.com/Starcounter-Jack/JSON-Patch/issues/337) |
+| 6 | fast-json-patch — `isInteger("")` | the root is covered by PR [#331](https://github.com/Starcounter-Jack/JSON-Patch/pull/331) (leading zero) — comment with the manifestation |
+| 7 | fast-json-patch — observe overwrites the mirror baseline | unreported (low) |
+| 8 | fast-json-patch — `~~key` truncation | unreported (low) |
+| 9 | bcryptjs — `base64_decode` c4 | **already reported**: PR [#170](https://github.com/dcodeIO/bcrypt.js/pull/170) (open) — comment with independent (patch-proven) confirmation |
+| 10 | bcryptjs — hash ignores the `genSalt` error | unreported |
+| 11 | bcryptjs — `genSalt` throws synchronously | unreported |
+| 12 | dateformat — `yyyy` negative years | **reported 30.10.**: [#196](https://github.com/felixge/node-dateformat/issues/196) |
 
-**Rezime:** **2 prethodno poznata upstream** (duplikati — pošteno navedeni, ne predstavljaju se kao novi) · **3 nova issue-a otvorena 30.10.** · **3 komentara** na postojeće prijave (mustache #854, bcrypt PR #170, fjp PR #331) · **5 nalaza ostaje neprijavljeno** (low uticaj / neaktivni repo / potreban dogovor o dizajnu). Nijedan nije prijavljen kao „novo otkriće“ — javni commitovi su stariji od analize.
+**Summary:** **2 previously known upstream** (duplicates — disclosed honestly, not presented as new) · **3 new issues opened on 30.10.** · **3 comments** on existing reports (mustache #854, bcrypt PR #170, fjp PR #331) · **5 findings remain unreported** (low impact / inactive repo / design decision needed). None was reported as a "new discovery" — the public commits predate the analysis.
 
-## 4c. Ispravka hand-checka (mustache F-001)
+## 4c. Hand-check correction (mustache F-001)
 
-Prvobitna adjudikacija je pogrešno tvrdila da do upisa u keš ne dolazi i da nema TypeError-a.
-**Ispravljeno:** prvi lookup za `hasOwnProperty` pada u `else` granu (nasleđena metoda nije *own* property keša),
-pa se vrednost upiše u keš; **drugi** lookup istog imena baca `TypeError: cache.hasOwnProperty is not a function`.
-Originalna tvrdnja iz runa je **tačna**, a upstream PR #854 je nezavisno potvrđuje.
+The original adjudication wrongly claimed that no cache write occurs and that there is no TypeError.
+**Corrected:** the first lookup for `hasOwnProperty` falls into the `else` branch (the inherited method is not an *own* property of the cache),
+so the value is written into the cache; the **second** lookup of the same name throws `TypeError: cache.hasOwnProperty is not a function`.
+The original claim from the run is **correct**, and upstream PR #854 independently confirms it.
 
-## 5. DoD 7 provera
+## 5. DoD 7 check
 
-| Zahtev | Rezultat |
+| Requirement | Result |
 |---|---|
-| ≥1 execution-proven i ≥1 patch-proven na novim repoima | ✅ **bcryptjs**: 1 jedinstven defekt, patch-proven u oba runa (execution + patch, reprodukovano 3/3) |
-| svi published ručno adjudikovani | ✅ 24/24, HAND-CHECK po repou |
-| 0 lažnih posle hand-checka | ⚠️ **1 odbačen** (sax F-002) — prijavljeno, ne skriveno |
-| 0-nalaza repoi prijavljeni kao takvi | ✅ dateformat run1 (0 nalaza) |
-| regresioni par dokazuje L3/L4 kao pre hardeninga | ✅ picomatch + jsesc patch-proven |
-| ≥1 refuted / odbijeni nalaz za video (S5) | ⚠️ u F4 nema **refuted** nalaza (svi verified/uncertain); za S5 se koristi evidentiran označen controlled test ili ručno odbačen nalaz (sax F-002) — odluka u F5 |
-| upstream status svakog nalaza prijavljen | ✅ §4b: 2 već poznata (duplikati), 3 prijavljena 30.10., 3 komentara, 5 neprijavljenih — nijedan nije predstavljen kao novo otkriće |
+| ≥1 execution-proven and ≥1 patch-proven on new repos | ✅ **bcryptjs**: 1 unique defect, patch-proven in both runs (execution + patch, reproduced 3/3) |
+| all published hand-adjudicated | ✅ 24/24, HAND-CHECK per repo |
+| 0 false after the hand-check | ⚠️ **1 rejected** (sax F-002) — reported, not hidden |
+| 0-finding repos reported as such | ✅ dateformat run1 (0 findings) |
+| the regression pair proves L3/L4 as before hardening | ✅ picomatch + jsesc patch-proven |
+| ≥1 refuted / rejected finding for the video (S5) | ⚠️ there is no **refuted** finding in F4 (all verified/uncertain); for S5 a recorded marked controlled test or a manually rejected finding (sax F-002) is used — decision in F5 |
+| upstream status of every finding reported | ✅ §4b: 2 already known (duplicates), 3 reported on 30.10., 3 comments, 5 unreported — none presented as a new discovery |
 
-## 6. Trošak i manifest
+## 6. Cost and manifest
 
-- F4: **$6,9050** (12 uspešnih runova + 1 prekinut, stvarno $0; 1 ponovni pokušaj).
-- Runda ukupno: **$15,7163** od $40 (settled). `spentEffective` $25,7163 zbog $10 unknown-cost rezervacija (attempt 7 $4, 11 $2, 25 $4) — konzervativno, prijavljeno.
+- F4: **$6.9050** (12 successful runs + 1 aborted, actual $0; 1 retry).
+- Round total: **$15.7163** of $40 (settled). `spentEffective` $25.7163 due to $10 of unknown-cost reservations (attempt 7 $4, 11 $2, 25 $4) — conservative, reported.
 - Manifest `ATTEMPTS.jsonl`: attempt 13–26; `audit` PASS.
 
-## 7. Artifakti
+## 7. Artifacts
 
-`real-world/<repo>/{probe.json,scope.json,<run>/}` + `HAND-CHECK.md` po repou; svi runovi verbatim (`run.json`, `findings.json`, `REPORT.md`, `REPORT.html`, `rejected.md`, `repro/`, `patch/`). `_repo` klonovi su git-ignored.
+`real-world/<repo>/{probe.json,scope.json,<run>/}` + `HAND-CHECK.md` per repo; all runs verbatim (`run.json`, `findings.json`, `REPORT.md`, `REPORT.html`, `rejected.md`, `repro/`, `patch/`). The `_repo` clones are git-ignored.

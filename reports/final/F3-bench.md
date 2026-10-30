@@ -1,78 +1,78 @@
-# F3 — bench (finalna runda)
+# F3 — bench (final round)
 
-**Datum:** 2026-10-29. (21:00–22:20 CET) · **Kod:** tag `v0.2.3-final` — svaki run ima `src` tree `f874d642`
-(provera: `git rev-parse <run.commit>:src`); HEAD se pomerao samo artefakt-commitovima.
-**Izvršilac:** DSH orkestrator, svi runovi kroz `scripts/final-run.sh` (reserve → git sidrenje → run → settle).
-**Potrošeno F3:** **$5,8642** od planiranih $8,2 (cap bloka $13).
+**Date:** 2026-10-29 (21:00–22:20 CET) · **Code:** tag `v0.2.3-final` — every run has `src` tree `f874d642`
+(check: `git rev-parse <run.commit>:src`); HEAD moved only through artifact commits.
+**Executor:** DSH orchestrator, all runs through `scripts/final-run.sh` (reserve → git anchoring → run → settle).
+**F3 spend:** **$5.8642** of the planned $8,2 (block cap $13).
 
-## 1. Kalibracija (`bench/seed-repo`, 15 f. / 229 LOC, frozen)
+## 1. Calibration (`bench/seed-repo`, 15 f. / 229 LOC, frozen)
 
-| Run | Dir | Proposed | Verified | L1 odbijeno | Reproduced | Patch-proven | Score: recall / precision / traps / FR | Cena | Trajanje |
+| Run | Dir | Proposed | Verified | L1 rejected | Reproduced | Patch-proven | Score: recall / precision / traps / FR | Cost | Duration |
 |---|---|---|---|---|---|---|---|---|---|
-| single-1 | `bench-calibration/single-1/ae354d4fdabfded1` | 9 | 8 | 1 | 5 | 5 | **7/8 (87,5%)** / 100% / 0/4 / 0 | $0,9426 | 481 s |
-| single-2 | `bench-calibration/single-2/77ca0cd10b081478` | 9 | 8 | 1 | 7 | 7 | **7/8 (87,5%)** / 100% / 0/4 / 0 | $1,1073 | 574 s |
-| dual | `bench-calibration/dual/ad5bfdbcd9ed17eb` | 14 uniq (spark 9 / wonder 9 / both 4) | 13 | 1 | 8 | 8 | **8/8 (100%)** / 100% / 0/4 / 0 | $1,2968 | 596 s |
+| single-1 | `bench-calibration/single-1/ae354d4fdabfded1` | 9 | 8 | 1 | 5 | 5 | **7/8 (87,5%)** / 100% / 0/4 / 0 | $0.9426 | 481 s |
+| single-2 | `bench-calibration/single-2/77ca0cd10b081478` | 9 | 8 | 1 | 7 | 7 | **7/8 (87,5%)** / 100% / 0/4 / 0 | $1.1073 | 574 s |
+| dual | `bench-calibration/dual/ad5bfdbcd9ed17eb` | 14 uniq (spark 9 / wonder 9 / both 4) | 13 | 1 | 8 | 8 | **8/8 (100%)** / 100% / 0/4 / 0 | $1.2968 | 596 s |
 
-**Varijansa je prijavljena, ne skrivena:** oba single runa daju **7/8**, dual **8/8**. Svih 8 verified
-nalaza u dual runu je execution-proven; u single runovima 5/7 i 7/7. Score thresholdi (≥6/8, ≥90%,
-0/4 trapova, ≤1 FR) prolaze u sva tri runa. Jedan verified nalaz po runu je `extraTrue` (X-02, stvarna
-greška van expected skupa) — score ga prijavljuje, ne računa kao FP.
+**Variance is reported, not hidden:** both single runs give **7/8**, dual **8/8**. All 8 verified
+findings in the dual run are execution-proven; in the single runs 5/7 and 7/7. The score thresholds (≥6/8, ≥90%,
+0/4 traps, ≤1 FR) pass in all three runs. One verified finding per run is `extraTrue` (X-02, a real
+error outside the expected set) — the score reports it, does not count it as an FP.
 
-**Odstupanje od DoD očekivanja (pošteno):** PREREG DoD 3 je očekivao 8/8 za single runove; izmereno je
-**7/8 u oba**. Ovo je model varijansa na n=8 kalibracionom setu — prijavljuje se kao takvo; promptovi i
-setovi nisu menjani posle prvog runa (PREREG §2.8).
+**Deviation from the DoD expectation (honest):** PREREG DoD 3 expected 8/8 for the single runs; **7/8 in both**
+was measured. This is model variance on the n=8 calibration set — reported as such; prompts and
+sets were not changed after the first run (PREREG §2.8).
 
-## 2. Extended (`axios lib/`, 74 f. / 9.564 LOC, frozen; 16 problema + 5 trapova)
+## 2. Extended (`axios lib/`, 74 f. / 9.564 LOC, frozen; 16 problems + 5 traps)
 
-| Run | Dir | Proposed | Verified | L1 odbijeno | Reproduced | Score: pronađeno/16 · precision · trapovi | Cena | Trajanje |
+| Run | Dir | Proposed | Verified | L1 rejected | Reproduced | Score: found/16 · precision · traps | Cost | Duration |
 |---|---|---|---|---|---|---|---|---|---|
-| single | `bench-extended/single/f0b6d3c2b5e351ae` | 8 | 3 | 5 | 1 | **3/16 (18,8%)** / 100% / 0/5 | $0,6068 | 202 s |
-| chunked | `bench-extended/chunked/27937bbf34fed1b7` | 10 (8 chunkova) | 9 | 1 | 1 | **9/16 (56,3%)** / 100% / 0/5 | $1,5038 | 692 s |
+| single | `bench-extended/single/f0b6d3c2b5e351ae` | 8 | 3 | 5 | 1 | **3/16 (18,8%)** / 100% / 0/5 | $0.6068 | 202 s |
+| chunked | `bench-extended/chunked/27937bbf34fed1b7` | 10 (8 chunks) | 9 | 1 | 1 | **9/16 (56,3%)** / 100% / 0/5 | $1.5038 | 692 s |
 
-**Pošteno:** single je **3/16**, ispod planom očekivanog opsega 4–7/16; chunked je **9/16**, u okviru
-očekivanog 9–10/16. Nijedan trap nije prijavljen ni u jednom statusu; 0 lažnih. Chunked scan je i ovde
-glavni recall mehanizam (+6 problema, +40 pp).
+**Honest:** single is **3/16**, below the planned expected range of 4–7/16; chunked is **9/16**, within
+the expected 9–10/16. No trap was reported in any status; 0 false positives. Chunked scan is again the
+main recall mechanism (+6 problems, +40 pp).
 
-## 3. Held-out ablacija (`bench/held-out`, 6 problema + 4 trapa, nikada korišćen za tuning)
+## 3. Held-out ablation (`bench/held-out`, 6 problems + 4 traps, never used for tuning)
 
-| Konfiguracija | Published | TP | FP | Trap leaks | Recall | Precision |
+| Configuration | Published | TP | FP | Trap leaks | Recall | Precision |
 |---|---:|---:|---:|---:|---:|---:|
 | scanner only | 6 | 6 | 0 | 0 | 1 | 1 |
 | + L1 | 6 | 6 | 0 | 0 | 1 | 1 |
 | + L1 + L2 | 6 | 6 | 0 | 0 | 1 | 1 |
-| + L1 + L2 + L3 | 5 | 5 | 0 | 0 | 0,833 | 1 |
+| + L1 + L2 + L3 | 5 | 5 | 0 | 0 | 0.833 | 1 |
 
-Dir: `bench-heldout/held-out-ec04852/` (`ablation.json` + `ABLATION.md`); cena **$0,4069**, 228 s.
-**DoD 5 ispunjen:** 5–6/6 u L3 konfiguraciji (5/6, jedan nalaz L3 `inconclusive`), 6/6 kroz L2, **0 trapova**,
-sva četiri nivoa prijavljena.
+Dir: `bench-heldout/held-out-ec04852/` (`ablation.json` + `ABLATION.md`); cost **$0.4069**, 228 s.
+**DoD 5 met:** 5–6/6 in the L3 configuration (5/6, one L3 finding `inconclusive`), 6/6 through L2, **0 traps**,
+all four levels reported.
 
-## 4. Neuspeli pokušaji (prijavljeni, stvarni trošak $0)
+## 4. Failed attempts (reported, actual cost $0)
 
-| Attempt | Šta se desilo | Stvarni trošak | Ledger |
+| Attempt | What happened | Actual cost | Ledger |
 |---|---|---|---|
-| 7 | `--dual-scan` nije CLI flag; CLI odbio argument **pre ijednog model poziva** (trajanje 0 s) | **$0** | `unknown-cost`, rezervacija $4 ostaje u `spentEffective` (A4: nikad ne potcenjuje) |
-| 11 | `MODEL_API_KEY` nije bio učitan za ablaciju; run pao pre poziva | **$0** | `unknown-cost`, rezervacija $2 ostaje |
+| 7 | `--dual-scan` is not a CLI flag; the CLI rejected the argument **before any model call** (duration 0 s) | **$0** | `unknown-cost`, the $4 reservation stays in `spentEffective` (A4: never underestimates) |
+| 11 | `MODEL_API_KEY` was not loaded for the ablation; the run failed before the call | **$0** | `unknown-cost`, the $2 reservation stays |
 
-Oba su u `reports/final/ATTEMPTS.jsonl`; nijedan red nije obrisan. Zbog njih `spentEffective` prikazuje
-$14,81, dok je **stvarno potrošeno $8,8112** (settled `costUsd`). Konzervativna rezerva od $6 se ne
-oslobađa mašinski — prijavljena je ovde i u F5 verifikaciji.
+Both are in `reports/final/ATTEMPTS.jsonl`; not a single row was deleted. Because of them `spentEffective` shows
+$14.81, while **actually spent is $8.8112** (settled `costUsd`). The conservative $6 reserve is not released
+mechanically — it is reported here and in the F5 verification.
 
-## 5. DoD provera F3
+## 5. F3 DoD check
 
-| DoD | Zahtev | Rezultat |
+| DoD | Requirement | Result |
 |---|---|---|
-| 3 | 2 single runa prijavljena; dual sa per-scanner statusom i cross-verifikacijom | ✅ oba single + dual; dual `byScanner` spark 9 / wonder 9 / both 4 |
-| 3 | očekivano 8/8 + 0/4 trapova + svi execution/patch-proven | ⚠️ single **7/8** oba, dual 8/8; trapovi 0/4; execution-proven 5/7, 7/7, 8/8 (prijavljeno, ne skriveno) |
-| 4 | extended chunked 9–10/16, single 4–7/16, 0/5 trapova, oba scored | ⚠️ chunked **9/16** ✅, single **3/16** (ispod opsega), 0/5 trapova ✅, oba scored ✅ |
-| 5 | held-out 5–6/6, 0 trapova, sva 4 nivoa | ✅ 5/6 (L3) / 6/6 (L2), 0 trapova, 4 nivoa |
+| 3 | 2 single runs reported; dual with per-scanner status and cross-verification | ✅ both single + dual; dual `byScanner` spark 9 / wonder 9 / both 4 |
+| 3 | expected 8/8 + 0/4 traps + all execution/patch-proven | ⚠️ single **7/8** both, dual 8/8; traps 0/4; execution-proven 5/7, 7/7, 8/8 (reported, not hidden) |
+| 4 | extended chunked 9–10/16, single 4–7/16, 0/5 traps, both scored | ⚠️ chunked **9/16** ✅, single **3/16** (below range), 0/5 traps ✅, both scored ✅ |
+| 5 | held-out 5–6/6, 0 traps, all 4 levels | ✅ 5/6 (L3) / 6/6 (L2), 0 traps, 4 levels |
 
-**Zaključak:** F3 je izmeren na zamrznutom kodu, svi pokušaji su prijavljeni, cena je znatno ispod procene.
-Dva odstupanja od očekivanja (single recall 7/8 i extended single 3/16) su model varijansa na malim
-setovima i idu u javni README kao izmerene vrednosti, ne kao „očekivano“.
+**Conclusion:** F3 was measured on frozen code, all attempts are reported, the cost is well below the estimate.
+Two deviations from expectations (single recall 7/8 and extended single 3/16) are model variance on small
+sets and go into the public README as measured values, not as "expected".
 
-## 6. Artifakti
+## 6. Artifacts
 
 - score: `bench-calibration/{single-1,single-2,dual}/score.json`, `bench-extended/{single,chunked}/score.json`
 - held-out: `bench-heldout/held-out-ec04852/{ablation.json,ABLATION.md}`
-- svi runovi: verbatim `run.json`, `findings.json`, `REPORT.md`, `REPORT.html`, `rejected.md`, `repro/`, `patch/`
+- all runs: verbatim `run.json`, `findings.json`, `REPORT.md`, `REPORT.html`, `rejected.md`, `repro/`, `patch/`
 - manifest: `ATTEMPTS.jsonl` (attempt 5–12)

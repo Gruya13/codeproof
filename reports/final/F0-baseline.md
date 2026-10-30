@@ -1,15 +1,15 @@
-# F0 — deterministički baseline finalne runde
+# F0 — deterministic baseline of the final round
 
-**Datum:** 2026-10-29. (posle 20:00 CET) · **Head:** `0b9eef4` · **Izvršio:** DSH orkestrator
-**Povod:** PREREG §4.1 (F0) i A1 uslov 9; runda je odobrena 29.10. i sidrena commit-om `aa52b50`.
-**Trošak F0:** **$0** — nijedan API poziv (sve lokalno; mock/lokalni testovi).
+**Date:** 2026-10-29 (after 20:00 CET) · **Head:** `0b9eef4` · **Executed by:** DSH orchestrator
+**Reason:** PREREG §4.1 (F0) and A1 condition 9; the round was approved on 29.10. and anchored by commit `aa52b50`.
+**F0 cost:** **$0** — no API calls (everything local; mock/local tests).
 
-## 1. Deterministički kontrolni set
+## 1. Deterministic control set
 
-| Provera | Komanda | Rezultat |
+| Check | Command | Result |
 |---|---|---|
-| Testovi, Node 26.8.2 | `make test` | **263/263**, 0 fail |
-| Testovi, Node 22.23.3 | `mise exec node@22.23.3 -- make test` | **263/263**, 0 fail |
+| Tests, Node 26.8.2 | `make test` | **263/263**, 0 fail |
+| Tests, Node 22.23.3 | `mise exec node@22.23.3 -- make test` | **263/263**, 0 fail |
 | Integrity | `node scripts/integrity.mjs` | **PASS 22 checks** (baseline `2040aa9`) |
 | Replay golden | `make replay` | **9/9 identical, 0 mismatch** |
 | Score golden | `make score RUN=reports/golden` | **PASS** |
@@ -17,37 +17,37 @@
 | Clean clone (tmpfs, `env -i`) | `make clean-clone` | **PASS** |
 | Clean clone Docker `node:22-alpine` | `make clean-clone-docker` | **PASS** (node v22.23.4, 263/263, demo/replay/score) |
 
-**Broj testova:** 241 (pre F0) + **22 nova** = **263**. Novi test fajlovi su zaključani test-lock-om:
-`tests/final-budget.test.mjs` (21 test) i `tests/ablation-hard-budget.test.mjs` (1), autor **codex**
-(commit testova `dcf1c8a`, lock `0b9eef4`).
+**Test count:** 241 (before F0) + **22 new** = **263**. The new test files are locked with test-lock:
+`tests/final-budget.test.mjs` (21 tests) and `tests/ablation-hard-budget.test.mjs` (1), author **codex**
+(tests commit `dcf1c8a`, lock `0b9eef4`).
 
-## 2. F0 budžetski sloj (A1–A4)
+## 2. F0 budget layer (A1–A4)
 
-| Stavka | Dokaz | Status |
+| Item | Evidence | Status |
 |---|---|---|
-| `scripts/final-budget.mjs` — `reserve / check / settle / audit` | implementirano; A4 §1 validacija (`measured:true` + konačan nenegativan broj; `ablation.json.costUsd`) | ✅ |
-| `scripts/final-run.sh` — reserve → **git commit rezervacije** → run → settle → commit artefakata | git-anchored dry-run u privremenom repo-u: commit `485c9a2` (rezervacija) **pre** runa, `67b5dea` (settle+artefakti) posle; `audit PASS` | ✅ |
-| Suvi test wrappera na mock runu (`USE_MOCK=1`, $0) | reserve → mock run → auto-detekcija run dir → settle; mock (`measured:false`) ispravno = **unknown-cost**, rezervacija ostaje u `spentEffective` (A4) | ✅ |
-| `hardBudget` fix u `scripts/ablation.mjs` (A3 §1) | `BUDGET_USD=0.001` → **odbijen pre slanja** za **116 ms**: „the next call on muse-spark-1.3 could cost up to 0.0698 USD, which does not fit into the remaining 0.0010 USD“; trošak $0 | ✅ |
-| Regresioni test hard-budgeta (A3 §1) | `tests/ablation-hard-budget.test.mjs` — pada ako `createAgents` izgubi `hardBudget: config.hardBudget` | ✅ |
-| A4 §3 test tabela (9 obaveznih + 2 preciziranja) | `tests/final-budget.test.mjs` — 11 cost slučajeva + mehanika ledgera/CLI-ja | ✅ |
-| `.gitignore` za `_repo` klonove | `git check-ignore` exit 0 | ✅ |
-| `audit` na praznom pravom manifestu | `AUDIT PASS: 0 attempts, 0 artifacts` | ✅ |
+| `scripts/final-budget.mjs` — `reserve / check / settle / audit` | implemented; A4 §1 validation (`measured:true` + a finite non-negative number; `ablation.json.costUsd`) | ✅ |
+| `scripts/final-run.sh` — reserve → **reservation git commit** → run → settle → artifact commit | git-anchored dry run in a temporary repo: commit `485c9a2` (reservation) **before** the run, `67b5dea` (settle+artifacts) after; `audit PASS` | ✅ |
+| Dry run of the wrapper on a mock run (`USE_MOCK=1`, $0) | reserve → mock run → auto-detect run dir → settle; mock (`measured:false`) correctly = **unknown-cost**, the reservation stays in `spentEffective` (A4) | ✅ |
+| `hardBudget` fix in `scripts/ablation.mjs` (A3 §1) | `BUDGET_USD=0.001` → **rejected before sending** in **116 ms**: "the next call on muse-spark-1.3 could cost up to 0.0698 USD, which does not fit into the remaining 0.0010 USD"; cost $0 | ✅ |
+| Regression test for the hard budget (A3 §1) | `tests/ablation-hard-budget.test.mjs` — fails if `createAgents` loses `hardBudget: config.hardBudget` | ✅ |
+| A4 §3 test table (9 required + 2 clarifications) | `tests/final-budget.test.mjs` — 11 cost cases + ledger/CLI mechanics | ✅ |
+| `.gitignore` for `_repo` clones | `git check-ignore` exit 0 | ✅ |
+| `audit` on an empty real manifest | `AUDIT PASS: 0 attempts, 0 artifacts` | ✅ |
 
-**Napomena:** pravi `reports/final/ATTEMPTS.jsonl` još ne postoji — prvi pravi pokušaj je **F1 dogfood**;
-F0 ne troši nijedan attempt. Rezervacije iz suvih testova su bile u `/tmp` ledgerima (van repoa), tako da
-manifest runde počinje čisto od `attemptNo 1`.
+**Note:** the real `reports/final/ATTEMPTS.jsonl` does not exist yet — the first real attempt is **F1 dogfood**;
+F0 spends no attempt. Reservations from the dry tests were in `/tmp` ledgers (outside the repo), so the
+round manifest starts clean at `attemptNo 1`.
 
-## 3. Stanje pre F1
+## 3. State before F1
 
-| Stavka | Vrednost |
+| Item | Value |
 |---|---|
-| Head | `0b9eef4` (`main = origin/main` posle push-a) |
-| Baseline trošak do sada | **$55,8970** (lock v1.5; F0 nije menjao) |
-| Budžet runde | cilj **$35**, hard cap **$40**; ledger: `reports/final/ATTEMPTS.jsonl` |
-| Docker | dostupan **bez sudo** (`node:22-alpine` PASS) |
-| Node | v26.8.2 aktivan; v22.23.3 preko `mise` |
-| Frozen artefakti | netaknuti (integrity PASS) |
-| Git | radno stablo čisto; plan + F0 commitovani i push-ovani |
+| Head | `0b9eef4` (`main = origin/main` after the push) |
+| Baseline cost so far | **$55.8970** (lock v1.5; F0 did not change it) |
+| Round budget | target **$35**, hard cap **$40**; ledger: `reports/final/ATTEMPTS.jsonl` |
+| Docker | available **without sudo** (`node:22-alpine` PASS) |
+| Node | v26.8.2 active; v22.23.3 via `mise` |
+| Frozen artifacts | untouched (integrity PASS) |
+| Git | working tree clean; plan + F0 committed and pushed |
 
-**Gate F0 → F1: ispunjen.** Sledeći korak: F1 dogfood (prvi plaćeni API poziv), kroz `final-run.sh`.
+**Gate F0 → F1: met.** Next step: F1 dogfood (the first paid API call), through `final-run.sh`.

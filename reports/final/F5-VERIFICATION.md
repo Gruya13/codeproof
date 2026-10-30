@@ -1,29 +1,29 @@
-# F5 — nezavisna verifikacija (finalna runda)
+# F5 — independent verification (final round)
 
-**Datum:** 2026-10-30. (02:30–03:00 CET) · **Verifikovana revizija:** `ebcbe4a` (F5 commitovi)
-**Trošak:** $0 (Meta API nije korišćen; verifikatori su drugi modeli, ne Meta Model API)
+**Date:** 2026-10-30 (02:30–03:00 CET) · **Verified revision:** `ebcbe4a` (F5 commits)
+**Cost:** $0 (the Meta API was not used; the verifiers are other models, not the Meta Model API)
 
-## 1. agy-verify — slepi ulaz (spec + artefakti + tvrdnje, bez reasoninga izvršioca)
+## 1. agy-verify — blind input (spec + artifacts + claims, without the executor's reasoning)
 
-**Nalaz: svih 9 tvrdnji POTVRĐENO, 0 činjeničnih kontraprimera.**
+**Finding: all 9 claims CONFIRMED, 0 factual counterexamples.**
 
-Provereno (statički, iz artefakata): tag `v0.2.3-final` → `490e302`, `srcTreeSha` `f874d642`; git istorija
-posle taga ne dira `src/`; test-lock sidecari i autorski potpisi (3 nova test fajla); integrity 22 provere;
-kalibracija 7/8 + 7/8 + 8/8 (precision 1, 0/4 trapa, 0 FR, `mock:false`); extended 3/16 i 9/16 (0/5);
-held-out 6/6 kroz L2 i 5/6 kroz L3 (0 trapova); real-world published unosi (16 novih + regresija = 24),
-bcryptjs 1 jedinstven defekt patch-proven u oba runa, 8 HAND-CHECK fajlova, sax F-002 označen kao odbačen; trošak iz `ATTEMPTS.jsonl`
-= **$15,7162595** (zaokruženo $15,7163), attempts 1..26 bez rupa, 3 unknown-cost rezervacije = $10;
-pinovi picomatch/jsesc isti kao u v0.2.2 sample-u i dokumentacija ih deklariše kao **re-confirmed, not new**.
+Checked (statically, from the artifacts): tag `v0.2.3-final` → `490e302`, `srcTreeSha` `f874d642`; git history
+after the tag does not touch `src/`; test-lock sidecars and authorship signatures (3 new test files); integrity 22 checks;
+calibration 7/8 + 7/8 + 8/8 (precision 1, 0/4 traps, 0 FR, `mock:false`); extended 3/16 and 9/16 (0/5);
+held-out 6/6 through L2 and 5/6 through L3 (0 traps); real-world published entries (16 new + regression = 24),
+bcryptjs 1 unique defect patch-proven in both runs, 8 HAND-CHECK files, sax F-002 marked as rejected; cost from `ATTEMPTS.jsonl`
+= **$15.7162595** (rounded $15.7163), attempts 1..26 without gaps, 3 unknown-cost reservations = $10;
+picomatch/jsesc pins the same as in the v0.2.2 sample and the documentation declares them as **re-confirmed, not new**.
 
-**Ograničenje (prijavljeno):** agy je pokrenut u `safe` režimu i **nije mogao da izvrši nijednu shell komandu** —
-pre-tool kuka `/home/gru/.gemini/config/scripts/sandbox_guard.py` odbija `run_command` u headless režimu
-(nema `/dev/tty`). Zato je verifikacija **statička** (čitanje artefakata, heševa, git logova, JSON-ova), a ne
-izvršna; agy je to sam prijavio u nalazu. Živo pokretanje `make test`/`integrity`/`replay`/`audit` je uradio
-orkestrator u [F5-baseline.md](F5-baseline.md).
+**Limitation (reported):** agy ran in `safe` mode and **could not execute a single shell command** —
+the pre-tool hook `/home/gru/.gemini/config/scripts/sandbox_guard.py` rejects `run_command` in headless mode
+(no `/dev/tty`). That is why the verification is **static** (reading artifacts, hashes, git logs, JSONs) and not
+execution-based; agy reported this itself in the finding. The live run of `make test`/`integrity`/`replay`/`audit` was done by the
+orchestrator in [F5-baseline.md](F5-baseline.md).
 
-## 2. codex-verify — WATCHDOG integriteta testova
+## 2. codex-verify — test integrity WATCHDOG
 
-**Nalaz: WATCHDOG OK.**
+**Finding: WATCHDOG OK.**
 
 ```
 WATCHDOG OK   tests/*.test.mjs 39/39 locked, sha256 31cc66caec8a2894f63a6b4002193cfabfda59cca49f451a269ed375c37573c9,
@@ -31,34 +31,34 @@ WATCHDOG OK   tests/*.test.mjs 39/39 locked, sha256 31cc66caec8a2894f63a6b400219
               authors codex/orchestrator/dsh-orkestrator
 ```
 
-Dokaz (nezavisno izvršeno u codex verify worktree-u):
+Evidence (independently executed in the codex verify worktree):
 - `node scripts/test-lock.mjs check tests/*.test.mjs` → **39/39 LOCKED**, exit 0;
-- za svih 39: `git show <lock.gitRevision>:<lock.gitRel>` sha256 = `lock.casesSha256` = hash trenutnog fajla;
-- svih 39 lock sidecara je **u git-u**; svih **17 relock** unosa ima `by` i `reason`;
+- for all 39: `git show <lock.gitRevision>:<lock.gitRel>` sha256 = `lock.casesSha256` = hash of the current file;
+- all 39 lock sidecars are **in git**; all **17 relock** entries have `by` and `reason`;
 - `node scripts/integrity.mjs` → **INTEGRITY PASS: 22 checks**;
-- autorski potpisi: `dcf1c8a` (F0 testovi, author: codex), `0cc0849` (F1 testovi, author: codex);
-- statički broj testova: **268 = 241 baseline + 22 F0 + 5 F1**.
+- authorship signatures: `dcf1c8a` (F0 tests, author: codex), `0cc0849` (F1 tests, author: codex);
+- static test count: **268 = 241 baseline + 22 F0 + 5 F1**.
 
-**Ograničenje (prijavljeno):** codex nije izvršio ceo test set (watchdog režim ne traži podprocese), pa
-„268/268 prolazi“ iz njegove niti **nije potvrđeno izvršavanjem**. Izvršni deo je nezavisno urađen u
-[F5-baseline.md](F5-baseline.md): 268/268 na Node 26 i Node 22, integrity/replay/score/clean-clone PASS.
+**Limitation (reported):** codex did not execute the full test set (watchdog mode does not spawn subprocesses), so
+"268/268 passes" from its thread **is not confirmed by execution**. The execution part was done independently in
+[F5-baseline.md](F5-baseline.md): 268/268 on Node 26 and Node 22, integrity/replay/score/clean-clone PASS.
 
-## 3. Zaključak (DoD 8)
+## 3. Conclusion (DoD 8)
 
-| Zahtev | Rezultat |
+| Requirement | Result |
 |---|---|
-| agy-verify slepo potvrdio sve finalne brojeve | ✅ 9/9 potvrđeno, 0 kontraprimera (statički; ograničenje prijavljeno) |
-| codex-verify WATCHDOG OK (hash + git revizija) | ✅ 39/39, sha256 `31cc66ca…`, HEAD `ebcbe4a`, integrity PASS |
-| nijedan model ne verifikuje sopstveni rad | ✅ agy i codex nisu pisali ni kod ni testove finalne runde (kod: DSH, testovi: codex u radnoj niti; verifikacija: agy + codex verify nit) |
-| nezavisna **izvršna** verifikacija test seta | ⚠️ nije urađena od verifikatora (sandbox); izvršio orkestrator u F5-baseline — prijavljeno, ne skriveno |
+| agy-verify blindly confirmed all final numbers | ✅ 9/9 confirmed, 0 counterexamples (static; limitation reported) |
+| codex-verify WATCHDOG OK (hash + git revision) | ✅ 39/39, sha256 `31cc66ca…`, HEAD `ebcbe4a`, integrity PASS |
+| no model verifies its own work | ✅ agy and codex wrote neither the code nor the tests of the final round (code: DSH, tests: codex in the work thread; verification: agy + codex verify thread) |
+| independent **execution** verification of the test set | ⚠️ not done by the verifiers (sandbox); performed by the orchestrator in F5-baseline — reported, not hidden |
 
-**Nijedan kontraprimer nije pronađen.** Verifikatori nisu menjali nijedan fajl.
+**No counterexample was found.** The verifiers did not change a single file.
 
-## 4. Ažuriranje posle verifikacije (30.10.2026)
+## 4. Post-verification update (30.10.2026)
 
-Nezavisna provera upstream trackera je posle verifikacije pokazala da su **2 od 12** F4 nalaza već bila
-prijavljena pre naše analize (mustache PR #854, bcryptjs PR #170) i da je **1 nalaz u hand-checku bio
-pogrešno ocenjen** (mustache F-001 — TypeError je realan). Dokumentacija je ispravljena u
-[F4-real-world.md](F4-real-world.md) §4b/§4c, [README.md](README.md) §4d, hand-checkovima i javnom README-u;
-**3 nova issue-a su otvorena** (fast-json-patch #337, dateformat #196, sax #303) i ostavljena su 3 komentara
-na postojeće prijave. Tvrdnja br. 9 iz agy nalaza (re-confirmed status) time je dopunjena — vidi §4b.
+An independent check of the upstream trackers after the verification showed that **2 of 12** F4 findings had already been
+reported before our analysis (mustache PR #854, bcryptjs PR #170) and that **1 finding in the hand-check had been assessed
+incorrectly** (mustache F-001 — the TypeError is real). The documentation was corrected in
+[F4-real-world.md](F4-real-world.md) §4b/§4c, [README.md](README.md) §4d, the hand-checks and the public README;
+**3 new issues were opened** (fast-json-patch #337, dateformat #196, sax #303) and 3 comments were left
+on existing reports. Claim no. 9 from the agy finding (re-confirmed status) is thereby supplemented — see §4b.

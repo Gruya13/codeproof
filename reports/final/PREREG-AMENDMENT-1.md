@@ -1,64 +1,64 @@
-# PREREG AMENDMENT 1 — posle nezavisne recenzije plana
+# PREREG AMENDMENT 1 — after the independent review of the plan
 
-**Status: LOCKED v1.1** · datum 2026-10-29. · osnov: `PREREG.md` v1.0 (sha256 `209b1318…f2f8fed9`)
-**Povod:** nezavisna recenzija plana u dve niti — **agy-verify** i **codex-verify** (2 runde, 29.10.2026, slepi ulaz, bez API poziva).
-**Zaključak recenzije:** oba recenzenta daju **AGREE WITH CONDITIONS** na **zajedničkoj listi od 9 uslova**:
-- runda 1: codex `DISAGREE` (CX-1…CX-7), agy `AGREE WITH CONDITIONS` (AG-1…AG-7, 5 uslova);
-- runda 2 (razmena nalaza): codex prelazi na `AGREE WITH CONDITIONS` sa listom od 9; agy prihvata svih 9 („DA, u potpunosti se slažem sa drugim recenzentom").
-**Odnos prema originalu:** `PREREG.md` se **ne menja** — ovaj amendment je jedini izvor promena i čita se zajedno sa originalom.
-**Start:** izvršavanje ne počinje dok ovaj amendment ne bude zaključan (lock v1.1) **i** potvrđen od oba recenzenta (§5).
+**Status: LOCKED v1.1** · date 2026-10-29. · basis: `PREREG.md` v1.0 (sha256 `209b1318…f2f8fed9`)
+**Reason:** independent review of the plan in two threads — **agy-verify** and **codex-verify** (2 rounds, 29.10.2026, blind input, no API calls).
+**Review conclusion:** both reviewers give **AGREE WITH CONDITIONS** on a **shared list of 9 conditions**:
+- round 1: codex `DISAGREE` (CX-1…CX-7), agy `AGREE WITH CONDITIONS` (AG-1…AG-7, 5 conditions);
+- round 2 (exchange of findings): codex moves to `AGREE WITH CONDITIONS` with a list of 9; agy accepts all 9 ("YES, I fully agree with the other reviewer").
+**Relation to the original:** `PREREG.md` is **not changed** — this amendment is the only source of changes and is read together with the original.
+**Start:** execution does not begin until this amendment is locked (lock v1.1) **and** confirmed by both reviewers (§5).
 
-## 1. Devet obavezujućih uslova (dogovoreno jednoglasno)
+## 1. Nine binding conditions (agreed unanimously)
 
-| # | Uslov | Kako se primenjuje | Gde |
+| # | Condition | How it is applied | Where |
 |---|---|---|---|
-| 1 | Klonovi pod `reports/final/` ne smeju u git | u `.gitignore` dodato `reports/final/**/_repo/` (ovaj amendment); pre Faze 1 provera `git check-ignore -q reports/final/real-world/example/_repo/file.js` = exit 0; posle svake faze `git status --porcelain` čist | `.gitignore`, Faza 0/5 |
-| 2 | Tačne score putanje (bez „latest") | svaki pokušaj ima svoj `--out` direktorijum; run nastaje u `<out>/<runId>` (`src/cli.mjs` — `resolve(args.out, runId)`); score gađa **taj** dir; ako u `<out>` nije tačno 1 run dir → abort. Komande u §2 | §4.4, Faza 3 |
-| 3 | `ablation.json` je dokazni izuzetak | za held-out važi `ablation.json` (+ `ABLATION.md`) sa `costUsd`; ulazi u finalni manifest i zbir troška; izuzetak od pravila „brojevi iz `run.json`" je eksplicitan | §10.1, DoD 5 |
-| 4 | Ponovljiv izvor za regresioni par | **picomatch:** `https://github.com/micromatch/picomatch`, pin `6bb40679c218cefba5d4e9662408c5fdf699a8bb` (tag 4.0.7), scope `lib`; **jsesc:** `https://github.com/mathiasbynens/jsesc`, pin `819f534875fd87c9033bb72148ab6a6ad1219ca0` (v3.1.0), scope = fajl `jsesc.js`; rekonstrukcija: klon + `mkdir analysis-target && cp jsesc.js analysis-target/jsesc.js`; sha256 sadržaja `03c367cbd13dc753bb8fc6c8ec3a01078c3ee142ee3f747c0490d311bc80a3b3` (bajt-identičan upstreamu, provereno); lokalni commit `e3349b5` se tom prilikom dokumentuje. Nijedan run ne zavisi od nedokumentovanog foldera. | §4.5 |
-| 5 | Zamrznut extended `_repo` | lokalni klon `reports/probes/real/axios-extended/_repo` je zamrznut na `b2c8f4c90801b6c2260a43ce7550c22868a0fb82`; **zabranjeno** brisanje i rekonstrukcija preko `make-injected.mjs` (menja SHA i prlja frozen putanju); pre Faze 3 obavezna provera `git -C ... rev-parse HEAD`; ako nije taj SHA — extended se ne meri i to se prijavljuje | §4.4 |
-| 6 | Pre-lock real-world kandidata + razdvajanje metrika | pre Faze 4 zaključati `reports/final/REALWORLD-CANDIDATES.lock.json` (5 kandidata, commitovi, scope, redosled zamena, svi dry-run ishodi); početna lista: `mustache`, `fast-json-patch`, `bcryptjs`, `sax`, `argparse`; zamene: `dateformat`, `accounting`, `uuid`; DoD strogo razdvaja nove repoe od regresionih i bench dokaza; 0-nalaza i opovrgnuti nalazi ostaju u tabeli | §4.5, DoD 7 |
-| 7 | Zbirni budžetski ledger i izvršni stop | `reports/final/ATTEMPTS.jsonl` + `scripts/final-budget.mjs` (suma svih `run.json` + manifesta, `check --next-max <usd>`) + `scripts/final-run.sh` (provera → pokretanje → upis pokušaja); **svi runovi pojedinačno** (`--runs 1`), nikad `--runs 2` u jednom pozivu; capovi blokova u §2; stop na $35; implementirati u Fazi 0 pre prvog API runa | Faza 0, §5 |
-| 8 | Manifest svih pokušaja | `ATTEMPTS.jsonl` polja: `attemptNo, block, label, startedAt, endedAt, status, costUsd, runDir, note`; upisuje se i pokušaj koji stane pre `run.json`; `runId` **nije** ključ pokušaja (kolizija na istoj reviziji); dedup po sha256 sadržaja, ne po runId | Faza 0, §10 |
-| 9 | Puna deterministička provera posle freeze-a | Faza 5: na tagu `v0.2.3-final` ponoviti i zapisati u `reports/final/F5-baseline.md`: testovi Node 22/26, `make integrity`, `make replay`, `make score`, `make demo`, clean-clone (tmpfs) **i** Docker `node:22-alpine`; ako Docker nije dostupan — prijaviti „nije provereno", nikad lažni PASS | Faza 5 |
+| 1 | Clones under `reports/final/` must not go into git | in `.gitignore` added `reports/final/**/_repo/` (this amendment); before Phase 1 check `git check-ignore -q reports/final/real-world/example/_repo/file.js` = exit 0; after every phase `git status --porcelain` clean | `.gitignore`, Phase 0/5 |
+| 2 | Exact score paths (no "latest") | every attempt has its own `--out` directory; the run is created in `<out>/<runId>` (`src/cli.mjs` — `resolve(args.out, runId)`); score targets **that** dir; if `<out>` does not hold exactly 1 run dir → abort. Commands in §2 | §4.4, Phase 3 |
+| 3 | `ablation.json` is an evidentiary exception | for held-out, `ablation.json` (+ `ABLATION.md`) applies, with `costUsd`; it enters the final manifest and the cost total; the exception to the "numbers from `run.json`" rule is explicit | §10.1, DoD 5 |
+| 4 | Reproducible source for the regression pair | **picomatch:** `https://github.com/micromatch/picomatch`, pin `6bb40679c218cefba5d4e9662408c5fdf699a8bb` (tag 4.0.7), scope `lib`; **jsesc:** `https://github.com/mathiasbynens/jsesc`, pin `819f534875fd87c9033bb72148ab6a6ad1219ca0` (v3.1.0), scope = the file `jsesc.js`; reconstruction: clone + `mkdir analysis-target && cp jsesc.js analysis-target/jsesc.js`; content sha256 `03c367cbd13dc753bb8fc6c8ec3a01078c3ee142ee3f747c0490d311bc80a3b3` (byte-identical to upstream, verified); the local commit `e3349b5` is documented at that point. No run depends on an undocumented folder. | §4.5 |
+| 5 | Frozen extended `_repo` | the local clone `reports/probes/real/axios-extended/_repo` is frozen at `b2c8f4c90801b6c2260a43ce7550c22868a0fb82`; deletion and reconstruction via `make-injected.mjs` are **forbidden** (it changes the SHA and dirties the frozen path); before Phase 3 a mandatory check `git -C ... rev-parse HEAD`; if it is not that SHA — extended is not measured and this is reported | §4.4 |
+| 6 | Pre-lock of real-world candidates + separation of metrics | before Phase 4 lock `reports/final/REALWORLD-CANDIDATES.lock.json` (5 candidates, commits, scope, replacement order, all dry-run outcomes); initial list: `mustache`, `fast-json-patch`, `bcryptjs`, `sax`, `argparse`; replacements: `dateformat`, `accounting`, `uuid`; the DoD strictly separates new repos from the regression and bench evidence; 0-finding and refuted findings stay in the table | §4.5, DoD 7 |
+| 7 | Cumulative budget ledger and executive stop | `reports/final/ATTEMPTS.jsonl` + `scripts/final-budget.mjs` (sum of all `run.json` + the manifest, `check --next-max <usd>`) + `scripts/final-run.sh` (check → run → record the attempt); **all runs individually** (`--runs 1`), never `--runs 2` in a single call; block caps in §2; stop at $35; implement in Phase 0 before the first API run | Phase 0, §5 |
+| 8 | Manifest of all attempts | `ATTEMPTS.jsonl` fields: `attemptNo, block, label, startedAt, endedAt, status, costUsd, runDir, note`; an attempt that dies before `run.json` is recorded too; `runId` is **not** the key of an attempt (collision on the same revision); dedup by content sha256, not by runId | Phase 0, §10 |
+| 9 | Full deterministic check after the freeze | Phase 5: on the tag `v0.2.3-final` repeat and record in `reports/final/F5-baseline.md`: Node 22/26 tests, `make integrity`, `make replay`, `make score`, `make demo`, clean-clone (tmpfs) **and** Docker `node:22-alpine`; if Docker is not available — report "not verified", never a false PASS | Phase 5 |
 
-## 2. Revidirani budžet — zbir capova = $40
+## 2. Revised budget — sum of caps = $40
 
-| Blok | Runova | Cap |
+| Block | Runs | Cap |
 |---|---:|---:|
 | F1 dogfood chunked + single | 2 | $6 |
-| F3 kalibracioni single ×2 | 2 | $4 |
-| F3 kalibracioni dual ×1 | 1 | $3 |
+| F3 calibration single ×2 | 2 | $4 |
+| F3 calibration dual ×1 | 1 | $3 |
 | F3 extended chunked + single | 2 | $5 |
-| F3 held-out ablacija | 1 | $1 |
-| F4 novi real-world 5 × 2 | 10 | $10 |
-| F4 regresija picomatch + jsesc | 2 | $2 |
+| F3 held-out ablation | 1 | $1 |
+| F4 new real-world 5 × 2 | 10 | $10 |
+| F4 regression picomatch + jsesc | 2 | $2 |
 | F4 dual jsesc | 1 | $2 |
 | **Core** | **21** | **$33** |
-| Opcije (three-way, controlled, istorijski recall) | ~5 | $2 |
-| Rezerva (retry/re-run posle fixa) | — | $5 |
-| **Ukupno = hard cap** | | **$40** |
+| Options (three-way, controlled, historical recall) | ~5 | $2 |
+| Reserve (retry/re-run after a fix) | — | $5 |
+| **Total = hard cap** | | **$40** |
 
-**Cilj: $35.** Pravilo (uslov 7): pre svakog runa `node scripts/final-budget.mjs check --next-max <gornja cena runa>`; run se ne pokreće ako bi `spent + next-max > 40`; kada `spent ≥ 35` runda staje (osim rezerve za re-run posle dogfood/freeze popravke, uz zapis u amendment). Per-run `BUDGET_USD` ostaje 2,5–5 kako je u originalnom planu.
+**Target: $35.** Rule (condition 7): before every run `node scripts/final-budget.mjs check --next-max <upper bound of the run>`; the run does not start if `spent + next-max > 40`; when `spent ≥ 35` the round stops (except the reserve for a re-run after a dogfood/freeze fix, with a note in the amendment). Per-run `BUDGET_USD` remains 2,5–5 as in the original plan.
 
-## 3. Ispravka baseline troška (nalaz provere iz recenzije)
+## 3. Correction of the baseline cost (finding from the review check)
 
-- Do sada potrošeno: **$55,8970** (svi `run.json` na disku, dedup po sha256, 104 unique) odnosno **$50,3643** za gitom praćene (82 fajla, 76 unique).
-- Broj **$42,4571 iz lock-a v1.0 bio je pogrešan**: dedup po `runId` spajao je različite pokušaje istog runId (npr. picomatch run 1 i run 2). Ispravljeno ovde — to je isti rizik koji pokriva uslov 8 (`runId` nije ključ pokušaja).
-- Ovo ne menja cap runde ($40 za rundu je nezavisan), ali ispravlja evidenciju pre prvog runa.
+- Spent so far: **$55.8970** (all `run.json` on disk, dedup by sha256, 104 unique) respectively **$50.3643** for those tracked in git (82 files, 76 unique).
+- The figure **$42.4571 from lock v1.0 was wrong**: dedup by `runId` merged different attempts of the same runId (e.g. picomatch run 1 and run 2). Corrected here — it is the same risk that condition 8 covers (`runId` is not the key of an attempt).
+- This does not change the round cap ($40 for the round is independent), but it corrects the record before the first run.
 
-## 4. Preciziranja iz recenzije (prihvaćena, van 9 uslova)
+## 4. Clarifications from the review (accepted, outside the 9 conditions)
 
-- **AG-1:** klonovi pod `reports/final/` ruše `clean-clone` i Fazu 5 (zahtev za čist `git status`), ali ne `integrity.mjs` direktno (ne proverava `reports/final/`) — precizirano.
-- **AG-4:** `jsesc/analysis-target` je commitovan u lokalnom commitu `e3349b5` i stari jsesc runovi imaju `dirty=false`; problem je portabilnost — rešen uslovom 4.
-- **AG-6:** 0-nalaza na **novim** repoima ostaje prijavljen neuspeh za nove repoe i ne maskira se regresionim parom.
-- **CX-4:** Faza 5 sada ponavlja pun DoD 2 kontrolni set (uslov 9).
-- Tvrdnja „nijedan API poziv pre lock-a" nije nezavisno dokaziva — ostaje tvrdnja orkestratora, potvrđena lokalnom istorijom (u ovoj sesiji nema API poziva).
-- Docker clean-clone može zahtevati sudo/grupu; ako nije dostupan — „nije provereno", bez lažnog PASS-a.
+- **AG-1:** clones under `reports/final/` break `clean-clone` and Phase 5 (the requirement for a clean `git status`), but not `integrity.mjs` directly (it does not check `reports/final/`) — clarified.
+- **AG-4:** `jsesc/analysis-target` is committed in the local commit `e3349b5` and the old jsesc runs have `dirty=false`; the problem is portability — solved by condition 4.
+- **AG-6:** 0 findings on **new** repos remains a reported failure for the new repos and is not masked by the regression pair.
+- **CX-4:** Phase 5 now repeats the full DoD 2 control set (condition 9).
+- The claim "no API call before the lock" is not independently provable — it remains the orchestrator's claim, confirmed by the local history (there are no API calls in this session).
+- Docker clean-clone may require sudo/group; if it is not available — "not verified", without a false PASS.
 
-## 5. Uslov za početak izvršavanja
+## 5. Condition for starting execution
 
-1. ovaj amendment + lock v1.1;
-2. **runda 3 recenzije:** oba recenzenta daju `AGREE` na primenu lista u ovom amendmentu; ako neko traži izmenu → `PREREG-AMENDMENT-2.md` i ponovni dogovor (ukupno max 5 rundi);
-3. eksplicitno odobrenje korisnika za start;
-4. prvi API poziv je dozvoljen tek posle 1–3.
+1. this amendment + lock v1.1;
+2. **review round 3:** both reviewers give `AGREE` on the application list in this amendment; if someone requests a change → `PREREG-AMENDMENT-2.md` and a new agreement (at most 5 rounds in total);
+3. explicit user approval to start;
+4. the first API call is allowed only after 1–3.
