@@ -61,6 +61,8 @@ All runs are real API calls (`mock: false`), through `scripts/final-run.sh` (res
 | ea5b1ae7f3eeac48 | smoke | v26.8.2 | 0.2.2 | v3 / e0b10604b50f | v1 / e2e6c4a4ddbe |
 | 1e1b03c5d8ba9776 | smoke | v26.8.2 | 0.2.2 | v3 / e0b10604b50f | v1 / e2e6c4a4ddbe |
 
+The `CodeProof` column is the tool version string from `src/config.mjs` (`VERSION`), frozen at `0.2.2`; the release tag for these runs is `v0.2.3-final` and `package.json` says `0.2.3` — the version bump came after the code was frozen.
+
 All 13 runs use the **same** scanner prompt version and SHA256 (`e0b10604b50f…` = v3) and the same verifier version
 (`e2e6c4a4ddbe…` = v1). This is because the code was frozen before the round (`FREEZE.json`) and no prompt was
 changed during the measurement.

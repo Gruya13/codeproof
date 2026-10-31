@@ -142,3 +142,6 @@ No finding was reported as a "new discovery" — the public commits predate the 
 - `execution-proven`/`patch-proven` exist only on Node 26.8.2 (LinkCheck requires `--allow-inspector`).
 - `spentEffective` is **$25.7163** because $10 consists of `unknown-cost` reservations from three aborted/rejected attempts (attempt 7, 11, 25; actual cost $0 — the CLI rejected before any model call); the settled cost of the round is **$15.7163**.
 - Record-keeping logic: `reports/golden/` and the other frozen artifacts are historical (26–28.10.) and untouched; the final round uses `reports/final/`.
+- Replay: the full v2 claim requires the run's attestation. A v2 run whose attestation was removed replays in v1 mode (L0/L1 only) and can still print `REPLAY PASS`; replay also re-checks only the first citation of each finding, while the live gate checks every citation (see HISTORY.md §Limits).
+- L1 has a ±1 line tolerance for off-by-one line counts; the reason string and `lineTolerance` record when it was used.
+- Chunked scans can be partial: a failed chunk is recorded in `run.json.scanners[].status` while the scan phase still completes as `ok`, and `scanCoverage` counts the prompt that was sent. The internal tool version string is `0.2.2` (code frozen before the bump; the release tag is `v0.2.3-final`).

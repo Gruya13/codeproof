@@ -27,7 +27,7 @@ is part of the artifact.
 
 | Level | Check | Producer |
 |---|---|---|
-| **L1** | Every citation exists in the analyzed commit and matches the declared line range | deterministic, no model |
+| **L1** | Every citation exists in the analyzed commit and matches the declared line range (±1 line tolerance for off-by-one counts) | deterministic, no model |
 | **L2** | A second model tries to refute the claim; a strong refutation needs a machine-checked counter-citation | Muse Wonder (in dual mode, Muse Spark verifies Wonder-proposed findings) |
 | **L3 - execution proof** | A generated test has two phases: the control case passes on every run (at least three) and the trigger case fails on every run, both against the analyzed commit in a Node permission sandbox with no network | Muse Wonder writes the test |
 | **L4** | A minimal patch flips the reproduced result (differential proof) | Muse Wonder writes the patch |
