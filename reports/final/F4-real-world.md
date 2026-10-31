@@ -13,8 +13,8 @@
 | mustache | `972fd2b2` | `. ` | 80 / 2402 | 3 verified entries (**2 defects**) | $0.8823 |
 | sax | `961ceeef` | `lib` | 1 / 1866 | 4 entries (**2 real**, 1 rejected, 1 latent) | $1.1172 |
 | fast-json-patch | `9d313ac0` | `commonjs` | 3 / 803 | 4 entries (**4 defects**) | $0.7511 |
-| bcryptjs | `1211e9a2` | `. ` | 11 / 1666 | 5 entries (**3 defects, 1 unique patch-proven in both runs**) | $1.3095 |
-| dateformat | `e6800aa9` | `. ` | 43 / 2085 | 2 entries (**1 defect**; run1 0 findings) | $0.2662 |
+| bcryptjs | `1211e9a2` | `. ` | 11 / 1666 | 4 entries (**3 defects, 1 unique patch-proven in both runs**) | $1.3095 |
+| dateformat | `e6800aa9` | `. ` | 43 / 2085 | 1 entry (**1 defect**; run1 0 findings) | $0.2662 |
 
 **Rejected dry-run candidates (reported, $0):** argparse 4892 LOC and accounting 6483 LOC (>3000 per PREREG §4.5); uuid — TS source without committed JS output. Replacement: **dateformat** (candidate #4 per the replacement plan).
 
@@ -83,7 +83,7 @@ The original claim from the run is **correct**, and upstream PR #854 independent
 | 0-finding repos reported as such | ✅ dateformat run1 (0 findings) |
 | the regression pair proves L3/L4 as before hardening | ✅ picomatch + jsesc patch-proven |
 | ≥1 refuted / rejected finding for the video (S5) | ⚠️ there is no **refuted** finding in F4 (all verified/uncertain); for S5 a recorded marked controlled test or a manually rejected finding (sax F-002) is used — decision in F5 |
-| upstream status of every finding reported | ✅ §4b: 2 already known (duplicates), 3 reported on 30.10., 3 comments, 5 unreported — none presented as a new discovery |
+| upstream status of every finding reported | ✅ §4b: 3 already known (duplicates: #854, #762 closed in 2021, #170), 3 reported on 30.10., 1 comment + comments on the two known reports, 4 unreported + 1 latent not reported — none presented as a new discovery |
 
 ## 6. Cost and manifest
 

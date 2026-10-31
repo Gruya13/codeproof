@@ -56,9 +56,9 @@ Evidence (independently executed in the codex verify worktree):
 
 ## 4. Post-verification update (30.10.2026)
 
-An independent check of the upstream trackers after the verification showed that **2 of 12** F4 findings had already been
-reported before our analysis (mustache PR #854, bcryptjs PR #170) and that **1 finding in the hand-check had been assessed
+An independent check of the upstream trackers after the verification showed that **3 of 12** F4 findings had already been
+reported before our analysis (mustache PR #854; mustache #762, closed in 2021; bcryptjs PR #170) and that **1 finding in the hand-check had been assessed
 incorrectly** (mustache F-001 — the TypeError is real). The documentation was corrected in
 [F4-real-world.md](F4-real-world.md) §4b/§4c, [README.md](README.md) §4d, the hand-checks and the public README;
-**3 new issues were opened** (fast-json-patch #337, dateformat #196, sax #303) and 3 comments were left
-on existing reports. Claim no. 9 from the agy finding (re-confirmed status) is thereby supplemented — see §4b.
+**3 new issues were opened** (fast-json-patch #337, dateformat #196, sax #303), 1 comment was left on an
+existing PR (#331) and comments on the two known reports. Claim no. 9 from the agy finding (re-confirmed status) is thereby supplemented — see §4b.

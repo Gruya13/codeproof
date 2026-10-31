@@ -137,7 +137,7 @@ No finding was reported as a "new discovery" — the public commits predate the 
 ## 6. Limitations
 
 - The calibration set is n=8 and was used for calibration — not a statistical claim.
-- Real-world findings are anecdotes (small n, public commits → contamination possible). Upstream status: 2 of 12 were already reported (duplicates), 3 reported on 30.10. — **no report has a maintainer reply yet**, so there is no external confirmation.
+- Real-world findings are anecdotes (small n, public commits → contamination possible). Upstream status: 3 of 12 were already reported (duplicates: mustache #854, mustache #762 closed in 2021, bcryptjs #170), 3 reported on 30.10. — **no report has a maintainer reply yet**, so there is no external confirmation.
 - Model output is not bit-deterministic; the number of attempts is always stated.
 - `execution-proven`/`patch-proven` exist only on Node 26.8.2 (LinkCheck requires `--allow-inspector`).
 - `spentEffective` is **$25.7163** because $10 consists of `unknown-cost` reservations from three aborted/rejected attempts (attempt 7, 11, 25; actual cost $0 — the CLI rejected before any model call); the settled cost of the round is **$15.7163**.
