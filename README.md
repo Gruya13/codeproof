@@ -2,6 +2,8 @@
 
 **Every finding carries the level of proof it earned: machine-checked citation, adversarial confirmation, or a failing test.**
 
+[![docker](https://github.com/Gruya13/codeproof/actions/workflows/docker.yml/badge.svg)](https://github.com/Gruya13/codeproof/actions/workflows/docker.yml)
+
 CodeProof statically reviews a TypeScript/JavaScript repository. A producer model proposes findings with exact
 citations; a deterministic checker verifies every citation against the analyzed commit; a second model tries to
 refute each claim. Findings are published at the level of proof they earned: a claim that passes the citation and
