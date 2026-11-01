@@ -6,6 +6,7 @@ dependencies, so the image is a plain Node 26 runtime with `git`/`make`, the rep
 committed evidence baked in — no `npm install`, no build step.
 
 - [Quick start](#quick-start)
+- [Prebuilt image (GHCR)](#prebuilt-image-ghcr)
 - [What runs where](#what-runs-where)
 - [Measured results of this image](#measured-results-of-this-image)
 - [Live model runs](#live-model-runs)
@@ -38,6 +39,31 @@ make docker-check
 
 `docker run --rm codeproof` with no command runs the demo (the image's default command). `codeproof` is
 the local tag used throughout this document; any tag works.
+
+## Prebuilt image (GHCR)
+
+CI publishes the same image to GitHub Container Registry, but only after every gate in the
+[container-image job](.github/workflows/docker.yml) passed, and only for a release tag (`v*`) or a manual
+workflow run. On a branch push or a pull request nothing is published.
+
+```bash
+docker pull ghcr.io/gruya13/codeproof:latest
+docker run --rm ghcr.io/gruya13/codeproof:latest          # demo
+docker run --rm ghcr.io/gruya13/codeproof:latest test     # 268 tests on the pulled artifact
+```
+
+| Tag | Meaning |
+|---|---|
+| `latest` | newest published build (release tag or manual publish) |
+| `<version>` | `package.json` version on a manual publish, or the pushed `v*` tag without its `v` |
+| `sha-<7>` | every published commit |
+
+- The package is public, so it can be pulled without a `docker login`. Registry page:
+  [ghcr.io/gruya13/codeproof](https://github.com/Gruya13/codeproof/pkgs/container/codeproof).
+- Published for **linux/amd64** (the CI runner platform). Build the image locally on another architecture.
+- The publish job pulls the pushed image back from GHCR and re-runs the 268-test gate on that artifact before
+  reporting success, so the registry copy is the verified one.
+- Manual publish: GitHub → Actions → **docker** → *Run workflow* on `main`.
 
 ## What runs where
 

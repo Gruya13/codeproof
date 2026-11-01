@@ -41,3 +41,68 @@ jobs:
             echo "| user | uid $(docker run --rm codeproof:ci id -u) |"
             echo "| commit in image | $(docker run --rm codeproof:ci sh -c 'git -C /app rev-parse --short HEAD') |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: publish to GHCR
+    # Tagged releases (v*) and a manual run publish an image; plain branch pushes and pull requests
+    # only run the verification job above. Publishing waits for every gate in that job to pass.
+    needs: image
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: resolve image tags
+        id: meta
+        run: |
+          set -eu
+          version="$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            tags="$version latest"
+          else
+            tags="${GITHUB_REF_NAME#v} latest"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tags=$tags" >> "$GITHUB_OUTPUT"
+      - name: build and push to GHCR
+        env:
+          TOKEN: ${{ github.token }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -eu
+          owner="$(echo "$GITHUB_REPOSITORY" | cut -d/ -f1 | tr '[:upper:]' '[:lower:]')"
+          image="ghcr.io/$owner/codeproof"
+          echo "$TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          args=(-t "$image:sha-${GITHUB_SHA::7}")
+          for tag in $TAGS; do args+=(-t "$image:$tag"); done
+          docker build "${args[@]}" .
+          docker push --all-tags "$image"
+          echo "IMAGE=$image" >> "$GITHUB_ENV"
+      - name: verify the published artifact
+        run: |
+          set -eu
+          # Pull the image back from the registry and re-run the full deterministic gate on it.
+          docker pull "$IMAGE:${{ steps.meta.outputs.version }}"
+          docker run --rm "$IMAGE:${{ steps.meta.outputs.version }}" test
+          docker run --rm "$IMAGE:${{ steps.meta.outputs.version }}" sh -c 'test ! -e /app/.env'
+      - name: publish summary
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -eu
+          digest="$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$VERSION")"
+          {
+            echo "### Published image"
+            echo ""
+            echo "- digest: $digest"
+            echo "- commit: $GITHUB_SHA"
+            echo "- tags:"
+            for tag in $TAGS; do echo "  - $IMAGE:$tag"; done
+            echo "  - $IMAGE:sha-${GITHUB_SHA::7}"
+          } >> "$GITHUB_STEP_SUMMARY"

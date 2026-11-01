@@ -125,7 +125,9 @@ a call before it is sent when its worst-case price does not fit into the remaini
 ## Run it in Docker
 
 The same offline checks run in a container. The image bakes the project, its git history and the committed
-evidence, runs as the unprivileged `node` user, and needs no API key and no network for the gates:
+evidence, runs as the unprivileged `node` user, and needs no API key and no network for the gates. CI publishes
+it to GHCR after every gate passes, so it can be pulled instead of built:
+`docker pull ghcr.io/gruya13/codeproof:latest` (Linux/amd64).
 
 ```bash
 docker build -t codeproof .
