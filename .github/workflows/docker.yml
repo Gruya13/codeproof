@@ -80,7 +80,12 @@ jobs:
           echo "$TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           args=(-t "$image:sha-${GITHUB_SHA::7}")
           for tag in $TAGS; do args+=(-t "$image:$tag"); done
-          docker build "${args[@]}" .
+          # --provenance=false: BuildKit attaches a provenance attestation manifest by default, and
+          # GHCR denies the tagged index push when that extra manifest is present (the layers upload,
+          # then the manifest is rejected as "denied" / "unknown blob"). The tag push must stay a
+          # plain image manifest; the evidence for the build is the gates and the job log, not an
+          # attestation this registry rejects.
+          docker build --provenance=false "${args[@]}" .
           docker push --all-tags "$image"
           echo "IMAGE=$image" >> "$GITHUB_ENV"
       - name: verify the published artifact
