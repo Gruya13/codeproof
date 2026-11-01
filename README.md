@@ -18,7 +18,7 @@ event, zero runtime dependencies.
 | **268/268** deterministic tests (Node 22 & 26) | **12** hand-confirmed defects in 5 new OSS repositories (**1 unique patch-proven, both runs**) | **6** findings filed upstream (3 in the earlier sample + 3 in this round) | **$15.7163** measured for the final round |
 |---|---|---|---|
 
-**Try it now, offline:** `make demo` (mock pipeline, no API key, no network), or the same demo in a container: `make docker-demo`. · **Demo video (2:22):** [YouTube](https://youtu.be/pFNrljVBJh0).
+**Try it now, offline:** `make demo` (mock pipeline, no API key, no network), or the same demo in a container: `make docker-demo`.
 
 ## The problem
 
