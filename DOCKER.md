@@ -60,6 +60,11 @@ docker run --rm ghcr.io/gruya13/codeproof:latest test     # 268 tests on the pul
 
 - The package is public, so it can be pulled without a `docker login`. Registry page:
   [ghcr.io/gruya13/codeproof](https://github.com/Gruya13/codeproof/pkgs/container/codeproof).
+- First published image: tags `0.2.3`, `latest`, `sha-287250c`, digest
+  `sha256:24cc28f2e2198d3a1ea288fc6e25eda7900e9f63f953e62f8c58b90e32d65fbb` (286 MB); it was pulled
+  anonymously and re-tested (`268/268`) before this line was written. Published with
+  `--provenance=false`: BuildKit's default attestation manifest makes GHCR reject the tagged push
+  (`error from registry: denied`).
 - Published for **linux/amd64** (the CI runner platform). Build the image locally on another architecture.
 - The publish job pulls the pushed image back from GHCR and re-runs the 268-test gate on that artifact before
   reporting success, so the registry copy is the verified one.
@@ -106,6 +111,7 @@ Measured on this host (Docker 29.9.2, `node:26.8.2-alpine`), from a clean build 
 | Node 22 variant (`--build-arg NODE_IMAGE=node:22-alpine`) | built (293 MB); `test` 268/268; demo runs but stays at `citation+adversarial` (documented L2-only behaviour, no `--allow-inspector` on Node 22) |
 | Compose | `docker compose build`, `docker compose run --rm codeproof test` (268/268) and the demo pass; a local `.env` is passed to the container at runtime |
 | `.env` / secrets baked | no: `.env`, `.env.*` and `*.log` are excluded by [`.dockerignore`](.dockerignore) and absent from the image |
+| GHCR publish (`workflow_dispatch`) | package public; tags `0.2.3`, `latest`, `sha-287250c`; anonymous `docker pull` then `test` → **268/268 pass**; digest `sha256:24cc28f2…`, 286 MB |
 
 ## Live model runs
 
@@ -275,3 +281,4 @@ make docker-demo                                      # build + demo in one step
 | `make integrity` fails inside the image | the image was built from a tree whose frozen paths/tests differ from the baseline; rebuild from a clean commit |
 | `analyze` exits with `MODEL_API_KEY is not set` | that was a live command without a key; use `--mock` for the offline path or pass the key |
 | MCP client hangs | the container needs open stdin: `docker run -i ...`; with Compose add `-T` |
+| Publish job: `error from registry: denied` after all layers uploaded | BuildKit attaches a provenance attestation manifest by default and GHCR rejects the tagged push; the workflow builds the published image with `--provenance=false` |
