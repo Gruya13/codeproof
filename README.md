@@ -16,7 +16,7 @@ event, zero runtime dependencies.
 | **268/268** deterministic tests (Node 22 & 26) | **12** hand-confirmed defects in 5 new OSS repositories (**1 unique patch-proven, both runs**) | **6** findings filed upstream (3 in the earlier sample + 3 in this round) | **$15.7163** measured for the final round |
 |---|---|---|---|
 
-**Try it now, offline:** `make demo` (mock pipeline, no API key, no network), or the same demo in a container: `make docker-demo`. · **Demo video (2:48):** linked here with the submission on 3 Nov 2026.
+**Try it now, offline:** `make demo` (mock pipeline, no API key, no network), or the same demo in a container: `make docker-demo`. · **Demo video (2:22):** linked here with the submission on 3 Nov 2026.
 
 ## The problem
 
@@ -172,8 +172,9 @@ models.
 published claim. The implementation — product code, prompts, fixtures, tests and this documentation — was written
 with an AI coding harness (DeepSeek Harness) under that direction; codex (OpenAI) and agy (Google) were used for
 independent analysis, blind review and verification, and the patches produced from their hardening findings were
-applied by the author's harness, not by the assistants directly. Full project history (v0.2.0 → v0.2.3, earlier
-rounds and hardening): [HISTORY.md](HISTORY.md).
+applied by the author's harness, not by the assistants directly. The demo video's voiceover is a local synthesis
+of the author's own voice sample, produced with an open-source text-to-speech model; no external voice service was
+used. Full project history (v0.2.0 → v0.2.3, earlier rounds and hardening): [HISTORY.md](HISTORY.md).
 
 ## Documentation and evidence
 
