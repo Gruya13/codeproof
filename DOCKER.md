@@ -207,6 +207,10 @@ Expected highlights (from the measured run above): `ℹ pass 268 / ℹ fail 0`, 
 `"pass": true` from the scorer and `INTEGRITY PASS: 22 checks`. The same checks can be run one by one with
 the commands from [Quick start](#quick-start).
 
+The same gate runs in CI on every push and pull request: [`.github/workflows/docker.yml`](.github/workflows/docker.yml)
+builds the image, runs `make docker-check` inside it, verifies that no `.env` is baked and that the container
+runs as a non-root user, and writes the image size/Node version/commit into the job summary.
+
 Also useful:
 
 ```bash

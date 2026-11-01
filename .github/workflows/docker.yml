@@ -1,0 +1,43 @@
+name: docker
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    name: container image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The image bakes the git history: make integrity proves the test-lock revisions against
+          # the baseline commit, and make replay needs the analyzed commit from history.
+          fetch-depth: 0
+      - name: build the image
+        run: make docker-build DOCKER_IMAGE=codeproof:ci
+      - name: offline gates inside the container
+        # Same set as make docker-check: 268 deterministic tests, mock demo (L3/L4 executed
+        # locally), golden replay, golden score, integrity gate and the MCP handshake.
+        run: make docker-check DOCKER_IMAGE=codeproof:ci
+      - name: image hygiene (no secrets baked, unprivileged user)
+        run: |
+          docker run --rm codeproof:ci sh -c 'test ! -e /app/.env'
+          docker run --rm codeproof:ci sh -c 'test "$(id -u)" != "0"'
+      - name: image summary
+        run: |
+          {
+            echo "### CodeProof container image"
+            echo ""
+            echo "| item | value |"
+            echo "|---|---|"
+            echo "| size | $(docker image inspect codeproof:ci --format '{{.Size}}') bytes |"
+            echo "| node | $(docker run --rm codeproof:ci node --version) |"
+            echo "| user | uid $(docker run --rm codeproof:ci id -u) |"
+            echo "| commit in image | $(docker run --rm codeproof:ci sh -c 'git -C /app rev-parse --short HEAD') |"
+          } >> "$GITHUB_STEP_SUMMARY"
