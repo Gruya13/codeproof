@@ -10,13 +10,15 @@ refute each claim. Findings are published at the level of proof they earned: a c
 refutation gates is published as `verified`, and a generated test is required only for the stronger
 `execution-proven` / `patch-proven` labels. Rejected candidates stay visible instead of being silently filtered.
 
+<a href="https://youtu.be/pFNrljVBJh0"><img src="docs/demo-video.png" alt="CodeProof demo video (2:22) — click to watch on YouTube" width="720"></a>
+
 **Meta Global AI Developer Hackathon 2026** · Indie Dev track · Push the Frontier · written from scratch during the
 event, zero runtime dependencies.
 
 | **268/268** deterministic tests (Node 22 & 26) | **12** hand-confirmed defects in 5 new OSS repositories (**1 unique patch-proven, both runs**) | **6** findings filed upstream (3 in the earlier sample + 3 in this round) | **$15.7163** measured for the final round |
 |---|---|---|---|
 
-**Try it now, offline:** `make demo` (mock pipeline, no API key, no network), or the same demo in a container: `make docker-demo`. · **Demo video (2:22):** [YouTube — unlisted](https://youtu.be/pFNrljVBJh0).
+**Try it now, offline:** `make demo` (mock pipeline, no API key, no network), or the same demo in a container: `make docker-demo`. · **Demo video (2:22):** [YouTube](https://youtu.be/pFNrljVBJh0).
 
 ## The problem
 
