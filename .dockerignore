@@ -1,0 +1,58 @@
+# Build context for the CodeProof image (see Dockerfile and DOCKER.md).
+#
+# The image bakes the committed project and its evidence. Local working data that .gitignore keeps
+# out of the repository is kept out of the image too: run output, probe checkouts (local copies of
+# analyzed repositories) and the benchmark's installed dependencies are not project source.
+#
+# .git stays in the context on purpose: `make integrity`, `make replay` and `make score` verify
+# the committed evidence against real git revisions, and the image is meant to run those gates.
+
+# Per-machine linked-worktree metadata (agent worktrees on the build host), not project content.
+.git/worktrees
+
+# Installed dependencies and build output (the project itself has zero runtime dependencies).
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+**/coverage
+
+# Secrets are passed at runtime, never baked. Only the documented example stays in.
+.env
+.env.*
+!.env.example
+*.log
+
+# reports/: same committed whitelist as .gitignore; every other run directory stays out.
+reports/*
+!reports/README.md
+!reports/golden
+!reports/golden/**
+!reports/real-world
+!reports/real-world/**
+!reports/controlled-verifier
+!reports/controlled-verifier/**
+!reports/historical
+!reports/historical/**
+!reports/probes
+!reports/probes/**
+!reports/ablations
+!reports/ablations/**
+!reports/model-ablation
+!reports/model-ablation/**
+!reports/self-analysis
+!reports/self-analysis/**
+!reports/three-way
+!reports/three-way/**
+!reports/chunked-scan
+!reports/chunked-scan/**
+!reports/v0.2.0
+!reports/v0.2.0/**
+!reports/final
+!reports/final/**
+# Probe checkouts: local copies of the analyzed upstream repositories, not project evidence.
+reports/**/_repo
+
+# Local report note that .gitignore drops by name (working file, not committed evidence).
+reports/probes/agy-batch3.md

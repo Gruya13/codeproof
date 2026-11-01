@@ -1,0 +1,29 @@
+# CodeProof via Docker Compose.
+#
+#   docker compose build                      # build the image once
+#   docker compose run --rm codeproof         # offline mock demo
+#   docker compose run --rm codeproof test    # deterministic tests
+#   docker compose run --rm codeproof analyze /target --mock --out /reports/run
+#
+# A local .env (gitignored) is passed into the container at runtime only: MODEL_API_KEY,
+# BUDGET_USD, META_BASE_URL and the other knobs are never baked into the image and never copied
+# into the build context. See DOCKER.md for the full command matrix, mounts and limits.
+name: codeproof
+
+services:
+  codeproof:
+    build:
+      context: .
+      args:
+        # Node 26 gives execution-proven / patch-proven. Swap the build arg for the L2-only variant:
+        #   NODE_IMAGE=node:22-alpine docker compose build
+        NODE_IMAGE: ${NODE_IMAGE:-node:26.8.2-alpine}
+    image: codeproof:${CODEPROOF_TAG:-local}
+    # The MCP server speaks JSON-RPC over stdio and needs an open stdin.
+    stdin_open: true
+    # Reap the child processes the L3/L4 runner spawns (repro tests, linkcheck harness).
+    init: true
+    env_file:
+      # Optional: live runs read the key from here instead of the command line.
+      - path: .env
+        required: false

@@ -14,7 +14,7 @@ event, zero runtime dependencies.
 | **268/268** deterministic tests (Node 22 & 26) | **12** hand-confirmed defects in 5 new OSS repositories (**1 unique patch-proven, both runs**) | **6** findings filed upstream (3 in the earlier sample + 3 in this round) | **$15.7163** measured for the final round |
 |---|---|---|---|
 
-**Try it now, offline:** `make demo` (mock pipeline, no API key, no network). · **Demo video (2:48):** linked here with the submission on 3 Nov 2026.
+**Try it now, offline:** `make demo` (mock pipeline, no API key, no network), or the same demo in a container: `make docker-demo`. · **Demo video (2:48):** linked here with the submission on 3 Nov 2026.
 
 ## The problem
 
@@ -120,6 +120,34 @@ BUDGET_USD=2 node src/cli.mjs analyze path/to/repo --mode smoke --out reports/ru
 A smoke run costs cents on a small repository and up to a few dollars on ~4k+ LOC; the hard budget gate refuses
 a call before it is sent when its worst-case price does not fit into the remaining cap.
 
+## Run it in Docker
+
+The same offline checks run in a container. The image bakes the project, its git history and the committed
+evidence, runs as the unprivileged `node` user, and needs no API key and no network for the gates:
+
+```bash
+docker build -t codeproof .
+docker run --rm codeproof          # mock pipeline (demo)
+docker run --rm codeproof test     # 268 deterministic tests
+docker run --rm codeproof replay   # golden replay, 9/9 identical
+docker run --rm codeproof score    # golden score against the frozen expectations
+docker run --rm codeproof integrity
+```
+
+A live run takes the key at runtime (never baked into the image) and analyzes a repository mounted read-only,
+with the output volume outside it:
+
+```bash
+mkdir -p reports/docker-out
+docker run --rm -e MODEL_API_KEY=... \
+  -v "$PWD/path/to/repo:/target:ro" -v "$PWD/reports/docker-out:/reports" \
+  codeproof analyze /target --mode smoke --out /reports/run
+```
+
+`docker run -i --rm codeproof mcp` starts the MCP server over stdio, and `make docker-check` builds the image
+and runs every offline gate plus an MCP handshake inside it. Command matrix, mounts, security notes and
+measured image results: [DOCKER.md](DOCKER.md).
+
 ## What CodeProof does not claim
 
 - **The sandbox is process-level, not OS-level.** L3 executes a generated test that imports the analyzed repository's code under the Node permission model (no network, no writes) — it is not a VM.
@@ -152,6 +180,7 @@ rounds and hardening): [HISTORY.md](HISTORY.md).
 | Project history and earlier rounds | [HISTORY.md](HISTORY.md) |
 | Benchmark fixtures, scoring and frozen expectations | [bench/](bench/) |
 | Proof explorer (local, no network) | [docs/index.html](docs/index.html) |
+| Docker image: offline gates, live runs, MCP server | [DOCKER.md](DOCKER.md) |
 
 ## License
 
