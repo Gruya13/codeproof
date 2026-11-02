@@ -89,10 +89,61 @@ dateformat [#196](https://github.com/felixge/node-dateformat/issues/196), sax-js
 1 is a latent dead path, 1 is covered by a comment on an existing report, and **4 are not reported**. Two PR authors replied
 to our comments (#854 and fast-json-patch [#331](https://github.com/Starcounter-Jack/JSON-Patch/pull/331), whose author
 extended the fix for the empty-string case); no maintainer has responded and nothing is merged.
-**Six findings have been filed upstream in total**: three from the earlier v0.2.2 sample (picomatch
+**Six findings have been filed upstream in total** in that round: three from the earlier v0.2.2 sample (picomatch
 [#242](https://github.com/micromatch/picomatch/issues/242), [#243](https://github.com/micromatch/picomatch/issues/243) and
 jsesc [#79](https://github.com/mathiasbynens/jsesc/issues/79)) and the three from this round listed above.
+
+**Post-freeze (2 Nov 2026).** Seven further issues were filed from the exploratory round — sourcemaps
+[#59](https://github.com/jridgewell/sourcemaps/issues/59), [#60](https://github.com/jridgewell/sourcemaps/issues/60);
+fast-json-patch [#338](https://github.com/Starcounter-Jack/JSON-Patch/issues/338), [#339](https://github.com/Starcounter-Jack/JSON-Patch/issues/339),
+[#340](https://github.com/Starcounter-Jack/JSON-Patch/issues/340); swr
+[#4375](https://github.com/vercel/swr/issues/4375), [#4376](https://github.com/vercel/swr/issues/4376) — bringing the
+project total to **13 issues, all open**. swr [#4376](https://github.com/vercel/swr/issues/4376) already has a
+community fix PR ([#4377](https://github.com/vercel/swr/pulls/4377)). The full status, including 8 verified
+candidates deliberately not filed, is in [reports/exploratory/UPSTREAM.md](reports/exploratory/UPSTREAM.md).
 Per-run artifacts and hand-checks: [reports/final/README.md](reports/final/README.md).
+
+## After the freeze: exploratory studies (2 Nov 2026)
+
+After the final round was frozen, the remaining Meta API credit was used on a separate branch to test the claims
+instead of adding features: **106 paid attempts for $50.10**, every one in git-anchored ledgers, with the questions and
+hypotheses pre-registered before the first paid call. Nothing in the frozen table above was changed. Full record:
+[reports/exploratory/](reports/exploratory/).
+
+**What held up**
+
+- **Historical recall reproduces.** The 2/9 (22.2%) became **6/30 (20.0%)** on 30 new fix commits from 6 libraries
+  (swr, ky, mustache, fast-json-patch, dateformat, picomatch), none used before. The weakest published number is not
+  a nine-sample accident.
+- **The adversarial gate kept precision at 100% across all four architecture combinations** (Spark/Wonder as
+  producer/adversary, 2 runs each); recall followed the producer, and the cheapest combination (Spark→Spark)
+  verified findings at $0.0105 each on that set.
+- **Dual calibration was stable:** 8/8 in all three runs.
+- **New real-world evidence:** three unseen repositories produced **2 new hand-confirmed defects** (both
+  encoder/decoder asymmetries in `@jridgewell/sourcemap-codec`, reproduced with a machine round-trip).
+- **Upstream:** 7 issues filed from this round, **13 in total** across the project, all open; one of them already has
+  a community fix PR.
+
+**What did not hold up (published as measured)**
+
+- **"100% precision, 0 traps" is not an invariant.** Repeating the frozen runs produced one verified false positive
+  in 7 single calibration runs (precision 87.5%, below the 90% threshold) and, in one of three chunked extended runs,
+  5 false positives with 1 of 5 traps leaking through (precision 64.3%). The gate is good, not perfect.
+- **The single calibration run is 6–7/8, not a stable 7/8** (mean 82.1%, N=7); the dual run is the stable one.
+- **A bigger candidate budget does not buy recall:** MAX_FINDINGS 6 → 12 moved the hit rate from 20.0% to 20.7%
+  (+13% cost) on the n=30 historical sample.
+- **Scope size dominates recall:** fix commits in scopes ≤500 LOC were found 50% of the time; above 500 LOC it drops
+  to ~12%. The lever is smaller units of analysis, not a bigger model or a longer candidate list.
+- **Dual scanning is a trade-off:** on the 13 paired tests where both arms ran, dual found 2 and single 0
+  (+15.4 pp), but at $7.18 per hit vs $1.35, and the Wonder scanner often returned invalid JSON at these sizes.
+- **Library-level variance is huge:** the same gate found 60% of the fix commits in dateformat and 0% in
+  swr/ky/picomatch on the same protocol.
+
+**Limitations.** Small samples (n=30 single arm, n=13 dual arm, 3–7 runs per configuration, 3 new repositories); the
+hit check verifies that a published finding cites the fixed lines, not that it names the same root cause; public fix
+commits predate the analysis, so contamination is possible; 4 candidates that are only statically confirmed were not
+filed, and 8 of 15 confirmed candidates were held back from filing (risk of "by design" or duplicate — the reasons are
+listed in [reports/exploratory/UPSTREAM.md](reports/exploratory/UPSTREAM.md)).
 
 ## Where the Meta models are
 
@@ -160,8 +211,9 @@ measured image results: [DOCKER.md](DOCKER.md).
 - **The tie between a failing test and the claim is a human review, not a machine proof.** The same model (Muse Wonder) that confirms a claim also writes its test, so the machine checks execution, not the semantic link.
 - **Both models are from the same vendor family** — role separation (producer vs adversary) is not provenance separation.
 - **Large repositories are analysed partially**: the scanner prompt is capped at 400,000 characters, so above roughly 15–20k LOC only an alphabetical prefix reaches the model (recorded in `run.json.scanCoverage`).
-- **Historical recall is 2/9** known fix commits — the weakest number in the project, published first here.
+- **Historical recall is 2/9** known fix commits — the weakest number in the project, published first here. A post-freeze re-measurement on 30 new fix commits found **6/30 (20.0%)**, the same order of magnitude ([D-HISTORICAL.md](reports/exploratory/D-HISTORICAL.md), [large-historical/RESULTS.md](reports/exploratory/large-historical/RESULTS.md)).
 - **Recall on injected defects in real-world code is 3–7/16 single and 9–10/16 chunked** (19–44% / 56–63%) with 100% verified precision and 0/5 traps published; it is not organic-bug recall.
+- **The 100% precision and 0-traps figures above are single-run measurements.** Repeating the same runs produced 1 verified false positive in 7 single calibration runs (87.5% precision) and, in 1 of 3 chunked extended runs, 5 false positives with 1 trap leak (64.3% precision) — see [A-VARIANCE.md](reports/exploratory/A-VARIANCE.md).
 - **No statistical and no completeness claim**: calibration is n=8, extended n=16, real-world runs are hand-checked anecdotes; L3/L4 need Node 26.8.2; TypeScript trees that need their own build step stay at L2; nothing here is claimed as accepted, merged or a novel discovery.
 
 ## Built during the hackathon
@@ -183,6 +235,7 @@ used. Full project history (v0.2.0 → v0.2.3, earlier rounds and hardening): [H
 | What | Where |
 |---|---|
 | Final round: pre-registration, budget ledger, every attempt, hand-checks, independent verification | [reports/final/](reports/final/) |
+| Post-freeze exploratory studies: variance, role ablation, historical n=30, upstream reports | [reports/exploratory/](reports/exploratory/) |
 | Full evidence index across all rounds | [reports/README.md](reports/README.md) |
 | Project history and earlier rounds | [HISTORY.md](HISTORY.md) |
 | Benchmark fixtures, scoring and frozen expectations | [bench/](bench/) |

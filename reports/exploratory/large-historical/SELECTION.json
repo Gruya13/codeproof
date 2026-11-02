@@ -1,0 +1,11 @@
+{
+  "frozenAt": "2026-11-01T19:46:24.088Z",
+  "selectionLog": [
+    "swr: 5/5",
+    "ky: 5/5",
+    "mustache: 5/5",
+    "fast-json-patch: 5/5",
+    "dateformat: 5/5",
+    "picomatch: 5/5"
+  ]
+}

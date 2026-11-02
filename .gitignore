@@ -33,3 +33,7 @@ reports/probes/**/_repo/
 reports/final/**/_repo/
 reports/probes/agy-batch3.md
 *.log
+
+# Post-freeze exploratory studies (2 Nov 2026) — summary reports only, no run artifacts
+!reports/exploratory/
+!reports/exploratory/**
