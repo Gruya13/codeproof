@@ -101,6 +101,7 @@ fast-json-patch [#338](https://github.com/Starcounter-Jack/JSON-Patch/issues/338
 project total to **13 issues, all open**. swr [#4376](https://github.com/vercel/swr/issues/4376) already has a
 community fix PR ([#4377](https://github.com/vercel/swr/pulls/4377)). The full status, including 8 verified
 candidates deliberately not filed, is in [reports/exploratory/UPSTREAM.md](reports/exploratory/UPSTREAM.md).
+
 Per-run artifacts and hand-checks: [reports/final/README.md](reports/final/README.md).
 
 ## After the freeze: exploratory studies (2 Nov 2026)
