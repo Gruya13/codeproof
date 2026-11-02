@@ -1,6 +1,6 @@
 # CodeProof
 
-**Every finding carries the level of proof it earned: machine-checked citation, cross-model adversarial confirmation, or a failing test.**
+**Every finding carries the level of proof it earned: machine-checked citation, adversarial confirmation, or a failing test.**
 
 [![docker](https://github.com/Gruya13/codeproof/actions/workflows/docker.yml/badge.svg)](https://github.com/Gruya13/codeproof/actions/workflows/docker.yml)
 
@@ -17,13 +17,14 @@ event, zero runtime dependencies.
 ## Table of contents
 
 1. [What it does](#what-it-does)
-2. [Measured results (frozen at v0.2.3-final)](#measured-results-frozen-at-v023-final)
-3. [After the freeze: exploratory studies](#after-the-freeze-exploratory-studies)
-4. [Upstream reports](#upstream-reports)
-5. [Honest limits](#honest-limits)
-6. [Try it yourself](#try-it-yourself)
-7. [Documentation and evidence](#documentation-and-evidence)
-8. [Built during the hackathon](#built-during-the-hackathon)
+2. [Evidence levels](#evidence-levels)
+3. [Measured results (frozen at v0.2.3-final)](#measured-results-frozen-at-v023-final)
+4. [After the freeze: exploratory studies](#after-the-freeze-exploratory-studies)
+5. [Upstream reports](#upstream-reports)
+6. [Honest limits](#honest-limits)
+7. [Try it yourself](#try-it-yourself)
+8. [Documentation and evidence](#documentation-and-evidence)
+9. [Built during the hackathon](#built-during-the-hackathon)
 
 ## What it does
 
@@ -37,12 +38,18 @@ Both models are **Meta Muse models** served through the Meta Model API; no other
 the pipeline. **Muse Spark 1.3** is the producer; **Muse Wonder 1.0** is the adversary, the test writer and the patch
 writer.
 
+## Evidence levels
+
+L1 and L2 decide publication: a claim that passes both is published as `verified` even when no reproducer exists.
+L3 and L4 are upgrades a finding earns only when a reproducer is feasible (`verified` → `execution-proven` →
+`patch-proven`). Scan and verify are static — only the generated test runs, on a `git archive` snapshot.
+
 | Level | What must be earned | Enforced by |
 |---|---|---|
-| **L1 — citation** | every citation exists in the analyzed commit and matches the declared line range (±1 line for off-by-one counts) | deterministic checker, no model |
-| **L2 — adversarial** | a second model tries to refute the claim; a strong refutation needs a machine-checked counter-citation | **Meta Muse Wonder 1.0** (in opt-in dual mode, Muse Spark verifies Wonder-proposed findings) |
-| **L3 — execution proof** | a generated test has two phases: the control case passes on every run (at least three) and the trigger case fails on every run, against the analyzed commit in a Node permission sandbox with no network | **Meta Muse Wonder 1.0** writes the test |
-| **L4 — patch proof** | a minimal patch flips the reproduced result (differential proof) | **Meta Muse Wonder 1.0** writes the patch |
+| **L1 - citation** | every citation exists in the analyzed commit and matches the declared line range (±1 line for off-by-one counts) | deterministic checker, no model |
+| **L2 - adversarial** | a second model tries to refute the claim; a strong refutation needs a machine-checked counter-citation | **Meta Muse Wonder 1.0** (in opt-in dual mode, Muse Spark verifies Wonder-proposed findings) |
+| **L3 - execution proof** | a generated test has two phases: the control case passes on every run (at least three) and the trigger case fails on every run, against the analyzed commit in a Node permission sandbox with no network | **Meta Muse Wonder 1.0** writes the test |
+| **L4 - patch proof** | a minimal patch flips the reproduced result (differential proof) | **Meta Muse Wonder 1.0** writes the patch |
 
 ```mermaid
 flowchart LR
